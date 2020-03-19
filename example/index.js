@@ -1,5 +1,5 @@
 
-import installYamcsPlugin from '../dist/openmct-yamcs.js';
+import installYamcsPlugin from '../src/plugin.js';
 
 const config = {
     "yamcsDictionaryEndpoint": "http://localhost:9000/yamcs-proxy/",
