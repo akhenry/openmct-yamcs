@@ -1,24 +1,25 @@
 
-//import installYamcsPlugin from '../dist/openmct-yamcs.js';
+import installYamcsPlugin from '../dist/openmct-yamcs.js';
 
 const config = {
-    "yamcsDictionaryEndpoint": "http://localhost:9000/viper-proxy/viper/yamcs/",
-    "yamcsInstance": "viper",
-    "yamcsFolder": "VIPER",
-    "yamcsHistoricalEndpoint": "http://localhost:9000/viper-proxy/viper/yamcs/",
-    "yamcsRealtimeEndpoint": "ws://localhost:9000/viper-proxy-ws/"
+    "yamcsDictionaryEndpoint": "http://localhost:8090/",
+    "yamcsHistoricalEndpoint": "http://localhost:8090/",
+    "yamcsRealtimeEndpoint": "ws://localhost:8090/",
+    "yamcsInstance": "myproject",
+    "yamcsFolder": "myproject"
 };
+const openmct = window.openmct;
 
 (async function () {
     const THIRTY_MINUTES = 30 * 60 * 1000;
-    
+
     openmct.setAssetPath('/node_modules/openmct/dist');
-    
-    installDefaultPlugins(config);
-    //installYamcsPlugin(config);
-    
+
+    installDefaultPlugins();
+    openmct.install(installYamcsPlugin(config));
+
     openmct.start();
-    
+
     function installDefaultPlugins() {
         openmct.install(openmct.plugins.LocalStorage());
         openmct.install(openmct.plugins.Espresso());
@@ -27,7 +28,7 @@ const config = {
         openmct.install(openmct.plugins.ExampleImagery());
         openmct.install(openmct.plugins.UTCTimeSystem());
         openmct.install(openmct.plugins.TelemetryMean());
-        
+
         openmct.install(openmct.plugins.DisplayLayout({
             showAsView: ['summary-widget', 'example.imagery', 'yamcs.image']
         }));

@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src example",
+    "lint:fix": "eslint src example --fix",
     "build:dist": "webpack",
-    "example": "npm run build:dist; webpack-dev-server",
+    "start": "npm run build:dist; webpack-dev-server",
     "prepare": "npm run build:dist"
   },
   "keywords": [
@@ -16,7 +18,9 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "copy-webpack-plugin": "^5.1.1",
+    "eslint": "^6.8.0",
     "openmct": "github:nasa/openmct",
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11",

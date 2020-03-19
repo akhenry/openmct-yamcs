@@ -10,6 +10,7 @@ const WEBPACK_CONFIG = {
     output: {
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
+        libraryTarget: 'umd'
     },
     devtool: devMode ? 'eval-source-map' : 'source-map',
     devServer: {
