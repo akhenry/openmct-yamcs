@@ -8,45 +8,50 @@ import {
     STRING_OBJECT_TYPE
 } from '../const.js';
 
+import _ from 'lodash';
+
 export default class YamcsObjectProvider {
     constructor(url, instance, folderName) {
         this.url = url;
         this.instance = instance;
         this.folderName = folderName;
         this.dictionary = undefined;
+        this.namespace = 'taxonomy'
         this.objects = {};
+
+        this.createRootObject();
     }
 
-    async get(identifier) {
-        return this.getTelemetryDictionary().then(dictionary => {
-            return dictionary[identifier.key];
-        });
-    }
-
-    async getTelemetryDictionary() {
-        if (this.dictionary !== undefined) {
-            return Promise.resolve(this.dictionary);
-        }
-
-        this.dictionary = await this.fetchTelemetryDictionary(this.url, this.instance, this.folderName);
-
-        return Promise.resolve(this.dictionary);
-    }
-
-    async fetchTelemetryDictionary() {
-        let namespace = 'taxonomy';
-        let root_obj = {
+    createRootObject() {
+        this.rootObject = {
             identifier: {
                 key: 'spacecraft',
-                namespace: namespace
+                namespace: this.namespace
             },
             name: this.folderName,
             type: 'folder',
             location: 'ROOT',
             composition: []
         };
-        this.addObject(root_obj);
+        this.addObject(this.rootObject);
+    }
 
+    get(identifier) {
+        return this.getTelemetryDictionary().then(dictionary => {
+            return dictionary[identifier.key];
+        });
+    }
+
+    getTelemetryDictionary() {
+        if (this.dictionary !== undefined) {
+            return Promise.resolve(this.dictionary);
+        }
+
+        return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
+            .then((dictionary) => this.dictionary = dictionary);
+    }
+
+    fetchTelemetryDictionary() {
         return this.fetchMdbApi('containers').then(containers => {
             return this.fetchMdbApi('parameters?details=yes&limit=10000&recurse=yes')
                 .then(parameters => {
@@ -59,8 +64,7 @@ export default class YamcsObjectProvider {
 
                     if ('containers' in containers) {
                         containers.containers.forEach(container => {
-                            this.addContainer(container, root_obj, paramMap,
-                                namespace);
+                            this.addContainer(container, this.rootObject, paramMap);
                         });
                     }
                     return this.objects;
@@ -68,17 +72,17 @@ export default class YamcsObjectProvider {
         });
     }
 
-    async fetchMdbApi(operation, name='') {
+    fetchMdbApi(operation, name='') {
         return fetch(this.url + 'api/mdb/' + this.instance + '/' + operation + name)
             .then(res => {return res.json();});
     }
 
-    addContainer(container, parent, paramMap, namespace) {
+    addContainer(container, parent, paramMap) {
         let id = qualifiedNameToId('container' + container.qualifiedName);
         let obj = {
             identifier: {
                 key: id,
-                namespace: namespace
+                namespace: this.namespace
             },
             name: container.name,
             type: 'folder',
@@ -91,7 +95,7 @@ export default class YamcsObjectProvider {
         if ('entry' in container) {
             container.entry.forEach(entry => {
                 let parameter = paramMap[entry.parameter.qualifiedName];
-                this.addParameter(parameter, parameter.qualifiedName, obj, namespace);
+                this.addParameter(parameter, parameter.qualifiedName, obj);
             });
         }
     }
@@ -100,12 +104,12 @@ export default class YamcsObjectProvider {
         this.objects[object.identifier.key] = object;
     }
 
-    addParameter(parameter, qualifiedName, parent, namespace) {
+    addParameter(parameter, qualifiedName, parent) {
         let id = qualifiedNameToId(qualifiedName);
         let obj = {
             identifier: {
                 key: id,
-                namespace: namespace
+                namespace: this.namespace
             },
             name: parameter.name
         };
@@ -151,20 +155,13 @@ export default class YamcsObjectProvider {
             if ('member' in parameter.type) {
                 parameter.type.member.forEach(member => {
                     let memberQualifiedName = qualifiedName + '.' + member.name;
-                    this.addParameter(member, memberQualifiedName, obj,
-                        namespace);
+                    this.addParameter(member, memberQualifiedName, obj);
                 });
             }
         }
     }
 
     getParameterType(parameter) {
-        for (let i in parameter.alias) {
-            if (parameter.alias[i].namespace === 'OpenMCT:type') {
-                return parameter.alias[i].name;
-            }
-        }
-
         if (parameter.type.engType === 'integer' || parameter.type.engType === 'float') {
             return TELEMETRY_OBJECT_TYPE;
         }
