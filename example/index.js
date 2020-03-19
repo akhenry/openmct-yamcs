@@ -2,9 +2,9 @@
 import installYamcsPlugin from '../dist/openmct-yamcs.js';
 
 const config = {
-    "yamcsDictionaryEndpoint": "http://localhost:8090/",
-    "yamcsHistoricalEndpoint": "http://localhost:8090/",
-    "yamcsRealtimeEndpoint": "ws://localhost:8090/",
+    "yamcsDictionaryEndpoint": "http://localhost:9000/yamcs-proxy/",
+    "yamcsHistoricalEndpoint": "http://localhost:9000/yamcs-proxy/",
+    "yamcsRealtimeEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
     "yamcsInstance": "myproject",
     "yamcsFolder": "myproject"
 };

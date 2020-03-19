@@ -17,7 +17,24 @@ const WEBPACK_CONFIG = {
     devServer: {
         serveIndex: false,
         compress: true,
-        port: 9000
+        port: 9000,
+        open: true,
+        openPage: '/example/index.html',
+        proxy: {
+            "/yamcs-proxy/*": {
+                target: "http://localhost:8090/",
+                secure: false,
+                changeOrigin: true,
+                pathRewrite: {'^/yamcs-proxy' : ''}
+            },
+            "/yamcs-proxy-ws/*": {
+                target: "ws://localhost:8090/",
+                secure: false,
+                changeOrigin: true,
+                ws: true,
+                pathRewrite: {'^/yamcs-proxy-ws' : ''}
+            }
+        }
     }
 };
 
