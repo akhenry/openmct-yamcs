@@ -8,7 +8,7 @@
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack",
-    "prepublish": "npm install nasa/openmct",
+    "prepublish": "npm install nasa/openmct --no-save",
     "start": "npm run build:dist; webpack-dev-server",
     "prepare": "npm run build:dist"
   },
