@@ -10,7 +10,7 @@
     "build:dist": "webpack",
     "prepublish": "npm install nasa/openmct --no-save",
     "start": "npm run build:dist; webpack-dev-server",
-    "prepare": "npm run build:dist"
+    "build": "npm run build:dist"
   },
   "keywords": [
     "openmct",
