@@ -2,7 +2,7 @@
   "name": "openmct-yamcs",
   "version": "1.0.0",
   "description": "An adapter for connecting Open MCT with YAMCS",
-  "main": "index.js",
+  "main": "dist/openmct-yamcs.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src example",
