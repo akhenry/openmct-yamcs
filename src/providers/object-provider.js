@@ -16,7 +16,7 @@ export default class YamcsObjectProvider {
         this.instance = instance;
         this.folderName = folderName;
         this.dictionary = undefined;
-        this.namespace = 'taxonomy'
+        this.namespace = 'taxonomy';
         this.objects = {};
 
         this.createRootObject();
@@ -162,6 +162,12 @@ export default class YamcsObjectProvider {
     }
 
     getParameterType(parameter) {
+        for (let i in parameter.alias) {
+            if (parameter.alias[i].namespace === 'OpenMCT:type') {
+                return parameter.alias[i].name;
+            }
+        }
+
         if (parameter.type.engType === 'integer' || parameter.type.engType === 'float') {
             return TELEMETRY_OBJECT_TYPE;
         }
