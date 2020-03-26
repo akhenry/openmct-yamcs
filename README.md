@@ -10,6 +10,8 @@ An example is provided in this repository that can be configured to run against 
 ### Prerequisites
 * The YAMCS Quickstart example is assumed to have been installed and to be running successfully. See 
   https://github.com/yamcs/quickstart
+* [A git client](https://git-scm.com/)
+* [Node 10+](https://nodejs.org/)
 
 ### Installation
 ```
