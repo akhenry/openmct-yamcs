@@ -74,7 +74,6 @@ openmct.install(installYamcsPlugin({
 | yamcsRealtimeEndpoint   | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical instance. *It must always start with `ws` or `wss`* | ws://localhost:8090/               |
 | yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 | yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
-|-------------------------|-------------------------------------------------------|------------------------------------|
 
 ## Limitations
 Right now the Open MCT - YAMCS adapter can only be configued for a single YAMCS instance and parameter folder at a time. 
