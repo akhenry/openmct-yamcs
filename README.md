@@ -69,27 +69,11 @@ openmct.install(installYamcsPlugin({
 ## Configuration
 | Configuration Item      | Notes                                                 | Example Value                      |
 |-------------------------|-------------------------------------------------------|------------------------------------|
-| yamcsDictionaryEndpoint | This is the root path to the YAMCS installation. The  | http://localhost:8090/             |
-|                         | adapter will use this to fetch all of the parameters  |                                    |
-|                         | and containers defined for the configured instance.   |                                    |
-|-------------------------|-------------------------------------------------------|------------------------------------|
-| yamcsHistoricalEndpoint | As above, this is the root path to the YAMCS          | http://localhost:8090/             |
-|                         | installation. This will be automatically appended     |                                    |
-|                         | with the necessary path to retrieve historical        |                                    |
-|                         | data for the selected parameter, in the configured    |                                    |
-|                         | instance.                                             |                                    |
-|-------------------------|-------------------------------------------------------|------------------------------------|
-| yamcsRealtimeEndpoint   | As above, this is the root path to the YAMCS          | ws://localhost:8090/               |
-|                         | installation. This will be automatically appended     |                                    |
-|                         | with the necessary path to retrieve historical        |                                    |
-|                         | data for the selected parameter, in the configured    |                                    |
-|                         | instance. *It must always start with `ws` or `wss`*   |                                    |
-|-------------------------|-------------------------------------------------------|------------------------------------|
-| yamcsInstance           | The name of the instance configured in YAMCS that you | myproject                          |
-|                         | wish to connect to.                                   |                                    |
-|-------------------------|-------------------------------------------------------|------------------------------------|
-| yamcsFolder             | The name of the instance configured in YAMCS that you | myproject                          |
-|                         | wish to connect to.                                   |                                    |
+| yamcsDictionaryEndpoint | This is the root path to the YAMCS installation. The adapter will use this to fetch all of the parameters adapter will use this to fetch all of the parameters and containers defined for the configured instance. | http://localhost:8090/              |
+| yamcsHistoricalEndpoint | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical data for the selected parameter, in the configured instance. | http://localhost:8090/             |
+| yamcsRealtimeEndpoint   | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical instance. *It must always start with `ws` or `wss`* | ws://localhost:8090/               |
+| yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
+| yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 |-------------------------|-------------------------------------------------------|------------------------------------|
 
 ## Limitations
