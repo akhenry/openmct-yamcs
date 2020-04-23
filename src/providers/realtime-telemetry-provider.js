@@ -27,7 +27,7 @@ import {
 } from '../utils.js';
 
 const WS_IDLE_INTERVAL_MS = 10000;
-const FALLBACK_AND_WAIT_MS = [1000, 5000, 10000, 30000];
+const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 
 export default class RealtimeTelemetryProvider {
     constructor(url ,instance) {
@@ -65,6 +65,7 @@ export default class RealtimeTelemetryProvider {
     }
 
     connect() {
+        console.time('bog');
         if (this.connected) {
             return;
         }
@@ -74,6 +75,8 @@ export default class RealtimeTelemetryProvider {
         this.socket = new WebSocket(wsUrl);
 
         this.socket.onopen = () => {
+            clearTimeout(this.reconnectTimeout);
+
             this.keepAliveInterval = setInterval(
                 this.idleSubscribe.bind(this), WS_IDLE_INTERVAL_MS);
             this.connected = true;
@@ -117,16 +120,14 @@ export default class RealtimeTelemetryProvider {
     }
 
     reconnect() {
-        if (this.reconnecting) {
+        if (this.reconnectTimeout) {
             return;
         }
-        else {
-            this.reconnecting = true;
-        }
 
-        setTimeout(() => {
+        this.reconnectTimeout = setTimeout(() => {
+            console.timeLog('bog');
             this.connect();
-            this.reconnecting = false;
+            delete this.reconnectTimeout;
         }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
 
         if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length) {
