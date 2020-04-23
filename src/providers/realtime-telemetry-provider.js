@@ -26,7 +26,8 @@ import {
     getValue
 } from '../utils.js';
 
-const WS_IDLE_INTERVAL = 10000;
+const WS_IDLE_INTERVAL_MS = 10000;
+const FALLBACK_AND_WAIT_MS = [1000, 5000, 10000, 30000];
 
 export default class RealtimeTelemetryProvider {
     constructor(url ,instance) {
@@ -36,6 +37,7 @@ export default class RealtimeTelemetryProvider {
         this.connected = false;
         this.listener = {};
         this.requests = [];
+        this.currentWaitIndex = 0;
     }
 
     supportsSubscribe(domainObject) {
@@ -45,7 +47,9 @@ export default class RealtimeTelemetryProvider {
     subscribe(domainObject, callback) {
         this.listener[domainObject.identifier.key] = callback;
         let name = idToQualifiedName(domainObject.identifier.key);
-        this.tlmSubscribe(name);
+        if (this.connected) {
+            this.tlmSubscribe(name);
+        }
 
         return () => {
             this.tlmUnsubscribe(name);
@@ -53,21 +57,37 @@ export default class RealtimeTelemetryProvider {
         };
     }
 
+    resubscribeToAll() {
+        Object.keys(this.listener).forEach((id) => {
+            let name = idToQualifiedName(id);
+            this.tlmSubscribe(name);
+        });
+    }
+
     connect() {
+        if (this.connected) {
+            return;
+        }
+        let wsUrl = `${this.url}_websocket/${this.instance}`;
         this.seqNo = 0;
         this.connected = false;
-        this.socket = new WebSocket(this.url + '_websocket/' + this.instance);
+        this.socket = new WebSocket(wsUrl);
 
         this.socket.onopen = () => {
             this.keepAliveInterval = setInterval(
-                this.idleSubscribe.bind(this), WS_IDLE_INTERVAL);
+                this.idleSubscribe.bind(this), WS_IDLE_INTERVAL_MS);
             this.connected = true;
+            console.log(`Established websocket connection to ${wsUrl}`);
+
+            this.currentWaitIndex = 0;
+            this.resubscribeToAll();
             this.flushQueue();
         };
+
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
 
-            if (data.length>=4 && data[3].dt === 'PARAMETER') {
+            if (data.length >= 4 && data[3].dt === 'PARAMETER') {
                 data[3].data.parameter.forEach(parameter => {
                     let point = {
                         id: qualifiedNameToId(parameter.id.name),
@@ -81,6 +101,37 @@ export default class RealtimeTelemetryProvider {
                 });
             }
         };
+
+        this.socket.onerror = (error) => {
+            console.error(error);
+            console.warn("Websocket error, attempting reconnect...");
+            this.connected = false;
+            this.reconnect();
+        };
+
+        this.socket.onclose = () => {
+            this.connected = false;
+            console.warn("Websocket closed. Attempting to reconnect...");
+            this.reconnect();
+        };
+    }
+
+    reconnect() {
+        if (this.reconnecting) {
+            return;
+        }
+        else {
+            this.reconnecting = true;
+        }
+
+        setTimeout(() => {
+            this.connect();
+            this.reconnecting = false;
+        }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
+
+        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length) {
+            this.currentWaitIndex++;
+        }
     }
 
     idleSubscribe() {
@@ -100,15 +151,41 @@ export default class RealtimeTelemetryProvider {
 
     sendOrQueueRequest(request) {
         if (this.connected) {
-            this.sendRequest(request);
+            try {
+                this.sendRequest(request);
+                return true;
+            } catch (error) {
+                this.connected = false;
+                console.error(error);
+                console.warn("Error while attempting to send to websocket. Reconnecting...");
+
+                this.requests.push(request);
+                this.reconnect();
+            }
         } else {
             this.requests.push(request);
         }
     }
 
     flushQueue() {
-        this.requests.forEach(this.sendRequest.bind(this));
-        this.requests = [];
+        let shouldReconnect = false;
+        this.requests = this.requests.filter((request) => {
+            try {
+                this.sendRequest(request);
+            } catch (error) {
+                this.connected = false;
+                console.error(error);
+                console.warn("Error while attempting to send to websocket. Reconnecting...");
+
+                shouldReconnect = true;
+                return true;
+            }
+            return false;
+        });
+
+        if (shouldReconnect) {
+            this.reconnect();
+        }
     }
 
     sendRequest(request) {
