@@ -65,7 +65,6 @@ export default class RealtimeTelemetryProvider {
     }
 
     connect() {
-        console.time('bog');
         if (this.connected) {
             return;
         }
@@ -125,7 +124,6 @@ export default class RealtimeTelemetryProvider {
         }
 
         this.reconnectTimeout = setTimeout(() => {
-            console.timeLog('bog');
             this.connect();
             delete this.reconnectTimeout;
         }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
