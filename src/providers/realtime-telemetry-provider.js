@@ -93,7 +93,7 @@ export default class RealtimeTelemetryProvider {
                 data[3].data.parameter.forEach(parameter => {
                     let point = {
                         id: qualifiedNameToId(parameter.id.name),
-                        timestamp: parameter.generationTimeUTC,
+                        timestamp: Number(parameter.generationTime),
                         value: getValue(parameter.engValue)
                     };
 

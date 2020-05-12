@@ -25,9 +25,10 @@ import {
     getValue} from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
-    constructor(url, instance) {
+    constructor(url, instance, openmct) {
         this.url = url;
         this.instance = instance;
+        this.openmct = openmct;
     }
 
     supportsRequest(domainObject) {
@@ -35,10 +36,17 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
+        this.dateFormatter = this.resolveDateFormatter(domainObject);
         return this.getHistory(domainObject.identifier.key,
             options.start,
             options.end,
             options.size);
+    }
+
+    resolveDateFormatter(domainObject) {
+        let metadata = this.openmct.telemetry.getMetadata(domainObject);
+        let domainMetadata = metadata.valuesForHints(['domain'])[0];
+        return this.openmct.telemetry.getValueFormatter(domainMetadata);
     }
 
     getHistory(id, start, end, size=300) {
@@ -81,7 +89,7 @@ export default class YamcsHistoricalTelemetryProvider {
         results.parameter.forEach(parameter => {
             let point = {
                 id: parameter.id.name,
-                timestamp: parameter.generationTimeUTC,
+                timestamp: Number(parameter.generationTime),
                 value: getValue(parameter.engValue)
             };
             values.push(point);
@@ -100,7 +108,7 @@ export default class YamcsHistoricalTelemetryProvider {
             results.sample.forEach(sample => {
                 if (sample.n > 0) {
                     let min_value = {
-                        timestamp: sample.time,
+                        timestamp: this.dateFormatter.parse(sample.time),
                         value: sample.min,
                         id: id
                     };
@@ -109,7 +117,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
                 if (sample.n > 1) {
                     let max_value = {
-                        timestamp: sample.time,
+                        timestamp: this.dateFormatter.parse(sample.time),
                         value: sample.max,
                         id: id
                     };

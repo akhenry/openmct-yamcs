@@ -37,7 +37,8 @@ export default function installYamcsPlugin(configuration) {
 
         const historicalProvider = new YamcsHistoricalTelemetryProvider(
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance);
+            configuration.yamcsInstance,
+            openmct);
         openmct.telemetry.addProvider(historicalProvider);
 
         const realtimeProvider = new YamcsRealtimeTelemetryProvider(
