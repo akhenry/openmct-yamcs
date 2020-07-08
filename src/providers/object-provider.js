@@ -69,7 +69,6 @@ export default class YamcsObjectProvider {
         if (this.dictionary !== undefined) {
             return Promise.resolve(this.dictionary);
         }
-        console.log('fetching telemetry dictionary');
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
             .then((dictionary) => this.dictionary = dictionary);
     }
