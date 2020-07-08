@@ -40,6 +40,7 @@ export default class YamcsObjectProvider {
         this.dictionary = undefined;
         this.namespace = 'taxonomy';
         this.objects = {};
+        this.dictionaryPromise = undefined;
 
         this.createRootObject();
     }
@@ -68,30 +69,34 @@ export default class YamcsObjectProvider {
         if (this.dictionary !== undefined) {
             return Promise.resolve(this.dictionary);
         }
-
+        console.log('fetching telemetry dictionary');
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
             .then((dictionary) => this.dictionary = dictionary);
     }
 
     fetchTelemetryDictionary() {
-        return this.fetchMdbApi('containers').then(containers => {
-            return this.fetchMdbApi('parameters?details=yes&limit=10000&recurse=yes')
-                .then(parameters => {
-                    let paramMap = {};
-                    if ('parameters' in parameters) {
-                        parameters.parameters.forEach(parameter => {
-                            paramMap[parameter.qualifiedName] = parameter;
-                        });
-                    }
+        if(this.dictionaryPromise === undefined) {
+            this.dictionaryPromise = this.fetchMdbApi('containers').then(containers => {
+                return this.fetchMdbApi('parameters?details=yes&limit=1000&recurse=yes')
+                    .then(parameters => {
+                        let paramMap = {};
+                        if ('parameters' in parameters) {
+                            parameters.parameters.forEach(parameter => {
+                                paramMap[parameter.qualifiedName] = parameter;
+                            });
+                        }
 
-                    if ('containers' in containers) {
-                        containers.containers.forEach(container => {
-                            this.addContainer(container, this.rootObject, paramMap);
-                        });
-                    }
-                    return this.objects;
-                });
-        });
+                        if ('containers' in containers) {
+                            containers.containers.forEach(container => {
+                                this.addContainer(container, this.rootObject, paramMap);
+                            });
+                        }
+                        this.dictionaryPromise = undefined;
+                        return this.objects;
+                    });
+            });
+        }
+        return this.dictionaryPromise;
     }
 
     fetchMdbApi(operation, name='') {
@@ -110,8 +115,8 @@ export default class YamcsObjectProvider {
             type: 'folder',
             composition: []
         };
-        this.addObject(obj);
 
+        this.addObject(obj);
         parent.composition.push(obj.identifier);
 
         if ('entry' in container) {
