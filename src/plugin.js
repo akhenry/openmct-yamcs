@@ -35,6 +35,8 @@ export default function installYamcsPlugin(configuration) {
 
         //TODO: Validate provided configuration
 
+        openmct.install(openmct.plugins.ISOTimeFormat());
+
         const historicalProvider = new YamcsHistoricalTelemetryProvider(
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance);
