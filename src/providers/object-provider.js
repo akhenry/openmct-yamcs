@@ -157,7 +157,7 @@ export default class YamcsObjectProvider {
                         key: 'utc',
                         source: 'timestamp',
                         name: 'Timestamp',
-                        format: 'utc',
+                        format: 'iso',
                         hints: {
                             domain: 1
                         }
