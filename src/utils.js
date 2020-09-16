@@ -45,8 +45,60 @@ function getValue(value) {
     return VALUE_EXTRACT_MAP[value.type](value);
 }
 
+/*
+ * Accumulates results from a Yamcs API request that does paging
+ * with a continuation token. The Yamcs responses generally contain
+ * an indication of the total size, a continuation token, if there
+ * are more results, and another property that is an array of results
+ * for the current request. That array is what is to be accumulated
+ * over multiple requests. The property name for that array is a
+ * parameter to this function.
+ *
+ * Parameters:
+ *     url          the API URL
+ *     property     the property of the JSON responses to be gathered
+ *     totalLimit   (optional) a limit on the total number of objects
+ *                  to gather over multiple requests
+ *     token        (optional) the continuation token value from
+ *                  a prior request
+ *
+ * Returns:
+ *     a promise for an array of results accumulated over the requests
+ */
+function accumulateResults(url, property, soFar, totalLimit, token) {
+    if (totalLimit === undefined) {
+        totalLimit = 1000000
+    }
+
+    /*console.log('#soFar=' + soFar.length)*/
+    /*console.log('token=' + token)*/
+    var newUrl = url
+    if (token !== undefined) {
+        if (url.indexOf('?') < 0) {
+            newUrl += '?next=' + token
+        } else {
+            newUrl += '&next=' + token
+        }
+    }
+    /*console.log('newUrl=' + newUrl)*/
+
+    var result = fetch(newUrl).then(res => {return res.json()})
+    return result.then(res => {
+        /*console.log('#new=' + res[property].length)*/
+        if (property in res) {
+            soFar = soFar.concat(res[property])
+        }
+        if (!('continuationToken' in res) || soFar.length >= totalLimit) {
+            return soFar
+        }
+        return accumulateResults(url, property, soFar, totalLimit,
+                                 res.continuationToken)
+    })
+}
+
 export {
     idToQualifiedName,
     qualifiedNameToId,
-    getValue
+    getValue,
+    accumulateResults
 };

@@ -1,5 +1,6 @@
 import {
-    qualifiedNameToId
+    qualifiedNameToId,
+    accumulateResults
 } from '../utils.js';
 
 import {
@@ -7,8 +8,6 @@ import {
     IMAGE_OBJECT_TYPE,
     STRING_OBJECT_TYPE
 } from '../const.js';
-
-import _ from 'lodash';
 
 /*****************************************************************************
  * Open MCT, Copyright (c) 2014-2020, United States Government
@@ -75,22 +74,25 @@ export default class YamcsObjectProvider {
 
     fetchTelemetryDictionary() {
         if(this.dictionaryPromise === undefined) {
-            this.dictionaryPromise = this.fetchMdbApi('containers').then(containers => {
-                return this.fetchMdbApi('parameters?details=yes&limit=1000&recurse=yes')
+            let url = this.getMdbUrl('space-systems')
+            this.dictionaryPromise = accumulateResults(url, 'spaceSystems', []).then(spaceSystems => {
+                return this.fetchMdbApi('parameters?details=yes&limit=1000')
                     .then(parameters => {
-                        let paramMap = {};
+                        /* Sort the space systems by name, so that the
+                           children of the root object are in sorted order. */
+                        spaceSystems.sort((a, b) => {
+                            a.name.localeCompare(b.name)
+                        })
+                        spaceSystems.forEach(spaceSystem => {
+                            this.addSpaceSystem(spaceSystem)
+                        })
                         if ('parameters' in parameters) {
                             parameters.parameters.forEach(parameter => {
-                                paramMap[parameter.qualifiedName] = parameter;
-                            });
-                        }
-
-                        if ('containers' in containers) {
-                            containers.containers.forEach(container => {
-                                this.addContainer(container, this.rootObject, paramMap);
-                            });
+                                this.addParameterObject(parameter)
+                            })
                         }
                         this.dictionaryPromise = undefined;
+                        let objects = this.objects;
                         return this.objects;
                     });
             });
@@ -98,36 +100,65 @@ export default class YamcsObjectProvider {
         return this.dictionaryPromise;
     }
 
+    getMdbUrl(operation, name='') {
+        return this.url + 'api/mdb/' + this.instance + '/' + operation + name
+    }
+
     fetchMdbApi(operation, name='') {
         return fetch(this.url + 'api/mdb/' + this.instance + '/' + operation + name)
             .then(res => {return res.json();});
     }
 
-    addContainer(container, parent, paramMap) {
-        let id = qualifiedNameToId('container' + container.qualifiedName);
-        let obj = {
-            identifier: {
-                key: id,
-                namespace: this.namespace
-            },
-            name: container.name,
-            type: 'folder',
-            composition: []
-        };
+    addSpaceSystem(spaceSystem) {
+        if (spaceSystem.qualifiedName != '/') {
+            let composition = []
+            if ('sub' in spaceSystem) {
+                /* Sort the subsidiary space systems by name. */
+                spaceSystem.sub.sort((a, b) => {
+                    return a.name.localeCompare(b.name)
+                })
+                spaceSystem.sub.forEach(sub => {
+                    let subId = qualifiedNameToId(sub.qualifiedName)
+                    composition.push({
+                        key: subId,
+                        namespace: this.namespace
+                    })
+                })
+            }
+                        
+            let id = qualifiedNameToId(spaceSystem.qualifiedName)
+            let obj = {
+                identifier: {
+                    key: id,
+                    namespace: this.namespace
+                },
+                name: spaceSystem.name,
+                type: 'folder',
+                composition: composition
+            }
+            this.addObject(obj)
 
-        this.addObject(obj);
-        parent.composition.push(obj.identifier);
-
-        if ('entry' in container) {
-            container.entry.forEach(entry => {
-                let parameter = paramMap[entry.parameter.qualifiedName];
-                this.addParameter(parameter, parameter.qualifiedName, obj);
-            });
+            /* Add the space system to the root object if it's top-level. */
+            if (spaceSystem.qualifiedName.lastIndexOf('/') == 0) {
+                this.rootObject.composition.push({
+                    key: id,
+                    namespace: this.namespace
+                })
+            }
         }
     }
 
     addObject(object) {
         this.objects[object.identifier.key] = object;
+    }
+
+    addParameterObject(parameter) {
+        let qn = parameter.qualifiedName
+        let lastSlashPos = qn.lastIndexOf('/')
+        let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos))
+        let parent = this.objects[parentId]
+
+        this.addParameter(parameter, qn, parent)
     }
 
     addParameter(parameter, qualifiedName, parent) {
@@ -138,8 +169,14 @@ export default class YamcsObjectProvider {
                 namespace: this.namespace
             },
             name: parameter.name
-        };
-        if (parameter.type.engType === 'aggregate') {
+        }
+
+        let isAggregate = false;
+        if ('type' in parameter && parameter.type.engType === 'aggregate') {
+            isAggregate = true;
+        }
+        
+        if (isAggregate) {
             obj.type = 'folder';
             obj.composition = [];
         } else {
@@ -177,7 +214,7 @@ export default class YamcsObjectProvider {
 
         parent.composition.push(obj.identifier);
 
-        if (parameter.type.engType === 'aggregate') {
+        if (isAggregate) {
             if ('member' in parameter.type) {
                 parameter.type.member.forEach(member => {
                     let memberQualifiedName = qualifiedName + '.' + member.name;
@@ -194,6 +231,10 @@ export default class YamcsObjectProvider {
             }
         }
 
+        /* Built-in Yamcs telemetry does not supply type information. */
+        if (!('type' in parameter)) {
+            return TELEMETRY_OBJECT_TYPE;
+        }
         if (parameter.type.engType === 'integer' || parameter.type.engType === 'float') {
             return TELEMETRY_OBJECT_TYPE;
         }
