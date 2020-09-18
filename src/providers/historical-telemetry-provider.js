@@ -84,6 +84,15 @@ export default class YamcsHistoricalTelemetryProvider {
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
             };
+            if ('monitoringResult' in parameter) {
+                point.monitoringResult = parameter.monitoringResult
+            }
+            if ('rangeCondition' in parameter) {
+                point.rangeCondition = parameter.rangeCondition
+            }
+            if ('alarmRange' in parameter) {
+                point.alarmRange = parameter.alarmRange
+            }
             values.push(point);
         });
 

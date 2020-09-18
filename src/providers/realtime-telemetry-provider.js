@@ -29,6 +29,19 @@ import {
 const WS_IDLE_INTERVAL_MS = 10000;
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 
+const MONITORING_RESULT = {
+    'WATCH': 'is-limit--yellow',
+    'WARNING': 'is-limit--yellow',
+    'DISTRESS': 'is-limit--red',
+    'CRITICAL': 'is-limit--red',
+    'SEVERE': 'is-limit--red'
+}
+
+const RANGE_CONDITION = {
+    'LOW': 'is-limit--lwr',
+    'HIGH': 'is-limit--upr'
+}
+
 export default class RealtimeTelemetryProvider {
     constructor(url ,instance) {
         this.url = url;
@@ -44,6 +57,10 @@ export default class RealtimeTelemetryProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
+    supportsLimits(domainObject) {
+        return domainObject.type.startsWith('yamcs.');
+    }
+
     subscribe(domainObject, callback) {
         this.listener[domainObject.identifier.key] = callback;
         let name = idToQualifiedName(domainObject.identifier.key);
@@ -55,6 +72,30 @@ export default class RealtimeTelemetryProvider {
             this.tlmUnsubscribe(name);
             delete this.listener[domainObject.identifier.key];
         };
+    }
+
+    getLimitEvaluator(domainObject) {
+        return {
+            evaluate: function(datum, valueMetadata) {
+                console.log('evaluate:'
+                            + ' datum=' + JSON.stringify(datum)
+                            + ' valueMetadata='
+                            + JSON.stringify(valueMetadata))
+                if ('monitoringResult' in datum
+                   && datum.monitoringResult in MONITORING_RESULT) {
+                    let obj = {
+                        cssClass: MONITORING_RESULT[datum.monitoringResult],
+                        name: datum.monitoringResult
+                    }
+                    if ('rangeCondition' in datum
+                        && datum.rangeCondition in RANGE_CONDITION) {
+                        obj.cssClass += ' '
+                        obj.cssClass += RANGE_CONDITION[datum.rangeCondition]
+                    }
+                    return obj
+                }
+            }
+        }
     }
 
     resubscribeToAll() {
@@ -88,6 +129,7 @@ export default class RealtimeTelemetryProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
+            console.log('socket.onmessage event=' + JSON.stringify(data))
 
             if (data.length >= 4 && data[3].dt === 'PARAMETER') {
                 data[3].data.parameter.forEach(parameter => {
@@ -96,6 +138,15 @@ export default class RealtimeTelemetryProvider {
                         timestamp: parameter.generationTimeUTC,
                         value: getValue(parameter.engValue)
                     };
+                    if ('monitoringResult' in parameter) {
+                        point.monitoringResult = parameter.monitoringResult
+                    }
+                    if ('rangeCondition' in parameter) {
+                        point.rangeCondition = parameter.rangeCondition
+                    }
+                    if ('alarmRange' in parameter) {
+                        point.alarmRange = parameter.alarmRange
+                    }
 
                     if (this.listener[point.id]) {
                         this.listener[point.id](point);
