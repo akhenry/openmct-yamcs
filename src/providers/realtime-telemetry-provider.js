@@ -29,7 +29,7 @@ import {
 const WS_IDLE_INTERVAL_MS = 10000;
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 
-const MONITORING_RESULT = {
+const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
     'WARNING': 'is-limit--yellow',
     'DISTRESS': 'is-limit--red',
@@ -37,9 +37,61 @@ const MONITORING_RESULT = {
     'SEVERE': 'is-limit--red'
 }
 
-const RANGE_CONDITION = {
+const RANGE_CONDITION_CSS = {
     'LOW': 'is-limit--lwr',
     'HIGH': 'is-limit--upr'
+}
+
+class LimitEvaluator {
+
+    evaluate(datum, valueMetadata) {
+        console.log('evaluate:'
+                    + ' datum=' + JSON.stringify(datum)
+                    + ' valueMetadata='
+                    + JSON.stringify(valueMetadata))
+        if ('monitoringResult' in datum
+            && datum.monitoringResult in MONITORING_RESULT_CSS) {
+            let obj = {
+                cssClass: MONITORING_RESULT_CSS[datum.monitoringResult],
+                name: datum.monitoringResult
+            }
+            if ('rangeCondition' in datum
+                && datum.rangeCondition in RANGE_CONDITION_CSS) {
+                obj.cssClass += ' '
+                obj.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
+                this.addLimitRange(datum, datum.monitoringResult, obj)
+            }
+            console.log('result -> ' + JSON.stringify(obj))
+            return obj
+        }
+    }
+    
+    addLimitRange(datum, result, obj) {
+        if ('alarmRange' in datum) {
+            let range = this.findAlarmRange(datum, result)
+            if ('minInclusive' in range) {
+                obj.low = range.minInclusive
+            }
+            if ('minExclusive' in range) {
+                obj.low = range.minExclusive
+            }
+            if ('maxInclusive' in range) {
+                obj.high = range.maxInclusive
+            }
+            if ('maxExclusive' in range) {
+                obj.high = range.maxExclusive
+            }
+        }
+    }
+
+    findAlarmRange(datum, result) {
+        for (let range of datum.alarmRange) {
+            if (range.level == result) {
+                return range
+            }
+        }
+        return {}
+    }
 }
 
 export default class RealtimeTelemetryProvider {
@@ -75,27 +127,7 @@ export default class RealtimeTelemetryProvider {
     }
 
     getLimitEvaluator(domainObject) {
-        return {
-            evaluate: function(datum, valueMetadata) {
-                console.log('evaluate:'
-                            + ' datum=' + JSON.stringify(datum)
-                            + ' valueMetadata='
-                            + JSON.stringify(valueMetadata))
-                if ('monitoringResult' in datum
-                   && datum.monitoringResult in MONITORING_RESULT) {
-                    let obj = {
-                        cssClass: MONITORING_RESULT[datum.monitoringResult],
-                        name: datum.monitoringResult
-                    }
-                    if ('rangeCondition' in datum
-                        && datum.rangeCondition in RANGE_CONDITION) {
-                        obj.cssClass += ' '
-                        obj.cssClass += RANGE_CONDITION[datum.rangeCondition]
-                    }
-                    return obj
-                }
-            }
-        }
+        return new LimitEvaluator()
     }
 
     resubscribeToAll() {
