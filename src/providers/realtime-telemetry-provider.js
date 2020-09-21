@@ -73,10 +73,6 @@ class LimitEvaluator {
      *         results, or omitted, if no alarm ranges are defined
      */
     evaluate(datum, valueMetadata) {
-        console.log('evaluate:'
-                    + ' datum=' + JSON.stringify(datum)
-                    + ' valueMetadata='
-                    + JSON.stringify(valueMetadata))
         if (datum.monitoringResult
             && datum.monitoringResult in MONITORING_RESULT_CSS) {
             let obj = {
@@ -89,7 +85,6 @@ class LimitEvaluator {
                 obj.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
                 this.addLimitRange(datum, datum.monitoringResult, obj)
             }
-            console.log('result -> ' + JSON.stringify(obj))
             return obj
         }
     }
@@ -196,7 +191,6 @@ export default class RealtimeTelemetryProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-            console.log('socket.onmessage event=' + JSON.stringify(data))
 
             if (data.length >= 4 && data[3].dt === 'PARAMETER') {
                 data[3].data.parameter.forEach(parameter => {
