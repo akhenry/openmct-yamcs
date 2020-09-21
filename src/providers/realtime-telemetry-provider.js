@@ -23,7 +23,8 @@
 import {
     idToQualifiedName,
     qualifiedNameToId,
-    getValue
+    getValue,
+    addLimitInformation
 } from '../utils.js';
 
 const WS_IDLE_INTERVAL_MS = 10000;
@@ -203,17 +204,8 @@ export default class RealtimeTelemetryProvider {
                         id: qualifiedNameToId(parameter.id.name),
                         timestamp: parameter.generationTimeUTC,
                         value: getValue(parameter.engValue)
-                    };
-                    /* Add information for the limit evaluator, if present. */
-                    if (parameter.monitoringResult) {
-                        point.monitoringResult = parameter.monitoringResult
                     }
-                    if (parameter.rangeCondition) {
-                        point.rangeCondition = parameter.rangeCondition
-                    }
-                    if (parameter.alarmRange) {
-                        point.alarmRange = parameter.alarmRange
-                    }
+                    addLimitInformation(parameter, point)
 
                     if (this.listener[point.id]) {
                         this.listener[point.id](point);

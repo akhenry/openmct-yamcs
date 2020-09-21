@@ -96,9 +96,27 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
     })
 }
 
+/*
+ * Adds information about limit violations and ranges to a telemetry
+ * point object.
+ */
+function addLimitInformation(parameter, point) {
+    /* Add information for the limit evaluator, if present. */
+    if (parameter.monitoringResult) {
+        point.monitoringResult = parameter.monitoringResult
+    }
+    if (parameter.rangeCondition) {
+        point.rangeCondition = parameter.rangeCondition
+    }
+    if (parameter.alarmRange) {
+        point.alarmRange = parameter.alarmRange
+    }
+}
+
 export {
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
-    accumulateResults
+    accumulateResults,
+    addLimitInformation
 };

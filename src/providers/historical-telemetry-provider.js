@@ -22,7 +22,9 @@
 
 import {
     idToQualifiedName,
-    getValue} from '../utils.js';
+    getValue,
+    addLimitInformation
+} from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(url, instance) {
@@ -83,19 +85,10 @@ export default class YamcsHistoricalTelemetryProvider {
                 id: parameter.id.name,
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
-            };
-            /* Add information for the limit evaluator, if present. */
-            if (parameter.monitoringResult) {
-                point.monitoringResult = parameter.monitoringResult
             }
-            if (parameter.rangeCondition) {
-                point.rangeCondition = parameter.rangeCondition
-            }
-            if (parameter.alarmRange) {
-                point.alarmRange = parameter.alarmRange
-            }
-            values.push(point);
-        });
+            addLimitInformation(parameter, point)
+            values.push(point)
+        })
 
         return values;
     }
