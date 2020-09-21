@@ -29,6 +29,7 @@ import {
 const WS_IDLE_INTERVAL_MS = 10000;
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 
+/* CSS classes for Yamcs parameter monitoring result values. */
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
     'WARNING': 'is-limit--yellow',
@@ -37,25 +38,51 @@ const MONITORING_RESULT_CSS = {
     'SEVERE': 'is-limit--red'
 }
 
+/* CSS classes for Yamcs range condition values. */
 const RANGE_CONDITION_CSS = {
     'LOW': 'is-limit--lwr',
     'HIGH': 'is-limit--upr'
 }
 
+
+/*
+ * Implements an OpenMCT limit evaluator that uses limit information passed
+ * from either the historical or realtime telemetry source to create limit
+ * information for OpenMCT.
+ */
 class LimitEvaluator {
 
+    /*
+     * Evaluates a telemetry point for limit violations.
+     *
+     * Parameters:
+     *     datum: the telemetry point data from the historical or realtime
+     *            plugin
+     *     valueMetadata: metadata about the telemetry point, not used
+     *
+     * Returns:
+     *     an object with CSS class information, a violation name, and
+     *     range information, if there is a limit violates, or nothing,
+     *     if the value is within limits.
+     *
+     * The datum parameter may include the following information:
+     *     monitoringResult: the Yamcs limit monitoring result, if any
+     *     rangeCondition: the Yamcs range condition (LOW/HIGH), if any
+     *     alarmRange: an array of alarm ranges for different monitoring
+     *         results, or omitted, if no alarm ranges are defined
+     */
     evaluate(datum, valueMetadata) {
         console.log('evaluate:'
                     + ' datum=' + JSON.stringify(datum)
                     + ' valueMetadata='
                     + JSON.stringify(valueMetadata))
-        if ('monitoringResult' in datum
+        if (datum.monitoringResult
             && datum.monitoringResult in MONITORING_RESULT_CSS) {
             let obj = {
                 cssClass: MONITORING_RESULT_CSS[datum.monitoringResult],
                 name: datum.monitoringResult
             }
-            if ('rangeCondition' in datum
+            if (datum.rangeCondition
                 && datum.rangeCondition in RANGE_CONDITION_CSS) {
                 obj.cssClass += ' '
                 obj.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
@@ -65,25 +92,32 @@ class LimitEvaluator {
             return obj
         }
     }
-    
+
+    /*
+     * Adds limit range information to an object based on the monitoring
+     * result.
+     */
     addLimitRange(datum, result, obj) {
-        if ('alarmRange' in datum) {
+        if (datum.alarmRange) {
             let range = this.findAlarmRange(datum, result)
-            if ('minInclusive' in range) {
+            if (range.minInclusive) {
                 obj.low = range.minInclusive
             }
-            if ('minExclusive' in range) {
+            if (range.minExclusive) {
                 obj.low = range.minExclusive
             }
-            if ('maxInclusive' in range) {
+            if (range.maxInclusive) {
                 obj.high = range.maxInclusive
             }
-            if ('maxExclusive' in range) {
+            if (range.maxExclusive) {
                 obj.high = range.maxExclusive
             }
         }
     }
 
+    /*
+     * Finds the appropriate limit range for a monitoring results.
+     */
     findAlarmRange(datum, result) {
         for (let range of datum.alarmRange) {
             if (range.level == result) {
@@ -170,13 +204,14 @@ export default class RealtimeTelemetryProvider {
                         timestamp: parameter.generationTimeUTC,
                         value: getValue(parameter.engValue)
                     };
-                    if ('monitoringResult' in parameter) {
+                    /* Add information for the limit evaluator, if present. */
+                    if (parameter.monitoringResult) {
                         point.monitoringResult = parameter.monitoringResult
                     }
-                    if ('rangeCondition' in parameter) {
+                    if (parameter.rangeCondition) {
                         point.rangeCondition = parameter.rangeCondition
                     }
-                    if ('alarmRange' in parameter) {
+                    if (parameter.alarmRange) {
                         point.alarmRange = parameter.alarmRange
                     }
 

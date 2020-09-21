@@ -88,7 +88,7 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         if (property in res) {
             soFar = soFar.concat(res[property])
         }
-        if (!('continuationToken' in res) || soFar.length >= totalLimit) {
+        if (!(res.continuationToken) || soFar.length >= totalLimit) {
             return soFar
         }
         return accumulateResults(url, property, soFar, totalLimit,

@@ -86,7 +86,7 @@ export default class YamcsObjectProvider {
                         spaceSystems.forEach(spaceSystem => {
                             this.addSpaceSystem(spaceSystem)
                         })
-                        if ('parameters' in parameters) {
+                        if (parameters.parameters) {
                             parameters.parameters.forEach(parameter => {
                                 this.addParameterObject(parameter)
                             })
@@ -112,7 +112,7 @@ export default class YamcsObjectProvider {
     addSpaceSystem(spaceSystem) {
         if (spaceSystem.qualifiedName != '/') {
             let composition = []
-            if ('sub' in spaceSystem) {
+            if (spaceSystem.sub) {
                 /* Sort the subsidiary space systems by name. */
                 spaceSystem.sub.sort((a, b) => {
                     return a.name.localeCompare(b.name)
@@ -172,7 +172,7 @@ export default class YamcsObjectProvider {
         }
 
         let isAggregate = false;
-        if ('type' in parameter && parameter.type.engType === 'aggregate') {
+        if (parameter.type && parameter.type.engType === 'aggregate') {
             isAggregate = true;
         }
         
@@ -215,7 +215,7 @@ export default class YamcsObjectProvider {
         parent.composition.push(obj.identifier);
 
         if (isAggregate) {
-            if ('member' in parameter.type) {
+            if (parameter.type.member) {
                 parameter.type.member.forEach(member => {
                     let memberQualifiedName = qualifiedName + '.' + member.name;
                     this.addParameter(member, memberQualifiedName, obj);
@@ -232,7 +232,7 @@ export default class YamcsObjectProvider {
         }
 
         /* Built-in Yamcs telemetry does not supply type information. */
-        if (!('type' in parameter)) {
+        if (!(parameter.type)) {
             return TELEMETRY_OBJECT_TYPE;
         }
         if (parameter.type.engType === 'integer' || parameter.type.engType === 'float') {
