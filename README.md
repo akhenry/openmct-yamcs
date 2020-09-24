@@ -75,6 +75,32 @@ openmct.install(installYamcsPlugin({
 | yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 | yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 
+## Special XTCE features
+
+If you are using an XTCE configuration in Yamcs, there are two special
+constructs you can use in the XTCE to control how a parameter is used in
+Yamcs. Both are specified in an `<AliasSet>` associated with a parameter
+definition. The `namespace` attribute of the `<Alias>` is one of these
+two values:
+
+* `OpenMCT:type` -- This namespace indicates that the parameter type in OpenMCT should be taken from the `alias` attribute rather than inferred from the Yamcs type. The main use of this construct is to mark string parameters which should be interpreted as image URLs. Those should have a `alias` attribute of `yamcs.image`.
+* `OpenMCT:omit` -- This namespace indicates that the parameter should be omitted from the OpenMCT object tree. This is useful for parameters that are used as filler values, or for packet values that are always constant. Using this construct you can declutter the OpenMCT object tree.
+
+Examples:
+
+    <!-- This string parameter is actually an image URL. -->
+    <xtce:Parameter parameterTypeRef="someStringType" name="cameraImage">
+      <xtce:AliasSet>
+        <xtce:Alias namespace="OpenMCT:type" alias="yamcs.image" />
+      </xtce:AliasSet>
+    </xtce:Parameter>
+    <!-- This parameter should be omitted from the object tree. -->
+    <xtce:Parameter parameterTypeRef="otherType" name="fixedValueEBh">
+      <xtce:AliasSet>
+        <xtce:Alias namespace="OpenMCT:omit" alias="" />
+      </xtce:AliasSet>
+    </xtce:Parameter>
+
 ## Limitations
 Right now the Open MCT - YAMCS adapter can only be configued for a single YAMCS instance and parameter folder at a time. 
 eg. in the YAMCS Quickstart example Open MCT can be configured to interface with the `myproject` instance and parameter 

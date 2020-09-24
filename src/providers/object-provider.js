@@ -152,23 +152,36 @@ export default class YamcsObjectProvider {
         this.objects[object.identifier.key] = object;
     }
 
+    /*
+     * Add a telemetry parameter object to the object tree, unless it
+     * has an alias indicating to omit the parameter from OpenMCT.
+     */
     addParameterObject(parameter) {
-        let qn = parameter.qualifiedName
-        let lastSlashPos = qn.lastIndexOf('/')
-        let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos))
-        let parent = this.objects[parentId]
+        if (!this.isSuppressed(parameter)) {
+            let qn = parameter.qualifiedName
+            let lastSlashPos = qn.lastIndexOf('/')
+            let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos))
+            let parent = this.objects[parentId]
 
-        this.addParameter(parameter, qn, parent)
+            this.addParameter(parameter, qn, parent, '')
+        }
     }
 
-    addParameter(parameter, qualifiedName, parent) {
+    isSuppressed(parameter) {
+        return (parameter.alias && parameter.alias.some(alias => {
+            return (alias.namespace === 'OpenMCT:omit')
+        }))
+    }
+
+    addParameter(parameter, qualifiedName, parent, prefix) {
         let id = qualifiedNameToId(qualifiedName);
+        let name = prefix + parameter.name
         let obj = {
             identifier: {
                 key: id,
                 namespace: this.namespace
             },
-            name: parameter.name
+            name: name
         }
 
         let isAggregate = false;
@@ -218,7 +231,9 @@ export default class YamcsObjectProvider {
             if (parameter.type.member) {
                 parameter.type.member.forEach(member => {
                     let memberQualifiedName = qualifiedName + '.' + member.name;
-                    this.addParameter(member, memberQualifiedName, obj);
+                    /* Use current name as a prefix for the member name. */
+                    this.addParameter(member, memberQualifiedName, obj,
+                                      name + '_');
                 });
             }
         }
