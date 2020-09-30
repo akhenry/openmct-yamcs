@@ -75,40 +75,47 @@ class LimitEvaluator {
     evaluate(datum, valueMetadata) {
         if (datum.monitoringResult
             && datum.monitoringResult in MONITORING_RESULT_CSS) {
-            let obj = {
+            let evaluationResult = {
                 cssClass: MONITORING_RESULT_CSS[datum.monitoringResult],
                 name: datum.monitoringResult
             }
             if (datum.rangeCondition
                 && datum.rangeCondition in RANGE_CONDITION_CSS) {
-                obj.cssClass += ' '
-                obj.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
-                this.addLimitRange(datum, datum.monitoringResult, obj)
+                evaluationResult.cssClass += ' '
+                evaluationResult.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
+                this.addLimitRange(datum, datum.monitoringResult, evaluationResult)
             }
-            return obj
+            return evaluationResult
         }
     }
 
     /*
      * Adds limit range information to an object based on the monitoring
      * result.
+     *
+     * Parameters:
+     *     datum: the telemetry point data from the historical or realtime
+     *            plugin
+     *     result: the monitoring result information from Yamcs
+     *     evaluationResult: the object that is to be the result of the
+     *                       limit evaluation
      */
-    addLimitRange(datum, result, obj) {
+    addLimitRange(datum, result, evaluationResult) {
         let range = this.findAlarmRange(datum, result)
         if (range === undefined) {
             return
         }
         if (range.minInclusive) {
-            obj.low = range.minInclusive
+            evaluationResult.low = range.minInclusive
         }
         if (range.minExclusive) {
-            obj.low = range.minExclusive
+            evaluationResult.low = range.minExclusive
         }
         if (range.maxInclusive) {
-            obj.high = range.maxInclusive
+            evaluationResult.high = range.maxInclusive
         }
         if (range.maxExclusive) {
-            obj.high = range.maxExclusive
+            evaluationResult.high = range.maxExclusive
         }
     }
 
@@ -116,7 +123,7 @@ class LimitEvaluator {
      * Finds the appropriate limit range for a monitoring results.
      */
     findAlarmRange(datum, result) {
-        if (datum.alarmRange) {
+        if (datum.alarmRange !== undefined) {
             return datum.alarmRange.find(range => range.level == result)
         }
     }
