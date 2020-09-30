@@ -29,11 +29,15 @@ function qualifiedNameToId(name) {
 }
 
 const VALUE_EXTRACT_MAP = {
+    'UINT64': (value) => value.uint64Value,
+    'INT64': (value) => value.int64Value,
+    'SINT64': (value) => value.sint64Value,
     'UINT32': (value) => value.uint32Value,
     'INT32': (value) => value.int32Value,
     'SINT32': (value) => value.sint32Value,
     'UINT16': (value) => value.uint16Value,
     'INT16': (value) => value.int16Value,
+    'SINT16': (value) => value.sint16Value,
     'FLOAT': (value) => value.floatValue,
     'DOUBLE': (value) => value.doubleValue,
     'STRING': (value) => value.stringValue,
@@ -70,9 +74,7 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         totalLimit = 1000000
     }
 
-    /*console.log('#soFar=' + soFar.length)*/
-    /*console.log('token=' + token)*/
-    var newUrl = url
+    let newUrl = url
     if (token !== undefined) {
         if (url.indexOf('?') < 0) {
             newUrl += '?next=' + token
@@ -80,15 +82,13 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
             newUrl += '&next=' + token
         }
     }
-    /*console.log('newUrl=' + newUrl)*/
 
-    var result = fetch(newUrl).then(res => {return res.json()})
+    const result = fetch(newUrl).then(res => {return res.json()})
     return result.then(res => {
-        /*console.log('#new=' + res[property].length)*/
         if (property in res) {
             soFar = soFar.concat(res[property])
         }
-        if (!('continuationToken' in res) || soFar.length >= totalLimit) {
+        if (res.continuationToken===undefined || soFar.length >= totalLimit) {
             return soFar
         }
         return accumulateResults(url, property, soFar, totalLimit,
