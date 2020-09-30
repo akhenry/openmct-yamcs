@@ -42,6 +42,11 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getHistory(id, start, end, size=300) {
+        // cap size at 1000, temporarily to prevent errors
+        if (size > 1000) {
+            size = 1000;
+        }
+
         let url = this.url + 'api/archive/' + this.instance + '/parameters' + idToQualifiedName(id);
         url += '?start=' + (new Date(start).toISOString());
         url += '&stop=' + (new Date(end).toISOString());
@@ -60,6 +65,11 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getSampleHistory(id, start, end, size=300) {
+        // cap size at 1000, temporarily to prevent errors
+        if (size > 1000) {
+            size = 1000;
+        }
+
         let url = this.url + 'api/archive/' + this.instance + '/parameters' + idToQualifiedName(id);
         url += '/samples';
         url += '?start=' + (new Date(start).toISOString());
