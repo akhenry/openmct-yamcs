@@ -22,7 +22,9 @@
 
 import {
     idToQualifiedName,
-    getValue} from '../utils.js';
+    getValue,
+    addLimitInformation
+} from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(url, instance) {
@@ -56,7 +58,7 @@ export default class YamcsHistoricalTelemetryProvider {
         return fetch(encodeURI(url))
             .then(res => {return res.json();})
             .then(res => {
-                if (!('continuationToken' in res)) {
+                if (!(res.continuationToken)) {
                     return this.convertPointHistory(id, res);
                 } else {
                     return this.getSampleHistory(id, start, end, size);
@@ -83,7 +85,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     convertPointHistory(id, results) {
-        if (!('parameter' in results)) {
+        if (!(results.parameter)) {
             return [];
         }
 
@@ -93,40 +95,39 @@ export default class YamcsHistoricalTelemetryProvider {
                 id: parameter.id.name,
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
-            };
-            values.push(point);
-        });
+            }
+            addLimitInformation(parameter, point)
+            values.push(point)
+        })
 
         return values;
     }
 
     convertSampleHistory(id, results) {
-        if (!('sample' in results)) {
+        if (!(results.sample)) {
             return [];
         }
 
         let values = [];
-        if ('sample' in results) {
-            results.sample.forEach(sample => {
-                if (sample.n > 0) {
-                    let min_value = {
-                        timestamp: sample.time,
-                        value: sample.min,
-                        id: id
-                    };
-                    values.push(min_value);
-                }
+        results.sample.forEach(sample => {
+            if (sample.n > 0) {
+                let min_value = {
+                    timestamp: sample.time,
+                    value: sample.min,
+                    id: id
+                };
+                values.push(min_value);
+            }
 
-                if (sample.n > 1) {
-                    let max_value = {
-                        timestamp: sample.time,
-                        value: sample.max,
-                        id: id
-                    };
-                    values.push(max_value);
-                }
-            });
-        }
+            if (sample.n > 1) {
+                let max_value = {
+                    timestamp: sample.time,
+                    value: sample.max,
+                    id: id
+                };
+                values.push(max_value);
+            }
+        });
 
         return values;
     }

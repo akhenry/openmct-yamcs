@@ -23,11 +23,113 @@
 import {
     idToQualifiedName,
     qualifiedNameToId,
-    getValue
+    getValue,
+    addLimitInformation
 } from '../utils.js';
 
 const WS_IDLE_INTERVAL_MS = 10000;
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
+
+/* CSS classes for Yamcs parameter monitoring result values. */
+const MONITORING_RESULT_CSS = {
+    'WATCH': 'is-limit--yellow',
+    'WARNING': 'is-limit--yellow',
+    'DISTRESS': 'is-limit--red',
+    'CRITICAL': 'is-limit--red',
+    'SEVERE': 'is-limit--red'
+}
+
+/* CSS classes for Yamcs range condition values. */
+const RANGE_CONDITION_CSS = {
+    'LOW': 'is-limit--lwr',
+    'HIGH': 'is-limit--upr'
+}
+
+
+/*
+ * Implements an OpenMCT limit evaluator that uses limit information passed
+ * from either the historical or realtime telemetry source to create limit
+ * information for OpenMCT.
+ */
+class LimitEvaluator {
+
+    /*
+     * Evaluates a telemetry point for limit violations.
+     *
+     * Parameters:
+     *     datum: the telemetry point data from the historical or realtime
+     *            plugin
+     *     valueMetadata: metadata about the telemetry point, not used
+     *
+     * Returns:
+     *     an object with CSS class information, a violation name, and
+     *     range information, if there is a limit violates, or nothing,
+     *     if the value is within limits.
+     *
+     * The datum parameter may include the following information:
+     *     monitoringResult: the Yamcs limit monitoring result, if any
+     *     rangeCondition: the Yamcs range condition (LOW/HIGH), if any
+     *     alarmRange: an array of alarm ranges for different monitoring
+     *         results, or omitted, if no alarm ranges are defined
+     */
+    evaluate(datum, valueMetadata) {
+        if (datum.monitoringResult
+            && datum.monitoringResult in MONITORING_RESULT_CSS) {
+            let evaluationResult = {
+                cssClass: MONITORING_RESULT_CSS[datum.monitoringResult],
+                name: datum.monitoringResult
+            }
+            if (datum.rangeCondition
+                && datum.rangeCondition in RANGE_CONDITION_CSS) {
+                evaluationResult.cssClass += ' '
+                evaluationResult.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
+                this.addLimitRange(datum, datum.monitoringResult, evaluationResult)
+            }
+            return evaluationResult
+        }
+    }
+
+    /*
+     * Adds limit range information to an object based on the monitoring
+     * result.
+     *
+     * Parameters:
+     *     datum: the telemetry point data from the historical or realtime
+     *            plugin
+     *     result: the monitoring result information from Yamcs
+     *     evaluationResult: the object that is to be the result of the
+     *                       limit evaluation
+     */
+    addLimitRange(datum, result, evaluationResult) {
+        if (datum.alarmRange) {
+            let range = this.findAlarmRange(datum, result)
+            if (range.minInclusive) {
+                evaluationResult.low = range.minInclusive
+            }
+            if (range.minExclusive) {
+                evaluationResult.low = range.minExclusive
+            }
+            if (range.maxInclusive) {
+                evaluationResult.high = range.maxInclusive
+            }
+            if (range.maxExclusive) {
+                evaluationResult.high = range.maxExclusive
+            }
+        }
+    }
+
+    /*
+     * Finds the appropriate limit range for a monitoring results.
+     */
+    findAlarmRange(datum, result) {
+        for (let range of datum.alarmRange) {
+            if (range.level == result) {
+                return range
+            }
+        }
+        return {}
+    }
+}
 
 export default class RealtimeTelemetryProvider {
     constructor(url ,instance) {
@@ -44,6 +146,10 @@ export default class RealtimeTelemetryProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
+    supportsLimits(domainObject) {
+        return domainObject.type.startsWith('yamcs.');
+    }
+
     subscribe(domainObject, callback) {
         this.listener[domainObject.identifier.key] = callback;
         let name = idToQualifiedName(domainObject.identifier.key);
@@ -55,6 +161,10 @@ export default class RealtimeTelemetryProvider {
             this.tlmUnsubscribe(name);
             delete this.listener[domainObject.identifier.key];
         };
+    }
+
+    getLimitEvaluator(domainObject) {
+        return new LimitEvaluator()
     }
 
     resubscribeToAll() {
@@ -95,7 +205,8 @@ export default class RealtimeTelemetryProvider {
                         id: qualifiedNameToId(parameter.id.name),
                         timestamp: parameter.generationTimeUTC,
                         value: getValue(parameter.engValue)
-                    };
+                    }
+                    addLimitInformation(parameter, point)
 
                     if (this.listener[point.id]) {
                         this.listener[point.id](point);
