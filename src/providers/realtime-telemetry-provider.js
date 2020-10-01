@@ -101,20 +101,21 @@ class LimitEvaluator {
      *                       limit evaluation
      */
     addLimitRange(datum, result, evaluationResult) {
-        if (datum.alarmRange) {
-            let range = this.findAlarmRange(datum, result)
-            if (range.minInclusive) {
-                evaluationResult.low = range.minInclusive
-            }
-            if (range.minExclusive) {
-                evaluationResult.low = range.minExclusive
-            }
-            if (range.maxInclusive) {
-                evaluationResult.high = range.maxInclusive
-            }
-            if (range.maxExclusive) {
-                evaluationResult.high = range.maxExclusive
-            }
+        let range = this.findAlarmRange(datum, result)
+        if (range === undefined) {
+            return
+        }
+        if (range.minInclusive) {
+            evaluationResult.low = range.minInclusive
+        }
+        if (range.minExclusive) {
+            evaluationResult.low = range.minExclusive
+        }
+        if (range.maxInclusive) {
+            evaluationResult.high = range.maxInclusive
+        }
+        if (range.maxExclusive) {
+            evaluationResult.high = range.maxExclusive
         }
     }
 
@@ -122,13 +123,11 @@ class LimitEvaluator {
      * Finds the appropriate limit range for a monitoring results.
      */
     findAlarmRange(datum, result) {
-        for (let range of datum.alarmRange) {
-            if (range.level == result) {
-                return range
-            }
+        if (datum.alarmRange !== undefined) {
+            return datum.alarmRange.find(range => range.level == result)
         }
-        return {}
     }
+
 }
 
 export default class RealtimeTelemetryProvider {
