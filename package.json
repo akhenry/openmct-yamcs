@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
-    "build:dist": "webpack",
-    "prepublish": "npm install nasa/openmct --no-save",
+    "build:dist": "NODE_ENV=production webpack",
+    "prepublish": "npm install openmct --no-save",
     "start": "npm run build:dist; webpack-dev-server",
     "prepare": "npm run build:dist"
   },
