@@ -21,7 +21,7 @@ npm install
 npm start
 ```
 
-This should build the example, and launch a web browser with Open MCT connected to a locally running YAMCS server. My 
+This should build the example, and launch a web browser with Open MCT connected to a locally running YAMCS server. By 
 default it is configured to connect to the "myproject" instance provided in the [YAMCS QuickStart](https://github.com/yamcs/quickstart) server.
 
 ## Using the Open MCT-YAMCS plugin in your own project

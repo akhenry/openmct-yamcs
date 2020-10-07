@@ -9,7 +9,7 @@
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
     "prepublish": "npm install openmct --no-save",
-    "start": "npm run build:dist; webpack-dev-server",
+    "start": "NODE_ENV=dev webpack-dev-server",
     "prepare": "npm run build:dist"
   },
   "keywords": [
