@@ -1,6 +1,7 @@
 import {
     qualifiedNameToId,
-    accumulateResults
+    accumulateResults,
+    makeKeyString
 } from '../utils.js';
 
 import {
@@ -38,6 +39,7 @@ export default class YamcsObjectProvider {
         this.folderName = folderName;
         this.dictionary = undefined;
         this.namespace = 'taxonomy';
+        this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
 
@@ -47,7 +49,7 @@ export default class YamcsObjectProvider {
     createRootObject() {
         this.rootObject = {
             identifier: {
-                key: 'spacecraft',
+                key: this.key,
                 namespace: this.namespace
             },
             name: this.folderName,
@@ -111,7 +113,8 @@ export default class YamcsObjectProvider {
 
     addSpaceSystem(spaceSystem) {
         if (spaceSystem.qualifiedName !== '/') {
-            let composition = []
+            let composition = [];
+
             if (spaceSystem.sub !== undefined) {
                 /* Sort the subsidiary space systems by name. */
                 spaceSystem.sub.sort((a, b) => {
@@ -125,8 +128,12 @@ export default class YamcsObjectProvider {
                     })
                 })
             }
-                        
-            let id = qualifiedNameToId(spaceSystem.qualifiedName)
+
+            let id = qualifiedNameToId(spaceSystem.qualifiedName);
+            const location = makeKeyString({
+                namespace: this.namespace,
+                key: this.key
+            });
             let obj = {
                 identifier: {
                     key: id,
@@ -134,8 +141,10 @@ export default class YamcsObjectProvider {
                 },
                 name: spaceSystem.name,
                 type: 'folder',
-                composition: composition
-            }
+                composition: composition,
+                location: location
+            };
+
             this.addObject(obj)
 
             /* Add the space system to the root object if it's top-level. */
@@ -175,20 +184,26 @@ export default class YamcsObjectProvider {
 
     addParameter(parameter, qualifiedName, parent, prefix) {
         let id = qualifiedNameToId(qualifiedName);
-        let name = prefix + parameter.name
+        let name = prefix + parameter.name;
+        const location = makeKeyString({
+            key: parent.identifier.key,
+            namespace: parent.identifier.namespace
+        });
+
         let obj = {
             identifier: {
                 key: id,
                 namespace: this.namespace
             },
-            name: name
-        }
+            name: name,
+            location: location
+        };
 
         let isAggregate = false;
         if (parameter.type!==undefined && parameter.type.engType==='aggregate') {
             isAggregate = true;
         }
-        
+
         if (isAggregate) {
             obj.type = 'folder';
             obj.composition = [];
