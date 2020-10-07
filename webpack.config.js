@@ -26,8 +26,14 @@ const path = require('path');
 const devMode = process.env.NODE_ENV !== 'production';
 
 const WEBPACK_CONFIG = {
-    entry: {
-        'openmct-yamcs': './src/plugin.js'
+    entry: () => {
+        const entries = {};
+        if (devMode) {
+            entries['openmct-yamcs-example'] = './example/index.js';
+        } else {
+            entries['openmct-yamcs'] = './src/plugin.js';
+        }
+	return entries;
     },
     mode: 'production',
     output: {
@@ -59,9 +65,5 @@ const WEBPACK_CONFIG = {
         }
     }
 };
-
-if (devMode) {
-    WEBPACK_CONFIG.entry['openmct-yamcs-example'] = './example/index.js';
-}
 
 module.exports = WEBPACK_CONFIG;
