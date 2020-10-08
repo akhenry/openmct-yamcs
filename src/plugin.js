@@ -50,6 +50,7 @@ export default function installYamcsPlugin(configuration) {
         realtimeProvider.connect();
 
         const objectProvider = new YamcsObjectProvider(
+            openmct,
             configuration.yamcsDictionaryEndpoint,
             configuration.yamcsInstance,
             configuration.yamcsFolder
