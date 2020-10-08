@@ -130,9 +130,12 @@ export default class YamcsObjectProvider {
             }
 
             let id = qualifiedNameToId(spaceSystem.qualifiedName);
+            const locationId = id.substring(0, id.lastIndexOf('~')); 
+            const isSubSystem = locationId.includes('~');
+            const key = isSubSystem ? locationId : this.key;
             const location = this.openmct.objects.makeKeyString({
                 namespace: this.namespace,
-                key: this.key
+                key: key
             });
             let obj = {
                 identifier: {
