@@ -28,12 +28,6 @@ function qualifiedNameToId(name) {
     return name.replace(/\//g, '~');
 }
 
-function makeKeyString(identifier) {
-    const { namespace, key } = identifier;
-
-    return namespace ? `${namespace}:${key}` : key;
-}
-
 const VALUE_EXTRACT_MAP = {
     'UINT64': (value) => value.uint64Value,
     'INT64': (value) => value.int64Value,
@@ -122,7 +116,6 @@ function addLimitInformation(parameter, point) {
 export {
     idToQualifiedName,
     qualifiedNameToId,
-    makeKeyString,
     getValue,
     accumulateResults,
     addLimitInformation

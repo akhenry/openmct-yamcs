@@ -1,7 +1,6 @@
 import {
     qualifiedNameToId,
-    accumulateResults,
-    makeKeyString
+    accumulateResults
 } from '../utils.js';
 
 import {
@@ -33,7 +32,8 @@ import {
  *****************************************************************************/
 
 export default class YamcsObjectProvider {
-    constructor(url, instance, folderName) {
+    constructor(openmct, url, instance, folderName) {
+        this.openmct = openmct;
         this.url = url;
         this.instance = instance;
         this.folderName = folderName;
@@ -130,7 +130,7 @@ export default class YamcsObjectProvider {
             }
 
             let id = qualifiedNameToId(spaceSystem.qualifiedName);
-            const location = makeKeyString({
+            const location = this.openmct.objects.makeKeyString({
                 namespace: this.namespace,
                 key: this.key
             });
@@ -185,7 +185,7 @@ export default class YamcsObjectProvider {
     addParameter(parameter, qualifiedName, parent, prefix) {
         let id = qualifiedNameToId(qualifiedName);
         let name = prefix + parameter.name;
-        const location = makeKeyString({
+        const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
             namespace: parent.identifier.namespace
         });
