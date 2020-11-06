@@ -27,6 +27,8 @@ function MoveActionPolicy() {
 MoveActionPolicy.prototype.allow = function (action, context) {
     let isAllowed = true;
 
+    console.log(action, context);
+
     if (action.getMetadata().key === 'move') {
         let identifier;
 
