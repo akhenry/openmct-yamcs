@@ -6,7 +6,7 @@ import {
 import {
     TELEMETRY_OBJECT_TYPE,
     IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
+    STRING_OBJECT_TYPE, NAMESPACE_TAXONOMY
 } from '../const.js';
 
 /*****************************************************************************
@@ -38,7 +38,7 @@ export default class YamcsObjectProvider {
         this.instance = instance;
         this.folderName = folderName;
         this.dictionary = undefined;
-        this.namespace = 'taxonomy';
+        this.namespace = NAMESPACE_TAXONOMY;
         this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
@@ -130,7 +130,7 @@ export default class YamcsObjectProvider {
             }
 
             let id = qualifiedNameToId(spaceSystem.qualifiedName);
-            const locationId = id.substring(0, id.lastIndexOf('~')); 
+            const locationId = id.substring(0, id.lastIndexOf('~'));
             const isSubSystem = locationId.includes('~');
             const key = isSubSystem ? locationId : this.key;
             const location = this.openmct.objects.makeKeyString({

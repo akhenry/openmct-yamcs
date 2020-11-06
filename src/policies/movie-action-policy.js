@@ -19,8 +19,30 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+import { NAMESPACE_TAXONOMY } from "../const";
 
-export const TELEMETRY_OBJECT_TYPE = 'yamcs.telemetry';
-export const IMAGE_OBJECT_TYPE = 'yamcs.image';
-export const STRING_OBJECT_TYPE = 'yamcs.string';
-export const NAMESPACE_TAXONOMY = 'taxonomy';
+function MoveActionPolicy() {
+}
+
+MoveActionPolicy.prototype.allow = function (action, context) {
+    let isAllowed = true;
+
+    if (action.getMetadata().key === 'move') {
+        let identifier;
+
+        if (context) {
+            let object = context.selectedObject || context.domainObject;
+            identifier = object.identifier;
+        }
+
+        if (identifier &&
+            identifier.namespace &&
+            (identifier.namespace === NAMESPACE_TAXONOMY)) {
+            isAllowed = false;
+        }
+    }
+
+    return isAllowed;
+};
+
+export default MoveActionPolicy;

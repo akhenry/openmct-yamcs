@@ -27,8 +27,10 @@ import YamcsObjectProvider from './providers/object-provider.js';
 import {
     TELEMETRY_OBJECT_TYPE,
     IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
+    STRING_OBJECT_TYPE, NAMESPACE_TAXONOMY
 } from './const.js';
+import CopyActionPolicy from "./policies/copy-action-policy.js";
+import MoveActionPolicy from "./policies/movie-action-policy.js";
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -57,11 +59,21 @@ export default function installYamcsPlugin(configuration) {
         );
 
         openmct.objects.addRoot({
-            namespace: 'taxonomy',
+            namespace: NAMESPACE_TAXONOMY,
             key: 'spacecraft'
         });
 
-        openmct.objects.addProvider('taxonomy', objectProvider);
+        openmct.objects.addProvider(NAMESPACE_TAXONOMY, objectProvider);
+
+        openmct.legacyExtension('policies',{
+            "implementation": CopyActionPolicy,
+            "category": "action"
+        });
+
+        openmct.legacyExtension('policies',{
+            "implementation": MoveActionPolicy,
+            "category": "action"
+        });
 
         openmct.types.addType(TELEMETRY_OBJECT_TYPE, {
             name: 'Telemetry Point',
