@@ -39,6 +39,16 @@ export default function installYamcsPlugin(configuration) {
 
         openmct.install(openmct.plugins.ISOTimeFormat());
 
+        openmct.legacyExtension('policies',{
+            "implementation": CopyActionPolicy,
+            "category": "action"
+        });
+
+        openmct.legacyExtension('policies',{
+            "implementation": MoveActionPolicy,
+            "category": "action"
+        });
+
         const historicalProvider = new YamcsHistoricalTelemetryProvider(
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance);
@@ -64,16 +74,6 @@ export default function installYamcsPlugin(configuration) {
         });
 
         openmct.objects.addProvider(NAMESPACE_TAXONOMY, objectProvider);
-
-        openmct.legacyExtension('policies',{
-            "implementation": CopyActionPolicy,
-            "category": "action"
-        });
-
-        openmct.legacyExtension('policies',{
-            "implementation": MoveActionPolicy,
-            "category": "action"
-        });
 
         openmct.types.addType(TELEMETRY_OBJECT_TYPE, {
             name: 'Telemetry Point',
