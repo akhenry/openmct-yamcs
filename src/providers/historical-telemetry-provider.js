@@ -27,7 +27,7 @@ import {
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
-    constructor(url, instance, openmct) {
+    constructor(openmct, url, instance) {
         this.url = url;
         this.instance = instance;
         this.openmct = openmct;
