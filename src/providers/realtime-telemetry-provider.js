@@ -37,13 +37,13 @@ const MONITORING_RESULT_CSS = {
     'DISTRESS': 'is-limit--red',
     'CRITICAL': 'is-limit--red',
     'SEVERE': 'is-limit--red'
-}
+};
 
 /* CSS classes for Yamcs range condition values. */
 const RANGE_CONDITION_CSS = {
     'LOW': 'is-limit--lwr',
     'HIGH': 'is-limit--upr'
-}
+};
 
 
 /*
@@ -78,14 +78,14 @@ class LimitEvaluator {
             let evaluationResult = {
                 cssClass: MONITORING_RESULT_CSS[datum.monitoringResult],
                 name: datum.monitoringResult
-            }
+            };
             if (datum.rangeCondition
                 && datum.rangeCondition in RANGE_CONDITION_CSS) {
-                evaluationResult.cssClass += ' '
-                evaluationResult.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition]
-                this.addLimitRange(datum, datum.monitoringResult, evaluationResult)
+                evaluationResult.cssClass += ' ';
+                evaluationResult.cssClass += RANGE_CONDITION_CSS[datum.rangeCondition];
+                this.addLimitRange(datum, datum.monitoringResult, evaluationResult);
             }
-            return evaluationResult
+            return evaluationResult;
         }
     }
 
@@ -101,21 +101,21 @@ class LimitEvaluator {
      *                       limit evaluation
      */
     addLimitRange(datum, result, evaluationResult) {
-        let range = this.findAlarmRange(datum, result)
+        let range = this.findAlarmRange(datum, result);
         if (range === undefined) {
-            return
+            return;
         }
         if (range.minInclusive) {
-            evaluationResult.low = range.minInclusive
+            evaluationResult.low = range.minInclusive;
         }
         if (range.minExclusive) {
-            evaluationResult.low = range.minExclusive
+            evaluationResult.low = range.minExclusive;
         }
         if (range.maxInclusive) {
-            evaluationResult.high = range.maxInclusive
+            evaluationResult.high = range.maxInclusive;
         }
         if (range.maxExclusive) {
-            evaluationResult.high = range.maxExclusive
+            evaluationResult.high = range.maxExclusive;
         }
     }
 
@@ -124,7 +124,7 @@ class LimitEvaluator {
      */
     findAlarmRange(datum, result) {
         if (datum.alarmRange !== undefined) {
-            return datum.alarmRange.find(range => range.level == result)
+            return datum.alarmRange.find(range => range.level === result);
         }
     }
 
@@ -163,7 +163,7 @@ export default class RealtimeTelemetryProvider {
     }
 
     getLimitEvaluator(domainObject) {
-        return new LimitEvaluator()
+        return new LimitEvaluator();
     }
 
     resubscribeToAll() {
@@ -204,8 +204,8 @@ export default class RealtimeTelemetryProvider {
                         id: qualifiedNameToId(parameter.id.name),
                         timestamp: parameter.generationTimeUTC,
                         value: getValue(parameter.engValue)
-                    }
-                    addLimitInformation(parameter, point)
+                    };
+                    addLimitInformation(parameter, point);
 
                     if (this.listener[point.id]) {
                         this.listener[point.id](point);

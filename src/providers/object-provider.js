@@ -76,25 +76,25 @@ export default class YamcsObjectProvider {
 
     fetchTelemetryDictionary() {
         if(this.dictionaryPromise === undefined) {
-            let url = this.getMdbUrl('space-systems')
+            let url = this.getMdbUrl('space-systems');
             this.dictionaryPromise = accumulateResults(url, 'spaceSystems', []).then(spaceSystems => {
                 return this.fetchMdbApi('parameters?details=yes&limit=1000')
                     .then(parameters => {
                         /* Sort the space systems by name, so that the
                            children of the root object are in sorted order. */
                         spaceSystems.sort((a, b) => {
-                            a.name.localeCompare(b.name)
-                        })
+                            a.name.localeCompare(b.name);
+                        });
                         spaceSystems.forEach(spaceSystem => {
-                            this.addSpaceSystem(spaceSystem)
-                        })
+                            this.addSpaceSystem(spaceSystem);
+                        });
                         if (parameters.parameters !== undefined) {
                             parameters.parameters.forEach(parameter => {
-                                this.addParameterObject(parameter)
-                            })
+                                this.addParameterObject(parameter);
+                            });
                         }
                         this.dictionaryPromise = undefined;
-                        let objects = this.objects;
+
                         return this.objects;
                     });
             });
@@ -103,7 +103,7 @@ export default class YamcsObjectProvider {
     }
 
     getMdbUrl(operation, name='') {
-        return this.url + 'api/mdb/' + this.instance + '/' + operation + name
+        return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
     fetchMdbApi(operation, name='') {
@@ -118,19 +118,19 @@ export default class YamcsObjectProvider {
             if (spaceSystem.sub !== undefined) {
                 /* Sort the subsidiary space systems by name. */
                 spaceSystem.sub.sort((a, b) => {
-                    return a.name.localeCompare(b.name)
-                })
+                    return a.name.localeCompare(b.name);
+                });
                 spaceSystem.sub.forEach(sub => {
-                    let subId = qualifiedNameToId(sub.qualifiedName)
+                    let subId = qualifiedNameToId(sub.qualifiedName);
                     composition.push({
                         key: subId,
                         namespace: this.namespace
-                    })
-                })
+                    });
+                });
             }
 
             let id = qualifiedNameToId(spaceSystem.qualifiedName);
-            const locationId = id.substring(0, id.lastIndexOf('~')); 
+            const locationId = id.substring(0, id.lastIndexOf('~'));
             const isSubSystem = locationId.includes('~');
             const key = isSubSystem ? locationId : this.key;
             const location = this.openmct.objects.makeKeyString({
@@ -148,14 +148,14 @@ export default class YamcsObjectProvider {
                 location: location
             };
 
-            this.addObject(obj)
+            this.addObject(obj);
 
             /* Add the space system to the root object if it's top-level. */
             if (spaceSystem.qualifiedName.lastIndexOf('/') === 0) {
                 this.rootObject.composition.push({
                     key: id,
                     namespace: this.namespace
-                })
+                });
             }
         }
     }
@@ -170,19 +170,19 @@ export default class YamcsObjectProvider {
      */
     addParameterObject(parameter) {
         if (!this.isSuppressed(parameter)) {
-            let qn = parameter.qualifiedName
-            let lastSlashPos = qn.lastIndexOf('/')
-            let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos))
-            let parent = this.objects[parentId]
+            let qn = parameter.qualifiedName;
+            let lastSlashPos = qn.lastIndexOf('/');
+            let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos));
+            let parent = this.objects[parentId];
 
-            this.addParameter(parameter, qn, parent, '')
+            this.addParameter(parameter, qn, parent, '');
         }
     }
 
     isSuppressed(parameter) {
         return (parameter.alias && parameter.alias.some(alias => {
-            return (alias.namespace === 'OpenMCT:omit')
-        }))
+            return (alias.namespace === 'OpenMCT:omit');
+        }));
     }
 
     addParameter(parameter, qualifiedName, parent, prefix) {
@@ -251,7 +251,7 @@ export default class YamcsObjectProvider {
                     let memberQualifiedName = qualifiedName + '.' + member.name;
                     /* Use current name as a prefix for the member name. */
                     this.addParameter(member, memberQualifiedName, obj,
-                                      name + '_');
+                        name + '_');
                 });
             }
         }
