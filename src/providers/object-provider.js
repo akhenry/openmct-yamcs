@@ -67,11 +67,17 @@ export default class YamcsObjectProvider {
     }
 
     search(query) {
-        const { q = '' } = query;
+        const {
+            q = ''
+        } = query;
 
         return this.fetchMdbApi(`parameters?q=${q}`)
             .then(parameters => {
-                return parameters.parameters;
+                return parameters.parameters.map(parameter => {
+                    return {
+                        id: qualifiedNameToId(parameter.qualifiedName)
+                    };
+                });
             });
     }
 
