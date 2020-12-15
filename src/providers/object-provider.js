@@ -66,6 +66,15 @@ export default class YamcsObjectProvider {
         });
     }
 
+    search(query) {
+        const { q = '' } = query;
+
+        return this.fetchMdbApi(`parameters?q=${q}`)
+            .then(parameters => {
+                return parameters.parameters;
+            });
+    }
+
     getTelemetryDictionary() {
         if (this.dictionary !== undefined) {
             return Promise.resolve(this.dictionary);
