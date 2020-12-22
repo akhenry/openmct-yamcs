@@ -67,7 +67,7 @@ export default class YamcsHistoricalTelemetryProvider {
         url += "&order=asc";
 
         return fetch(encodeURI(url))
-            .then(res => {return res.json();})
+            .then(res => res.json())
             .then(res => {
                 if (!(res.continuationToken)) {
                     return this.convertPointHistory(id, res);
@@ -99,8 +99,8 @@ export default class YamcsHistoricalTelemetryProvider {
         url += "&order=asc";
 
         return fetch(encodeURI(url))
-            .then(res => {return res.json();})
-            .then(res => {return this.convertSampleHistory(id, res);});
+            .then(res => res.json())
+            .then(res => this.convertSampleHistory(id, res));
     }
 
     convertEventHistory(id, results) {
@@ -132,6 +132,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
             };
+
             addLimitInformation(parameter, point);
             values.push(point);
         });
@@ -152,6 +153,8 @@ export default class YamcsHistoricalTelemetryProvider {
                     value: sample.min,
                     id: id
                 };
+
+                addLimitInformation(sample, min_value);
                 values.push(min_value);
             }
 
@@ -161,11 +164,12 @@ export default class YamcsHistoricalTelemetryProvider {
                     value: sample.max,
                     id: id
                 };
+
+                addLimitInformation(sample, max_value);
                 values.push(max_value);
             }
         });
 
         return values;
     }
-
 }
