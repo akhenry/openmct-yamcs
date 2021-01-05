@@ -90,7 +90,14 @@ export default class YamcsObjectProvider {
             });
 
         return Promise.all([spaceSystemsPromise, parametersPromise]).then((spaceSystemsResults, parametersResults) => {
-            return [...spaceSystemsResults, ...parametersResults];
+            console.log(spaceSystemsResults);
+            console.log(parametersResults);
+            const results = [...spaceSystemsResults, ...parametersResults];
+            results.sort((a, b) => {
+                a.name.localeCompare(b.name);
+            });
+
+            return results;
         });
     }
 
