@@ -71,7 +71,16 @@ export default class YamcsObjectProvider {
             q = ''
         } = query;
 
-        return this.fetchMdbApi(`parameters?q=${q}`)
+        const spaceSystemsPromise = this.fetchMdbApi(`space-systems?q=${q}`)
+            .then(spaceSystems => {
+                return spaceSystems.parameters.map(parameter => {
+                    return {
+                        id: qualifiedNameToId(parameter.qualifiedName)
+                    };
+                });
+            });
+
+        const parametersPromise = this.fetchMdbApi(`parameters?q=${q}`)
             .then(parameters => {
                 return parameters.parameters.map(parameter => {
                     return {
@@ -79,6 +88,10 @@ export default class YamcsObjectProvider {
                     };
                 });
             });
+
+        return Promise.all([spaceSystemsPromise, parametersPromise]).then((spaceSystemsResults, parametersResults) => {
+            return [...spaceSystemsResults, ...parametersResults];
+        });
     }
 
     getTelemetryDictionary() {
