@@ -72,34 +72,32 @@ export default class YamcsObjectProvider {
         } = query;
 
         const spaceSystemsPromise = this.fetchMdbApi(`space-systems?q=${q}`)
-            .then(spaceSystems => {
-                console.log('spaceSystems');
-                console.log(spaceSystems);
-                return spaceSystems.parameters.map(parameter => {
+            .then(data => {
+                if (data.spaceSystems === undefined) {
+                    return [];
+                }
+
+                return data.spaceSystems.map(spaceSystem => {
                     return {
-                        id: qualifiedNameToId(parameter.qualifiedName)
+                        id: qualifiedNameToId(spaceSystem.qualifiedName)
                     };
                 });
             });
 
         const parametersPromise = this.fetchMdbApi(`parameters?q=${q}`)
-            .then(parameters => {
-                console.log('parameters');
-                console.log(parameters);
-                return parameters.parameters.map(parameter => {
+            .then(data => {
+                if (data.spaceSystems === undefined) {
+                    return [];
+                }
+
+                return data.parameters.map(parameter => {
                     return {
                         id: qualifiedNameToId(parameter.qualifiedName)
                     };
                 });
             });
 
-        const results = await Promise.all([spaceSystemsPromise, parametersPromise]);
-        console.log(results);
-
-        results[0].sort((a, b) => {
-            a.name.localeCompare(b.name);
-        });
-
+        const results = await Promise.all([...parametersPromise, ...spaceSystemsPromise]);
         console.log(results);
 
         return results[0];
