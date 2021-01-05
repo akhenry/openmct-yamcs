@@ -66,13 +66,15 @@ export default class YamcsObjectProvider {
         });
     }
 
-    search(query) {
+    async search(query) {
         const {
             q = ''
         } = query;
 
         const spaceSystemsPromise = this.fetchMdbApi(`space-systems?q=${q}`)
             .then(spaceSystems => {
+                console.log('spaceSystems');
+                console.log(spaceSystems);
                 return spaceSystems.parameters.map(parameter => {
                     return {
                         id: qualifiedNameToId(parameter.qualifiedName)
@@ -82,6 +84,8 @@ export default class YamcsObjectProvider {
 
         const parametersPromise = this.fetchMdbApi(`parameters?q=${q}`)
             .then(parameters => {
+                console.log('parameters');
+                console.log(parameters);
                 return parameters.parameters.map(parameter => {
                     return {
                         id: qualifiedNameToId(parameter.qualifiedName)
@@ -89,16 +93,16 @@ export default class YamcsObjectProvider {
                 });
             });
 
-        Promise.all([spaceSystemsPromise, parametersPromise]).then((spaceSystemsResults, parametersResults) => {
-            console.log(spaceSystemsResults);
-            console.log(parametersResults);
-            const results = [...spaceSystemsResults, ...parametersResults];
-            results.sort((a, b) => {
-                a.name.localeCompare(b.name);
-            });
+        const results = await Promise.all([spaceSystemsPromise, parametersPromise]);
+        console.log(results);
 
-            return results;
+        results[0].sort((a, b) => {
+            a.name.localeCompare(b.name);
         });
+
+        console.log(results);
+
+        return results[0];
     }
 
     getTelemetryDictionary() {
