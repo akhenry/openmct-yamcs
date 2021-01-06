@@ -66,7 +66,7 @@ export default class YamcsObjectProvider {
         });
     }
 
-    async search(query) {
+    search(query) {
         const {
             q = ''
         } = query;
@@ -97,13 +97,13 @@ export default class YamcsObjectProvider {
                 });
             });
 
-        parametersPromise.then((data) => { console.log(data)});
-        spaceSystemsPromise.then((data) => { console.log(data)});
+        parametersPromise.then((data) => { console.log(data) });
+        spaceSystemsPromise.then((data) => { console.log(data) });
 
-        const results = await Promise.all([...parametersPromise, ...spaceSystemsPromise]);
-        console.log(results);
-
-        return results;
+        return Promise.all(parametersPromise, spaceSystemsPromise)
+            .then((parametersResults, spaceSystemsResults) => {
+                return [...parametersResults, ...spaceSystemsResults];
+            });
     }
 
     getTelemetryDictionary() {
