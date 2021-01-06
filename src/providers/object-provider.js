@@ -101,7 +101,7 @@ export default class YamcsObjectProvider {
             .then((parametersResults, spaceSystemsResults) => {
                 console.log(parametersResults);
                 console.log(spaceSystemsResults);
-                return [...parametersResults, ...spaceSystemsResults];
+                return [];
             });
     }
 
