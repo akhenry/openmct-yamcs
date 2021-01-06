@@ -86,7 +86,7 @@ export default class YamcsObjectProvider {
 
         const parametersPromise = this.fetchMdbApi(`parameters?q=${q}`)
             .then(data => {
-                if (data.spaceSystems === undefined) {
+                if (data.parameters === undefined) {
                     return [];
                 }
 
