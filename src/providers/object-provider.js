@@ -61,6 +61,7 @@ export default class YamcsObjectProvider {
     }
 
     get(identifier) {
+        console.log('calling yamcs get');
         return this.getTelemetryDictionary().then(dictionary => {
             return dictionary[identifier.key];
         });
@@ -79,7 +80,10 @@ export default class YamcsObjectProvider {
 
                 return data.spaceSystems.map(spaceSystem => {
                     return {
-                        id: qualifiedNameToId(spaceSystem.qualifiedName)
+                        identifier: {
+                            key: qualifiedNameToId(spaceSystem.qualifiedName),
+                            namespace: this.namespace
+                        }
                     };
                 });
             });
@@ -92,21 +96,24 @@ export default class YamcsObjectProvider {
 
                 return data.parameters.map(parameter => {
                     return {
-                        id: qualifiedNameToId(parameter.qualifiedName)
+                        identifier: {
+                            key: qualifiedNameToId(parameter.qualifiedName),
+                            namespace: this.namespace
+                        }
                     };
                 });
             });
 
-        return Promise.all([parametersPromise, spaceSystemsPromise])
-            .then(([parametersResults, spaceSystemsResults]) => {
-                console.log(parametersResults);
-                console.log(spaceSystemsResults);
-                return [...parametersResults, ...spaceSystemsResults];
+        return Promise.all([spaceSystemsPromise, parametersPromise])
+            .then(([spaceSystemsResults, parametersResults]) => {
+                return [...spaceSystemsResults, ...parametersResults];
             });
     }
 
     getTelemetryDictionary() {
         if (this.dictionary !== undefined) {
+            console.log('get dictionary - dictionary already exists');
+            console.log(this.dictionary);
             return Promise.resolve(this.dictionary);
         }
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
