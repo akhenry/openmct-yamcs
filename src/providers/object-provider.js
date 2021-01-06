@@ -97,7 +97,7 @@ export default class YamcsObjectProvider {
                 });
             });
 
-        const results = await Promise.all([...parametersPromise, ...spaceSystemsPromise]);
+        const results = await Promise.all([parametersPromise, spaceSystemsPromise]);
         console.log(results);
 
         return results[0];
