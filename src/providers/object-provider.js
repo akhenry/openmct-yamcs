@@ -71,13 +71,37 @@ export default class YamcsObjectProvider {
             q = ''
         } = query;
 
-        return this.fetchMdbApi(`parameters?q=${q}`)
-            .then(parameters => {
-                return parameters.parameters.map(parameter => {
+        const spaceSystemsPromise = this.fetchMdbApi(`space-systems?q=${q}`)
+            .then(data => {
+                if (data.spaceSystems === undefined) {
+                    return [];
+                }
+
+                return data.spaceSystems.map(spaceSystem => {
+                    return {
+                        id: qualifiedNameToId(spaceSystem.qualifiedName)
+                    };
+                });
+            });
+
+        const parametersPromise = this.fetchMdbApi(`parameters?q=${q}`)
+            .then(data => {
+                if (data.spaceSystems === undefined) {
+                    return [];
+                }
+
+                return data.parameters.map(parameter => {
                     return {
                         id: qualifiedNameToId(parameter.qualifiedName)
                     };
                 });
+            });
+
+        return Promise.all([parametersPromise, spaceSystemsPromise])
+            .then(([parametersResults, spaceSystemsResults]) => {
+                console.log(parametersResults);
+                console.log(spaceSystemsResults);
+                return [...parametersResults, ...spaceSystemsResults];
             });
     }
 
