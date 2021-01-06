@@ -97,10 +97,13 @@ export default class YamcsObjectProvider {
                 });
             });
 
-        const results = await Promise.all([parametersPromise, spaceSystemsPromise]);
+        parametersPromise.then((data) => { console.log(data)});
+        spaceSystemsPromise.then((data) => { console.log(data)});
+
+        const results = await Promise.all([...parametersPromise, ...spaceSystemsPromise]);
         console.log(results);
 
-        return results[0];
+        return results;
     }
 
     getTelemetryDictionary() {
