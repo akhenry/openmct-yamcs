@@ -31,6 +31,11 @@ import {
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+const YAMCS_API_MAP = {
+    'space-systems': 'spaceSystems',
+    'parameters': 'parameters'
+};
+
 export default class YamcsObjectProvider {
     constructor(openmct, url, instance, folderName) {
         this.openmct = openmct;
@@ -61,59 +66,50 @@ export default class YamcsObjectProvider {
     }
 
     get(identifier) {
-        console.log('calling yamcs get');
         return this.getTelemetryDictionary().then(dictionary => {
             return dictionary[identifier.key];
         });
     }
 
-    search(query) {
-        const {
-            q = ''
-        } = query;
+    search(query, options) {
+        const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
+        const parametersSearch = this.searchMdbApi('parameters', query, options);
 
-        const spaceSystemsPromise = this.fetchMdbApi(`space-systems?q=${q}`)
-            .then(data => {
-                if (data.spaceSystems === undefined) {
-                    return [];
-                }
-
-                return data.spaceSystems.map(spaceSystem => {
-                    return {
-                        identifier: {
-                            key: qualifiedNameToId(spaceSystem.qualifiedName),
-                            namespace: this.namespace
-                        }
-                    };
-                });
-            });
-
-        const parametersPromise = this.fetchMdbApi(`parameters?q=${q}`)
-            .then(data => {
-                if (data.parameters === undefined) {
-                    return [];
-                }
-
-                return data.parameters.map(parameter => {
-                    return {
-                        identifier: {
-                            key: qualifiedNameToId(parameter.qualifiedName),
-                            namespace: this.namespace
-                        }
-                    };
-                });
-            });
-
-        return Promise.all([spaceSystemsPromise, parametersPromise])
+        return Promise.all([spaceSystemsSearch, parametersSearch])
             .then(([spaceSystemsResults, parametersResults]) => {
                 return [...spaceSystemsResults, ...parametersResults];
             });
     }
 
+    async searchMdbApi(operation, query, options) {
+        const key = YAMCS_API_MAP[operation];
+        const search = await this.fetchMdbApi(`${operation}?q=${query}`);
+        const hits = search[key];
+
+        if (hits === undefined) {
+            return [];
+        }
+
+        // make sure we have the dictionary loaded first
+        // even though calling get will fetch dictionary if not already loaded
+        await this.getTelemetryDictionary();
+
+        const results = await Promise.all(
+            hits.map(async hit => {
+                const identifier = {
+                    key: qualifiedNameToId(hit.qualifiedName),
+                    namespace: this.namespace
+                };
+
+                return this.get(identifier);
+            })
+        );
+
+        return results;
+    }
+
     getTelemetryDictionary() {
         if (this.dictionary !== undefined) {
-            console.log('get dictionary - dictionary already exists');
-            console.log(this.dictionary);
             return Promise.resolve(this.dictionary);
         }
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
