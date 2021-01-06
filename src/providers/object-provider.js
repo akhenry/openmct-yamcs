@@ -1,14 +1,3 @@
-import {
-    qualifiedNameToId,
-    accumulateResults
-} from '../utils.js';
-
-import {
-    TELEMETRY_OBJECT_TYPE,
-    IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
-} from '../const.js';
-
 /*****************************************************************************
  * Open MCT, Copyright (c) 2014-2020, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
@@ -30,6 +19,17 @@ import {
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+
+import {
+    qualifiedNameToId,
+    accumulateResults
+} from '../utils.js';
+
+import {
+    TELEMETRY_OBJECT_TYPE,
+    IMAGE_OBJECT_TYPE,
+    STRING_OBJECT_TYPE
+} from '../const.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
