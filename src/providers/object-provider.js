@@ -75,12 +75,8 @@ export default class YamcsObjectProvider {
         const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
         const parametersSearch = this.searchMdbApi('parameters', query, options);
 
-        console.log('search');
         return Promise.all([spaceSystemsSearch, parametersSearch])
             .then(([spaceSystemsResults, parametersResults]) => {
-                console.log('resolve');
-                console.log(spaceSystemsResults);
-                console.log(parametersResults);
                 return [...spaceSystemsResults, ...parametersResults];
             });
     }
@@ -89,9 +85,6 @@ export default class YamcsObjectProvider {
         const key = YAMCS_API_MAP[operation];
         const search = await this.fetchMdbApi(`${operation}?q=${query}`);
         const hits = search[key];
-        console.log(key);
-        console.log(search);
-        console.log(hits);
 
         if (hits === undefined) {
             return [];
@@ -112,7 +105,6 @@ export default class YamcsObjectProvider {
             })
         );
 
-        console.log(results);
         return results;
     }
 
