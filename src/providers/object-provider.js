@@ -74,7 +74,6 @@ export default class YamcsObjectProvider {
             namespace: this.namespace
         };
         const eventObject = {
-            composition: undefined,
             identifier,
             location,
             name: 'Events',

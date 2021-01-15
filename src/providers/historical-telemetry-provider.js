@@ -60,10 +60,7 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         let url = this.url + 'api/archive/' + this.instance;
-        url += id === OBJECT_TYPES.EVENTS_OBJECT_TYPE
-            ? '/' + idToQualifiedName(id)
-            : '/parameters' + idToQualifiedName(id);
-
+        url += this.getLinkParamsSpecificToId(id);
         url += '?start=' + (new Date(start).toISOString());
         url += '&stop=' + (new Date(end).toISOString());
         url += '&limit=' + size;
@@ -78,6 +75,14 @@ export default class YamcsHistoricalTelemetryProvider {
                     return this.getSampleHistory(id, start, end, size);
                 }
             });
+    }
+
+    getLinkParamsSpecificToId(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return '/events';
+        }
+
+        return '/parameters' + idToQualifiedName(id);
     }
 
     getSampleHistory(id, start, end, size=300) {
@@ -108,7 +113,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 id,
                 ...e
             };
-        }) || [];
+        });
     }
 
     convertPointHistory(id, results) {
