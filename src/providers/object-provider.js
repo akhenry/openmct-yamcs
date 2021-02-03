@@ -55,7 +55,7 @@ export default class YamcsObjectProvider {
                 namespace: this.namespace
             },
             name: this.folderName,
-            type: 'folder',
+            type: 'noneditable.folder',
             location: 'ROOT',
             composition: []
         };
@@ -210,7 +210,7 @@ export default class YamcsObjectProvider {
                     namespace: this.namespace
                 },
                 name: spaceSystem.name,
-                type: 'folder',
+                type: 'noneditable.folder',
                 composition: composition,
                 location: location
             };
@@ -275,7 +275,7 @@ export default class YamcsObjectProvider {
         }
 
         if (isAggregate) {
-            obj.type = 'folder';
+            obj.type = 'noneditable.folder';
             obj.composition = [];
         } else {
             obj.type = this.getParameterType(parameter);
