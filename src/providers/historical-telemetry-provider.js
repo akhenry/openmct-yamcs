@@ -61,7 +61,7 @@ export default class YamcsHistoricalTelemetryProvider {
         let convertHistory = (res) => this.convertPointHistory(id, res);
         if (strategy && strategy.toLowerCase() === 'latest') {
             size = 1;
-            order = 'desc'
+            order = 'desc';
         } else if (strategy && strategy.toLowerCase() === 'minmax' && !isImagery) {
             url += '/samples';
             sizeParam = 'count';
@@ -89,10 +89,10 @@ export default class YamcsHistoricalTelemetryProvider {
                 id: parameter.id.name,
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
-            }
-            addLimitInformation(parameter, point)
-            values.push(point)
-        })
+            };
+            addLimitInformation(parameter, point);
+            values.push(point);
+        });
 
         return values;
     }
