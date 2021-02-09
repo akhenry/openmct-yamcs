@@ -4,6 +4,7 @@ import {
 } from '../utils.js';
 
 import {
+    EVENTS_OBJECT_TYPE,
     TELEMETRY_OBJECT_TYPE,
     IMAGE_OBJECT_TYPE,
     STRING_OBJECT_TYPE
@@ -44,6 +45,7 @@ export default class YamcsObjectProvider {
         this.dictionaryPromise = undefined;
 
         this.createRootObject();
+        this.createEventObject();
     }
 
     createRootObject() {
@@ -57,10 +59,75 @@ export default class YamcsObjectProvider {
             location: 'ROOT',
             composition: []
         };
+
         this.addObject(this.rootObject);
     }
 
+    createEventObject() {
+        const location = this.openmct.objects.makeKeyString({
+            key: this.key,
+            namespace: this.namespace
+        });
+
+        const identifier = {
+            key: EVENTS_OBJECT_TYPE,
+            namespace: this.namespace
+        };
+        const eventObject = {
+            identifier,
+            location,
+            name: 'Events',
+            type: EVENTS_OBJECT_TYPE,
+            telemetry: {
+                values: [
+                    {
+                        key: 'severity',
+                        name: 'Severity'
+                    },
+                    {
+                        key: 'generationTime',
+                        name: 'Generation Time',
+                        hints: {
+                            domain: 1
+                        }
+                    },
+                    {
+                        key: 'receptionTime',
+                        name: 'Reception Time'
+                    },
+                    {
+                        key: 'seqNumber',
+                        name: 'Sequence Number'
+                    },
+                    {
+                        key: 'message',
+                        name: 'Message'
+                    },
+                    {
+                        key: 'type',
+                        name: 'Type'
+                    },
+                    {
+                        key: 'source',
+                        name: 'Source'
+                    },
+                    {
+                        key: 'createdBy',
+                        name: 'Created By'
+                    }
+                ]
+            }
+        };
+
+        this.addObject(eventObject);
+        this.objects[this.key].composition.push(identifier);
+    }
+
     get(identifier) {
+        if (identifier.key === EVENTS_OBJECT_TYPE) {
+            return Promise.resolve(this.objects[identifier.key]);
+        }
+
         return this.getTelemetryDictionary().then(dictionary => {
             return dictionary[identifier.key];
         });
@@ -99,6 +166,7 @@ export default class YamcsObjectProvider {
                     });
             });
         }
+
         return this.dictionaryPromise;
     }
 

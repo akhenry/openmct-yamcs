@@ -20,6 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+import * as OBJECT_TYPES from '../const';
 import {
     idToQualifiedName,
     qualifiedNameToId,
@@ -127,7 +128,6 @@ class LimitEvaluator {
             return datum.alarmRange.find(range => range.level == result)
         }
     }
-
 }
 
 export default class RealtimeTelemetryProvider {
@@ -139,10 +139,20 @@ export default class RealtimeTelemetryProvider {
         this.listener = {};
         this.requests = [];
         this.currentWaitIndex = 0;
+        this.supportedTypes = {};
+
+        this.addSupportedTypes();
+    }
+
+    addSupportedTypes() {
+        const types = Object.values(OBJECT_TYPES);
+        types.forEach(type => {
+            this.supportedTypes[type] = type;
+        });
     }
 
     supportsSubscribe(domainObject) {
-        return domainObject.type.startsWith('yamcs.');
+        return this.supportedTypes[domainObject.type];
     }
 
     supportsLimits(domainObject) {
@@ -150,15 +160,36 @@ export default class RealtimeTelemetryProvider {
     }
 
     subscribe(domainObject, callback) {
-        this.listener[domainObject.identifier.key] = callback;
-        let name = idToQualifiedName(domainObject.identifier.key);
+        const id = domainObject.identifier.key;
+        this.listener[id] = callback;
+
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return this.subscribeToEvent(id);
+        } else {
+            let name = idToQualifiedName(id);
+            return this.subscribeToTelemetry(name, id);
+        }
+    }
+
+    subscribeToTelemetry(name, id) {
         if (this.connected) {
             this.tlmSubscribe(name);
         }
 
         return () => {
-            this.tlmUnsubscribe(name);
-            delete this.listener[domainObject.identifier.key];
+            this.tlmUnsubscribe();
+            delete this.listener[id];
+        };
+    }
+
+    subscribeToEvent(id) {
+        if (this.connected) {
+            this.eventSubscribe();
+        }
+
+        return () => {
+            this.eventUnsubscribe();
+            delete this.listener[id];
         };
     }
 
@@ -168,8 +199,12 @@ export default class RealtimeTelemetryProvider {
 
     resubscribeToAll() {
         Object.keys(this.listener).forEach((id) => {
-            let name = idToQualifiedName(id);
-            this.tlmSubscribe(name);
+            if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+                this.eventSubscribe();
+            } else {
+                let name = idToQualifiedName(id);
+                this.tlmSubscribe(name);
+            }
         });
     }
 
@@ -198,7 +233,12 @@ export default class RealtimeTelemetryProvider {
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
 
-            if (data.length >= 4 && data[3].dt === 'PARAMETER') {
+            if (data.length < 4) {
+                return;
+            }
+
+            const dataType = data[3].dt;
+            if (dataType === 'PARAMETER') {
                 data[3].data.parameter.forEach(parameter => {
                     let point = {
                         id: qualifiedNameToId(parameter.id.name),
@@ -211,6 +251,12 @@ export default class RealtimeTelemetryProvider {
                         this.listener[point.id](point);
                     }
                 });
+            }
+
+            if (dataType === 'EVENT') {
+                if (this.listener[OBJECT_TYPES.EVENTS_OBJECT_TYPE]) {
+                    this.listener[OBJECT_TYPES.EVENTS_OBJECT_TYPE](data[3].data);
+                }
             }
         };
 
@@ -244,6 +290,16 @@ export default class RealtimeTelemetryProvider {
     }
 
     idleSubscribe() {
+        Object.keys(this.listener).forEach((id) => {
+            if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+                this.eventSubscribe();
+            } else {
+                this.idleTlmSubscribe();
+            }
+        });
+    }
+
+    idleTlmSubscribe() {
         this.sendOrQueueRequest('{"parameter": "subscribe", "data": { "id": [] }}');
     }
 
@@ -253,9 +309,17 @@ export default class RealtimeTelemetryProvider {
                      "sendFromCache": false }}`);
     }
 
+    eventSubscribe() {
+        this.sendOrQueueRequest("{'events': 'subscribe'}");
+    }
+
     tlmUnsubscribe(id) {
         this.sendOrQueueRequest(`{"parameter": "unsubscribe",
                      "data": { "id": [{ "name": "${id}" }] }}`);
+    }
+
+    eventUnsubscribe() {
+        this.sendOrQueueRequest("{'events': 'unsubscribe'}");
     }
 
     sendOrQueueRequest(request) {

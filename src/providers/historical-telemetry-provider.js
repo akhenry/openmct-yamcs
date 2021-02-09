@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-
+import * as OBJECT_TYPES from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -31,10 +31,20 @@ export default class YamcsHistoricalTelemetryProvider {
         this.url = url;
         this.instance = instance;
         this.openmct = openmct;
+        this.supportedTypes = {};
+
+        this.addSupportedTypes();
+    }
+
+    addSupportedTypes() {
+        const types = Object.values(OBJECT_TYPES);
+        types.forEach(type => {
+            this.supportedTypes[type] = type;
+        });
     }
 
     supportsRequest(domainObject) {
-        return domainObject.type.startsWith('yamcs.');
+        return this.supportedTypes[domainObject.type];
     }
 
     request(domainObject, options) {
@@ -55,30 +65,50 @@ export default class YamcsHistoricalTelemetryProvider {
             size = 1000;
         }
 
-        let url = this.url + 'api/archive/' + this.instance + '/parameters' + idToQualifiedName(id);
-        let order = 'asc';
-        let sizeParam = 'limit';
-        let convertHistory = (res) => this.convertPointHistory(id, res);
-        if (strategy && strategy.toLowerCase() === 'latest') {
-            size = 1;
-            order = 'desc';
-        } else if (strategy && strategy.toLowerCase() === 'minmax' && !isImagery) {
-            url += '/samples';
-            sizeParam = 'count';
-            convertHistory = (res) => this.convertSampleHistory(id, res);
-        }
-
+        let url = this.url + 'api/archive/' + this.instance;
+        url += this.getLinkParamsSpecificToId(id);
         url += '?start=' + (new Date(start).toISOString());
         url += '&stop=' + (new Date(end).toISOString());
-        url += `&${sizeParam}=${size}`;
-        url += `&order=${order}`;
+        url += '&limit=' + size;
+        url += "&order=asc";
 
         return fetch(encodeURI(url))
-            .then(res => res.json())
-            .then(convertHistory);
+            .then(res => {return res.json();})
+            .then(res => {
+                if (!(res.continuationToken)) {
+                    return this.convertPointHistory(id, res);
+                } else {
+                    return this.getSampleHistory(id, start, end, size);
+                }
+            });
+    }
+
+    getLinkParamsSpecificToId(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return '/events';
+        }
+
+        return '/parameters' + idToQualifiedName(id);
+    }
+
+    convertEventHistory(id, results) {
+        if (!results.event) {
+            return [];
+        }
+
+        return results.event.map(e => {
+            return {
+                id,
+                ...e
+            };
+        });
     }
 
     convertPointHistory(id, results) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return this.convertEventHistory(id, results);
+        }
+
         if (!(results.parameter)) {
             return [];
         }

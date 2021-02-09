@@ -25,6 +25,7 @@ import YamcsRealtimeTelemetryProvider from './providers/realtime-telemetry-provi
 import YamcsObjectProvider from './providers/object-provider.js';
 
 import {
+    EVENTS_OBJECT_TYPE,
     TELEMETRY_OBJECT_TYPE,
     IMAGE_OBJECT_TYPE,
     STRING_OBJECT_TYPE
@@ -81,6 +82,12 @@ export default function installYamcsPlugin(configuration) {
             name: 'Telemetry String',
             description: 'Spacecraft telemetry string value',
             cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(EVENTS_OBJECT_TYPE, {
+            name: "Events",
+            description: "To view events",
+            cssClass: "icon-generator-events"
         });
     };
 }
