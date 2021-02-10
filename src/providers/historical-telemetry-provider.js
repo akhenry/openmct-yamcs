@@ -47,20 +47,23 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        return this.getHistory(domainObject.identifier.key,
-            options.start,
-            options.end,
-            options.size,
-            options.strategy);
+        return this.getHistory(domainObject.identifier.key, options);
     }
 
-    getHistory(id, start, end, size=300, strategy) {
+    getHistory(id, options) {
+        const {
+            start,
+            end,
+            size = 300,
+            strategy
+        } = options;
+
         // cap size at 1000, temporarily to prevent errors
         if (size > 1000) {
             size = 1000;
         }
 
-        let url = this.url + 'api/archive/' + this.instance;
+        let url = `${this.url}api/archive/${this.instance}`;
         url += this.getLinkParamsSpecificToId(id);
 
         let order = 'asc';
@@ -75,8 +78,8 @@ export default class YamcsHistoricalTelemetryProvider {
             convertHistory = (res) => this.convertSampleHistory(id, res);
         }
 
-        url += '?start=' + (new Date(start).toISOString());
-        url += '&stop=' + (new Date(end).toISOString());
+        url += `?start=${new Date(start).toISOString()}`;
+        url += `&stop=${new Date(end).toISOString()}`;
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
