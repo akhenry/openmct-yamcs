@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-
+import * as OBJECT_TYPES from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -30,10 +30,20 @@ export default class YamcsHistoricalTelemetryProvider {
     constructor(url, instance) {
         this.url = url;
         this.instance = instance;
+        this.supportedTypes = {};
+
+        this.addSupportedTypes();
+    }
+
+    addSupportedTypes() {
+        const types = Object.values(OBJECT_TYPES);
+        types.forEach(type => {
+            this.supportedTypes[type] = type;
+        });
     }
 
     supportsRequest(domainObject) {
-        return domainObject.type.startsWith('yamcs.');
+        return this.supportedTypes[domainObject.type];
     }
 
     request(domainObject, options) {
@@ -49,7 +59,8 @@ export default class YamcsHistoricalTelemetryProvider {
             size = 1000;
         }
 
-        let url = this.url + 'api/archive/' + this.instance + '/parameters' + idToQualifiedName(id);
+        let url = this.url + 'api/archive/' + this.instance;
+        url += this.getLinkParamsSpecificToId(id);
         url += '?start=' + (new Date(start).toISOString());
         url += '&stop=' + (new Date(end).toISOString());
         url += '&limit=' + size;
@@ -64,6 +75,14 @@ export default class YamcsHistoricalTelemetryProvider {
                     return this.getSampleHistory(id, start, end, size);
                 }
             });
+    }
+
+    getLinkParamsSpecificToId(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return '/events';
+        }
+
+        return '/parameters' + idToQualifiedName(id);
     }
 
     getSampleHistory(id, start, end, size=300) {
@@ -84,7 +103,24 @@ export default class YamcsHistoricalTelemetryProvider {
             .then(res => {return this.convertSampleHistory(id, res);});
     }
 
+    convertEventHistory(id, results) {
+        if (!results.event) {
+            return [];
+        }
+
+        return results.event.map(e => {
+            return {
+                id,
+                ...e
+            };
+        });
+    }
+
     convertPointHistory(id, results) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return this.convertEventHistory(id, results);
+        }
+
         if (!(results.parameter)) {
             return [];
         }
