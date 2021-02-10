@@ -131,10 +131,10 @@ export default class YamcsHistoricalTelemetryProvider {
                 id: parameter.id.name,
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
-            }
-            addLimitInformation(parameter, point)
-            values.push(point)
-        })
+            };
+            addLimitInformation(parameter, point);
+            values.push(point);
+        });
 
         return values;
     }
