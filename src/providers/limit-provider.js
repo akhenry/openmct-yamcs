@@ -13,29 +13,33 @@ const RANGE_CONDITION_CSS = {
     'HIGH': 'is-limit--upr'
 }
 
+/**
+ * @typedef {Object} Datum
+ * @property {number} [monitoringResult] the Yamcs limit monitoring result
+ * @property {number} [rangeCondition] the Yamcs range condition (LOW/HIGH)
+ * @property {Array} alarmRange alarm ranges for different monitoringresults, or omitted, if no alarm ranges are defined
+ *                              A floating point value representing some observable quantity (eg.temperature, air pressure, etc.)
+ */
+
+/**
+ * @typedef {Object} EvaluationResult
+ * @property {string} cssClass CSS class information
+ * @property {string} name a violation name
+ * @property {number} low a lower limit for violation
+ * @property {number} high a higher limit violation
+ */
 export default class LimitProvider {
     getLimitEvaluator(domainObject) {
         const self = this;
 
         return {
-            /*
+            /**
              * Evaluates a telemetry point for limit violations.
              *
-             * Parameters:
-             *     datum: the telemetry point data from the historical or realtime
-             *            plugin
-             *     valueMetadata: metadata about the telemetry point
+             * @param {Datum} datum the telemetry point data from the historical or realtime plugin ({@link Datum})
+             * @param {object} valueMetadata metadata about the telemetry point
              *
-             * Returns:
-             *     an object with CSS class information, a violation name, and
-             *     range information, if there is a limit violates, or nothing,
-             *     if the value is within limits.
-             *
-             * The datum parameter may include the following information:
-             *     monitoringResult: the Yamcs limit monitoring result, if any
-             *     rangeCondition: the Yamcs range condition (LOW/HIGH), if any
-             *     alarmRange: an array of alarm ranges for different monitoring
-             *         results, or omitted, if no alarm ranges are defined
+             * @returns {EvaluationResult} ({@link EvaluationResult})
              */
             evaluate: function (datum, valueMetadata) {
                 if (valueMetadata && datum.monitoringResult
@@ -53,59 +57,31 @@ export default class LimitProvider {
         };
     }
 
-    /*
+    /**
      * Adds limit range information to an object based on the monitoring
      * result.
      *
-     * Parameters:
-     *     datum: the telemetry point data from the historical or realtime
-     *            plugin
-     *     result: the monitoring result information from Yamcs
-     *     valueMetadata: metadata about the telemetry point
+     * @param {Datum} datum the telemetry point data from the historical or realtime plugin ({@link Datum})
+     * @param {string} result the monitoring result information from Yamcs
+     * @param {object} [valueMetadata] metadata about the telemetry point
      *
-     * Returns: the object that is to be the result of the
-     *          limit evaluation
+     * @returns {EvaluationResult} ({@link EvaluationResult})
      */
     getLimitRange(datum, result, valueMetadata) {
-        const key = valueMetadata && valueMetadata.key;
-        if (key === undefined) {
+        if (!valueMetadata) {
             return;
         }
 
-        const range = this.findAlarmRange(datum, result);
-        if (range === undefined) {
-            return;
-        }
-
-        const evaluationResult = {
-            cssClass: MONITORING_RESULT_CSS[datum.monitoringResult] + ' ' + RANGE_CONDITION_CSS[datum.rangeCondition],
-            name: datum.monitoringResult,
-            low: Number.NEGATIVE_INFINITY,
-            high: Number.POSITIVE_INFINITY
-        };
-
-        if (datum[key] >= range.minInclusive || datum[key] > range.minExclusive) {
-            evaluationResult.low = range.minInclusive;
-
-            return evaluationResult;
-        }
-
-        if (datum[key] <= range.maxInclusive || datum[key] < range.maxExclusive) {
-            evaluationResult.high = range.maxInclusive;
-
-            return evaluationResult;
+        if (valueMetadata.key === 'value') {
+            return {
+                cssClass: MONITORING_RESULT_CSS[datum.monitoringResult] + ' ' + RANGE_CONDITION_CSS[datum.rangeCondition],
+                name: datum.monitoringResult,
+                low: Number.NEGATIVE_INFINITY,
+                high: Number.POSITIVE_INFINITY
+            };
         }
 
         return;
-    }
-
-    /*
-     * Finds the appropriate limit range for a monitoring results.
-     */
-    findAlarmRange(datum, result) {
-        if (datum.alarmRange !== undefined) {
-            return datum.alarmRange.find(range => range.level == result);
-        }
     }
 
     supportsLimits(domainObject) {
