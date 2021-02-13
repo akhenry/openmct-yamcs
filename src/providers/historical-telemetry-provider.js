@@ -47,34 +47,45 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        return this.getHistory(domainObject.identifier.key,
-            options.start,
-            options.end,
-            options.size);
+        return this.getHistory(domainObject.identifier.key, options);
     }
 
-    getHistory(id, start, end, size=300) {
+    getHistory(id, options) {
+        const {
+            start,
+            end,
+            size = 300,
+            strategy
+        } = options;
+
         // cap size at 1000, temporarily to prevent errors
         if (size > 1000) {
             size = 1000;
         }
 
-        let url = this.url + 'api/archive/' + this.instance;
+        let url = `${this.url}api/archive/${this.instance}`;
         url += this.getLinkParamsSpecificToId(id);
-        url += '?start=' + (new Date(start).toISOString());
-        url += '&stop=' + (new Date(end).toISOString());
-        url += '&limit=' + size;
-        url += "&order=asc";
+
+        let order = 'asc';
+        let sizeParam = 'limit';
+        let convertHistory = (res) => this.convertPointHistory(id, res);
+        if (strategy && strategy.toLowerCase() === 'latest') {
+            size = 1;
+            order = 'desc'
+        } else if (strategy && strategy.toLowerCase() === 'minmax') {
+            url += '/samples';
+            sizeParam = 'count';
+            convertHistory = (res) => this.convertSampleHistory(id, res);
+        }
+
+        url += `?start=${new Date(start).toISOString()}`;
+        url += `&stop=${new Date(end).toISOString()}`;
+        url += `&${sizeParam}=${size}`;
+        url += `&order=${order}`;
 
         return fetch(encodeURI(url))
             .then(res => res.json())
-            .then(res => {
-                if (!(res.continuationToken)) {
-                    return this.convertPointHistory(id, res);
-                } else {
-                    return this.getSampleHistory(id, start, end, size);
-                }
-            });
+            .then(convertHistory);
     }
 
     getLinkParamsSpecificToId(id) {
@@ -83,24 +94,6 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         return '/parameters' + idToQualifiedName(id);
-    }
-
-    getSampleHistory(id, start, end, size=300) {
-        // cap size at 1000, temporarily to prevent errors
-        if (size > 1000) {
-            size = 1000;
-        }
-
-        let url = this.url + 'api/archive/' + this.instance + '/parameters' + idToQualifiedName(id);
-        url += '/samples';
-        url += '?start=' + (new Date(start).toISOString());
-        url += '&stop=' + (new Date(end).toISOString());
-        url += '&count=' + size;
-        url += "&order=asc";
-
-        return fetch(encodeURI(url))
-            .then(res => res.json())
-            .then(res => this.convertSampleHistory(id, res));
     }
 
     convertEventHistory(id, results) {
