@@ -27,10 +27,9 @@ import {
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
-    constructor(openmct, url, instance) {
+    constructor(url, instance) {
         this.url = url;
         this.instance = instance;
-        this.openmct = openmct;
         this.supportedTypes = {};
 
         this.addSupportedTypes();
@@ -48,18 +47,13 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        let metadata = this.openmct.telemetry.getMetadata(domainObject);
-        let isImagery = metadata.valuesForHints(['image']).length !== 0;
-
         return this.getHistory(domainObject.identifier.key,
             options.start,
             options.end,
-            options.size,
-            options.strategy,
-            isImagery);
+            options.size);
     }
 
-    getHistory(id, start, end, size=300, strategy, isImagery) {
+    getHistory(id, start, end, size=300) {
         // cap size at 1000, temporarily to prevent errors
         if (size > 1000) {
             size = 1000;
@@ -91,6 +85,24 @@ export default class YamcsHistoricalTelemetryProvider {
         return '/parameters' + idToQualifiedName(id);
     }
 
+    getSampleHistory(id, start, end, size=300) {
+        // cap size at 1000, temporarily to prevent errors
+        if (size > 1000) {
+            size = 1000;
+        }
+
+        let url = this.url + 'api/archive/' + this.instance + '/parameters' + idToQualifiedName(id);
+        url += '/samples';
+        url += '?start=' + (new Date(start).toISOString());
+        url += '&stop=' + (new Date(end).toISOString());
+        url += '&count=' + size;
+        url += "&order=asc";
+
+        return fetch(encodeURI(url))
+            .then(res => {return res.json();})
+            .then(res => {return this.convertSampleHistory(id, res);});
+    }
+
     convertEventHistory(id, results) {
         if (!results.event) {
             return [];
@@ -119,10 +131,10 @@ export default class YamcsHistoricalTelemetryProvider {
                 id: parameter.id.name,
                 timestamp: parameter.generationTimeUTC,
                 value: getValue(parameter.engValue)
-            };
-            addLimitInformation(parameter, point);
-            values.push(point);
-        });
+            }
+            addLimitInformation(parameter, point)
+            values.push(point)
+        })
 
         return values;
     }
@@ -155,4 +167,5 @@ export default class YamcsHistoricalTelemetryProvider {
 
         return values;
     }
+
 }
