@@ -1,15 +1,3 @@
-import {
-    qualifiedNameToId,
-    accumulateResults
-} from '../utils.js';
-
-import {
-    EVENTS_OBJECT_TYPE,
-    TELEMETRY_OBJECT_TYPE,
-    IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
-} from '../const.js';
-
 /*****************************************************************************
  * Open MCT, Copyright (c) 2014-2020, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
@@ -31,6 +19,23 @@ import {
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+
+import {
+    qualifiedNameToId,
+    accumulateResults
+} from '../utils.js';
+
+import {
+    EVENTS_OBJECT_TYPE,
+    TELEMETRY_OBJECT_TYPE,
+    IMAGE_OBJECT_TYPE,
+    STRING_OBJECT_TYPE
+} from '../const.js';
+
+const YAMCS_API_MAP = {
+    'space-systems': 'spaceSystems',
+    'parameters': 'parameters'
+};
 
 export default class YamcsObjectProvider {
     constructor(openmct, url, instance, folderName) {
@@ -131,6 +136,43 @@ export default class YamcsObjectProvider {
         return this.getTelemetryDictionary().then(dictionary => {
             return dictionary[identifier.key];
         });
+    }
+
+    search(query, options) {
+        const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
+        const parametersSearch = this.searchMdbApi('parameters', query, options);
+
+        return Promise.all([spaceSystemsSearch, parametersSearch])
+            .then(([spaceSystemsResults, parametersResults]) => {
+                return [...spaceSystemsResults, ...parametersResults];
+            });
+    }
+
+    async searchMdbApi(operation, query, options) {
+        const key = YAMCS_API_MAP[operation];
+        const search = await this.fetchMdbApi(`${operation}?q=${query}`);
+        const hits = search[key];
+
+        if (hits === undefined) {
+            return [];
+        }
+
+        // make sure we have the dictionary loaded first
+        // even though calling get will fetch dictionary if not already loaded
+        await this.getTelemetryDictionary();
+
+        const results = await Promise.all(
+            hits.map(async hit => {
+                const identifier = {
+                    key: qualifiedNameToId(hit.qualifiedName),
+                    namespace: this.namespace
+                };
+
+                return this.get(identifier);
+            })
+        );
+
+        return results;
     }
 
     getTelemetryDictionary() {

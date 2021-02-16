@@ -71,29 +71,29 @@ function getValue(value) {
  */
 function accumulateResults(url, property, soFar, totalLimit, token) {
     if (totalLimit === undefined) {
-        totalLimit = 1000000
+        totalLimit = 1000000;
     }
 
-    let newUrl = url
+    let newUrl = url;
     if (token !== undefined) {
         if (url.indexOf('?') < 0) {
-            newUrl += '?next=' + token
+            newUrl += '?next=' + token;
         } else {
-            newUrl += '&next=' + token
+            newUrl += '&next=' + token;
         }
     }
 
-    const result = fetch(newUrl).then(res => {return res.json()})
+    const result = fetch(newUrl).then(res => {return res.json();});
     return result.then(res => {
         if (property in res) {
-            soFar = soFar.concat(res[property])
+            soFar = soFar.concat(res[property]);
         }
         if (res.continuationToken===undefined || soFar.length >= totalLimit) {
-            return soFar
+            return soFar;
         }
         return accumulateResults(url, property, soFar, totalLimit,
-                                 res.continuationToken)
-    })
+            res.continuationToken);
+    });
 }
 
 /*
@@ -103,13 +103,13 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
 function addLimitInformation(parameter, point) {
     /* Add information for the limit evaluator, if present. */
     if (parameter.monitoringResult) {
-        point.monitoringResult = parameter.monitoringResult
+        point.monitoringResult = parameter.monitoringResult;
     }
     if (parameter.rangeCondition) {
-        point.rangeCondition = parameter.rangeCondition
+        point.rangeCondition = parameter.rangeCondition;
     }
     if (parameter.alarmRange) {
-        point.alarmRange = parameter.alarmRange
+        point.alarmRange = parameter.alarmRange;
     }
 }
 

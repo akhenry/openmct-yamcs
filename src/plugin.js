@@ -23,6 +23,8 @@
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
 import YamcsRealtimeTelemetryProvider from './providers/realtime-telemetry-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
+import LimitProvider from './providers/limit-provider';
+
 
 import {
     EVENTS_OBJECT_TYPE,
@@ -51,6 +53,8 @@ export default function installYamcsPlugin(configuration) {
         );
         openmct.telemetry.addProvider(realtimeProvider);
         realtimeProvider.connect();
+
+        openmct.telemetry.addProvider(new LimitProvider());
 
         const objectProvider = new YamcsObjectProvider(
             openmct,
