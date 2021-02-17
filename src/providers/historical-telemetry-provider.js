@@ -27,9 +27,10 @@ import {
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
-    constructor(url, instance) {
+    constructor(openmct, url, instance) {
         this.url = url;
         this.instance = instance;
+        this.openmct = openmct;
         this.supportedTypes = {};
 
         this.addSupportedTypes();
@@ -47,11 +48,14 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        return this.getHistory(domainObject.identifier.key, options);
+        let metadata = this.openmct.telemetry.getMetadata(domainObject);
+        let isImagery = metadata.valuesForHints(['image']).length !== 0;
+
+        return this.getHistory(domainObject.identifier.key, options, isImagery);
     }
 
-    getHistory(id, options) {
-        const {
+    getHistory(id, options, isImagery) {
+        let {
             start,
             end,
             size = 300,
@@ -71,9 +75,10 @@ export default class YamcsHistoricalTelemetryProvider {
         let convertHistory = (res) => this.convertPointHistory(id, res);
         if (strategy && strategy.toLowerCase() === 'latest') {
             size = 1;
-            order = 'desc'
-        } else if (strategy && strategy.toLowerCase() === 'minmax') {
+            order = 'desc';
+        } else if (strategy && strategy.toLowerCase() === 'minmax' && !isImagery) {
             url += '/samples';
+
             sizeParam = 'count';
             convertHistory = (res) => this.convertSampleHistory(id, res);
         }
