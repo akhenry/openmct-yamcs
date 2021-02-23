@@ -161,7 +161,7 @@ export default class RealtimeEventsProvider {
             delete this.reconnectTimeout;
         }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
 
-        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length) {
+        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
             this.currentWaitIndex++;
         }
     }
