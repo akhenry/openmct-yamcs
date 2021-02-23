@@ -26,7 +26,7 @@ import * as MESSAGES from './messages';
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 
 export default class RealtimeEventsProvider {
-    constructor(url ,instance) {
+    constructor(url, instance) {
         this.url = url;
         this.instance = instance;
         this.connected = false;
