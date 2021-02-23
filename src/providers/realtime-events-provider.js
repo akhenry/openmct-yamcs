@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2021, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -21,65 +21,72 @@
  *****************************************************************************/
 
 import * as OBJECT_TYPES from '../const';
-import {
-    idToQualifiedName,
-    qualifiedNameToId,
-    getValue,
-    addLimitInformation
-} from '../utils.js';
+import * as MESSAGES from './messages';
 
-const WS_IDLE_INTERVAL_MS = 10000;
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
-export default class RealtimeTelemetryProvider {
+
+export default class RealtimeEventsProvider {
     constructor(url ,instance) {
         this.url = url;
         this.instance = instance;
-        this.seqNo = 0;
         this.connected = false;
-        this.listener = {};
+        this.lastSubscriptionId = 1;
+        this.subscriptions = new Map();
         this.requests = [];
         this.currentWaitIndex = 0;
-        this.supportedTypes = {};
-
-        this.addSupportedTypes();
-    }
-
-    addSupportedTypes() {
-        const types = Object.values(OBJECT_TYPES)
-            .filter(type => type !== OBJECT_TYPES.EVENTS_OBJECT_TYPE);
-
-        types.forEach(type => {
-            this.supportedTypes[type] = type;
-        });
     }
 
     supportsSubscribe(domainObject) {
-        return this.supportedTypes[domainObject.type];
+        return domainObject.type === OBJECT_TYPES.EVENTS_OBJECT_TYPE;
     }
 
     subscribe(domainObject, callback) {
-        const id = domainObject.identifier.key;
-        this.listener[id] = callback;
+        let subscriptionDetails;
+        let objectKey;
 
-        let name = idToQualifiedName(id);
-        return this.subscribeToTelemetry(name, id);
-    }
+        subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+        objectKey = domainObject.identifier.key;
 
-    subscribeToTelemetry(name, id) {
+        this.subscriptions.set(objectKey, subscriptionDetails);
+
         if (this.connected) {
-            this.tlmSubscribe(name);
+            this.sendSubscribeMessage(subscriptionDetails);
         }
 
         return () => {
-            this.tlmUnsubscribe(name);
-            delete this.listener[id];
+            this.sendUnsubscribeMessage(subscriptionDetails);
+            this.subscriptions.delete(objectKey);
         };
     }
 
+    buildSubscriptionDetails(domainObject, callback) {
+        let subscriptionId = this.lastSubscriptionId++;
+
+        return {
+            instance: this.instance,
+            subscriptionId: subscriptionId,
+            domainObject,
+            callback: callback
+        };
+    }
+
+    sendSubscribeMessage(subscriptionDetails) {
+        let domainObject = subscriptionDetails.domainObject;
+        let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+
+        this.sendOrQueueMessage(message);
+    }
+
+    sendUnsubscribeMessage(subscriptionDetails) {
+        let domainObject = subscriptionDetails.domainObject;
+        let message = MESSAGES.UNSUBSCRIBE[domainObject.type](subscriptionDetails);
+
+        this.sendOrQueueMessage(message);
+    }
+
     resubscribeToAll() {
-        Object.keys(this.listener).forEach((id) => {
-            let name = idToQualifiedName(id);
-            this.tlmSubscribe(name);
+        this.subscriptions.forEach((subscriptionDetails) => {
+            this.sendSubscribeMessage(subscriptionDetails);
         });
     }
 
@@ -87,16 +94,14 @@ export default class RealtimeTelemetryProvider {
         if (this.connected) {
             return;
         }
-        let wsUrl = `${this.url}_websocket/${this.instance}`;
-        this.seqNo = 0;
+        let wsUrl = `${this.url}api/websocket`;
+        this.lastSubscriptionId = 1;
         this.connected = false;
         this.socket = new WebSocket(wsUrl);
 
         this.socket.onopen = () => {
             clearTimeout(this.reconnectTimeout);
 
-            this.keepAliveInterval = setInterval(
-                this.idleSubscribe.bind(this), WS_IDLE_INTERVAL_MS);
             this.connected = true;
             console.log(`Established websocket connection to ${wsUrl}`);
 
@@ -108,24 +113,15 @@ export default class RealtimeTelemetryProvider {
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
 
-            if (data.length < 4) {
-                return;
-            }
+            if (data.type === MESSAGES.DATA_TYPE_REPLY) {
+                let replyToId = data.data.replyTo;
+                let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
+                subscriptionDetails.call = data.call;
+            } else if (data.type === MESSAGES.DATA_TYPE_EVENTS) {
+                let call = data.call;
+                let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
 
-            const dataType = data[3].dt;
-            if (dataType === 'PARAMETER') {
-                data[3].data.parameter.forEach(parameter => {
-                    let point = {
-                        id: qualifiedNameToId(parameter.id.name),
-                        timestamp: parameter.generationTimeUTC,
-                        value: getValue(parameter.engValue)
-                    };
-                    addLimitInformation(parameter, point);
-
-                    if (this.listener[point.id]) {
-                        this.listener[point.id](point);
-                    }
-                });
+                subscriptionDetails.callback(data.data);
             }
         };
 
@@ -143,6 +139,18 @@ export default class RealtimeTelemetryProvider {
         };
     }
 
+    getSubscriptionDetailsById(id) {
+        return Array.from(this.subscriptions.values()).find(
+            (subscriptionDetails) => subscriptionDetails.subscriptionId === id
+        );
+    }
+
+    getSubscriptionDetailsByCall(call) {
+        return Array.from(this.subscriptions.values()).find(
+            (subscriptionDetails) => subscriptionDetails.call === call
+        );
+    }
+
     reconnect() {
         if (this.reconnectTimeout) {
             return;
@@ -158,31 +166,10 @@ export default class RealtimeTelemetryProvider {
         }
     }
 
-    idleSubscribe() {
-        Object.keys(this.listener).forEach((id) => {
-            this.idleTlmSubscribe();
-        });
-    }
-
-    idleTlmSubscribe() {
-        this.sendOrQueueRequest('{"parameter": "subscribe", "data": { "id": [] }}');
-    }
-
-    tlmSubscribe(id) {
-        this.sendOrQueueRequest(`{"parameter": "subscribe",
-                     "data": { "id": [{ "name": "${id}" }],
-                     "sendFromCache": false }}`);
-    }
-
-    tlmUnsubscribe(id) {
-        this.sendOrQueueRequest(`{"parameter": "unsubscribe",
-                     "data": { "id": [{ "name": "${id}" }] }}`);
-    }
-
-    sendOrQueueRequest(request) {
+    sendOrQueueMessage(request) {
         if (this.connected) {
             try {
-                this.sendRequest(request);
+                this.sendMessage(request);
                 return true;
             } catch (error) {
                 this.connected = false;
@@ -201,7 +188,7 @@ export default class RealtimeTelemetryProvider {
         let shouldReconnect = false;
         this.requests = this.requests.filter((request) => {
             try {
-                this.sendRequest(request);
+                this.sendMessage(request);
             } catch (error) {
                 this.connected = false;
                 console.error(error);
@@ -218,8 +205,7 @@ export default class RealtimeTelemetryProvider {
         }
     }
 
-    sendRequest(request) {
-        let payload = '[1, 1, ' + (++this.seqNo) + ', ' + request + ']';
-        this.socket.send(payload);
+    sendMessage(message) {
+        this.socket.send(message);
     }
 }
