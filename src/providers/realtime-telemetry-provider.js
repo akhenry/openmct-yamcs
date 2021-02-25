@@ -28,7 +28,6 @@ import {
     addLimitInformation
 } from '../utils.js';
 
-const WS_IDLE_INTERVAL_MS = 10000;
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeTelemetryProvider {
     constructor(url ,instance) {
@@ -95,8 +94,6 @@ export default class RealtimeTelemetryProvider {
         this.socket.onopen = () => {
             clearTimeout(this.reconnectTimeout);
 
-            this.keepAliveInterval = setInterval(
-                this.idleSubscribe.bind(this), WS_IDLE_INTERVAL_MS);
             this.connected = true;
             console.log(`Established websocket connection to ${wsUrl}`);
 
@@ -156,16 +153,6 @@ export default class RealtimeTelemetryProvider {
         if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
             this.currentWaitIndex++;
         }
-    }
-
-    idleSubscribe() {
-        Object.keys(this.listener).forEach((id) => {
-            this.idleTlmSubscribe();
-        });
-    }
-
-    idleTlmSubscribe() {
-        this.sendOrQueueRequest('{"parameter": "subscribe", "data": { "id": [] }}');
     }
 
     tlmSubscribe(id) {
