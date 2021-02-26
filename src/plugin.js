@@ -56,7 +56,7 @@ export default function installYamcsPlugin(configuration) {
         realtimeTelemetryProvider.connect();
 
         const realtimeEventsProvider = new RealtimeEventsProvider(
-            configuration.yamcsRealtimeEndpoint,
+            configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance
         );
         openmct.telemetry.addProvider(realtimeEventsProvider);

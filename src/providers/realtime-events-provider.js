@@ -94,7 +94,7 @@ export default class RealtimeEventsProvider {
         if (this.connected) {
             return;
         }
-        let wsUrl = `${this.url}api/websocket`;
+        let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
         this.socket = new WebSocket(wsUrl);

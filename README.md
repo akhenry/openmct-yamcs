@@ -71,7 +71,8 @@ openmct.install(installYamcsPlugin({
 |-------------------------|-------------------------------------------------------|------------------------------------|
 | yamcsDictionaryEndpoint | This is the root path to the YAMCS installation. The adapter will use this to fetch all of the parameters adapter will use this to fetch all of the parameters and containers defined for the configured instance. | http://localhost:8090/              |
 | yamcsHistoricalEndpoint | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical data for the selected parameter, in the configured instance. | http://localhost:8090/             |
-| yamcsRealtimeEndpoint   | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical instance. *It must always start with `ws` or `wss`* | ws://localhost:8090/               |
+| yamcsRealtimeEndpoint   | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve realtime data *from the legacy WebSocket interface*. *It must always start with `ws` or `wss`* | ws://localhost:8090/               |
+| yamcsWebsocketEndpoint   | The path to the new (post v5) WebSocket interface.  *It must always start with `ws` or `wss`, and must contain the complete path (unlike config above) | ws://localhost:8090/api/websocket               |
 | yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 | yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 
