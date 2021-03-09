@@ -190,7 +190,7 @@ export default class YamcsObjectProvider {
         if(this.dictionaryPromise === undefined) {
             let url = this.getMdbUrl('space-systems');
             this.dictionaryPromise = accumulateResults(url, 'spaceSystems', []).then(spaceSystems => {
-                return this.accumulateResults(parameterUrl, 'parameters', [])
+                return accumulateResults(parameterUrl, 'parameters', [])
                     .then(parameters => {
                         /* Sort the space systems by name, so that the
                            children of the root object are in sorted order. */
