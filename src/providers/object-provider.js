@@ -192,6 +192,7 @@ export default class YamcsObjectProvider {
             this.dictionaryPromise = accumulateResults(url, 'spaceSystems', []).then(spaceSystems => {
                 return accumulateResults(parameterUrl, 'parameters', [])
                     .then(parameters => {
+                        console.log('parameters from accumulate', parameters);
                         /* Sort the space systems by name, so that the
                            children of the root object are in sorted order. */
                         spaceSystems.sort((a, b) => {
