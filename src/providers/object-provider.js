@@ -184,10 +184,13 @@ export default class YamcsObjectProvider {
     }
 
     fetchTelemetryDictionary() {
+        const operation = 'parameters?details=yes&limit=1000';
+        const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
+
         if(this.dictionaryPromise === undefined) {
             let url = this.getMdbUrl('space-systems');
             this.dictionaryPromise = accumulateResults(url, 'spaceSystems', []).then(spaceSystems => {
-                return this.fetchMdbApi('parameters?details=yes&limit=1000')
+                return this.accumulateResults(parameterUrl, 'parameters', [])
                     .then(parameters => {
                         /* Sort the space systems by name, so that the
                            children of the root object are in sorted order. */
