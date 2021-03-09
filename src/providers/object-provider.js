@@ -201,11 +201,11 @@ export default class YamcsObjectProvider {
                         spaceSystems.forEach(spaceSystem => {
                             this.addSpaceSystem(spaceSystem);
                         });
-                        if (parameters !== undefined) {
-                            parameters.forEach(parameter => {
-                                this.addParameterObject(parameter);
-                            });
-                        }
+
+                        parameters.forEach(parameter => {
+                            this.addParameterObject(parameter);
+                        });
+
                         this.dictionaryPromise = undefined;
 
                         return this.objects;
