@@ -70,6 +70,7 @@ function getValue(value) {
  *     a promise for an array of results accumulated over the requests
  */
 function accumulateResults(url, property, soFar, totalLimit, token) {
+    console.log('accumulate results', url, property);
     if (totalLimit === undefined) {
         totalLimit = 1000000;
     }
@@ -85,6 +86,7 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
 
     const result = fetch(newUrl).then(res => {return res.json();});
     return result.then(res => {
+        console.log('res', res);
         if (property in res) {
             soFar = soFar.concat(res[property]);
         }
