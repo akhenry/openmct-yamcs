@@ -28,6 +28,7 @@ function qualifiedNameToId(name) {
     return name.replace(/\//g, '~');
 }
 
+const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 const VALUE_EXTRACT_MAP = {
     'UINT64': (value) => value.uint64Value,
     'INT64': (value) => value.int64Value,
@@ -45,8 +46,40 @@ const VALUE_EXTRACT_MAP = {
     'TIMESTAMP': (value) => value.stringValue,
     'BOOLEAN': (value) => value.booleanValue
 };
+
+/*
+ * Takes a value and determines what value to return based on
+ * that values type property
+ *
+ * Parameters:
+ *     value          the value to check
+ *
+ * Returns:
+ *     depending on value type: an appropriate value, a string
+ *     of appropriate values or an "unsupported" notification string
+ */
 function getValue(value) {
-    return VALUE_EXTRACT_MAP[value.type](value);
+    let type = value.type;
+    let isArray = false;
+
+    // normalize type if necessary
+    if (value.type.endsWith('[]')) {
+        type = value.type.substring(0, value.type.length - 2);
+        isArray = true;
+    }
+
+    if (!VALUE_EXTRACT_MAP[type]) {
+        console.warn(`Type ${type} is currnetly not supported.`);
+
+        return UNSUPPORTED_TYPE;
+    } else if (!isArray) {
+        return VALUE_EXTRACT_MAP[type](value);
+    }
+
+    // map array values
+    return JSON.srtringify(
+        value.map(VALUE_EXTRACT_MAP[type])
+    );
 }
 
 /*
