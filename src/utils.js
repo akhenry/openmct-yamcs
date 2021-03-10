@@ -59,26 +59,24 @@ const VALUE_EXTRACT_MAP = {
  *     of appropriate values or an "unsupported" notification string
  */
 function getValue(value) {
-    let type = value.type;
-    let isArray = false;
+    let normalizedType = value.type;
+    let isArray = value.type.endsWith('[]');
 
-    // normalize type if necessary
-    if (value.type.endsWith('[]')) {
-        type = value.type.substring(0, value.type.length - 2);
-        isArray = true;
+    if (isArray) {
+        normalizedType = value.type.substring(0, value.type.length - 2);
     }
 
-    if (!VALUE_EXTRACT_MAP[type]) {
-        console.warn(`Type ${type} is currnetly not supported.`);
+    if (!VALUE_EXTRACT_MAP[normalizedType]) {
+        console.warn(`${UNSUPPORTED_TYPE}: ${value.type}`);
 
         return UNSUPPORTED_TYPE;
     } else if (!isArray) {
-        return VALUE_EXTRACT_MAP[type](value);
+        return VALUE_EXTRACT_MAP[normalizedType](value);
     }
 
     // map array values
     return JSON.srtringify(
-        value.map(VALUE_EXTRACT_MAP[type])
+        value.map(VALUE_EXTRACT_MAP[normalizedType])
     );
 }
 
