@@ -87,7 +87,7 @@ function getValue(value) {
 
 }
 
-warnUnsupportedType(type) {
+function warnUnsupportedType(type) {
     console.warn(`${UNSUPPORTED_TYPE}: ${type}`);
 }
 
