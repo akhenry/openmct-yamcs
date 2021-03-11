@@ -59,25 +59,36 @@ const VALUE_EXTRACT_MAP = {
  *     of appropriate values or an "unsupported" notification string
  */
 function getValue(value) {
-    let normalizedType = value.type;
-    let isArray = value.type.endsWith('[]');
+    let type = value.type;
 
-    if (isArray) {
-        normalizedType = value.type.substring(0, value.type.length - 2);
+    if (VALUE_EXTRACT_MAP[value.type]) {
+        return VALUE_EXTRACT_MAP[value.type](value);
     }
 
-    if (!VALUE_EXTRACT_MAP[normalizedType]) {
-        console.warn(`${UNSUPPORTED_TYPE}: ${value.type}`);
+    if (value.type === 'ARRAY') {
+        let valueResults = [];
 
-        return UNSUPPORTED_TYPE;
-    } else if (!isArray) {
-        return VALUE_EXTRACT_MAP[normalizedType](value);
+        for (const arrayValue of value) {
+            if (!VALUE_EXTRACT_MAP[arrayValue.type]) {
+                warnUnsupportedType(arrayValue.type);
+
+                return UNSUPPORTED_TYPE;
+            }
+
+            valueResults.push(VALUE_EXTRACT_MAP[arrayValue.type](arrayValue))
+        }
+
+        return JSON.stringify(valueResults);
     }
 
-    // map array values
-    return JSON.stringify(
-        value.map(VALUE_EXTRACT_MAP[normalizedType])
-    );
+    warnUnsupportedType(value.type);
+
+    return UNSUPPORTED_TYPE;
+
+}
+
+warnUnsupportedType(type) {
+    console.warn(`${UNSUPPORTED_TYPE}: ${type}`);
 }
 
 /*
