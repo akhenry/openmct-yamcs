@@ -59,8 +59,6 @@ const VALUE_EXTRACT_MAP = {
  *     of appropriate values or an "unsupported" notification string
  */
 function getValue(value) {
-    let type = value.type;
-
     if (VALUE_EXTRACT_MAP[value.type]) {
         return VALUE_EXTRACT_MAP[value.type](value);
     }
