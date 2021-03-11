@@ -75,7 +75,7 @@ function getValue(value) {
     }
 
     // map array values
-    return JSON.srtringify(
+    return JSON.stringify(
         value.map(VALUE_EXTRACT_MAP[normalizedType])
     );
 }
