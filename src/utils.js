@@ -66,14 +66,14 @@ function getValue(value) {
     if (value.type === 'ARRAY') {
         let valueResults = [];
 
-        for (const arrayValue of value) {
+        for (const arrayValue of value.arrayValue) {
             if (!VALUE_EXTRACT_MAP[arrayValue.type]) {
                 warnUnsupportedType(arrayValue.type);
 
                 return UNSUPPORTED_TYPE;
             }
 
-            valueResults.push(VALUE_EXTRACT_MAP[arrayValue.type](arrayValue))
+            valueResults.push(VALUE_EXTRACT_MAP[arrayValue.type](arrayValue));
         }
 
         return JSON.stringify(valueResults);
