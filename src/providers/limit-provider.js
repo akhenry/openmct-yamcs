@@ -87,4 +87,14 @@ export default class LimitProvider {
     supportsLimits(domainObject) {
         return domainObject.type.startsWith('yamcs.');
     }
+
+    getLimits(domainObject) {
+        return {
+            limits: function () {
+                return {
+
+                };
+            }
+        };
+    }
 }
