@@ -1,5 +1,5 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
-import {addLimitInformation, getValue, idToQualifiedName} from "../utils";
+import { idToQualifiedName } from "../utils";
 
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
@@ -98,33 +98,39 @@ export default class LimitProvider {
 
     getLimitsForParameter(id) {
         let url = `${this.url}api/archive/${this.instance}`;
-        url += '/alarms' + idToQualifiedName(id);
+        url += '/parameters' + idToQualifiedName(id);
+        url += '?limit=1&order=desc';
 
-        let addLimits = (results) => this.addLimits(id, results);
+        let convertToLimits = (results) => this.convertToLimits(id, results);
 
         return fetch(encodeURI(url))
             .then(res => res.json())
-            .then(addLimits);
+            .then(convertToLimits);
     }
 
-    addLimits(id, results) {
+    convertToLimits(id, results) {
         if (!(results.parameter)) {
             return [];
         }
 
-        let values = [];
-        results.parameter.forEach(parameter => {
-            let limit = {
-                id: parameter.id.name,
-                timestamp: parameter.generationTimeUTC,
-                value: getValue(parameter.engValue)
-            };
+        return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);;
+    }
 
-            addLimitInformation(parameter, limit);
-            values.push(limit);
+    getLimitFromAlarmRange(id, alarmRange) {
+        let limits = {};
+        alarmRange.forEach(alarm => {
+            limits[alarm.level] = {
+                low: {
+                    cssClass: MONITORING_RESULT_CSS[alarm.level] + ' ' + RANGE_CONDITION_CSS.LOW,
+                    [id]: alarm.minInclusive || alarm.minExclusive
+                },
+                high: {
+                    cssClass: MONITORING_RESULT_CSS[alarm.level] + ' ' + RANGE_CONDITION_CSS.HIGH,
+                    [id]: alarm.maxInclusive || alarm.maxExclusive
+                }
+            }
         });
-
-        return values;
+        return limits;
     }
 
     getLimits(domainObject) {
