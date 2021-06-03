@@ -1,5 +1,5 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
-import { idToQualifiedName } from "../utils";
+import { idToQualifiedName, idWithoutPath } from "../utils";
 
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
@@ -96,12 +96,12 @@ export default class LimitProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
-    getLimitsForParameter(id) {
+    getLimitsForParameter(id, fullId) {
         let url = `${this.url}api/archive/${this.instance}`;
         url += '/parameters' + idToQualifiedName(id);
         url += '?limit=1&order=desc';
 
-        let convertToLimits = (results) => this.convertToLimits(id, results);
+        let convertToLimits = (results) => this.convertToLimits(fullId, results);
 
         return fetch(encodeURI(url))
             .then(res => res.json())
@@ -122,11 +122,11 @@ export default class LimitProvider {
             limits[alarm.level] = {
                 low: {
                     cssClass: MONITORING_RESULT_CSS[alarm.level] + ' ' + RANGE_CONDITION_CSS.LOW,
-                    [id]: alarm.minInclusive || alarm.minExclusive
+                    value: alarm.minInclusive || alarm.minExclusive
                 },
                 high: {
                     cssClass: MONITORING_RESULT_CSS[alarm.level] + ' ' + RANGE_CONDITION_CSS.HIGH,
-                    [id]: alarm.maxInclusive || alarm.maxExclusive
+                    value: alarm.maxInclusive || alarm.maxExclusive
                 }
             }
         });
@@ -134,7 +134,7 @@ export default class LimitProvider {
     }
 
     getLimits(domainObject) {
-        const limits = this.getLimitsForParameter(domainObject.identifier.key);
+        const limits = this.getLimitsForParameter(domainObject.identifier.key, this.openmct.objects.makeKeyString(domainObject.identifier));
 
         return {
             limits: function () {
