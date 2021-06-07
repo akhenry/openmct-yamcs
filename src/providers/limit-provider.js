@@ -1,5 +1,6 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
-import { idToQualifiedName, idWithoutPath } from "../utils";
+import { idToQualifiedName } from "../utils";
+import limitConfig  from "../limits-config.json";
 
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
@@ -121,11 +122,11 @@ export default class LimitProvider {
         alarmRange.forEach(alarm => {
             limits[alarm.level] = {
                 low: {
-                    cssClass: MONITORING_RESULT_CSS[alarm.level] + ' ' + RANGE_CONDITION_CSS.LOW,
+                    color: limitConfig[alarm.level],
                     value: alarm.minInclusive || alarm.minExclusive
                 },
                 high: {
-                    cssClass: MONITORING_RESULT_CSS[alarm.level] + ' ' + RANGE_CONDITION_CSS.HIGH,
+                    color: limitConfig[alarm.level],
                     value: alarm.maxInclusive || alarm.maxExclusive
                 }
             }
