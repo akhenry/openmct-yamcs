@@ -58,7 +58,7 @@ export default class YamcsHistoricalTelemetryProvider {
         let {
             start,
             end,
-            size = 300,
+            size = 1000,
             strategy
         } = options;
 
