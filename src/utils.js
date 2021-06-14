@@ -123,7 +123,7 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         }
     }
 
-    const result = fetch(newUrl)
+    const result = fetch(encodeURI(newUrl))
         .then(res => res.json());
 
     return result.then(res => {
