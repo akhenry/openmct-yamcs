@@ -114,6 +114,8 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         totalLimit = 1000000;
     }
 
+    console.log('accumulate results', url, property, token);
+
     let newUrl = url;
     if (token !== undefined) {
         if (url.indexOf('?') < 0) {
