@@ -123,7 +123,9 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         }
     }
 
-    const result = fetch(newUrl).then(res => {return res.json();});
+    const result = fetch(newUrl)
+        .then(res => res.json());
+
     return result.then(res => {
         if (property in res) {
             soFar = soFar.concat(res[property]);

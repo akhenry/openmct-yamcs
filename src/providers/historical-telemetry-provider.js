@@ -23,7 +23,8 @@ import * as OBJECT_TYPES from '../const';
 import {
     idToQualifiedName,
     getValue,
-    addLimitInformation
+    addLimitInformation,
+    accumulateResults
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
@@ -68,11 +69,13 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         let url = `${this.url}api/archive/${this.instance}`;
+        let responseKeyName = this.getEndpointById(id);
         url += this.getLinkParamsSpecificToId(id);
 
         let order = 'asc';
         let sizeParam = 'limit';
         let convertHistory = (res) => this.convertPointHistory(id, res);
+
         if (strategy && strategy.toLowerCase() === 'latest') {
             size = 1;
             order = 'desc';
@@ -88,17 +91,30 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
-        return fetch(encodeURI(url))
-            .then(res => res.json())
+        return accumulateResults(url, responseKeyName, [])
             .then(convertHistory);
+
+        // return fetch(encodeURI(url))
+        //     .then(res => res.json())
+        //     .then(convertHistory);
     }
 
     getLinkParamsSpecificToId(id) {
+        let endpoint = this.getEndpointById(id);
+
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return '/events';
+            return '/' + endpoint;
         }
 
-        return '/parameters' + idToQualifiedName(id);
+        return '/' + endpoint + idToQualifiedName(id);
+    }
+
+    getEndpointById(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return 'events';
+        }
+
+        return 'parameters';
     }
 
     convertEventHistory(id, results) {
