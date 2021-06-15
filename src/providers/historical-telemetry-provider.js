@@ -56,6 +56,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getHistory(id, options, isImagery) {
+        console.log('get history', options);
         let {
             start,
             end,
@@ -76,15 +77,19 @@ export default class YamcsHistoricalTelemetryProvider {
         let sizeParam = 'limit';
         let convertHistory = (res) => this.convertPointHistory(id, res);
 
-        if (strategy && strategy.toLowerCase() === 'latest') {
-            size = 1;
-            order = 'desc';
-        } else if (strategy && strategy.toLowerCase() === 'minmax' && !isImagery) {
-            responseKeyName = 'sample';
-            url += '/samples';
+        if (strategy) {
+            let lcStrategy = strategy.toLowerCase();
 
-            sizeParam = 'count';
-            convertHistory = (res) => this.convertSampleHistory(id, res);
+            if (lcStrategy === 'latest') {
+                size = 1;
+                order = 'desc';
+            } else if (lcStrategy === 'minmax' && !isImagery) {
+                responseKeyName = 'sample';
+                url += '/samples';
+
+                sizeParam = 'count';
+                convertHistory = (res) => this.convertSampleHistory(id, res);
+            }
         }
 
         url += `?start=${new Date(start).toISOString()}`;
@@ -94,10 +99,6 @@ export default class YamcsHistoricalTelemetryProvider {
 
         return accumulateResults(url, responseKeyName, [])
             .then(convertHistory);
-
-        // return fetch(encodeURI(url))
-        //     .then(res => res.json())
-        //     .then(convertHistory);
     }
 
     getLinkParamsSpecificToId(id) {
