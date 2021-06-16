@@ -56,7 +56,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getHistory(id, options, isImagery) {
-        console.log('get history', options);
+
         let {
             start,
             end,
@@ -123,7 +123,7 @@ export default class YamcsHistoricalTelemetryProvider {
         if (!results) {
             return [];
         }
-        console.log('convert event history', id, results);
+
         return results.map(e => {
             return {
                 id,
@@ -136,7 +136,7 @@ export default class YamcsHistoricalTelemetryProvider {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return this.convertEventHistory(id, results);
         }
-        console.log('convert point history', id, results);
+
 
         if (!(results)) {
             return [];
@@ -161,7 +161,7 @@ export default class YamcsHistoricalTelemetryProvider {
         if (!(results)) {
             return [];
         }
-        console.log('convert sample history', id, results);
+
         let values = [];
         results.forEach(result => {
             if (result.n > 0) {
