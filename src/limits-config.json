@@ -1,0 +1,7 @@
+{
+  "WATCH": "cyan",
+  "WARNING": "yellow",
+  "DISTRESS": "orange",
+  "CRITICAL": "red",
+  "SEVERE": "purple"
+}
