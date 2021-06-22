@@ -110,8 +110,10 @@ export default class LimitProvider {
     }
 
     convertToLimits(id, results) {
-        if (!(results.parameter)) {
-            return [];
+        if (!(results.parameter)
+            || (results.parameter.length <= 0)
+            || !(results.parameter[0].alarmRange)) {
+            return {};
         }
 
         return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);;
