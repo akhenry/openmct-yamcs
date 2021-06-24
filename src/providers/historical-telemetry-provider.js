@@ -63,6 +63,7 @@ export default class YamcsHistoricalTelemetryProvider {
             size = 1000,
             strategy
         } = options;
+        let totalRequestSize = size;
 
         // cap size at 1000, temporarily to prevent errors
         if (size > 1000) {
@@ -98,7 +99,7 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
-        return accumulateResults(url, responseKeyName, [], size)
+        return accumulateResults(url, responseKeyName, [], totalRequestSize)
             .then(convertHistory);
     }
 
