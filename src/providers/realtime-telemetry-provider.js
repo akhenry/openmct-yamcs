@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as OBJECT_TYPES from '../const';
+import * as OBJECT_TYPES from '../const'; // can delete
 import {
     idToQualifiedName,
     qualifiedNameToId,

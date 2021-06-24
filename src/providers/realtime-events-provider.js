@@ -20,8 +20,8 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as OBJECT_TYPES from '../const';
-import * as MESSAGES from './messages';
+import * as OBJECT_TYPES from '../const'; // can delete
+import * as MESSAGES from './messages'; // can delete
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 
