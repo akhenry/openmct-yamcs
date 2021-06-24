@@ -110,6 +110,7 @@ function warnUnsupportedType(type) {
  *     a promise for an array of results accumulated over the requests
  */
 function accumulateResults(url, property, soFar, totalLimit, token) {
+    console.log('accumulateResults', url, property, token);
     if (totalLimit === undefined) {
         totalLimit = 1000000;
     }

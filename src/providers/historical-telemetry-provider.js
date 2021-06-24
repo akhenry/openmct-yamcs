@@ -133,6 +133,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     convertPointHistory(id, results) {
+        console.log('convertPointHistory', id, results);
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return this.convertEventHistory(id, results);
         }
@@ -158,6 +159,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     convertSampleHistory(id, results) {
+        console.log('convertSampleHistory', id, results);
         if (!(results)) {
             return [];
         }
