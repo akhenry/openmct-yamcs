@@ -98,7 +98,7 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
-        return accumulateResults(url, responseKeyName, [])
+        return accumulateResults(url, responseKeyName, [], size)
             .then(convertHistory);
     }
 
@@ -117,7 +117,7 @@ export default class YamcsHistoricalTelemetryProvider {
             return 'events';
         }
 
-        return 'parameters';
+        return 'parameter';
     }
 
     convertEventHistory(id, results) {
