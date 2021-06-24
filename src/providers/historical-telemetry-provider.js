@@ -64,6 +64,7 @@ export default class YamcsHistoricalTelemetryProvider {
             strategy
         } = options;
         let totalRequestSize = size;
+        console.log('options', options);
 
         // cap size at 1000, temporarily to prevent errors
         if (!size || size > 1000) {
