@@ -70,14 +70,14 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         let url = `${this.url}api/archive/${this.instance}`;
-        let responseKeyName = this.getEndpointById(id);
+        let responseKeyName = this.getResponseKeyById(id);
 
         url += this.getLinkParamsSpecificToId(id);
 
         let order = 'asc';
         let sizeParam = 'limit';
         let convertHistory = (res) => this.convertPointHistory(id, res);
-        console.log('strategy', strategy);
+
         if (strategy) {
             let lcStrategy = strategy.toLowerCase();
 
@@ -92,7 +92,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 convertHistory = (res) => this.convertSampleHistory(id, res);
             }
         }
-        console.log('responseKeyName', responseKeyName);
+
         url += `?start=${new Date(start).toISOString()}`;
         url += `&stop=${new Date(end).toISOString()}`;
         url += `&${sizeParam}=${size}`;
@@ -117,6 +117,14 @@ export default class YamcsHistoricalTelemetryProvider {
             return 'events';
         }
 
+        return 'parameters';
+    }
+
+    getResponseKeyById(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return 'event';
+        }
+
         return 'parameter';
     }
 
@@ -134,7 +142,6 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     convertPointHistory(id, results) {
-        console.log('convertPointHistory', id, results);
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return this.convertEventHistory(id, results);
         }
@@ -160,7 +167,6 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     convertSampleHistory(id, results) {
-        console.log('convertSampleHistory', id, results);
         if (!(results)) {
             return [];
         }
