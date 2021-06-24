@@ -71,12 +71,13 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let url = `${this.url}api/archive/${this.instance}`;
         let responseKeyName = this.getEndpointById(id);
+
         url += this.getLinkParamsSpecificToId(id);
 
         let order = 'asc';
         let sizeParam = 'limit';
         let convertHistory = (res) => this.convertPointHistory(id, res);
-
+        console.log('strategy', strategy);
         if (strategy) {
             let lcStrategy = strategy.toLowerCase();
 
@@ -91,7 +92,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 convertHistory = (res) => this.convertSampleHistory(id, res);
             }
         }
-
+        console.log('responseKeyName', responseKeyName);
         url += `?start=${new Date(start).toISOString()}`;
         url += `&stop=${new Date(end).toISOString()}`;
         url += `&${sizeParam}=${size}`;
