@@ -21,8 +21,9 @@
  *****************************************************************************/
 
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
-import RealtimeTelemetryProvider from './providers/realtime-telemetry-provider.js';
-import RealtimeEventsProvider from './providers/realtime-events-provider.js';
+// import RealtimeTelemetryProvider from './providers/realtime-telemetry-provider.js';
+// import RealtimeEventsProvider from './providers/realtime-events-provider.js';
+import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 
@@ -33,6 +34,8 @@ import {
     IMAGE_OBJECT_TYPE,
     STRING_OBJECT_TYPE
 } from './const.js';
+
+const REALTIME_TYPES = [EVENTS_OBJECT_TYPE, TELEMETRY_OBJECT_TYPE, IMAGE_OBJECT_TYPE, STRING_OBJECT_TYPE];
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -48,19 +51,20 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsInstance);
         openmct.telemetry.addProvider(historicalProvider);
 
-        const realtimeTelemetryProvider = new RealtimeTelemetryProvider(
-            configuration.yamcsRealtimeEndpoint,
-            configuration.yamcsInstance
-        );
-        openmct.telemetry.addProvider(realtimeTelemetryProvider);
-        realtimeTelemetryProvider.connect();
+        // const realtimeTelemetryProvider = new RealtimeTelemetryProvider(
+        //     configuration.yamcsRealtimeEndpoint,
+        //     configuration.yamcsInstance
+        // );
+        // openmct.telemetry.addProvider(realtimeTelemetryProvider);
+        // realtimeTelemetryProvider.connect();
 
-        const realtimeEventsProvider = new RealtimeEventsProvider(
+        const realtimeProvider = new RealtimeProvider(
             configuration.yamcsWebsocketEndpoint,
-            configuration.yamcsInstance
+            configuration.yamcsInstance,
+            REALTIME_TYPES
         );
-        openmct.telemetry.addProvider(realtimeEventsProvider);
-        realtimeEventsProvider.connect();
+        openmct.telemetry.addProvider(realtimeProvider);
+        realtimeProvider.connect();
 
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
