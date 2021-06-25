@@ -60,17 +60,19 @@ export default class YamcsHistoricalTelemetryProvider {
         let {
             start,
             end,
-            size = 1000,
+            size,
             strategy
         } = options;
+        let totalRequestSize = size;
 
         // cap size at 1000, temporarily to prevent errors
-        if (size > 1000) {
+        if (!size || size > 1000) {
             size = 1000;
         }
 
         let url = `${this.url}api/archive/${this.instance}`;
-        let responseKeyName = this.getEndpointById(id);
+        let responseKeyName = this.getResponseKeyById(id);
+
         url += this.getLinkParamsSpecificToId(id);
 
         let order = 'asc';
@@ -82,6 +84,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
             if (lcStrategy === 'latest') {
                 size = 1;
+                totalRequestSize = 1;
                 order = 'desc';
             } else if (lcStrategy === 'minmax' && !isImagery) {
                 responseKeyName = 'sample';
@@ -97,7 +100,7 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
-        return accumulateResults(url, responseKeyName, [])
+        return accumulateResults(url, responseKeyName, [], totalRequestSize)
             .then(convertHistory);
     }
 
@@ -117,6 +120,14 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         return 'parameters';
+    }
+
+    getResponseKeyById(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return 'event';
+        }
+
+        return 'parameter';
     }
 
     convertEventHistory(id, results) {
