@@ -23,7 +23,8 @@ import * as OBJECT_TYPES from '../const';
 import {
     idToQualifiedName,
     getValue,
-    addLimitInformation
+    addLimitInformation,
+    accumulateResults
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
@@ -55,32 +56,43 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getHistory(id, options, isImagery) {
+
         let {
             start,
             end,
-            size = 300,
+            size,
             strategy
         } = options;
+        let totalRequestSize = size;
 
         // cap size at 1000, temporarily to prevent errors
-        if (size > 1000) {
+        if (!size || size > 1000) {
             size = 1000;
         }
 
         let url = `${this.url}api/archive/${this.instance}`;
+        let responseKeyName = this.getResponseKeyById(id);
+
         url += this.getLinkParamsSpecificToId(id);
 
         let order = 'asc';
         let sizeParam = 'limit';
         let convertHistory = (res) => this.convertPointHistory(id, res);
-        if (strategy && strategy.toLowerCase() === 'latest') {
-            size = 1;
-            order = 'desc';
-        } else if (strategy && strategy.toLowerCase() === 'minmax' && !isImagery) {
-            url += '/samples';
 
-            sizeParam = 'count';
-            convertHistory = (res) => this.convertSampleHistory(id, res);
+        if (strategy) {
+            let lcStrategy = strategy.toLowerCase();
+
+            if (lcStrategy === 'latest') {
+                size = 1;
+                totalRequestSize = 1;
+                order = 'desc';
+            } else if (lcStrategy === 'minmax' && !isImagery) {
+                responseKeyName = 'sample';
+                url += '/samples';
+
+                sizeParam = 'count';
+                convertHistory = (res) => this.convertSampleHistory(id, res);
+            }
         }
 
         url += `?start=${new Date(start).toISOString()}`;
@@ -88,25 +100,42 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
-        return fetch(encodeURI(url))
-            .then(res => res.json())
+        return accumulateResults(url, responseKeyName, [], totalRequestSize)
             .then(convertHistory);
     }
 
     getLinkParamsSpecificToId(id) {
+        let endpoint = this.getEndpointById(id);
+
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return '/events';
+            return '/' + endpoint;
         }
 
-        return '/parameters' + idToQualifiedName(id);
+        return '/' + endpoint + idToQualifiedName(id);
+    }
+
+    getEndpointById(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return 'events';
+        }
+
+        return 'parameters';
+    }
+
+    getResponseKeyById(id) {
+        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            return 'event';
+        }
+
+        return 'parameter';
     }
 
     convertEventHistory(id, results) {
-        if (!results.event) {
+        if (!results) {
             return [];
         }
 
-        return results.event.map(e => {
+        return results.map(e => {
             return {
                 id,
                 ...e
@@ -119,19 +148,20 @@ export default class YamcsHistoricalTelemetryProvider {
             return this.convertEventHistory(id, results);
         }
 
-        if (!(results.parameter)) {
+
+        if (!(results)) {
             return [];
         }
 
         let values = [];
-        results.parameter.forEach(parameter => {
+        results.forEach(result => {
             let point = {
-                id: parameter.id.name,
-                timestamp: parameter.generationTimeUTC,
-                value: getValue(parameter.engValue)
+                id: result.id.name,
+                timestamp: result.generationTimeUTC,
+                value: getValue(result.engValue)
             };
 
-            addLimitInformation(parameter, point);
+            addLimitInformation(result, point);
             values.push(point);
         });
 
@@ -139,31 +169,31 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     convertSampleHistory(id, results) {
-        if (!(results.sample)) {
+        if (!(results)) {
             return [];
         }
 
         let values = [];
-        results.sample.forEach(sample => {
-            if (sample.n > 0) {
+        results.forEach(result => {
+            if (result.n > 0) {
                 let min_value = {
-                    timestamp: sample.time,
-                    value: sample.min,
+                    timestamp: result.time,
+                    value: result.min,
                     id: id
                 };
 
-                addLimitInformation(sample, min_value);
+                addLimitInformation(result, min_value);
                 values.push(min_value);
             }
 
-            if (sample.n > 1) {
+            if (result.n > 1) {
                 let max_value = {
-                    timestamp: sample.time,
-                    value: sample.max,
+                    timestamp: result.time,
+                    value: result.max,
                     id: id
                 };
 
-                addLimitInformation(sample, max_value);
+                addLimitInformation(result, max_value);
                 values.push(max_value);
             }
         });
