@@ -17,15 +17,13 @@ const typeMap = {
 
 export const SUBSCRIBE = buildSubscribeMessages();
 
-export const UNSUBSCRIBE = {
-    [OBJECT_TYPES.EVENTS_OBJECT_TYPE]: (subscriptionDetails) => {
-        return `{
-            "type": "cancel",
-            "options": {
-                "call": "${subscriptionDetails.call}"
-            }
-          }`;
-    }
+export const UNSUBSCRIBE = (subscriptionDetails) => {
+    return `{
+        "type": "cancel",
+        "options": {
+            "call": "${subscriptionDetails.call}"
+        }
+    }`;
 };
 
 function buildSubscribeMessages() {
@@ -49,16 +47,3 @@ function buildSubscribeMessages() {
 
     return subscriptionMessages;
 }
-
-
-// export const SUBSCRIBE = {
-//     [OBJECT_TYPES.EVENTS_OBJECT_TYPE]: (subscriptionDetails) => {
-//         return `{
-//             "type": ${DATA_TYPE_EVENTS},
-//             "id": "${subscriptionDetails.subscriptionId}",
-//             "options": {
-//                 "instance": "${subscriptionDetails.instance}"
-//             }
-//           }`;
-//     }
-// };

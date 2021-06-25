@@ -49,7 +49,11 @@ export default class RealtimeProvider {
     }
 
     supportsSubscribe(domainObject) {
-        return this.supportedTypes[domainObject.type];
+        return this.isSupportedType(domainObject.type);
+    }
+
+    isSupportedType(type) {
+        return this.supportedTypes[type];
     }
 
     subscribe(domainObject, callback) {
@@ -90,15 +94,139 @@ export default class RealtimeProvider {
     }
 
     sendUnsubscribeMessage(subscriptionDetails) {
-        let domainObject = subscriptionDetails.domainObject;
-        let message = MESSAGES.UNSUBSCRIBE[domainObject.type](subscriptionDetails);
+        let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
 
         this.sendOrQueueMessage(message);
     }
 
-    resubscribeToAll() {
+    reconnect() {
+        if (this.reconnectTimeout) {
+            return;
+        }
 
+        this.reconnectTimeout = setTimeout(() => {
+            this.connect();
+            delete this.reconnectTimeout;
+        }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
+
+        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
+            this.currentWaitIndex++;
+        }
     }
 
+    sendOrQueueMessage(request) {
+        if (this.connected) {
+            try {
+                this.sendMessage(request);
+                return true;
+            } catch (error) {
+                this.connected = false;
+                console.error(error);
+                console.warn("Error while attempting to send to websocket. Reconnecting...");
+
+                this.requests.push(request);
+                this.reconnect();
+            }
+        } else {
+            this.requests.push(request);
+        }
+    }
+
+    connect() {
+        if (this.connected) {
+            return;
+        }
+        let wsUrl = `${this.url}`;
+        this.lastSubscriptionId = 1;
+        this.connected = false;
+        this.socket = new WebSocket(wsUrl);
+
+        this.socket.onopen = () => {
+            clearTimeout(this.reconnectTimeout);
+
+            this.connected = true;
+            console.log(`Established websocket connection to ${wsUrl}`);
+
+            this.currentWaitIndex = 0;
+            this.resubscribeToAll();
+            this.flushQueue();
+        };
+
+        this.socket.onmessage = (event) => {
+            let data = JSON.parse(event.data);
+
+            if (data.type === MESSAGES.DATA_TYPE_REPLY) {
+                let replyToId = data.data.replyTo;
+                let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
+                subscriptionDetails.call = data.call;
+            } else if (this.isSupportedType(data.type)) {
+                let call = data.call;
+                let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
+                let callBackData = this.transformData(data);
+
+                subscriptionDetails.callback(data.data);
+            }
+        };
+
+        this.socket.onerror = (error) => {
+            console.error(error);
+            console.warn("Websocket error, attempting reconnect...");
+            this.connected = false;
+            this.reconnect();
+        };
+
+        this.socket.onclose = () => {
+            this.connected = false;
+            console.warn("Websocket closed. Attempting to reconnect...");
+            this.reconnect();
+        };
+    }
+
+    transformData(data) {
+        console.log('data', data);
+    }
+
+    resubscribeToAll() {
+        this.subscriptions.forEach((subscriptionDetails) => {
+            this.sendSubscribeMessage(subscriptionDetails);
+        });
+    }
+
+    flushQueue() {
+        let shouldReconnect = false;
+        this.requests = this.requests.filter((request) => {
+            try {
+                this.sendMessage(request);
+            } catch (error) {
+                this.connected = false;
+                console.error(error);
+                console.warn("Error while attempting to send to websocket. Reconnecting...");
+
+                shouldReconnect = true;
+                return true;
+            }
+            return false;
+        });
+
+        if (shouldReconnect) {
+            this.reconnect();
+        }
+    }
+
+    getSubscriptionDetailsById(id) {
+        return Array.from(this.subscriptions.values()).find(
+            (subscriptionDetails) => subscriptionDetails.subscriptionId === id
+        );
+    }
+
+    getSubscriptionDetailsByCall(call) {
+        return Array.from(this.subscriptions.values()).find(
+            (subscriptionDetails) => subscriptionDetails.call === call
+        );
+    }
+
+    sendMessage(message) {
+        this.socket.send(message);
+    }
 
 }
