@@ -111,7 +111,7 @@ function warnUnsupportedType(type) {
  */
 function accumulateResults(url, options, property, soFar, totalLimit, token) {
     if (options.signal && options.signal.aborted) {
-        return;
+        return [];
     }
 
     if (totalLimit === undefined) {
