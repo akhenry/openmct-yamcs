@@ -1,7 +1,7 @@
 import * as OBJECT_TYPES from '../const';
 
 export const DATA_TYPE_EVENTS = 'events';
-export const DATA_TYPE_TELEMETRY = 'PARAMETER';
+export const DATA_TYPE_TELEMETRY = 'parameter';
 export const DATA_TYPE_STRING = 'string';
 export const DATA_TYPE_IMAGE = 'image';
 
