@@ -42,9 +42,11 @@ export default class RealtimeProvider {
         this.subscriptions = new Map();
 
         this.addSupportedTypes(types);
+        console.log('messages', MESSAGES);
     }
 
     addSupportedTypes(types) {
+        console.log('supported types', types);
         types.forEach(type => this.supportedTypes[type] = type);
     }
 
@@ -61,6 +63,7 @@ export default class RealtimeProvider {
         let objectKey;
 
         subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+        console.log('subscription details', subscriptionDetails);
         objectKey = domainObject.identifier.key;
 
         this.subscriptions.set(objectKey, subscriptionDetails);
@@ -183,7 +186,7 @@ export default class RealtimeProvider {
     }
 
     transformData(data) {
-        console.log('data', data);
+        console.log('transformData data', data);
     }
 
     resubscribeToAll() {
