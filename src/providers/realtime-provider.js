@@ -84,6 +84,7 @@ export default class RealtimeProvider {
         return {
             instance: this.instance,
             subscriptionId: subscriptionId,
+            name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
             callback: callback
         };

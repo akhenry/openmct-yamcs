@@ -39,7 +39,8 @@ function buildSubscribeMessages() {
                     "id": "${subscriptionDetails.subscriptionId}",
                     "options": {
                         "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime"
+                        "processor": "realtime",
+                        "name": "${subscriptionDetails.name}"
                     }
                 }`;
             };
