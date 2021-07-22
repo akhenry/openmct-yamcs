@@ -38,7 +38,8 @@ function buildSubscribeMessages() {
                     "type": ${dataType},
                     "id": "${subscriptionDetails.subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}"
+                        "instance": "${subscriptionDetails.instance}",
+                        "type": "realtime"
                     }
                 }`;
             };
