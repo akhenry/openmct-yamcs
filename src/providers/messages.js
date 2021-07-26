@@ -40,9 +40,9 @@ function buildSubscribeMessages() {
                     "options": {
                         "instance": "${subscriptionDetails.instance}",
                         "processor": "realtime",
-                        "id": {
+                        "id": [{
                             "name": "${subscriptionDetails.name}"
-                        },
+                        }],
                         "sendFromCache": false
                     }
                 }`;
