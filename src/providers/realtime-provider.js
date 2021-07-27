@@ -44,7 +44,6 @@ export default class RealtimeProvider {
 
         this.addSupportedTypes(types);
         this.addSupportedDataTypes(MESSAGES.SUPPORTED_DATA_TYPES);
-        console.log('messages', MESSAGES);
     }
 
     addSupportedTypes(types) {
@@ -70,9 +69,8 @@ export default class RealtimeProvider {
     subscribe(domainObject, callback) {
         let subscriptionDetails;
         let objectKey;
-        console.log('subscribe');
-        let callHijack = (datum) => { console.log('callback for', domainObject.name); callback(datum); };
-        subscriptionDetails = this.buildSubscriptionDetails(domainObject, callHijack);
+
+        subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
         objectKey = domainObject.identifier.key;
 
         this.subscriptions.set(objectKey, subscriptionDetails);
@@ -82,6 +80,7 @@ export default class RealtimeProvider {
         }
 
         return () => {
+            console.log('unsubscribe', subscriptionDetails.domainObject.name);
             this.sendUnsubscribeMessage(subscriptionDetails);
             this.subscriptions.delete(objectKey);
         };
@@ -173,13 +172,11 @@ export default class RealtimeProvider {
                 let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
                 subscriptionDetails.call = data.call;
             } else if (this.isSupportedDataType(data.type)) {
-                console.log('is supported data type');
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
 
                 for (let i = 0; i < data.data.values.length; i++) {
                     let parameter = data.data.values[i];
-                    console.log('in', parameter);
                     let point = {
                         id: qualifiedNameToId(subscriptionDetails.name),
                         timestamp: parameter.generationTimeUTC,
