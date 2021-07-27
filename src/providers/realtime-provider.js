@@ -42,12 +42,16 @@ export default class RealtimeProvider {
         this.subscriptions = new Map();
 
         this.addSupportedTypes(types);
+        this.addSupportedDataTypes(MESSAGES.SUPPORTED_DATA_TYPES);
         console.log('messages', MESSAGES);
     }
 
     addSupportedTypes(types) {
-        console.log('supported types', types);
         types.forEach(type => this.supportedTypes[type] = type);
+    }
+
+    addSupportedDataTypes(dataTypes) {
+        dataTypes.forEach(dataType => this.supportedDataTypes[dataType] = dataType);
     }
 
     supportsSubscribe(domainObject) {
@@ -56,6 +60,10 @@ export default class RealtimeProvider {
 
     isSupportedType(type) {
         return this.supportedTypes[type];
+    }
+
+    isSupportedDataType(type) {
+        return this.supportedDataTypes[type];
     }
 
     subscribe(domainObject, callback) {
@@ -163,7 +171,7 @@ export default class RealtimeProvider {
                 let replyToId = data.data.replyTo;
                 let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
                 subscriptionDetails.call = data.call;
-            } else if (this.isSupportedType(data.type)) {
+            } else if (this.isSupportedDataType(data.type)) {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
                 let callBackData = this.transformData(data);

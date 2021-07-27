@@ -2,8 +2,8 @@ import * as OBJECT_TYPES from '../const';
 
 export const DATA_TYPE_EVENTS = 'events';
 export const DATA_TYPE_TELEMETRY = 'parameters';
-// export const DATA_TYPE_STRING = 'string';
-// export const DATA_TYPE_IMAGE = 'image';
+
+export const SUPPORTED_DATA_TYPES = [DATA_TYPE_EVENTS, DATA_TYPE_TELEMETRY];
 
 // YAMCS built-in types
 export const DATA_TYPE_REPLY = 'reply';
