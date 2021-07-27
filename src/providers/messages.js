@@ -32,23 +32,28 @@ function buildSubscribeMessages() {
             let dataType = typeMap[objectType];
 
             subscriptionMessages[objectType] = (subscriptionDetails) => {
-                let message = `{
-                    "type": ${dataType},
-                    "id": "${subscriptionDetails.subscriptionId}"
-                }`;
+                let message;
 
                 if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-                    message.options = `{
-                        "instance": "${subscriptionDetails.instance}"
+                    message = `{
+                        "type": ${dataType},
+                        "id": "${subscriptionDetails.subscriptionId}"
+                        "options": {
+                            "instance": "${subscriptionDetails.instance}"
+                        }
                     }`;
                 } else {
-                    message.options = `{
-                        "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime",
-                        "id": [{
-                            "name": "${subscriptionDetails.name}"
-                        }],
-                        "sendFromCache": false
+                    message = `{
+                        "type": ${dataType},
+                        "id": "${subscriptionDetails.subscriptionId}"
+                        "options": {
+                            "instance": "${subscriptionDetails.instance}",
+                            "processor": "realtime",
+                            "id": [{
+                                "name": "${subscriptionDetails.name}"
+                            }],
+                            "sendFromCache": false
+                        }
                     }`;
                 }
 
