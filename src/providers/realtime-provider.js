@@ -167,7 +167,7 @@ export default class RealtimeProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-            console.log('data received', data);
+
             if (data.type === MESSAGES.DATA_TYPE_REPLY) {
                 let replyToId = data.data.replyTo;
                 let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
