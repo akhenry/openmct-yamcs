@@ -35,6 +35,7 @@ export default class RealtimeProvider {
         this.url = url;
         this.instance = instance;
         this.supportedTypes = {};
+        this.supportedDataTypes = {};
         this.connected = false;
         this.requests = [];
         this.currentWaitIndex = 0;
