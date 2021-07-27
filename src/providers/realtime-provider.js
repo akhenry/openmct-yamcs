@@ -177,7 +177,7 @@ export default class RealtimeProvider {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
 
-                for (let i = 0; i < data.data.values; i++) {
+                for (let i = 0; i < data.data.values.length; i++) {
                     let parameter = data.data.values[i];
                     console.log('in', parameter);
                     let point = {
