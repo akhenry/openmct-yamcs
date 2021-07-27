@@ -174,7 +174,7 @@ export default class RealtimeProvider {
             } else if (this.isSupportedDataType(data.type)) {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
-
+                if (!data.data.values) console.log('no values', data);
                 for (let i = 0; i < data.data.values.length; i++) {
                     let parameter = data.data.values[i];
                     let point = {
