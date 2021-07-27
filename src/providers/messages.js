@@ -36,7 +36,7 @@ function buildSubscribeMessages() {
 
                 if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
                     message = `{
-                        "type": ${dataType},
+                        "type": "${dataType}",
                         "id": "${subscriptionDetails.subscriptionId}"
                         "options": {
                             "instance": "${subscriptionDetails.instance}"
@@ -44,7 +44,7 @@ function buildSubscribeMessages() {
                     }`;
                 } else {
                     message = `{
-                        "type": ${dataType},
+                        "type": "${dataType}",
                         "id": "${subscriptionDetails.subscriptionId}"
                         "options": {
                             "instance": "${subscriptionDetails.instance}",
