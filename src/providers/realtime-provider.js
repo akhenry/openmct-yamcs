@@ -185,7 +185,7 @@ export default class RealtimeProvider {
                     };
                     addLimitInformation(parameter, point);
 
-                    subscriptionDetails.callback(data.data);
+                    subscriptionDetails.callback(point);
                 }
             }
         };
