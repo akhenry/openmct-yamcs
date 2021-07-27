@@ -175,7 +175,9 @@ export default class RealtimeProvider {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
 
-                if (subscriptionDetails && data.data.values) {
+                if (data.type === MESSAGES.DATA_TYPE_EVENTS) {
+                    subscriptionDetails.callback(data.data);
+                } else if (subscriptionDetails && data.data.values) {
                     for (let i = 0; i < data.data.values.length; i++) {
                         let parameter = data.data.values[i];
                         let point = {

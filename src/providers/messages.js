@@ -37,7 +37,7 @@ function buildSubscribeMessages() {
                     "id": "${subscriptionDetails.subscriptionId}"
                 }`;
 
-                if (obectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+                if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
                     message.options = `{
                         "instance": "${subscriptionDetails.instance}"
                     }`;
