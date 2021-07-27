@@ -173,11 +173,13 @@ export default class RealtimeProvider {
                 let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
                 subscriptionDetails.call = data.call;
             } else if (this.isSupportedDataType(data.type)) {
+                console.log('is supported data type');
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
-                console.log(data);
+
                 for (let i = 0; i < data.data.values; i++) {
                     let parameter = data.data.values[i];
+                    console.log('in', parameter);
                     let point = {
                         id: qualifiedNameToId(subscriptionDetails.name),
                         timestamp: parameter.generationTimeUTC,
