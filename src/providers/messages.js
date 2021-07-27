@@ -2,11 +2,9 @@ import * as OBJECT_TYPES from '../const';
 
 export const DATA_TYPE_EVENTS = 'events';
 export const DATA_TYPE_TELEMETRY = 'parameters';
+export const DATA_TYPE_REPLY = 'reply';
 
 export const SUPPORTED_DATA_TYPES = [DATA_TYPE_EVENTS, DATA_TYPE_TELEMETRY];
-
-// YAMCS built-in types
-export const DATA_TYPE_REPLY = 'reply';
 
 const typeMap = {
     [OBJECT_TYPES.EVENTS_OBJECT_TYPE]: DATA_TYPE_EVENTS,
@@ -34,18 +32,27 @@ function buildSubscribeMessages() {
             let dataType = typeMap[objectType];
 
             subscriptionMessages[objectType] = (subscriptionDetails) => {
-                return `{
+                let message = `{
                     "type": ${dataType},
-                    "id": "${subscriptionDetails.subscriptionId}",
-                    "options": {
+                    "id": "${subscriptionDetails.subscriptionId}"
+                }`;
+
+                if (obectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+                    message.options = `{
+                        "instance": "${subscriptionDetails.instance}"
+                    }`;
+                } else {
+                    message.options = `{
                         "instance": "${subscriptionDetails.instance}",
                         "processor": "realtime",
                         "id": [{
                             "name": "${subscriptionDetails.name}"
                         }],
                         "sendFromCache": false
-                    }
-                }`;
+                    }`;
+                }
+
+                return message;
             };
         }
     }
