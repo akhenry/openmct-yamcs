@@ -70,9 +70,9 @@ export default class RealtimeProvider {
     subscribe(domainObject, callback) {
         let subscriptionDetails;
         let objectKey;
-
-        subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
-        console.log('subscription details', subscriptionDetails);
+        console.log('subscribe');
+        let callHijack = (datum) => { console.log('callback for', domainObject.name); callback(datum); };
+        subscriptionDetails = this.buildSubscriptionDetails(domainObject, callHijack);
         objectKey = domainObject.identifier.key;
 
         this.subscriptions.set(objectKey, subscriptionDetails);
@@ -185,7 +185,7 @@ export default class RealtimeProvider {
                     };
                     addLimitInformation(parameter, point);
 
-                    subscriptionDetails.callback(data.data)
+                    subscriptionDetails.callback(data.data);
                 }
             }
         };
