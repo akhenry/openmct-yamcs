@@ -175,9 +175,18 @@ export default class RealtimeProvider {
             } else if (this.isSupportedDataType(data.type)) {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
-                let callBackData = this.transformData(data);
 
-                subscriptionDetails.callback(data.data);
+                for (let i = 0; i < data.data.values; i++) {
+                    let parameter = data.data.values[i];
+                    let point = {
+                        id: qualifiedNameToId(subscriptionDetails.name),
+                        timestamp: parameter.generationTimeUTC,
+                        value: getValue(parameter.engValue)
+                    };
+                    addLimitInformation(parameter, point);
+
+                    subscriptionDetails.callback(data.data)
+                }
             }
         };
 
@@ -193,10 +202,6 @@ export default class RealtimeProvider {
             console.warn("Websocket closed. Attempting to reconnect...");
             this.reconnect();
         };
-    }
-
-    transformData(data) {
-        console.log('transformData data', data);
     }
 
     resubscribeToAll() {
