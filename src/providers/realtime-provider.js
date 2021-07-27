@@ -166,6 +166,7 @@ export default class RealtimeProvider {
             } else if (this.isSupportedType(data.type)) {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
+                console.log('data received', data);
                 let callBackData = this.transformData(data);
 
                 subscriptionDetails.callback(data.data);
