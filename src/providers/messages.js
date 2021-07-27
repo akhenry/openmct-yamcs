@@ -37,7 +37,7 @@ function buildSubscribeMessages() {
                 if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
                     message = `{
                         "type": "${dataType}",
-                        "id": "${subscriptionDetails.subscriptionId}"
+                        "id": "${subscriptionDetails.subscriptionId}",
                         "options": {
                             "instance": "${subscriptionDetails.instance}"
                         }
@@ -45,7 +45,7 @@ function buildSubscribeMessages() {
                 } else {
                     message = `{
                         "type": "${dataType}",
-                        "id": "${subscriptionDetails.subscriptionId}"
+                        "id": "${subscriptionDetails.subscriptionId}",
                         "options": {
                             "instance": "${subscriptionDetails.instance}",
                             "processor": "realtime",
@@ -61,6 +61,31 @@ function buildSubscribeMessages() {
             };
         }
     }
-
-    return subscriptionMessages;
 }
+
+//     function buildSubscribeMessages() {
+//         let subscriptionMessages = {};
+    
+//         for (let objectType in typeMap) {
+//             if (typeMap[objectType]) {
+//                 let dataType = typeMap[objectType];
+    
+//                 subscriptionMessages[objectType] = (subscriptionDetails) => {
+//                     return `{
+//                         "type": ${dataType},
+//                         "id": "${subscriptionDetails.subscriptionId}",
+//                         "options": {
+//                             "instance": "${subscriptionDetails.instance}",
+//                             "processor": "realtime",
+//                             "id": [{
+//                                 "name": "${subscriptionDetails.name}"
+//                             }],
+//                             "sendFromCache": false
+//                         }
+//                     }`;
+//                 };
+//             }
+//         }
+
+//     return subscriptionMessages;
+// }
