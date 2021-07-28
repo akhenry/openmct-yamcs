@@ -26,3 +26,14 @@ export const OBJECT_TYPES = {
     IMAGE_OBJECT_TYPE: 'yamcs.image',
     STRING_OBJECT_TYPE: 'yamcs.string'
 };
+
+export const DATA_TYPES = {
+    DATA_TYPE_EVENTS: 'events',
+    DATA_TYPE_TELEMETRY: 'parameters',
+    DATA_TYPE_REPLY: 'reply'
+};
+
+export const SUPPORTED_DATA_TYPES = [
+    DATA_TYPES.DATA_TYPE_EVENTS,
+    DATA_TYPES.DATA_TYPE_TELEMETRY
+];

@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
+import { SUPPORTED_DATA_TYPES, DATA_TYPES } from '../const';
 import {
     idToQualifiedName,
     qualifiedNameToId,
@@ -43,7 +44,7 @@ export default class RealtimeProvider {
         this.subscriptions = new Map();
 
         this.addSupportedTypes(types);
-        this.addSupportedDataTypes(MESSAGES.SUPPORTED_DATA_TYPES);
+        this.addSupportedDataTypes(SUPPORTED_DATA_TYPES);
     }
 
     addSupportedTypes(types) {
@@ -166,7 +167,7 @@ export default class RealtimeProvider {
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
 
-            if (data.type === MESSAGES.DATA_TYPE_REPLY) {
+            if (data.type === DATA_TYPES.DATA_TYPE_REPLY) {
                 let replyToId = data.data.replyTo;
                 let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
                 subscriptionDetails.call = data.call;
@@ -174,7 +175,7 @@ export default class RealtimeProvider {
                 let call = data.call;
                 let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
 
-                if (data.type === MESSAGES.DATA_TYPE_EVENTS) {
+                if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
                     subscriptionDetails.callback(data.data);
                 } else if (subscriptionDetails && data.data.values) {
                     for (let i = 0; i < data.data.values.length; i++) {
