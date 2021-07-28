@@ -50,6 +50,8 @@ function buildSubscribeMessages() {
             };
         }
     }
+
+    return subscriptionMessages;
 }
 export const SUBSCRIBE = buildSubscribeMessages();
 

@@ -44,7 +44,6 @@ export default class RealtimeProvider {
 
         this.addSupportedTypes(types);
         this.addSupportedDataTypes(MESSAGES.SUPPORTED_DATA_TYPES);
-        console.log(MESSAGES);
     }
 
     addSupportedTypes(types) {
