@@ -1,4 +1,4 @@
-import OBJECT_TYPES from '../const';
+import { OBJECT_TYPES } from '../const';
 
 export const DATA_TYPE_EVENTS = 'events';
 export const DATA_TYPE_TELEMETRY = 'parameters';
