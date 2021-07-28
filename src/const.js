@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2021, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -24,3 +24,10 @@ export const EVENTS_OBJECT_TYPE = 'yamcs.events';
 export const TELEMETRY_OBJECT_TYPE = 'yamcs.telemetry';
 export const IMAGE_OBJECT_TYPE = 'yamcs.image';
 export const STRING_OBJECT_TYPE = 'yamcs.string';
+
+export const OBJECT_TYPES = {
+    EVENTS_OBJECT_TYPE,
+    TELEMETRY_OBJECT_TYPE,
+    IMAGE_OBJECT_TYPE,
+    STRING_OBJECT_TYPE
+};
