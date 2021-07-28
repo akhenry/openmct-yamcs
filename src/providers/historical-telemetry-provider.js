@@ -39,6 +39,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
     addSupportedTypes() {
         const types = Object.values(OBJECT_TYPES);
+        console.log('types', types);
         types.forEach(type => {
             this.supportedTypes[type] = type;
         });
