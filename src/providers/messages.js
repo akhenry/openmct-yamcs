@@ -62,30 +62,3 @@ function buildSubscribeMessages() {
         }
     }
 }
-
-//     function buildSubscribeMessages() {
-//         let subscriptionMessages = {};
-    
-//         for (let objectType in typeMap) {
-//             if (typeMap[objectType]) {
-//                 let dataType = typeMap[objectType];
-    
-//                 subscriptionMessages[objectType] = (subscriptionDetails) => {
-//                     return `{
-//                         "type": ${dataType},
-//                         "id": "${subscriptionDetails.subscriptionId}",
-//                         "options": {
-//                             "instance": "${subscriptionDetails.instance}",
-//                             "processor": "realtime",
-//                             "id": [{
-//                                 "name": "${subscriptionDetails.name}"
-//                             }],
-//                             "sendFromCache": false
-//                         }
-//                     }`;
-//                 };
-//             }
-//         }
-
-//     return subscriptionMessages;
-// }

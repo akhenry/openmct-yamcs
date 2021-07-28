@@ -21,9 +21,7 @@
  *****************************************************************************/
 
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
-// import RealtimeTelemetryProvider from './providers/realtime-telemetry-provider.js';
-// import RealtimeEventsProvider from './providers/realtime-events-provider.js';
-import RealtimeProvider from './providers/realtime-provider.js';
+import RealtimeProvider from './providers/realtime-telemetry-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 
@@ -50,13 +48,6 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance);
         openmct.telemetry.addProvider(historicalProvider);
-
-        // const realtimeTelemetryProvider = new RealtimeTelemetryProvider(
-        //     configuration.yamcsRealtimeEndpoint,
-        //     configuration.yamcsInstance
-        // );
-        // openmct.telemetry.addProvider(realtimeTelemetryProvider);
-        // realtimeTelemetryProvider.connect();
 
         const realtimeProvider = new RealtimeProvider(
             configuration.yamcsWebsocketEndpoint,
