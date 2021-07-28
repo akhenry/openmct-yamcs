@@ -13,17 +13,6 @@ const typeMap = {
     [OBJECT_TYPES.IMAGE_OBJECT_TYPE]: DATA_TYPE_TELEMETRY
 };
 
-export const SUBSCRIBE = buildSubscribeMessages();
-
-export const UNSUBSCRIBE = (subscriptionDetails) => {
-    return `{
-        "type": "cancel",
-        "options": {
-            "call": "${subscriptionDetails.call}"
-        }
-    }`;
-};
-
 function buildSubscribeMessages() {
     let subscriptionMessages = {};
 
@@ -62,3 +51,13 @@ function buildSubscribeMessages() {
         }
     }
 }
+export const SUBSCRIBE = buildSubscribeMessages();
+
+export const UNSUBSCRIBE = (subscriptionDetails) => {
+    return `{
+        "type": "cancel",
+        "options": {
+            "call": "${subscriptionDetails.call}"
+        }
+    }`;
+};
