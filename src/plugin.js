@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
-import RealtimeProvider from './providers/realtime-telemetry-provider.js';
+import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 
