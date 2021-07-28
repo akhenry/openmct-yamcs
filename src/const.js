@@ -20,14 +20,9 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export const EVENTS_OBJECT_TYPE = 'yamcs.events';
-export const TELEMETRY_OBJECT_TYPE = 'yamcs.telemetry';
-export const IMAGE_OBJECT_TYPE = 'yamcs.image';
-export const STRING_OBJECT_TYPE = 'yamcs.string';
-
 export const OBJECT_TYPES = {
-    EVENTS_OBJECT_TYPE,
-    TELEMETRY_OBJECT_TYPE,
-    IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
+    EVENTS_OBJECT_TYPE: 'yamcs.events',
+    TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
+    IMAGE_OBJECT_TYPE: 'yamcs.image',
+    STRING_OBJECT_TYPE: 'yamcs.string'
 };
