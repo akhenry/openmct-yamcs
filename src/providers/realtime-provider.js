@@ -34,7 +34,7 @@ export default class RealtimeProvider {
     constructor(url, instance) {
         this.url = url;
         this.instance = instance;
-        this.supportedTypes = {};
+        this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
         this.requests = [];
@@ -48,7 +48,7 @@ export default class RealtimeProvider {
     }
 
     addSupportedObjectTypes(types) {
-        types.forEach(type => this.supportedTypes[type] = type);
+        types.forEach(type => this.supportedObjectTypes[type] = type);
     }
 
     addSupportedDataTypes(dataTypes) {
@@ -60,7 +60,7 @@ export default class RealtimeProvider {
     }
 
     isSupportedObjectType(type) {
-        return this.supportedTypes[type];
+        return this.supportedObjectTypes[type];
     }
 
     isSupportedDataType(type) {
