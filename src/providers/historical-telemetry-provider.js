@@ -61,7 +61,8 @@ export default class YamcsHistoricalTelemetryProvider {
             start,
             end,
             size,
-            strategy
+            strategy,
+            signal
         } = options;
         let totalRequestSize = size;
 
@@ -100,7 +101,7 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&${sizeParam}=${size}`;
         url += `&order=${order}`;
 
-        return accumulateResults(url, responseKeyName, [], totalRequestSize)
+        return accumulateResults(url, { signal }, responseKeyName, [], totalRequestSize)
             .then(convertHistory);
     }
 

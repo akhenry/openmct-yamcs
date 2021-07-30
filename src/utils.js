@@ -109,7 +109,11 @@ function warnUnsupportedType(type) {
  * Returns:
  *     a promise for an array of results accumulated over the requests
  */
-function accumulateResults(url, property, soFar, totalLimit, token) {
+function accumulateResults(url, options, property, soFar, totalLimit, token) {
+    if (options.signal && options.signal.aborted) {
+        return [];
+    }
+
     if (totalLimit === undefined) {
         totalLimit = 1000000;
     }
@@ -123,7 +127,7 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         }
     }
 
-    const result = fetch(encodeURI(newUrl))
+    const result = fetch(encodeURI(newUrl), options)
         .then(res => res.json());
 
     return result.then(res => {
@@ -133,7 +137,7 @@ function accumulateResults(url, property, soFar, totalLimit, token) {
         if (res.continuationToken===undefined || soFar.length >= totalLimit) {
             return soFar;
         }
-        return accumulateResults(url, property, soFar, totalLimit,
+        return accumulateResults(url, options, property, soFar, totalLimit,
             res.continuationToken);
     });
 }
