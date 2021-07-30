@@ -25,12 +25,7 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import {
-    EVENTS_OBJECT_TYPE,
-    TELEMETRY_OBJECT_TYPE,
-    IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
-} from '../const.js';
+import { OBJECT_TYPES } from '../const';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -75,14 +70,14 @@ export default class YamcsObjectProvider {
         });
 
         const identifier = {
-            key: EVENTS_OBJECT_TYPE,
+            key: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
             namespace: this.namespace
         };
         const eventObject = {
             identifier,
             location,
             name: 'Events',
-            type: EVENTS_OBJECT_TYPE,
+            type: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
             telemetry: {
                 values: [
                     {
@@ -129,7 +124,7 @@ export default class YamcsObjectProvider {
     }
 
     get(identifier) {
-        if (identifier.key === EVENTS_OBJECT_TYPE) {
+        if (identifier.key === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return Promise.resolve(this.objects[identifier.key]);
         }
 
@@ -346,9 +341,9 @@ export default class YamcsObjectProvider {
                 ]
             };
 
-            if (obj.type === STRING_OBJECT_TYPE) {
+            if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
                 obj.telemetry.values[0].hints = {};
-            } else if (obj.type === IMAGE_OBJECT_TYPE) {
+            } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
                 obj.telemetry.values[0].hints = { image: 1 };
                 obj.telemetry.values[0].format = 'image';
             }
@@ -378,12 +373,12 @@ export default class YamcsObjectProvider {
 
         /* Built-in Yamcs telemetry does not supply type information. */
         if (parameter.type === undefined) {
-            return TELEMETRY_OBJECT_TYPE;
+            return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }
         if (parameter.type.engType==='integer' || parameter.type.engType==='float') {
-            return TELEMETRY_OBJECT_TYPE;
+            return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }
 
-        return STRING_OBJECT_TYPE;
+        return OBJECT_TYPES.STRING_OBJECT_TYPE;
     }
 }

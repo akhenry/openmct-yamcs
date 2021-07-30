@@ -21,18 +21,12 @@
  *****************************************************************************/
 
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
-import RealtimeTelemetryProvider from './providers/realtime-telemetry-provider.js';
-import RealtimeEventsProvider from './providers/realtime-events-provider.js';
+import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 
 
-import {
-    EVENTS_OBJECT_TYPE,
-    TELEMETRY_OBJECT_TYPE,
-    IMAGE_OBJECT_TYPE,
-    STRING_OBJECT_TYPE
-} from './const.js';
+import { OBJECT_TYPES } from './const';
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -48,19 +42,12 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsInstance);
         openmct.telemetry.addProvider(historicalProvider);
 
-        const realtimeTelemetryProvider = new RealtimeTelemetryProvider(
-            configuration.yamcsRealtimeEndpoint,
-            configuration.yamcsInstance
-        );
-        openmct.telemetry.addProvider(realtimeTelemetryProvider);
-        realtimeTelemetryProvider.connect();
-
-        const realtimeEventsProvider = new RealtimeEventsProvider(
+        const realtimeProvider = new RealtimeProvider(
             configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance
         );
-        openmct.telemetry.addProvider(realtimeEventsProvider);
-        realtimeEventsProvider.connect();
+        openmct.telemetry.addProvider(realtimeProvider);
+        realtimeProvider.connect();
 
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
@@ -81,25 +68,25 @@ export default function installYamcsPlugin(configuration) {
 
         openmct.objects.addProvider('taxonomy', objectProvider);
 
-        openmct.types.addType(TELEMETRY_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.TELEMETRY_OBJECT_TYPE, {
             name: 'Telemetry Point',
             description: 'Spacecraft Telemetry point',
             cssClass: 'icon-telemetry'
         });
 
-        openmct.types.addType(IMAGE_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.IMAGE_OBJECT_TYPE, {
             name: 'Telemetry Image',
             description: 'Spacecraft camera image',
             cssClass: 'icon-telemetry'
         });
 
-        openmct.types.addType(STRING_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.STRING_OBJECT_TYPE, {
             name: 'Telemetry String',
             description: 'Spacecraft telemetry string value',
             cssClass: 'icon-telemetry'
         });
 
-        openmct.types.addType(EVENTS_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.EVENTS_OBJECT_TYPE, {
             name: "Events",
             description: "To view events",
             cssClass: "icon-generator-events"
