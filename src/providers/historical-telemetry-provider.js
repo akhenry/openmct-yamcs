@@ -102,10 +102,7 @@ export default class YamcsHistoricalTelemetryProvider {
         url += `&order=${order}`;
 
         return accumulateResults(url, { signal }, responseKeyName, [], totalRequestSize)
-            .then(convertHistory)
-            .catch((error) => {
-                console.log('error', error);
-            });
+            .then(convertHistory);
     }
 
     getLinkParamsSpecificToId(id) {
