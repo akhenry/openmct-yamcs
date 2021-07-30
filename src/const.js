@@ -32,8 +32,3 @@ export const DATA_TYPES = {
     DATA_TYPE_TELEMETRY: 'parameters',
     DATA_TYPE_REPLY: 'reply'
 };
-
-export const SUPPORTED_DATA_TYPES = [
-    DATA_TYPES.DATA_TYPE_EVENTS,
-    DATA_TYPES.DATA_TYPE_TELEMETRY
-];

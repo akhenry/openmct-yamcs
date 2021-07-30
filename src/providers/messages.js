@@ -11,39 +11,36 @@ const typeMap = {
 function buildSubscribeMessages() {
     let subscriptionMessages = {};
 
-    for (let objectType in typeMap) {
-        if (typeMap[objectType]) {
-            let dataType = typeMap[objectType];
+    for (const [objectType, dataType] of Object.entries(typeMap)) {
 
-            subscriptionMessages[objectType] = (subscriptionDetails) => {
-                let message;
+        subscriptionMessages[objectType] = (subscriptionDetails) => {
+            let message;
 
-                if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-                    message = `{
-                        "type": "${dataType}",
-                        "id": "${subscriptionDetails.subscriptionId}",
-                        "options": {
-                            "instance": "${subscriptionDetails.instance}"
-                        }
-                    }`;
-                } else {
-                    message = `{
-                        "type": "${dataType}",
-                        "id": "${subscriptionDetails.subscriptionId}",
-                        "options": {
-                            "instance": "${subscriptionDetails.instance}",
-                            "processor": "realtime",
-                            "id": [{
-                                "name": "${subscriptionDetails.name}"
-                            }],
-                            "sendFromCache": false
-                        }
-                    }`;
-                }
+            if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+                message = `{
+                    "type": "${dataType}",
+                    "id": "${subscriptionDetails.subscriptionId}",
+                    "options": {
+                        "instance": "${subscriptionDetails.instance}"
+                    }
+                }`;
+            } else {
+                message = `{
+                    "type": "${dataType}",
+                    "id": "${subscriptionDetails.subscriptionId}",
+                    "options": {
+                        "instance": "${subscriptionDetails.instance}",
+                        "processor": "realtime",
+                        "id": [{
+                            "name": "${subscriptionDetails.name}"
+                        }],
+                        "sendFromCache": false
+                    }
+                }`;
+            }
 
-                return message;
-            };
-        }
+            return message;
+        };
     }
 
     return subscriptionMessages;

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2021, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { SUPPORTED_DATA_TYPES, DATA_TYPES } from '../const';
+import { OBJECT_TYPES, DATA_TYPES } from '../const';
 import {
     idToQualifiedName,
     qualifiedNameToId,
@@ -30,9 +30,8 @@ import {
 } from '../utils.js';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
-
 export default class RealtimeProvider {
-    constructor(url, instance, types) {
+    constructor(url, instance) {
         this.url = url;
         this.instance = instance;
         this.supportedTypes = {};
@@ -41,13 +40,14 @@ export default class RealtimeProvider {
         this.requests = [];
         this.currentWaitIndex = 0;
         this.lastSubscriptionId = 1;
-        this.subscriptions = new Map();
+        this.subscriptionsByCall = new Map();
+        this.subscriptionsById = {};
 
-        this.addSupportedTypes(types);
-        this.addSupportedDataTypes(SUPPORTED_DATA_TYPES);
+        this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
+        this.addSupportedDataTypes(Object.values(DATA_TYPES));
     }
 
-    addSupportedTypes(types) {
+    addSupportedObjectTypes(types) {
         types.forEach(type => this.supportedTypes[type] = type);
     }
 
@@ -56,10 +56,10 @@ export default class RealtimeProvider {
     }
 
     supportsSubscribe(domainObject) {
-        return this.isSupportedType(domainObject.type);
+        return this.isSupportedObjectType(domainObject.type);
     }
 
-    isSupportedType(type) {
+    isSupportedObjectType(type) {
         return this.supportedTypes[type];
     }
 
@@ -68,13 +68,10 @@ export default class RealtimeProvider {
     }
 
     subscribe(domainObject, callback) {
-        let subscriptionDetails;
-        let objectKey;
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+        let id = subscriptionDetails.subscriptionId;
 
-        subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
-        objectKey = domainObject.identifier.key;
-
-        this.subscriptions.set(objectKey, subscriptionDetails);
+        this.subscriptionsById[id] = subscriptionDetails;
 
         if (this.connected) {
             this.sendSubscribeMessage(subscriptionDetails);
@@ -82,7 +79,8 @@ export default class RealtimeProvider {
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
-            this.subscriptions.delete(objectKey);
+            this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+            delete this.subscriptionsById[id];
         };
     }
 
@@ -167,28 +165,39 @@ export default class RealtimeProvider {
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
 
-            if (data.type === DATA_TYPES.DATA_TYPE_REPLY) {
-                let replyToId = data.data.replyTo;
-                let subscriptionDetails = this.getSubscriptionDetailsById(replyToId);
-                subscriptionDetails.call = data.call;
-            } else if (this.isSupportedDataType(data.type)) {
-                let call = data.call;
-                let subscriptionDetails = this.getSubscriptionDetailsByCall(call);
+            if (!this.isSupportedDataType(data.type)) {
+                return;
+            }
 
+            let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
+            let subscriptionDetails;
+
+            if (isReply) {
+                let id = data.data.replyTo;
+                subscriptionDetails = this.subscriptionsById[id];
+                subscriptionDetails.call = data.call;
+            } else {
+                subscriptionDetails = this.subscriptionsByCall.get(data.call);
+
+                // possibly cancelled
+                if (!subscriptionDetails) {
+                    return;
+                }
+
+                // only event is handled differently
                 if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
                     subscriptionDetails.callback(data.data);
-                } else if (subscriptionDetails && data.data.values) {
-                    for (let i = 0; i < data.data.values.length; i++) {
-                        let parameter = data.data.values[i];
+                } else if (data.data.values) {
+                    data.data.values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter.generationTimeUTC,
                             value: getValue(parameter.engValue)
                         };
-                        addLimitInformation(parameter, point);
 
+                        addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);
-                    }
+                    });
                 }
             }
         };
@@ -208,7 +217,7 @@ export default class RealtimeProvider {
     }
 
     resubscribeToAll() {
-        this.subscriptions.forEach((subscriptionDetails) => {
+        this.subscriptionsByCall.forEach((subscriptionDetails) => {
             this.sendSubscribeMessage(subscriptionDetails);
         });
     }
@@ -232,18 +241,6 @@ export default class RealtimeProvider {
         if (shouldReconnect) {
             this.reconnect();
         }
-    }
-
-    getSubscriptionDetailsById(id) {
-        return Array.from(this.subscriptions.values()).find(
-            (subscriptionDetails) => subscriptionDetails.subscriptionId === id
-        );
-    }
-
-    getSubscriptionDetailsByCall(call) {
-        return Array.from(this.subscriptions.values()).find(
-            (subscriptionDetails) => subscriptionDetails.call === call
-        );
     }
 
     sendMessage(message) {

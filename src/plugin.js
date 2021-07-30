@@ -28,8 +28,6 @@ import LimitProvider from './providers/limit-provider';
 
 import { OBJECT_TYPES } from './const';
 
-const REALTIME_TYPES = [OBJECT_TYPES.EVENTS_OBJECT_TYPE, OBJECT_TYPES.TELEMETRY_OBJECT_TYPE, OBJECT_TYPES.IMAGE_OBJECT_TYPE, OBJECT_TYPES.STRING_OBJECT_TYPE];
-
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
@@ -46,8 +44,7 @@ export default function installYamcsPlugin(configuration) {
 
         const realtimeProvider = new RealtimeProvider(
             configuration.yamcsWebsocketEndpoint,
-            configuration.yamcsInstance,
-            REALTIME_TYPES
+            configuration.yamcsInstance
         );
         openmct.telemetry.addProvider(realtimeProvider);
         realtimeProvider.connect();
