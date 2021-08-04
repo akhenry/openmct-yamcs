@@ -72,12 +72,14 @@ export default class RealtimeProvider {
         let id = subscriptionDetails.subscriptionId;
 
         this.subscriptionsById[id] = subscriptionDetails;
+        console.log('setting subscriptions object', id, this.subscriptionsById);
 
         if (this.connected) {
             this.sendSubscribeMessage(subscriptionDetails);
         }
 
         return () => {
+            console.log('unsubscribing', id, this.subscriptionsById, this.subscriptionsByCall);
             this.sendUnsubscribeMessage(subscriptionDetails);
             this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
             delete this.subscriptionsById[id];
