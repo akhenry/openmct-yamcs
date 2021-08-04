@@ -172,16 +172,15 @@ export default class RealtimeProvider {
             }
             console.log('is supported');
             let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
-            let subscriptionDetails;
 
             if (isReply) {
                 console.log('is reply');
                 let id = data.data.replyTo;
-                subscriptionDetails = this.subscriptionsById[id];
+                let subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = data.call;
                 console.log('adding call', data, subscriptionDetails);
             } else {
-                subscriptionDetails = this.subscriptionsByCall.get(data.call);
+                let subscriptionDetails = this.subscriptionsByCall.get(data.call);
                 console.log('updating sub deets from call', subscriptionDetails);
                 // possibly cancelled
                 if (!subscriptionDetails) {
