@@ -72,14 +72,12 @@ export default class RealtimeProvider {
         let id = subscriptionDetails.subscriptionId;
 
         this.subscriptionsById[id] = subscriptionDetails;
-        console.log('setting subscriptions object', id, this.subscriptionsById);
 
         if (this.connected) {
             this.sendSubscribeMessage(subscriptionDetails);
         }
 
         return () => {
-            console.log('unsubscribing', id, this.subscriptionsById, this.subscriptionsByCall);
             this.sendUnsubscribeMessage(subscriptionDetails);
             this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
             delete this.subscriptionsById[id];
@@ -166,22 +164,21 @@ export default class RealtimeProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-            console.log('on message');
+
             if (!this.isSupportedDataType(data.type)) {
                 return;
             }
-            console.log('is supported');
+
             let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
+            let subscriptionDetails;
 
             if (isReply) {
                 let id = data.data.replyTo;
-                console.log('isReply: grabbing subscriptions details by id', id, data, this.subscriptionsById);
-                let subscriptionDetails = this.subscriptionsById[id];
+                subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = data.call;
                 this.subscriptionsByCall.set(data.call, subscriptionDetails);
             } else {
-                console.log('isData: grabbing subscrition detals by call', data, this.subscriptionsByCall);
-                let subscriptionDetails = this.subscriptionsByCall.get(data.call);
+                subscriptionDetails = this.subscriptionsByCall.get(data.call);
 
                 // possibly cancelled
                 if (!subscriptionDetails) {
