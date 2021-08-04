@@ -174,14 +174,14 @@ export default class RealtimeProvider {
             let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
 
             if (isReply) {
-                console.log('is reply');
                 let id = data.data.replyTo;
+                console.log('isReply: grabbing subscriptions details by id', id, data, this.subscriptionsById);
                 let subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = data.call;
-                console.log('adding call', data, subscriptionDetails);
             } else {
+                console.log('isData: grabbing subscrition detals by call', data, this.subscriptionsByCall);
                 let subscriptionDetails = this.subscriptionsByCall.get(data.call);
-                console.log('updating sub deets from call', subscriptionDetails);
+
                 // possibly cancelled
                 if (!subscriptionDetails) {
                     return;
@@ -199,7 +199,6 @@ export default class RealtimeProvider {
                         };
 
                         addLimitInformation(parameter, point);
-                        console.log('looping and callbacks', point);
                         subscriptionDetails.callback(point);
                     });
                 }
