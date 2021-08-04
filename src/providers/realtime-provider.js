@@ -174,9 +174,10 @@ export default class RealtimeProvider {
 
             if (isReply) {
                 let id = data.data.replyTo;
+                let call = data.call;
                 subscriptionDetails = this.subscriptionsById[id];
-                subscriptionDetails.call = data.call;
-                this.subscriptionsByCall.set(data.call, subscriptionDetails);
+                subscriptionDetails.call = call;
+                this.subscriptionsByCall.set(call, subscriptionDetails);
             } else {
                 subscriptionDetails = this.subscriptionsByCall.get(data.call);
 
