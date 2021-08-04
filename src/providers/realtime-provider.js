@@ -166,21 +166,22 @@ export default class RealtimeProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-
+            console.log('on message');
             if (!this.isSupportedDataType(data.type)) {
                 return;
             }
-
+            console.log('is supported');
             let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
             let subscriptionDetails;
 
             if (isReply) {
+                console.log('is reply');
                 let id = data.data.replyTo;
                 subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = data.call;
             } else {
                 subscriptionDetails = this.subscriptionsByCall.get(data.call);
-
+                console.log('updating sub deets with call', subscriptionDetails);
                 // possibly cancelled
                 if (!subscriptionDetails) {
                     return;
@@ -198,6 +199,7 @@ export default class RealtimeProvider {
                         };
 
                         addLimitInformation(parameter, point);
+                        console.log('looping and callbacks', point);
                         subscriptionDetails.callback(point);
                     });
                 }
