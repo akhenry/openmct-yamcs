@@ -179,9 +179,10 @@ export default class RealtimeProvider {
                 let id = data.data.replyTo;
                 subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = data.call;
+                console.log('adding call', data, subscriptionDetails);
             } else {
                 subscriptionDetails = this.subscriptionsByCall.get(data.call);
-                console.log('updating sub deets with call', subscriptionDetails);
+                console.log('updating sub deets from call', subscriptionDetails);
                 // possibly cancelled
                 if (!subscriptionDetails) {
                     return;
