@@ -312,6 +312,7 @@ export default class YamcsObjectProvider {
 
         let isAggregate = false;
         if (parameter.type!==undefined && parameter.type.engType==='aggregate') {
+            console.log('aggregate', parameter, qualifiedName, parent, prefix);
             isAggregate = true;
         }
 
