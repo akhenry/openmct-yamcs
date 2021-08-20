@@ -68,6 +68,12 @@ export default function installYamcsPlugin(configuration) {
 
         openmct.objects.addProvider('taxonomy', objectProvider);
 
+        openmct.types.addType(OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE, {
+            name: 'Telemetry Points',
+            description: 'Spacecraft Telemetry points',
+            cssClass: 'icon-telemetry'
+        });
+
         openmct.types.addType(OBJECT_TYPES.TELEMETRY_OBJECT_TYPE, {
             name: 'Telemetry Point',
             description: 'Spacecraft Telemetry point',

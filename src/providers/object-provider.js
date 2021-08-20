@@ -310,59 +310,81 @@ export default class YamcsObjectProvider {
             location: location
         };
 
-        let isAggregate = false;
-        if (parameter.type!==undefined && parameter.type.engType==='aggregate') {
-            console.log('aggregate', parameter, qualifiedName, parent, prefix);
-            isAggregate = true;
-        }
+        let isAggregate = this.isAggregate(parameter);
+        let aggregateHasMembers = false;
+
+        obj.type = this.getParameterType(parameter);
+        obj.telemetry = {
+            values: [{
+                key: 'utc',
+                source: 'timestamp',
+                name: 'Timestamp',
+                format: 'iso',
+                hints: {
+                    domain: 1
+                }
+            }]
+        };
 
         if (isAggregate) {
-            obj.type = 'noneditable.folder';
+            aggregateHasMembers = this.aggregateHasMembers(parameter);
             obj.composition = [];
         } else {
-            obj.type = this.getParameterType(parameter);
-            obj.telemetry = {
-                values: [
-                    {
-                        key: 'value',
-                        name: 'Value',
-                        hints: {
-                            range: 1
-                        }
-                    },
-                    {
-                        key: 'utc',
-                        source: 'timestamp',
-                        name: 'Timestamp',
-                        format: 'iso',
-                        hints: {
-                            domain: 1
-                        }
-                    }
-                ]
-            };
+            let key = 'value';
+            obj.telemetry.values.push({
+                key,
+                name: 'Value',
+                hints: {
+                    range: 1
+                }
+            });
 
-            if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
-                obj.telemetry.values[0].hints = {};
-            } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
-                obj.telemetry.values[0].hints = { image: 1 };
-                obj.telemetry.values[0].format = 'image';
-            }
+            this.addHints(key, obj);
         }
 
         this.addObject(obj);
 
         parent.composition.push(obj.identifier);
 
-        if (isAggregate) {
-            if (parameter.type.member !== undefined) {
-                parameter.type.member.forEach(member => {
-                    let memberQualifiedName = qualifiedName + '.' + member.name;
-                    /* Use current name as a prefix for the member name. */
-                    this.addParameter(member, memberQualifiedName, obj, name + '_');
-                });
-            }
+        if (isAggregate && aggregateHasMembers) {
+            parameter.type.member.forEach(member => {
+                let memberQualifiedName = qualifiedName + '.' + member.name;
+                /* Use current name as a prefix for the member name. */
+                this.addParameter(member, memberQualifiedName, obj, name + '_');
+            });
         }
+    }
+
+    addHints(key, obj) {
+        let metadatum = obj.telemetry.values.find(md => md.key === key);
+
+        if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
+            metadatum.hints = {};
+        } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
+            metadatum.hints = { image: 1 };
+            metadatum.format = 'image';
+        }
+
+    }
+
+    isAggregate(parameter) {
+        let isAggregate = false;
+
+        if (parameter.type !== undefined) {
+            isAggregate = parameter.type.engType === 'aggregate';
+        }
+
+        return isAggregate;
+    }
+
+    aggregateHasMembers(parameter) {
+        let hasMembers = false;
+
+        if (this.isAggregate(parameter)) {
+            hasMembers = parameter.type.member !== undefined;
+        }
+
+        return hasMembers;
     }
 
     getParameterType(parameter) {
@@ -370,6 +392,10 @@ export default class YamcsObjectProvider {
             if (parameter.alias[i].namespace === 'OpenMCT:type') {
                 return parameter.alias[i].name;
             }
+        }
+
+        if (this.isAggregate(parameter)) {
+            return OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE;
         }
 
         /* Built-in Yamcs telemetry does not supply type information. */
