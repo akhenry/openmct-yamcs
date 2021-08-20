@@ -294,42 +294,37 @@ export default class YamcsObjectProvider {
     }
 
     addParameter(parameter, qualifiedName, parent, prefix) {
+        console.log('parameter', parameter);
         let id = qualifiedNameToId(qualifiedName);
         let name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
             namespace: parent.identifier.namespace
         });
-
         let obj = {
             identifier: {
                 key: id,
                 namespace: this.namespace
             },
+            type: this.getParameterType(parameter),
             name: name,
-            location: location
+            location: location,
+            telemetry: {
+                values: [{
+                    key: 'utc',
+                    source: 'timestamp',
+                    name: 'Timestamp',
+                    format: 'iso',
+                    hints: {
+                        domain: 1
+                    }
+                }]
+            }
         };
-
         let isAggregate = this.isAggregate(parameter);
         let aggregateHasMembers = false;
 
-        obj.type = this.getParameterType(parameter);
-        obj.telemetry = {
-            values: [{
-                key: 'utc',
-                source: 'timestamp',
-                name: 'Timestamp',
-                format: 'iso',
-                hints: {
-                    domain: 1
-                }
-            }]
-        };
-
-        if (isAggregate) {
-            aggregateHasMembers = this.aggregateHasMembers(parameter);
-            obj.composition = [];
-        } else {
+        if (!isAggregate) {
             let key = 'value';
             obj.telemetry.values.push({
                 key,
@@ -340,6 +335,13 @@ export default class YamcsObjectProvider {
             });
 
             this.addHints(key, obj);
+        } else {
+            aggregateHasMembers = this.aggregateHasMembers(parameter);
+            obj.composition = [];
+            if (aggregateHasMembers) {
+                let memberMetadata = this.formatAggregateMembers(parameter.type.member);
+                obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
+            }
         }
 
         this.addObject(obj);
@@ -375,6 +377,10 @@ export default class YamcsObjectProvider {
         }
 
         return isAggregate;
+    }
+
+    formatAggregateMembers(members) {
+        console.log('members', members);
     }
 
     aggregateHasMembers(parameter) {
