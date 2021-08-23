@@ -294,7 +294,7 @@ export default class YamcsObjectProvider {
     }
 
     addParameter(parameter, qualifiedName, parent, prefix) {
-        console.log('parameter', parameter);
+        // console.log('parameter', parameter);
         let id = qualifiedNameToId(qualifiedName);
         let name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
@@ -339,16 +339,17 @@ export default class YamcsObjectProvider {
             aggregateHasMembers = this.aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
-                let memberMetadata = this.formatAggregateMembers(parameter.type.member);
+                let memberMetadata = this.formatAggregateMembers(parameter.type.member, qualifiedName);
+                console.log('formatted aggregates', memberMetadata);
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
-
+        console.log('object to add', obj);
         this.addObject(obj);
 
         parent.composition.push(obj.identifier);
 
-        if (isAggregate && aggregateHasMembers) {
+        if (aggregateHasMembers) {
             parameter.type.member.forEach(member => {
                 let memberQualifiedName = qualifiedName + '.' + member.name;
                 /* Use current name as a prefix for the member name. */
@@ -379,8 +380,27 @@ export default class YamcsObjectProvider {
         return isAggregate;
     }
 
-    formatAggregateMembers(members) {
-        console.log('members', members);
+    formatAggregateMembers(members, parentName, rangeHint = 1, formatted = []) {
+
+        members.forEach(member => {
+            let key = parentName + '.' + member.name;
+            let name = member.name;
+
+            if (!this.isAggregate({ member })) {
+                formatted.push({
+                    key,
+                    name,
+                    hints: {
+                        range: rangeHint++
+                    }
+                });
+            } else if (this.aggregateHasMembers({ member })) {
+                let formatedSubMembers = this.formatAggregateMembers(member.type.member, name, rangeHint, formatted);
+                formatted = formatted.concat(formatedSubMembers);
+            }
+        });
+
+        return formatted;
     }
 
     aggregateHasMembers(parameter) {
