@@ -68,6 +68,7 @@ export default class RealtimeProvider {
     }
 
     subscribe(domainObject, callback) {
+        console.log('subscribe', domainObject);
         let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
         let id = subscriptionDetails.subscriptionId;
 
@@ -164,7 +165,7 @@ export default class RealtimeProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
-
+            console.log('on message', event.data.type);
             if (!this.isSupportedDataType(data.type)) {
                 return;
             }
@@ -190,6 +191,7 @@ export default class RealtimeProvider {
                 if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
                     subscriptionDetails.callback(data.data);
                 } else if (data.data.values) {
+                    console.log('data values', data.data.values);
                     data.data.values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),
