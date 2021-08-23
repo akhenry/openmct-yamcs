@@ -420,15 +420,12 @@ export default class YamcsObjectProvider {
             }
         }
 
-        if (this.isAggregate(parameter)) {
-            return OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE;
-        }
-
         /* Built-in Yamcs telemetry does not supply type information. */
-        if (parameter.type === undefined) {
-            return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
-        }
-        if (parameter.type.engType==='integer' || parameter.type.engType==='float') {
+        if (
+            parameter.type === undefined
+            || (parameter.type.engType==='integer' || parameter.type.engType==='float')
+            || (this.isAggregate(parameter) && this.aggregateHasMembers(parameter))
+        ) {
             return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }
 
