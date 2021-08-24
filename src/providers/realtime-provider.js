@@ -68,7 +68,6 @@ export default class RealtimeProvider {
     }
 
     subscribe(domainObject, callback) {
-        console.log('subscribe', domainObject);
         let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
         let id = subscriptionDetails.subscriptionId;
 
@@ -198,9 +197,8 @@ export default class RealtimeProvider {
                             id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter.generationTimeUTC
                         };
-                        console.log('get value', parameter);
                         let value = getValue(parameter.engValue);
-
+                        console.log('value', value);
                         if (parameter.type !== AGGREGATE_TYPE) {
                             point.value = value;
                         } else {

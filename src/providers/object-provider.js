@@ -294,7 +294,6 @@ export default class YamcsObjectProvider {
     }
 
     addParameter(parameter, qualifiedName, parent, prefix) {
-        // console.log('parameter', parameter);
         let id = qualifiedNameToId(qualifiedName);
         let name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
@@ -340,11 +339,10 @@ export default class YamcsObjectProvider {
             obj.composition = [];
             if (aggregateHasMembers) {
                 let memberMetadata = this.formatAggregateMembers(parameter.type.member);
-                console.log('formatted aggregates', memberMetadata);
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
-        console.log('object to add', obj);
+
         this.addObject(obj);
 
         parent.composition.push(obj.identifier);

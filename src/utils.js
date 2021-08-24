@@ -80,7 +80,6 @@ function getValue(value) {
     }
 
     if (value.type === 'AGGREGATE') {
-        console.log(getAggregateValues(value));
         return getAggregateValues(value);
     }
 
@@ -91,7 +90,6 @@ function getValue(value) {
 }
 
 function getAggregateValues(value, existing = {}) {
-    console.log('get aggregate values', value, existing);
     let values = value.aggregateValue.value;
     let names = value.aggregateValue.name;
 
