@@ -92,8 +92,8 @@ function getValue(value) {
 
 function getAggregateValues(value, existing = {}) {
     console.log('get aggregate values', value, existing);
-    let values = value.aggregateValues.value;
-    let names = value.aggregateValues.name;
+    let values = value.aggregateValue.value;
+    let names = value.aggregateValue.name;
 
     for (let i = 0, len = values.length; i < len; i++) {
         let currentValue = values[i];
@@ -101,7 +101,7 @@ function getAggregateValues(value, existing = {}) {
         if (currentValue.type !== 'AGGREGATE') {
             existing[names[i]] = getValue(currentValue);
         } else {
-            existing = { ...existing, ...getAggregateValues(currentValue.aggregateValues) };
+            existing = { ...existing, ...getAggregateValues(currentValue.aggregateValue) };
         }
     }
 
