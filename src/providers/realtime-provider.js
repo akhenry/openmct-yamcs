@@ -199,7 +199,7 @@ export default class RealtimeProvider {
                         };
                         let value = getValue(parameter.engValue);
                         console.log('value', value);
-                        if (parameter.type !== AGGREGATE_TYPE) {
+                        if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             point.value = value;
                         } else {
                             point = { ...point, ...value };
