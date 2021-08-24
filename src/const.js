@@ -34,4 +34,5 @@ export const DATA_TYPES = {
     DATA_TYPE_REPLY: 'reply'
 };
 
+export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 export const AGGREGATE_TYPE = 'AGGREGATE';
