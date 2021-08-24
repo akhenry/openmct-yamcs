@@ -192,12 +192,13 @@ export default class RealtimeProvider {
                     subscriptionDetails.callback(data.data);
                 } else if (data.data.values) {
                     let values = data.data.values;
-                    console.log('data', data, 'values', values);
+                    // console.log('data', data, 'values', values);
                     values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter.generationTimeUTC
                         };
+                        console.log('get value', parameter);
                         let value = getValue(parameter.engValue);
 
                         if (parameter.type !== AGGREGATE_TYPE) {
