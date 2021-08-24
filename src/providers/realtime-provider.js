@@ -198,13 +198,12 @@ export default class RealtimeProvider {
                             timestamp: parameter.generationTimeUTC
                         };
                         let value = getValue(parameter.engValue);
-                        console.log('value', value);
+
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             point.value = value;
                         } else {
                             point = { ...point, ...value };
                         }
-                        console.log('point', point);
 
                         addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);

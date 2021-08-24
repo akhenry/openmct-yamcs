@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES } from '../const';
+import { AGGREGATE_TYPE, OBJECT_TYPES } from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -158,9 +158,15 @@ export default class YamcsHistoricalTelemetryProvider {
         results.forEach(result => {
             let point = {
                 id: result.id.name,
-                timestamp: result.generationTimeUTC,
-                value: getValue(result.engValue)
+                timestamp: result.generationTimeUTC
             };
+            let value = getValue(result.engValue);
+
+            if (result.engValue.type !== AGGREGATE_TYPE) {
+                point.value = value;
+            } else {
+                point = { ...point, ...value };
+            }
 
             addLimitInformation(result, point);
             values.push(point);
