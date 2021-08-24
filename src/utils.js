@@ -101,7 +101,7 @@ function getAggregateValues(value, existing = {}) {
         if (currentValue.type !== 'AGGREGATE') {
             existing[names[i]] = getValue(currentValue);
         } else {
-            existing = { ...existing, ...getAggregateValues(currentValue.aggregateValue) };
+            existing = { ...existing, ...getAggregateValues(currentValue) };
         }
     }
 
