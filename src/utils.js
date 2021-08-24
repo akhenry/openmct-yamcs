@@ -79,10 +79,32 @@ function getValue(value) {
         return JSON.stringify(valueResults);
     }
 
+    if (value.type === 'AGGREGATE') {
+        console.log(getAggregateValues(value));
+        return getAggregateValues(value);
+    }
+
     warnUnsupportedType(value.type);
 
     return UNSUPPORTED_TYPE;
 
+}
+
+function getAggregateValues(value, existing = {}) {
+    let values = value.aggregateValues.value;
+    let names = value.aggregateValues.name;
+
+    for (let i = 0, len = values.length; i < len; i++) {
+        let currentValue = values[i];
+
+        if (currentValue.type !== 'AGGREGATE') {
+            existing[names[i]] = getValue(currentValue);
+        } else {
+            existing = { ...existing, ...getAggregateValues(currentValue.aggregateValues) };
+        }
+    }
+
+    return existing;
 }
 
 function warnUnsupportedType(type) {
