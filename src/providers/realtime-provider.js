@@ -204,6 +204,7 @@ export default class RealtimeProvider {
                         } else {
                             point = { ...point, ...value };
                         }
+                        console.log('point', point);
 
                         addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);
