@@ -370,11 +370,11 @@ export default class YamcsObjectProvider {
 
     isAggregate(parameter) {
         let isAggregate = false;
-        if (!parameter.type) console.log('no type', parameter);
+
         if (parameter.type !== undefined) {
             isAggregate = parameter.type.engType === 'aggregate';
         }
-        console.log('well?', isAggregate);
+
         return isAggregate;
     }
 
@@ -418,11 +418,14 @@ export default class YamcsObjectProvider {
             }
         }
 
+        if (this.isAggregate(parameter) && this.aggregateHasMembers(parameter)) {
+            return OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE;
+        }
+
         /* Built-in Yamcs telemetry does not supply type information. */
         if (
             parameter.type === undefined
             || (parameter.type.engType==='integer' || parameter.type.engType==='float')
-            || (this.isAggregate(parameter) && this.aggregateHasMembers(parameter))
         ) {
             return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }

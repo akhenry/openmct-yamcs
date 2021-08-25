@@ -25,7 +25,7 @@ export const OBJECT_TYPES = {
     TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
     IMAGE_OBJECT_TYPE: 'yamcs.image',
     STRING_OBJECT_TYPE: 'yamcs.string',
-    AGGREGATE_TELEMETRY_TYPE: 'yamcs.telemetry'
+    AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate'
 };
 
 export const DATA_TYPES = {
