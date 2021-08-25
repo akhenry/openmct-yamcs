@@ -191,7 +191,7 @@ export default class RealtimeProvider {
                     subscriptionDetails.callback(data.data);
                 } else if (data.data.values) {
                     let values = data.data.values;
-                    console.log('data', data, 'values', values);
+
                     values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),

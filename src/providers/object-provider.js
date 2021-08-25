@@ -369,7 +369,6 @@ export default class YamcsObjectProvider {
     }
 
     isAggregate(parameter) {
-        console.log('is aggregate', parameter);
         let isAggregate = false;
 
         if (parameter.type !== undefined) {
@@ -384,7 +383,7 @@ export default class YamcsObjectProvider {
         members.forEach(member => {
             let key = member.name;
             let name = member.name;
-
+            console.log('member is aggregate', this.isAggregate({member}), member);
             if (!this.isAggregate({ member })) {
                 formatted.push({
                     key,
@@ -394,7 +393,6 @@ export default class YamcsObjectProvider {
                     }
                 });
             } else if (this.aggregateHasMembers({ member })) {
-                console.log('aggregate aggregate', member);
                 let formatedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint, formatted);
                 formatted = formatted.concat(formatedSubMembers);
             }
