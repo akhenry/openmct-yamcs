@@ -49,8 +49,10 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
+        console.log('request', domainObject, options);
         let metadata = this.openmct.telemetry.getMetadata(domainObject);
         let isImagery = metadata.valuesForHints(['image']).length !== 0;
+        console.log('metadata', metadata);
 
         return this.getHistory(domainObject.identifier.key, options, isImagery);
     }
