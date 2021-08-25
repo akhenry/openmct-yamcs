@@ -383,8 +383,8 @@ export default class YamcsObjectProvider {
         members.forEach(member => {
             let key = member.name;
             let name = member.name;
-            console.log('member is aggregate', this.isAggregate({member}), member);
-            if (!this.isAggregate({ member })) {
+
+            if (!this.isAggregate(member)) {
                 formatted.push({
                     key,
                     name,
