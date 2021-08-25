@@ -370,11 +370,11 @@ export default class YamcsObjectProvider {
 
     isAggregate(parameter) {
         let isAggregate = false;
-
+        console.log('is aggregate check', parameter, parameter.type, parameter.type.engType);
         if (parameter.type !== undefined) {
             isAggregate = parameter.type.engType === 'aggregate';
         }
-
+        console.log('well?', isAggregate);
         return isAggregate;
     }
 
