@@ -49,72 +49,95 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        console.log('request', domainObject, options);
-        let metadata = this.openmct.telemetry.getMetadata(domainObject);
-        let isImagery = metadata.valuesForHints(['image']).length !== 0;
-        console.log('metadata', metadata);
+        // console.log('request', domainObject.type);
+        let requestType = 'getHistory';
+        let standardizedOptions = this.standardizeOptions(options);
 
-        return this.getHistory(domainObject.identifier.key, options, isImagery);
+        if (standardizedOptions.strategy === 'minmax') {
+            requestType = 'getMinMaxHistory';
+        }
+
+        if (this.isImagery(domainObject)) {
+            requestType = 'getImageHistory';
+        }
+
+        return this[requestType](domainObject.identifier.key, standardizedOptions);
     }
 
-    getHistory(id, options, isImagery) {
+    getHistory(id, options) {
+        options.sizeType = 'limit';
 
-        let {
-            start,
-            end,
-            size,
-            strategy,
-            signal
-        } = options;
-        let totalRequestSize = size;
+        let url = `${this.url}api/archive/${this.instance}/${this.buildUrlParams(id, options)}`;
+        let totalRequestSize = this.getAppropriateSize(options.size);
+        let responseKeyName = this.getResponseKeyById(id);
 
-        // cap size at 1000, temporarily to prevent errors
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
+            .then((res) => this.convertPointHistory(id, res));
+    }
+
+    getMinMaxHistory(id, options) {
+        options.sizeType = 'count';
+
+        let responseKeyName = 'sample';
+        let url = `${this.url}api/archive/${this.instance}/samples/${this.buildUrlParams(id, options)}`;
+
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
+            .then((res) => this.convertSampleHistory(id, res));
+    }
+
+    getImageHistory(id, options) {
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
+            .then((res) => this.convertPointHistory(id, res));
+    }
+
+    standardizeOptions(options) {
+        if (options.strategy) {
+            options.strategy = options.strategy.toLowerCase();
+
+            if (options.strategy === 'latest') {
+                options.size = 1;
+                options.order = 'desc';
+            } else {
+                options.order = 'asc';
+            }
+        }
+    }
+
+    buildUrlParams(id, options) {
+        let params = this.getLinkParamsSpecificToId(id);
+
+        params += `?start=${new Date(options.start).toISOString()}`;
+        params += `&stop=${new Date(options.end).toISOString()}`;
+        params += `&${options.sizeType}=${options.size}`;
+        params += `&order=${options.order}`;
+
+        return params;
+    }
+
+    // cap size at 1000, temporarily to prevent errors
+    getAppropriateSize(size) {
         if (!size || size > 1000) {
             size = 1000;
         }
 
-        let url = `${this.url}api/archive/${this.instance}`;
-        let responseKeyName = this.getResponseKeyById(id);
-
-        url += this.getLinkParamsSpecificToId(id);
-
-        let order = 'asc';
-        let sizeParam = 'limit';
-        let convertHistory = (res) => this.convertPointHistory(id, res);
-
-        if (strategy) {
-            let lcStrategy = strategy.toLowerCase();
-
-            if (lcStrategy === 'latest') {
-                size = 1;
-                totalRequestSize = 1;
-                order = 'desc';
-            } else if (lcStrategy === 'minmax' && !isImagery) {
-                responseKeyName = 'sample';
-                url += '/samples';
-
-                sizeParam = 'count';
-                convertHistory = (res) => this.convertSampleHistory(id, res);
-            }
-        }
-
-        url += `?start=${new Date(start).toISOString()}`;
-        url += `&stop=${new Date(end).toISOString()}`;
-        url += `&${sizeParam}=${size}`;
-        url += `&order=${order}`;
-
-        return accumulateResults(url, { signal }, responseKeyName, [], totalRequestSize)
-            .then(convertHistory);
+        return size;
     }
+
+    isImagery(domainObject) {
+        let metadata = this.openmct.telemetry.getMetadata(domainObject);
+
+        return metadata.valuesForHints(['image']).length !== 0;
+    }
+
 
     getLinkParamsSpecificToId(id) {
         let endpoint = this.getEndpointById(id);
 
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return '/' + endpoint;
+            return endpoint;
         }
 
-        return '/' + endpoint + idToQualifiedName(id);
+        return endpoint + idToQualifiedName(id);
     }
 
     getEndpointById(id) {
