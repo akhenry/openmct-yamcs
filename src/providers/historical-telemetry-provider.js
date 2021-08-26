@@ -38,15 +38,13 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     addSupportedTypes() {
-        const types = Object.values(OBJECT_TYPES).filter(type => type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE);
+        const types = Object.values(OBJECT_TYPES);
         types.forEach(type => {
             this.supportedTypes[type] = type;
         });
     }
 
     supportsRequest(domainObject) {
-        console.log('supports request', domainObject);
-        console.log('well?', this.supportedTypes[domainObject.type]);
         return this.supportedTypes[domainObject.type];
     }
 
