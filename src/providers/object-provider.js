@@ -338,6 +338,7 @@ export default class YamcsObjectProvider {
             aggregateHasMembers = this.aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
+                console.log('has aggregate memmbers', parameter);
                 let memberMetadata = this.formatAggregateMembers(parameter.type.member);
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
