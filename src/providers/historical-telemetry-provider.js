@@ -50,24 +50,20 @@ export default class YamcsHistoricalTelemetryProvider {
 
     request(domainObject, options) {
         // console.log('request', domainObject.type);
-        let requestType = 'getHistory';
-        let standardizedOptions = this.standardizeOptions(options);
+        this.standardizeOptions(options);
+        let idAndOptions = [domainObject.identifier.key, options];
 
-        if (standardizedOptions.strategy === 'minmax') {
-            requestType = 'getMinMaxHistory';
+        if (options.strategy === 'minmax') {
+            options.sizeType = 'limit';
+
+            return this.getMinMaxHistory(...idAndOptions);
         }
 
-        if (this.isImagery(domainObject)) {
-            requestType = 'getImageHistory';
-        }
-
-        return this[requestType](domainObject.identifier.key, standardizedOptions);
+        return this.getHistory(...idAndOptions);
     }
 
     getHistory(id, options) {
-        options.sizeType = 'limit';
-
-        let url = `${this.url}api/archive/${this.instance}/${this.buildUrlParams(id, options)}`;
+        let url = this.buildUrl(id, options);
         let totalRequestSize = this.getAppropriateSize(options.size);
         let responseKeyName = this.getResponseKeyById(id);
 
@@ -76,42 +72,37 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getMinMaxHistory(id, options) {
-        options.sizeType = 'count';
-
+        let url = `${this.url}api/archive/${this.instance}/samples/${this.buildUrl(id, options)}`;
+        let totalRequestSize = this.getAppropriateSize(options.size);
         let responseKeyName = 'sample';
-        let url = `${this.url}api/archive/${this.instance}/samples/${this.buildUrlParams(id, options)}`;
 
         return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
             .then((res) => this.convertSampleHistory(id, res));
     }
 
-    getImageHistory(id, options) {
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
-            .then((res) => this.convertPointHistory(id, res));
-    }
-
     standardizeOptions(options) {
+        options.sizeType = 'count';
+        options.order = 'asc';
+
         if (options.strategy) {
             options.strategy = options.strategy.toLowerCase();
 
             if (options.strategy === 'latest') {
                 options.size = 1;
                 options.order = 'desc';
-            } else {
-                options.order = 'asc';
             }
         }
     }
 
-    buildUrlParams(id, options) {
-        let params = this.getLinkParamsSpecificToId(id);
+    buildUrl(id, options) {
+        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
 
-        params += `?start=${new Date(options.start).toISOString()}`;
-        params += `&stop=${new Date(options.end).toISOString()}`;
-        params += `&${options.sizeType}=${options.size}`;
-        params += `&order=${options.order}`;
+        url += `?start=${new Date(options.start).toISOString()}`;
+        url += `&stop=${new Date(options.end).toISOString()}`;
+        url += `&${options.sizeType}=${options.size}`;
+        url += `&order=${options.order}`;
 
-        return params;
+        return url;
     }
 
     // cap size at 1000, temporarily to prevent errors
