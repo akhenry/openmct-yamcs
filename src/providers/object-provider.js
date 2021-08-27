@@ -295,6 +295,7 @@ export default class YamcsObjectProvider {
 
     addParameter(parameter, qualifiedName, parent, prefix) {
         let id = qualifiedNameToId(qualifiedName);
+        console.log('qualified name', id);
         let name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
