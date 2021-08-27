@@ -99,13 +99,11 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     buildUrl(id, options) {
-        let url = `${this.url}api/archive/${this.instance}/`;
+        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
 
         if (options.isSamples) {
-            url += 'samples/';
+            url += '/samples';
         }
-
-        url += this.getLinkParamsSpecificToId(id);
 
         url += `?start=${new Date(options.start).toISOString()}`;
         url += `&stop=${new Date(options.end).toISOString()}`;
