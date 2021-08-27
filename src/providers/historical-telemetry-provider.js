@@ -55,6 +55,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
         if (options.strategy === 'minmax') {
             options.sizeType = 'limit';
+            options.isSamples = true;
 
             return this.getMinMaxHistory(...idAndOptions);
         }
@@ -73,6 +74,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getMinMaxHistory(id, options) {
+        let url = this.buildUrl(id, options);
         let url = `${this.url}api/archive/${this.instance}/samples/${this.buildUrl(id, options)}`;
         console.log('getMinMaxHistory url', url);
         let totalRequestSize = this.getAppropriateSize(options.size);
@@ -85,6 +87,7 @@ export default class YamcsHistoricalTelemetryProvider {
     standardizeOptions(options) {
         options.sizeType = 'count';
         options.order = 'asc';
+        options.isSamples = false;
 
         if (options.strategy) {
             options.strategy = options.strategy.toLowerCase();
@@ -97,7 +100,13 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     buildUrl(id, options) {
-        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
+        let url = `${this.url}api/archive/${this.instance}/`;
+
+        if (options.isSamples) {
+            url += 'samples/';
+        }
+
+        url += this.getLinkParamsSpecificToId(id);
 
         url += `?start=${new Date(options.start).toISOString()}`;
         url += `&stop=${new Date(options.end).toISOString()}`;
@@ -124,21 +133,11 @@ export default class YamcsHistoricalTelemetryProvider {
 
 
     getLinkParamsSpecificToId(id) {
-        let endpoint = this.getEndpointById(id);
-
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return endpoint;
-        }
-
-        return endpoint + idToQualifiedName(id);
-    }
-
-    getEndpointById(id) {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return 'events';
         }
 
-        return 'parameters';
+        return 'parameters' + idToQualifiedName(id);
     }
 
     getResponseKeyById(id) {
