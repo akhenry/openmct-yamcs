@@ -64,6 +64,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
     getHistory(id, options) {
         let url = this.buildUrl(id, options);
+        console.log('getHistory url', url);
         let totalRequestSize = this.getAppropriateSize(options.size);
         let responseKeyName = this.getResponseKeyById(id);
 
@@ -73,6 +74,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
     getMinMaxHistory(id, options) {
         let url = `${this.url}api/archive/${this.instance}/samples/${this.buildUrl(id, options)}`;
+        console.log('getMinMaxHistory url', url);
         let totalRequestSize = this.getAppropriateSize(options.size);
         let responseKeyName = 'sample';
 
