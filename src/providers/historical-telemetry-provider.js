@@ -49,7 +49,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        console.log('request', domainObject.telemetry);
+        console.log('request', domainObject);
         this.standardizeOptions(options);
 
         let id = domainObject.identifier.key;
@@ -135,7 +135,6 @@ export default class YamcsHistoricalTelemetryProvider {
 
         return metadata.valuesForHints(['image']).length !== 0;
     }
-
 
     getLinkParamsSpecificToId(id) {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
