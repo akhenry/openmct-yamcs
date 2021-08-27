@@ -295,7 +295,6 @@ export default class YamcsObjectProvider {
 
     addParameter(parameter, qualifiedName, parent, prefix) {
         let id = qualifiedNameToId(qualifiedName);
-        console.log('qualified name', id);
         let name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
@@ -339,8 +338,11 @@ export default class YamcsObjectProvider {
             aggregateHasMembers = this.aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
-                console.log('has aggregate memmbers', parameter);
                 let memberMetadata = this.formatAggregateMembers(parameter.type.member);
+                if (id === '~ViperGround~Test~roverPose') {
+                    console.log('member', parameter.type.member);
+                    console.log('format aggregate members results', memberMetadata);
+                }
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
