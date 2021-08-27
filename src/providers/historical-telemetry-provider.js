@@ -49,6 +49,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
+        console.log('request', domainObject.type);
         this.standardizeOptions(options);
 
         let id = domainObject.identifier.key;
