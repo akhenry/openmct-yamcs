@@ -50,7 +50,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
     request(domainObject, options) {
         console.log('request', domainObject);
-        this.standardizeOptions(options);
+        this.standardizeOptions(options, domainObject);
 
         let id = domainObject.identifier.key;
         let url = this.buildUrl(id, options);
@@ -81,7 +81,7 @@ export default class YamcsHistoricalTelemetryProvider {
             .then((res) => this.convertSampleHistory(id, res));
     }
 
-    standardizeOptions(options) {
+    standardizeOptions(options, domainObject) {
         options.sizeType = 'count';
         options.order = 'asc';
         options.isSamples = false;
@@ -98,7 +98,10 @@ export default class YamcsHistoricalTelemetryProvider {
                 options.order = 'desc';
             }
 
-            if (options.strategy === 'minmax') {
+            if (
+                options.strategy === 'minmax'
+                && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
+            ) {
                 options.sizeType = 'limit';
                 options.isSamples = true;
             }
