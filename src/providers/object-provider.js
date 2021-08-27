@@ -387,6 +387,9 @@ export default class YamcsObjectProvider {
         members.forEach(member => {
             let key = member.name;
             let name = member.name;
+            if (name === 'position' || name === 'orientation') {
+                console.log('format aggregate, foreach', name);
+            }
 
             if (!this.isAggregate(member)) {
                 formatted.push({
