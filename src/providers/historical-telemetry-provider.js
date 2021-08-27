@@ -49,37 +49,30 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        // console.log('request', domainObject.type);
         this.standardizeOptions(options);
-        let idAndOptions = [domainObject.identifier.key, options];
 
-        if (options.strategy === 'minmax') {
-            options.sizeType = 'limit';
-            options.isSamples = true;
+        let id = domainObject.identifier.key;
+        let url = this.buildUrl(id, options);
+        let requestArguments = [id, url, options];
 
-            return this.getMinMaxHistory(...idAndOptions);
+        if (!this.isImagery(domainObject) && options.strategy === 'minmax') {
+            return this.getMinMaxHistory(...requestArguments);
         }
 
-        return this.getHistory(...idAndOptions);
+        return this.getHistory(...requestArguments);
     }
 
-    getHistory(id, options) {
-        let url = this.buildUrl(id, options);
-        console.log('getHistory url', url);
-        let totalRequestSize = this.getAppropriateSize(options.size);
+    getHistory(id, url, options) {
         let responseKeyName = this.getResponseKeyById(id);
 
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
             .then((res) => this.convertPointHistory(id, res));
     }
 
-    getMinMaxHistory(id, options) {
-        let url = this.buildUrl(id, options);
-        console.log('getMinMaxHistory url', url);
-        let totalRequestSize = this.getAppropriateSize(options.size);
+    getMinMaxHistory(id, url, options) {
         let responseKeyName = 'sample';
 
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], totalRequestSize)
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
             .then((res) => this.convertSampleHistory(id, res));
     }
 
@@ -87,15 +80,25 @@ export default class YamcsHistoricalTelemetryProvider {
         options.sizeType = 'count';
         options.order = 'asc';
         options.isSamples = false;
+        options.totalRequestSize = options.size;
+
+        options.size = this.getAppropriateSize(options.size);
 
         if (options.strategy) {
             options.strategy = options.strategy.toLowerCase();
 
             if (options.strategy === 'latest') {
                 options.size = 1;
+                options.totalRequestSize = 1;
                 options.order = 'desc';
             }
+
+            if (options.strategy === 'minmax') {
+                options.sizeType = 'limit';
+                options.isSamples = true;
+            }
         }
+        console.log('standardized options', { options });
     }
 
     buildUrl(id, options) {
