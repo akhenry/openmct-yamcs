@@ -388,10 +388,13 @@ export default class YamcsObjectProvider {
             let key = member.name;
             let name = member.name;
             if (name === 'position' || name === 'orientation') {
-                console.log('format aggregate, foreach', name);
+                console.log('format aggregate, foreach', name, member);
             }
 
             if (!this.isAggregate(member)) {
+                if (name === 'position' || name === 'orientation') {
+                    console.log('position or orientation', member, 'not aggregate, adding to formatted');
+                }   
                 formatted.push({
                     key,
                     name,
@@ -400,8 +403,11 @@ export default class YamcsObjectProvider {
                     }
                 });
             } else if (this.aggregateHasMembers(member)) {
-                let formatedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint, formatted);
-                formatted = formatted.concat(formatedSubMembers);
+                let formattedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint, formatted);
+                formatted = formatted.concat(formattedSubMembers);
+                if (name === 'position' || name === 'orientation') {
+                    console.log('position or orientation', member, 'IS aggregate, formatted concat: ', formatted);
+                }
             }
         });
 
