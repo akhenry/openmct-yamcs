@@ -382,7 +382,8 @@ export default class YamcsObjectProvider {
         return isAggregate;
     }
 
-    formatAggregateMembers(members, rangeHint = 1, formatted = []) {
+    formatAggregateMembers(members, rangeHint = 1) {
+        let formatted = [];
 
         members.forEach(member => {
             let key = member.name;
@@ -403,7 +404,7 @@ export default class YamcsObjectProvider {
                     }
                 });
             } else if (this.aggregateHasMembers(member)) {
-                let formattedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint, formatted);
+                let formattedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
                 if (name === 'position' || name === 'orientation') {
                     console.log('position or orientation', member, 'IS aggregate, formatted concat: ', formatted);
