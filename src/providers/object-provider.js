@@ -339,10 +339,6 @@ export default class YamcsObjectProvider {
             obj.composition = [];
             if (aggregateHasMembers) {
                 let memberMetadata = this.formatAggregateMembers(parameter.type.member);
-                if (id === '~ViperGround~Test~roverPose') {
-                    console.log('member', parameter.type.member);
-                    console.log('format aggregate members results', memberMetadata);
-                }
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
@@ -388,14 +384,8 @@ export default class YamcsObjectProvider {
         members.forEach(member => {
             let key = member.name;
             let name = member.name;
-            if (name === 'position' || name === 'orientation') {
-                console.log('format aggregate, foreach', name, member);
-            }
 
             if (!this.isAggregate(member)) {
-                if (name === 'position' || name === 'orientation') {
-                    console.log('position or orientation', member, 'not aggregate, adding to formatted');
-                }   
                 formatted.push({
                     key,
                     name,
@@ -406,9 +396,6 @@ export default class YamcsObjectProvider {
             } else if (this.aggregateHasMembers(member)) {
                 let formattedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
-                if (name === 'position' || name === 'orientation') {
-                    console.log('position or orientation', member, 'IS aggregate, formatted concat: ', formatted);
-                }
             }
         });
 

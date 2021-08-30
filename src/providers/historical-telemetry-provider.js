@@ -49,7 +49,6 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        console.log('request', domainObject);
         this.standardizeOptions(options, domainObject);
 
         let id = domainObject.identifier.key;
@@ -106,7 +105,6 @@ export default class YamcsHistoricalTelemetryProvider {
                 options.isSamples = true;
             }
         }
-        console.log('standardized options', { options });
     }
 
     buildUrl(id, options) {
