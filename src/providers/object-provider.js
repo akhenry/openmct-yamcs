@@ -378,11 +378,11 @@ export default class YamcsObjectProvider {
         return isAggregate;
     }
 
-    formatAggregateMembers(members, parentName = '', rangeHint = 1) {
+    formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
         let formatted = [];
 
         members.forEach(member => {
-            let key = parentName ? parentName + '.' + member.name : member.name;
+            let key = parentKey ? parentKey + '.' + member.name : member.name;
             let name = member.name;
 
             if (!this.isAggregate(member)) {
