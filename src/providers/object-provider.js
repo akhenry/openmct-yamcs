@@ -382,8 +382,13 @@ export default class YamcsObjectProvider {
         let formatted = [];
 
         members.forEach(member => {
-            let key = parentKey ? parentKey + '.' + member.name : member.name;
+            let key = member.name;
             let name = member.name;
+
+            if (parentKey) {
+                key = parentKey + '.' + key;
+                name = parentKey.split('.').shift() + ' ' + name;
+            }
 
             if (!this.isAggregate(member)) {
                 formatted.push({
