@@ -378,11 +378,11 @@ export default class YamcsObjectProvider {
         return isAggregate;
     }
 
-    formatAggregateMembers(members, rangeHint = 1) {
+    formatAggregateMembers(members, parentName = '', rangeHint = 1) {
         let formatted = [];
 
         members.forEach(member => {
-            let key = member.name;
+            let key = parentName ? parentName + '.' + member.name : member.name;
             let name = member.name;
 
             if (!this.isAggregate(member)) {
@@ -394,7 +394,7 @@ export default class YamcsObjectProvider {
                     }
                 });
             } else if (this.aggregateHasMembers(member)) {
-                let formattedSubMembers = this.formatAggregateMembers(member.type.member, rangeHint);
+                let formattedSubMembers = this.formatAggregateMembers(member.type.member, key, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
             }
         });
