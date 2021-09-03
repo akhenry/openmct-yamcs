@@ -85,7 +85,7 @@ export default class YamcsObjectProvider {
                         name: 'Severity'
                     },
                     {
-                        key: 'generationTime',
+                        key: 'utc',
                         name: 'Generation Time',
                         hints: {
                             domain: 1
