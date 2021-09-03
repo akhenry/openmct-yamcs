@@ -48,7 +48,7 @@ export default class YamcsHistoricalTelemetryProvider {
         return this.supportedTypes[domainObject.type];
     }
 
-    request(domainObject, options) {
+    request(domainObject, options, yieldResults = false) {
         this.standardizeOptions(options, domainObject);
 
         let id = domainObject.identifier.key;
@@ -74,6 +74,20 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getMinMaxHistory(id, url, options) {
+        let responseKeyName = 'sample';
+
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+            .then((res) => this.convertSampleHistory(id, res));
+    }
+
+    yieldHistory(id, url, options) {
+        let responseKeyName = this.getResponseKeyById(id);
+
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+            .then((res) => this.convertPointHistory(id, res));
+    }
+
+    yieldMinMaxHistory(id, url, options) {
         let responseKeyName = 'sample';
 
         return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
