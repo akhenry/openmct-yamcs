@@ -86,6 +86,7 @@ export default class YamcsObjectProvider {
                     },
                     {
                         key: 'utc',
+                        source: 'generationTime',
                         name: 'Generation Time',
                         hints: {
                             domain: 1
