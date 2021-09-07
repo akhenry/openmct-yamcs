@@ -67,20 +67,6 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getHistory(id, url, options) {
-        let responseKeyName = this.getResponseKeyById(id);
-
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertPointHistory(id, res));
-    }
-
-    getMinMaxHistory(id, url, options) {
-        let responseKeyName = 'sample';
-
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertSampleHistory(id, res));
-    }
-
-    yieldHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
 
         if (!options.yieldRequestProcessor) {
@@ -92,6 +78,17 @@ export default class YamcsHistoricalTelemetryProvider {
 
             return Promise.resolve([]);
         }
+        // let responseKeyName = this.getResponseKeyById(id);
+
+        // return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+        //     .then((res) => this.convertPointHistory(id, res));
+    }
+
+    getMinMaxHistory(id, url, options) {
+        let responseKeyName = 'sample';
+
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+            .then((res) => this.convertSampleHistory(id, res));
     }
 
     yieldMinMaxHistory(id, url, options) {
