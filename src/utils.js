@@ -159,9 +159,49 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     });
 }
 
-function yieldResults(url, options, property, totalLimit, yieldCallback) {
-    if (options.signal && options.signal.aborted) {
-        return [];
+async function yieldResults(url, options) {
+    let {
+        signal,
+        responseKeyName,
+        totalRequestSize,
+        yieldRequestProcessor,
+        formatter
+    } = options;
+
+    if (signal && signal.aborted) {
+        return;
+    }
+
+    let count = 0;
+    let stop = false;
+    let newUrl = url;
+    let token;
+    let result;
+    let data;
+
+    while (!stop) {
+        result = await fetch(encodeURI(newUrl), { signal });
+        result = result.json();
+        data = result[responseKeyName];
+
+        if (data) {
+            count += data.length;
+            token = data.continuationToken;
+
+            yieldRequestProcessor.next(formatter(data));
+
+            if ((signal && signal.aborted) || !token || count >= totalRequestSize) {
+                stop = true;
+            } else {
+                if (url.indexOf('?') < 0) {
+                    newUrl = url + '?next=' + token;
+                } else {
+                    newUrl = url + '&next=' + token;
+                }
+            }
+        } else {
+            stop = true;
+        }
     }
 
 }
