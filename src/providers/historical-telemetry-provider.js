@@ -91,13 +91,6 @@ export default class YamcsHistoricalTelemetryProvider {
             .then((res) => this.convertSampleHistory(id, res));
     }
 
-    yieldMinMaxHistory(id, url, options) {
-        let responseKeyName = 'sample';
-
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertSampleHistory(id, res));
-    }
-
     standardizeOptions(options, domainObject) {
         options.sizeType = 'count';
         options.order = 'asc';
