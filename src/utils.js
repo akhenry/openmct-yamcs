@@ -135,10 +135,6 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
         return [];
     }
 
-    if (totalLimit === undefined) {
-        totalLimit = 1000000;
-    }
-
     let newUrl = url;
     if (token !== undefined) {
         if (url.indexOf('?') < 0) {
@@ -161,6 +157,13 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
         return accumulateResults(url, options, property, soFar, totalLimit,
             res.continuationToken);
     });
+}
+
+yieldResults(url, options, property, totalLimit, yieldCallback) {
+    if (options.signal && options.signal.aborted) {
+        return [];
+    }
+
 }
 
 /*
