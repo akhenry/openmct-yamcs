@@ -159,7 +159,7 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     });
 }
 
-yieldResults(url, options, property, totalLimit, yieldCallback) {
+function yieldResults(url, options, property, totalLimit, yieldCallback) {
     if (options.signal && options.signal.aborted) {
         return [];
     }
@@ -188,5 +188,6 @@ export {
     qualifiedNameToId,
     getValue,
     accumulateResults,
-    addLimitInformation
+    addLimitInformation,
+    yieldResults
 };
