@@ -24,7 +24,8 @@ import {
     idToQualifiedName,
     getValue,
     addLimitInformation,
-    accumulateResults
+    accumulateResults,
+    yieldResults
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
@@ -48,18 +49,17 @@ export default class YamcsHistoricalTelemetryProvider {
         return this.supportedTypes[domainObject.type];
     }
 
-    request(domainObject, options, yieldResults = false) {
+    request(domainObject, options) {
         this.standardizeOptions(options, domainObject);
 
         let id = domainObject.identifier.key;
         let url = this.buildUrl(id, options);
         let requestArguments = [id, url, options];
-
-        if (
-            !this.isImagery(domainObject)
+        let isMinMax = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax'
-        ) {
+            && options.strategy === 'minmax';
+
+        if (isMinMax) {
             return this.getMinMaxHistory(...requestArguments);
         }
 
@@ -69,8 +69,13 @@ export default class YamcsHistoricalTelemetryProvider {
     getHistory(id, url, options) {
         let responseKeyName = this.getResponseKeyById(id);
 
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertPointHistory(id, res));
+        if (!options.yieldRequestCallback) {
+            return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+                .then((res) => this.convertPointHistory(id, res));
+        } else {
+            return yieldResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+                .then((res) => this.convertPointHistory(id, res));
+        }
     }
 
     getMinMaxHistory(id, url, options) {
@@ -98,7 +103,7 @@ export default class YamcsHistoricalTelemetryProvider {
         options.sizeType = 'count';
         options.order = 'asc';
         options.isSamples = false;
-        options.totalRequestSize = options.size;
+        options.totalRequestSize = options.size || 1000000;
 
         options.size = this.getAppropriateSize(options.size);
 
