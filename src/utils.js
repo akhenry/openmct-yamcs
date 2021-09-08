@@ -175,6 +175,7 @@ async function yieldResults(url, options) {
     let formattedData;
 
     while (!stop) {
+        console.log('url sent into yield req hist', newUrl);
         result = await yieldRequestHistory.next(newUrl).value;
         data = result[responseKeyName];
 
@@ -210,7 +211,7 @@ async function yieldResults(url, options) {
 function getHistoryYieldRequest(signal) {
 
     function* yieldRequestHistory() {
-        const url = yield;
+        let url = yield;
 
         while (url) {
             yield fetch(encodeURI(url, { signal}))
