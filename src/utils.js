@@ -183,7 +183,7 @@ async function yieldResults(url, options) {
         console.log({newUrl});
         result = await fetch(encodeURI(newUrl), { signal });
         console.log('result', result, responseKeyName);
-        result = result.json();
+        result = await result.json();
         console.log('result', result);
         data = result[responseKeyName];
         console.log({data});
