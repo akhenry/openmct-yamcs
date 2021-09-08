@@ -74,9 +74,8 @@ export default class YamcsHistoricalTelemetryProvider {
                 .then((res) => this.convertPointHistory(id, res));
         } else {
             options.formatter = (res) => { console.log('formatter', res, this.convertPointHistory); this.convertPointHistory(id, res); };
-            yieldResults(url, options);
 
-            return Promise.resolve([]);
+            return yieldResults(url, options);
         }
         // let responseKeyName = this.getResponseKeyById(id);
 
