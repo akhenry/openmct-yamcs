@@ -163,7 +163,7 @@ function yieldResults(url, options) {
     } = options;
 
     if (aborted(signal)) {
-        return;
+        return [];
     }
 
     const yieldRequestHistory = getHistoryYieldRequest();
@@ -200,6 +200,8 @@ function yieldResults(url, options) {
             stop = true;
         }
     }
+
+    return [];
 
 }
 
