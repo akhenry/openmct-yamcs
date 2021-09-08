@@ -207,10 +207,19 @@ async function yieldResults(url, options) {
 
 function getHistoryYieldRequest(signal) {
 
-    function* yieldRequestHistory() {
-        const url = yield;
-        console.log('yielded url', url);
-        yield fetch(encodeURI(url, { signal})).then(res => res.json());
+    async function* yieldRequestHistory() {
+        let proceed = true;
+
+        while (proceed) {
+            let url = yield;
+            let results = await fetch(encodeURI(url, { signal})).then(res => res.json());
+
+            if (!results.continuationToken) {
+                proceed = false;
+            }
+
+            yield results;
+        }
     }
 
     const generator = yieldRequestHistory();
