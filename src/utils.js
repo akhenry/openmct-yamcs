@@ -190,8 +190,8 @@ async function yieldResults(url, options) {
         if (data) {
             count += data.length;
             token = result.continuationToken;
-
-            yieldRequestProcessor.next(formatter(data));
+            console.log('yield req proc', yieldRequestProcessor);
+            console.log('um', yieldRequestProcessor.next(formatter(data)));
 
             if ((signal && signal.aborted) || !token || count >= totalRequestSize) {
                 console.log('stopping', signal, signal.aborted, token, count, totalRequestSize);
