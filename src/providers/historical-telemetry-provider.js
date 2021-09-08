@@ -106,9 +106,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 options.size = 1;
                 options.totalRequestSize = 1;
                 options.order = 'desc';
-            }
-
-            if (
+            } else if (
                 options.strategy === 'minmax'
                 && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             ) {
