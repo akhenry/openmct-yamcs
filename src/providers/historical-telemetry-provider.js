@@ -81,7 +81,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     standardizeOptions(options, domainObject) {
-        options.sizeType = 'count';
+        options.sizeType = 'limit';
         options.order = 'asc';
         options.isSamples = false;
         options.totalRequestSize = options.size;
@@ -95,13 +95,11 @@ export default class YamcsHistoricalTelemetryProvider {
                 options.size = 1;
                 options.totalRequestSize = 1;
                 options.order = 'desc';
-            }
-
-            if (
+            } else if (
                 options.strategy === 'minmax'
                 && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             ) {
-                options.sizeType = 'limit';
+                options.sizeType = 'count';
                 options.isSamples = true;
             }
         }
