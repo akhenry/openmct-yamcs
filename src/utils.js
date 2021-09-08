@@ -185,11 +185,11 @@ function yieldResults(url, options) {
             token = result.continuationToken;
             formattedData = formatter(data);
 
-            if (!token) {
-                return formattedData;
-            } else {
+            if (token) {
                 yieldRequestProcessor(formattedData);
                 newUrl = addTokenToUrl(url, token);
+            } else {
+                return formattedData;
             }
 
             if (aborted(signal) || count >= totalRequestSize) {
