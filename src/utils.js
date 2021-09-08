@@ -131,17 +131,11 @@ function warnUnsupportedType(type) {
  *     a promise for an array of results accumulated over the requests
  */
 function accumulateResults(url, options, property, soFar, totalLimit, token) {
-    if (options.signal && options.signal.aborted) {
+    if (aborted(options.signal)) {
         return [];
     }
 
-    let newUrl = url;
-    if (token !== undefined) {
-        if (url.indexOf('?') < 0) {
-            newUrl += '?next=' + token;
-        } else {
-            newUrl += '&next=' + token;
-        }
+    let newUrl = addTokenToUrl(url, token);
     }
 
     const result = fetch(encodeURI(newUrl), options)
@@ -159,7 +153,7 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     });
 }
 
-async function yieldResults(url, options) {
+function yieldResults(url, options) {
     let {
         signal,
         responseKeyName,
@@ -168,46 +162,75 @@ async function yieldResults(url, options) {
         formatter
     } = options;
 
-    if (signal && signal.aborted) {
+    if (aborted(signal)) {
         return;
     }
 
+    const yieldRequestHistory = getHistoryYieldRequest();
     let count = 0;
     let stop = false;
     let newUrl = url;
     let token;
     let result;
     let data;
+    let formattedData;
 
     while (!stop) {
-        console.log({newUrl});
-        result = await fetch(encodeURI(newUrl), { signal });
-        console.log('result', result, responseKeyName);
-        result = await result.json();
+        result = yieldRequestHistory.next(newUrl);
         console.log('result', result);
         data = result[responseKeyName];
-        console.log({data});
+
         if (data) {
             count += data.length;
             token = result.continuationToken;
-            console.log('yield req proc', yieldRequestProcessor);
-            console.log('um', yieldRequestProcessor().next(formatter(data)));
+            formattedData = formatter(data);
 
-            if ((signal && signal.aborted) || !token || count >= totalRequestSize) {
-                console.log('stopping', signal, signal.aborted, token, count, totalRequestSize);
-                stop = true;
+            if (!token) {
+                return formattedData;
             } else {
-                if (url.indexOf('?') < 0) {
-                    newUrl = url + '?next=' + token;
-                } else {
-                    newUrl = url + '&next=' + token;
-                }
+                yieldRequestProcessor(formattedData);
+                newUrl = addTokenToUrl(url, token);
+            }
+
+            if (aborted(signal) || count >= totalRequestSize) {
+                console.log('stopping', aborted(signal), token, count, totalRequestSize);
+                stop = true;
             }
         } else {
             stop = true;
         }
     }
 
+}
+
+function getHistoryYieldRequest(signal) {
+
+    function* yieldRequestHistory() {
+        const url = yield;
+
+        yield fetch(encodeURI(url, { signal})).then(res => res.json());
+    }
+
+    const generator = yieldRequestHistory();
+    generator.next(); // prime
+
+    return generator;
+}
+
+function addTokenToUrl(url, token) {
+    if (token !== undefined) {
+        if (url.indexOf('?') < 0) {
+            return url += '?next=' + token;
+        } else {
+            return url += '&next=' + token;
+        }
+    }
+
+    return url;
+}
+
+function aborted(signal) {
+    return signal && signal.aborted;
 }
 
 /*
