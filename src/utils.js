@@ -214,7 +214,7 @@ function getHistoryYieldRequest(signal) {
             let url = yield;
             console.log('url', url);
             let result = await fetch(encodeURI(url, { signal})).then(res => res.json());
-
+            console.log('result', result);
             if (!result.continuationToken) {
                 proceed = false;
             }
