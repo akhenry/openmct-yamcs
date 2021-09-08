@@ -213,13 +213,16 @@ function getHistoryYieldRequest(signal) {
         while (proceed) {
             let url = yield;
             console.log('url', url);
-            let result = await fetch(encodeURI(url, { signal})).then(res => res.json());
-            console.log('result', result);
-            if (!result.continuationToken) {
-                proceed = false;
-            }
+            yield fetch(encodeURI(url, { signal}))
+                .then(res => res.json())
+                .then(res => {
+                    console.log('res', res);
+                    if (!res.continuationToken) {
+                        proceed = false;
+                    }
 
-            yield result;
+                    return res;
+                });
         }
     }
 
