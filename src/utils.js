@@ -176,12 +176,12 @@ async function yieldResults(url, options) {
 
     while (!stop) {
         result = await yieldRequestHistory.next(newUrl).value;
-        console.log('result', result);
         data = result[responseKeyName];
 
         if (data) {
             count += data.length;
             token = result.continuationToken;
+            console.log('token', token);
             formattedData = formatter(data);
 
             if (token) {
