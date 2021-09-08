@@ -152,7 +152,7 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     });
 }
 
-function yieldResults(url, options) {
+async function yieldResults(url, options) {
     let {
         signal,
         responseKeyName,
@@ -175,7 +175,7 @@ function yieldResults(url, options) {
     let formattedData;
 
     while (!stop) {
-        result = yieldRequestHistory.next(newUrl).value;
+        result = await yieldRequestHistory.next(newUrl).value;
         console.log('result', result);
         data = result[responseKeyName];
 
