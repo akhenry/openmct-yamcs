@@ -187,6 +187,7 @@ async function yieldResults(url, options) {
             if (token) {
                 yieldRequestProcessor(formattedData);
                 newUrl = addTokenToUrl(url, token);
+                console.log('new url', newUrl);
             } else {
                 return formattedData;
             }
@@ -208,7 +209,7 @@ function getHistoryYieldRequest(signal) {
 
     function* yieldRequestHistory() {
         const url = yield;
-
+        console.log('yielded url', url);
         yield fetch(encodeURI(url, { signal})).then(res => res.json());
     }
 
