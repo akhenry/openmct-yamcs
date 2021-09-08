@@ -201,28 +201,20 @@ async function yieldResults(url, options) {
         }
     }
 
+    yieldRequestHistory.return(false);
+
     return [];
 
 }
 
 function getHistoryYieldRequest(signal) {
 
-    async function* yieldRequestHistory() {
-        let proceed = true;
+    function* yieldRequestHistory() {
+        const url = yield;
 
-        while (proceed) {
-            let url = yield;
-            console.log('url', url);
+        while (url) {
             yield fetch(encodeURI(url, { signal}))
-                .then(res => res.json())
-                .then(res => {
-                    console.log('res', res);
-                    if (!res.continuationToken) {
-                        proceed = false;
-                    }
-
-                    return res;
-                });
+                .then(res => res.json());
         }
     }
 
