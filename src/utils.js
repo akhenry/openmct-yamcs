@@ -180,10 +180,11 @@ async function yieldResults(url, options) {
     let data;
 
     while (!stop) {
+        console.log({newUrl});
         result = await fetch(encodeURI(newUrl), { signal });
         result = result.json();
         data = result[responseKeyName];
-
+        console.log({data});
         if (data) {
             count += data.length;
             token = data.continuationToken;
@@ -191,6 +192,7 @@ async function yieldResults(url, options) {
             yieldRequestProcessor.next(formatter(data));
 
             if ((signal && signal.aborted) || !token || count >= totalRequestSize) {
+                console.log('stopping', signal, signal.aborted, token, count, totalRequestSize);
                 stop = true;
             } else {
                 if (url.indexOf('?') < 0) {
