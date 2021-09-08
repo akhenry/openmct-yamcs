@@ -189,7 +189,7 @@ async function yieldResults(url, options) {
         console.log({data});
         if (data) {
             count += data.length;
-            token = data.continuationToken;
+            token = result.continuationToken;
 
             yieldRequestProcessor.next(formatter(data));
 
