@@ -212,13 +212,14 @@ function getHistoryYieldRequest(signal) {
 
         while (proceed) {
             let url = yield;
-            let results = await fetch(encodeURI(url, { signal})).then(res => res.json());
+            console.log('url', url);
+            let result = await fetch(encodeURI(url, { signal})).then(res => res.json());
 
-            if (!results.continuationToken) {
+            if (!result.continuationToken) {
                 proceed = false;
             }
 
-            yield results;
+            yield result;
         }
     }
 
