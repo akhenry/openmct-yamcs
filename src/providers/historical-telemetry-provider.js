@@ -73,7 +73,7 @@ export default class YamcsHistoricalTelemetryProvider {
             return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
                 .then((res) => this.convertPointHistory(id, res));
         } else {
-            options.formatter = (res) => { console.log('formatter', res, this.convertPointHistory); this.convertPointHistory(id, res); };
+            options.formatter = (res) => this.convertPointHistory(id, res);
 
             return yieldResults(url, options);
         }
