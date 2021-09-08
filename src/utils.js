@@ -136,7 +136,6 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     }
 
     let newUrl = addTokenToUrl(url, token);
-    }
 
     const result = fetch(encodeURI(newUrl), options)
         .then(res => res.json());
