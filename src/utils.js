@@ -165,7 +165,7 @@ async function yieldResults(url, options) {
         return [];
     }
 
-    const yieldRequestHistory = getHistoryYieldRequest(url, signal);
+    const yieldRequestHistory = getHistoryYieldRequest(signal);
     let count = 0;
     let stop = false;
     let newUrl = url;
@@ -208,15 +208,13 @@ async function yieldResults(url, options) {
 
 }
 
-function getHistoryYieldRequest(originalUrl, signal) {
+function getHistoryYieldRequest(signal) {
 
     function* yieldRequestHistory() {
-        let url = originalUrl;
+        let url = true;
 
-        while (url) {
-            if (url !== originalUrl) {
-                url = yield;
-            }
+        while () {
+            url = yield;
             yield fetch(encodeURI(url, { signal}))
                 .then(res => res.json());
         }
