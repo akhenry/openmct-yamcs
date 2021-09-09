@@ -213,10 +213,11 @@ function getHistoryYieldRequest(signal) {
     function* yieldRequestHistory() {
         let url = yield;
 
-        while (url) {
+        do {
             yield fetch(encodeURI(url, { signal}))
                 .then(res => res.json());
-        }
+            url = yield;
+        } while (url);
     }
 
     const generator = yieldRequestHistory();
