@@ -188,7 +188,7 @@ async function yieldResults(url, options) {
             if (token) {
                 yieldRequestProcessor(formattedData);
                 newUrl = addTokenToUrl(url, token);
-                console.log('new url', newUrl);
+                yieldRequestHistory.next();
             } else {
                 return formattedData;
             }
