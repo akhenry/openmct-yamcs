@@ -175,14 +175,12 @@ async function yieldResults(url, options) {
     let formattedData;
 
     while (!stop) {
-        console.log('url sent into yield req hist', newUrl);
         result = await yieldRequestHistory.next(newUrl).value;
         data = result[responseKeyName];
 
         if (data) {
             count += data.length;
             token = result.continuationToken;
-            console.log('token', token);
             formattedData = formatter(data);
 
             if (token) {
@@ -194,7 +192,6 @@ async function yieldResults(url, options) {
             }
 
             if (aborted(signal) || count >= totalRequestSize) {
-                console.log('stopping', aborted(signal), token, count, totalRequestSize);
                 stop = true;
             }
         } else {

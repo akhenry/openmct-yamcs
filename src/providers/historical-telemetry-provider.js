@@ -77,17 +77,19 @@ export default class YamcsHistoricalTelemetryProvider {
 
             return yieldResults(url, options);
         }
-        // let responseKeyName = this.getResponseKeyById(id);
-
-        // return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-        //     .then((res) => this.convertPointHistory(id, res));
     }
 
     getMinMaxHistory(id, url, options) {
-        let responseKeyName = 'sample';
+        options.responseKeyName = 'sample';
 
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertSampleHistory(id, res));
+        if (!options.yieldRequestProcessor) {
+            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
+                .then((res) => this.convertSampleHistory(id, res));
+        } else {
+            options.formatter = (res) => this.convertSampleHistory(id, res);
+
+            return yieldResults(url, options);
+        }
     }
 
     standardizeOptions(options, domainObject) {
