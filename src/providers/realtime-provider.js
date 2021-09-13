@@ -79,8 +79,11 @@ export default class RealtimeProvider {
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
-            this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
-            delete this.subscriptionsById[id];
+
+            if (this.subscriptionsById[id]) {
+                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                delete this.subscriptionsById[id];
+            }
         };
     }
 
