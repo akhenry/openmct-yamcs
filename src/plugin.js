@@ -70,7 +70,7 @@ export default function installYamcsPlugin(configuration) {
 
         openmct.types.addType(OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE, {
             name: 'Aggregate Telemetry Points',
-            description: 'Aggregate Spacecraft Telemetry points',
+            description: 'Aggregate Spacecraft Telemetry Points',
             cssClass: 'icon-telemetry-aggregate'
         });
 
