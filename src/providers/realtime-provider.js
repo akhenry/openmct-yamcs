@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES } from '../const';
+import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE } from '../const';
 import {
     idToQualifiedName,
     qualifiedNameToId,
@@ -79,8 +79,11 @@ export default class RealtimeProvider {
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
-            this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
-            delete this.subscriptionsById[id];
+
+            if (this.subscriptionsById[id]) {
+                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                delete this.subscriptionsById[id];
+            }
         };
     }
 
@@ -190,12 +193,20 @@ export default class RealtimeProvider {
                 if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
                     subscriptionDetails.callback(data.data);
                 } else if (data.data.values) {
-                    data.data.values.forEach(parameter => {
+                    let values = data.data.values;
+
+                    values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter.generationTimeUTC,
-                            value: getValue(parameter.engValue)
+                            timestamp: parameter.generationTimeUTC
                         };
+                        let value = getValue(parameter.engValue);
+
+                        if (parameter.engValue.type !== AGGREGATE_TYPE) {
+                            point.value = value;
+                        } else {
+                            point = { ...point, ...value };
+                        }
 
                         addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);

@@ -19,6 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const';
 
 function idToQualifiedName(id) {
     return id.replace(/~/g, '/');
@@ -28,7 +29,6 @@ function qualifiedNameToId(name) {
     return name.replace(/\//g, '~');
 }
 
-const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 const VALUE_EXTRACT_MAP = {
     'UINT64': (value) => value.uint64Value,
     'INT64': (value) => value.int64Value,
@@ -79,10 +79,31 @@ function getValue(value) {
         return JSON.stringify(valueResults);
     }
 
+    if (value.type === AGGREGATE_TYPE) {
+        return getAggregateValues(value);
+    }
+
     warnUnsupportedType(value.type);
 
     return UNSUPPORTED_TYPE;
 
+}
+
+function getAggregateValues(value, existing = {}) {
+    let values = value.aggregateValue.value;
+    let names = value.aggregateValue.name;
+
+    for (let i = 0, len = values.length; i < len; i++) {
+        let currentValue = values[i];
+
+        if (currentValue.type !== AGGREGATE_TYPE) {
+            existing[names[i]] = getValue(currentValue);
+        } else {
+            existing = { ...existing, ...getAggregateValues(currentValue) };
+        }
+    }
+
+    return existing;
 }
 
 function warnUnsupportedType(type) {

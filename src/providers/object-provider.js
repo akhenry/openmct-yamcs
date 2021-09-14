@@ -85,7 +85,8 @@ export default class YamcsObjectProvider {
                         name: 'Severity'
                     },
                     {
-                        key: 'generationTime',
+                        key: 'utc',
+                        source: 'generationTime',
                         name: 'Generation Time',
                         hints: {
                             domain: 1
@@ -300,52 +301,46 @@ export default class YamcsObjectProvider {
             key: parent.identifier.key,
             namespace: parent.identifier.namespace
         });
-
         let obj = {
             identifier: {
                 key: id,
                 namespace: this.namespace
             },
+            type: this.getParameterType(parameter),
             name: name,
-            location: location
-        };
-
-        let isAggregate = false;
-        if (parameter.type!==undefined && parameter.type.engType==='aggregate') {
-            isAggregate = true;
-        }
-
-        if (isAggregate) {
-            obj.type = 'noneditable.folder';
-            obj.composition = [];
-        } else {
-            obj.type = this.getParameterType(parameter);
-            obj.telemetry = {
-                values: [
-                    {
-                        key: 'value',
-                        name: 'Value',
-                        hints: {
-                            range: 1
-                        }
-                    },
-                    {
-                        key: 'utc',
-                        source: 'timestamp',
-                        name: 'Timestamp',
-                        format: 'iso',
-                        hints: {
-                            domain: 1
-                        }
+            location: location,
+            telemetry: {
+                values: [{
+                    key: 'utc',
+                    source: 'timestamp',
+                    name: 'Timestamp',
+                    format: 'iso',
+                    hints: {
+                        domain: 1
                     }
-                ]
-            };
+                }]
+            }
+        };
+        let isAggregate = this.isAggregate(parameter);
+        let aggregateHasMembers = false;
 
-            if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
-                obj.telemetry.values[0].hints = {};
-            } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
-                obj.telemetry.values[0].hints = { image: 1 };
-                obj.telemetry.values[0].format = 'image';
+        if (!isAggregate) {
+            let key = 'value';
+            obj.telemetry.values.push({
+                key,
+                name: 'Value',
+                hints: {
+                    range: 1
+                }
+            });
+
+            this.addHints(key, obj);
+        } else {
+            aggregateHasMembers = this.aggregateHasMembers(parameter);
+            obj.composition = [];
+            if (aggregateHasMembers) {
+                let memberMetadata = this.formatAggregateMembers(parameter.type.member);
+                obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
 
@@ -353,15 +348,74 @@ export default class YamcsObjectProvider {
 
         parent.composition.push(obj.identifier);
 
-        if (isAggregate) {
-            if (parameter.type.member !== undefined) {
-                parameter.type.member.forEach(member => {
-                    let memberQualifiedName = qualifiedName + '.' + member.name;
-                    /* Use current name as a prefix for the member name. */
-                    this.addParameter(member, memberQualifiedName, obj, name + '_');
-                });
-            }
+        if (aggregateHasMembers) {
+            parameter.type.member.forEach(member => {
+                let memberQualifiedName = qualifiedName + '.' + member.name;
+                /* Use current name as a prefix for the member name. */
+                this.addParameter(member, memberQualifiedName, obj, name + '_');
+            });
         }
+    }
+
+    addHints(key, obj) {
+        let metadatum = obj.telemetry.values.find(md => md.key === key);
+
+        if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
+            metadatum.hints = {};
+        } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
+            metadatum.hints = { image: 1 };
+            metadatum.format = 'image';
+        }
+
+    }
+
+    isAggregate(parameter) {
+        let isAggregate = false;
+
+        if (parameter.type !== undefined) {
+            isAggregate = parameter.type.engType === 'aggregate';
+        }
+
+        return isAggregate;
+    }
+
+    formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
+        let formatted = [];
+
+        members.forEach(member => {
+            let key = member.name;
+            let name = member.name;
+
+            if (parentKey) {
+                key = parentKey + '.' + key;
+                name = parentKey.split('.').shift() + ' ' + name;
+            }
+
+            if (!this.isAggregate(member)) {
+                formatted.push({
+                    key,
+                    name,
+                    hints: {
+                        range: rangeHint++
+                    }
+                });
+            } else if (this.aggregateHasMembers(member)) {
+                let formattedSubMembers = this.formatAggregateMembers(member.type.member, key, rangeHint);
+                formatted = formatted.concat(formattedSubMembers);
+            }
+        });
+
+        return formatted;
+    }
+
+    aggregateHasMembers(parameter) {
+        let hasMembers = false;
+
+        if (this.isAggregate(parameter)) {
+            hasMembers = parameter.type.member !== undefined;
+        }
+
+        return hasMembers;
     }
 
     getParameterType(parameter) {
@@ -371,11 +425,15 @@ export default class YamcsObjectProvider {
             }
         }
 
-        /* Built-in Yamcs telemetry does not supply type information. */
-        if (parameter.type === undefined) {
-            return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
+        if (this.isAggregate(parameter) && this.aggregateHasMembers(parameter)) {
+            return OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE;
         }
-        if (parameter.type.engType==='integer' || parameter.type.engType==='float') {
+
+        /* Built-in Yamcs telemetry does not supply type information. */
+        if (
+            parameter.type === undefined
+            || (parameter.type.engType==='integer' || parameter.type.engType==='float')
+        ) {
             return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }
 

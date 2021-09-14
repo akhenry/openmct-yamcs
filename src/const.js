@@ -24,7 +24,8 @@ export const OBJECT_TYPES = {
     EVENTS_OBJECT_TYPE: 'yamcs.events',
     TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
     IMAGE_OBJECT_TYPE: 'yamcs.image',
-    STRING_OBJECT_TYPE: 'yamcs.string'
+    STRING_OBJECT_TYPE: 'yamcs.string',
+    AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate'
 };
 
 export const DATA_TYPES = {
@@ -32,3 +33,6 @@ export const DATA_TYPES = {
     DATA_TYPE_TELEMETRY: 'parameters',
     DATA_TYPE_REPLY: 'reply'
 };
+
+export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
+export const AGGREGATE_TYPE = 'AGGREGATE';

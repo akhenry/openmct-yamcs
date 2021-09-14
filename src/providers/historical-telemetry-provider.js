@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES } from '../const';
+import { AGGREGATE_TYPE, OBJECT_TYPES } from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -49,78 +49,98 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
-        let metadata = this.openmct.telemetry.getMetadata(domainObject);
-        let isImagery = metadata.valuesForHints(['image']).length !== 0;
+        this.standardizeOptions(options, domainObject);
 
-        return this.getHistory(domainObject.identifier.key, options, isImagery);
+        let id = domainObject.identifier.key;
+        let url = this.buildUrl(id, options);
+        let requestArguments = [id, url, options];
+
+        if (
+            !this.isImagery(domainObject)
+            && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
+            && options.strategy === 'minmax'
+        ) {
+            return this.getMinMaxHistory(...requestArguments);
+        }
+
+        return this.getHistory(...requestArguments);
     }
 
-    getHistory(id, options, isImagery) {
+    getHistory(id, url, options) {
+        let responseKeyName = this.getResponseKeyById(id);
 
-        let {
-            start,
-            end,
-            size,
-            strategy,
-            signal
-        } = options;
-        let totalRequestSize = size;
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+            .then((res) => this.convertPointHistory(id, res));
+    }
 
-        // cap size at 1000, temporarily to prevent errors
+    getMinMaxHistory(id, url, options) {
+        let responseKeyName = 'sample';
+
+        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
+            .then((res) => this.convertSampleHistory(id, res));
+    }
+
+    standardizeOptions(options, domainObject) {
+        options.sizeType = 'limit';
+        options.order = 'asc';
+        options.isSamples = false;
+        options.totalRequestSize = options.size;
+
+        options.size = this.getAppropriateSize(options.size);
+
+        if (options.strategy) {
+            options.strategy = options.strategy.toLowerCase();
+
+            if (options.strategy === 'latest') {
+                options.size = 1;
+                options.totalRequestSize = 1;
+                options.order = 'desc';
+            } else if (
+                options.strategy === 'minmax'
+                && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
+            ) {
+                options.sizeType = 'count';
+                options.isSamples = true;
+            }
+        }
+    }
+
+    buildUrl(id, options) {
+        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
+
+        if (options.isSamples) {
+            url += '/samples';
+        }
+
+        url += `?start=${new Date(options.start).toISOString()}`;
+        url += `&stop=${new Date(options.end).toISOString()}`;
+        url += `&${options.sizeType}=${options.size}`;
+        url += `&order=${options.order}`;
+
+        return url;
+    }
+
+    // cap size at 1000, temporarily to prevent errors
+    getAppropriateSize(size) {
         if (!size || size > 1000) {
             size = 1000;
         }
 
-        let url = `${this.url}api/archive/${this.instance}`;
-        let responseKeyName = this.getResponseKeyById(id);
+        return size;
+    }
 
-        url += this.getLinkParamsSpecificToId(id);
+    isImagery(domainObject) {
+        let metadata = this.openmct.telemetry.getMetadata(domainObject);
 
-        let order = 'asc';
-        let sizeParam = 'limit';
-        let convertHistory = (res) => this.convertPointHistory(id, res);
-
-        if (strategy) {
-            let lcStrategy = strategy.toLowerCase();
-
-            if (lcStrategy === 'latest') {
-                size = 1;
-                totalRequestSize = 1;
-                order = 'desc';
-            } else if (lcStrategy === 'minmax' && !isImagery) {
-                responseKeyName = 'sample';
-                url += '/samples';
-
-                sizeParam = 'count';
-                convertHistory = (res) => this.convertSampleHistory(id, res);
-            }
-        }
-
-        url += `?start=${new Date(start).toISOString()}`;
-        url += `&stop=${new Date(end).toISOString()}`;
-        url += `&${sizeParam}=${size}`;
-        url += `&order=${order}`;
-
-        return accumulateResults(url, { signal }, responseKeyName, [], totalRequestSize)
-            .then(convertHistory);
+        return metadata.valuesForHints(['image']).length !== 0;
     }
 
     getLinkParamsSpecificToId(id) {
-        let endpoint = this.getEndpointById(id);
-
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return '/' + endpoint;
-        }
-
-        return '/' + endpoint + idToQualifiedName(id);
-    }
-
-    getEndpointById(id) {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return 'events';
         }
 
-        return 'parameters';
+        return 'parameters' + idToQualifiedName(id);
     }
 
     getResponseKeyById(id) {
@@ -158,9 +178,15 @@ export default class YamcsHistoricalTelemetryProvider {
         results.forEach(result => {
             let point = {
                 id: result.id.name,
-                timestamp: result.generationTimeUTC,
-                value: getValue(result.engValue)
+                timestamp: result.generationTimeUTC
             };
+            let value = getValue(result.engValue);
+
+            if (result.engValue.type !== AGGREGATE_TYPE) {
+                point.value = value;
+            } else {
+                point = { ...point, ...value };
+            }
 
             addLimitInformation(result, point);
             values.push(point);
