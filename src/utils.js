@@ -152,7 +152,7 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     });
 }
 
-async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialReponse, formatter }) {
+async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
 
     if (aborted(signal)) {
         return [];
@@ -177,7 +177,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
             formattedData = formatter(data);
 
             if (token) {
-                onPartialReponse(formattedData);
+                onPartialResponse(formattedData);
                 newUrl = addTokenToUrl(url, token);
                 yieldRequestHistory.next();
             } else {
