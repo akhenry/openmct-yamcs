@@ -69,7 +69,7 @@ export default class YamcsHistoricalTelemetryProvider {
     getHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
 
-        if (!options.yieldRequestProcessor) {
+        if (!options.onPartialResponse) {
             return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
                 .then((res) => this.convertPointHistory(id, res));
         } else {
@@ -82,7 +82,7 @@ export default class YamcsHistoricalTelemetryProvider {
     getMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
 
-        if (!options.yieldRequestProcessor) {
+        if (!options.onPartialResponse) {
             return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
                 .then((res) => this.convertSampleHistory(id, res));
         } else {
