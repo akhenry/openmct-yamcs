@@ -176,13 +176,13 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
             token = result.continuationToken;
             formattedData = formatter(data);
 
+            onPartialResponse(formattedData);
+
             if (token) {
-                onPartialResponse(formattedData);
                 newUrl = addTokenToUrl(url, token);
                 yieldRequestHistory.next();
             } else {
-                onPartialResponse(formattedData);
-                yieldRequestHistory.return(false);
+                yieldRequestHistory.return();
 
                 return [];
             }
@@ -195,7 +195,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
         }
     }
 
-    yieldRequestHistory.return(false);
+    yieldRequestHistory.return();
 
     return [];
 
