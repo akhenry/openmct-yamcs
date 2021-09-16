@@ -182,9 +182,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
                 newUrl = formatUrl(url, token);
                 yieldRequestHistory.next();
             } else {
-                yieldRequestHistory.return();
-
-                return [];
+                stop = true;
             }
 
             if (aborted(signal) || count >= totalRequestSize) {
