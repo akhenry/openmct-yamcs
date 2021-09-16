@@ -165,7 +165,6 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
     let token;
     let result;
     let data;
-    let formattedData;
 
     while (!stop) {
         result = await yieldRequestHistory.next(newUrl).value;
@@ -174,21 +173,16 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
         if (data) {
             count += data.length;
             token = result.continuationToken;
-            formattedData = formatter(data);
 
-            onPartialResponse(formattedData);
+            onPartialResponse(formatter(data));
 
             if (token) {
                 newUrl = formatUrl(url, token);
                 yieldRequestHistory.next();
-            } else {
-                stop = true;
             }
+        }
 
-            if (aborted(signal) || count >= totalRequestSize) {
-                stop = true;
-            }
-        } else {
+        if (aborted(signal) || count >= totalRequestSize || !token || !data) {
             stop = true;
         }
     }
