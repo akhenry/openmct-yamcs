@@ -221,11 +221,10 @@ function getHistoryYieldRequest(signal) {
 
 function addTokenToUrl(url, token) {
     if (token !== undefined) {
-        if (url.indexOf('?') < 0) {
-            return url += '?next=' + token;
-        } else {
-            return url += '&next=' + token;
-        }
+        const urlObject = new URL(url);
+        urlObject.searchParams.set("next", token);
+
+        return urlObject.toString();
     }
 
     return url;
