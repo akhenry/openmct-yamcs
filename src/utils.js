@@ -135,7 +135,7 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
         return [];
     }
 
-    let newUrl = addTokenToUrl(url, token);
+    let newUrl = formatUrl(url, token);
 
     const result = fetch(newUrl, options)
         .then(res => res.json());
@@ -161,7 +161,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
     const yieldRequestHistory = getHistoryYieldRequest(signal);
     let count = 0;
     let stop = false;
-    let newUrl = addTokenToUrl(url);
+    let newUrl = formatUrl(url);
     let token;
     let result;
     let data;
@@ -179,7 +179,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
             onPartialResponse(formattedData);
 
             if (token) {
-                newUrl = addTokenToUrl(url, token);
+                newUrl = formatUrl(url, token);
                 yieldRequestHistory.next();
             } else {
                 yieldRequestHistory.return();
@@ -219,7 +219,7 @@ function getHistoryYieldRequest(signal) {
     return generator;
 }
 
-function addTokenToUrl(url, token) {
+function formatUrl(url, token) {
     const urlObject = new URL(url);
 
     if (token !== undefined) {
