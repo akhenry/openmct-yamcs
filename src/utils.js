@@ -131,24 +131,13 @@ function warnUnsupportedType(type) {
  *     a promise for an array of results accumulated over the requests
  */
 function accumulateResults(url, options, property, soFar, totalLimit, token) {
-    if (options.signal && options.signal.aborted) {
+    if (aborted(options.signal)) {
         return [];
     }
 
-    if (totalLimit === undefined) {
-        totalLimit = 1000000;
-    }
+    let newUrl = formatUrl(url, token);
 
-    let newUrl = url;
-    if (token !== undefined) {
-        if (url.indexOf('?') < 0) {
-            newUrl += '?next=' + token;
-        } else {
-            newUrl += '&next=' + token;
-        }
-    }
-
-    const result = fetch(encodeURI(newUrl), options)
+    const result = fetch(newUrl, options)
         .then(res => res.json());
 
     return result.then(res => {
@@ -161,6 +150,81 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
         return accumulateResults(url, options, property, soFar, totalLimit,
             res.continuationToken);
     });
+}
+
+async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
+
+    if (aborted(signal)) {
+        return [];
+    }
+
+    const yieldRequestHistory = getHistoryYieldRequest(signal);
+    let count = 0;
+    let stop = false;
+    let newUrl = formatUrl(url);
+    let token;
+    let result;
+    let data;
+
+    while (!stop) {
+        result = await yieldRequestHistory.next(newUrl).value;
+        data = result[responseKeyName];
+
+        if (data) {
+            count += data.length;
+            token = result.continuationToken;
+
+            onPartialResponse(formatter(data));
+
+            if (token) {
+                newUrl = formatUrl(url, token);
+                yieldRequestHistory.next();
+            }
+        }
+
+        if (aborted(signal) || count >= totalRequestSize || !token || !data) {
+            stop = true;
+        }
+    }
+
+    yieldRequestHistory.return();
+
+    return [];
+
+}
+
+function getHistoryYieldRequest(signal) {
+
+    function* yieldRequestHistory() {
+        let url = true;
+
+        while (url) {
+            url = yield;
+            yield fetch(url, { signal})
+                .then(res => res.json());
+        }
+    }
+
+    const generator = yieldRequestHistory();
+    generator.next(); // prime
+
+    return generator;
+}
+
+function formatUrl(url, token) {
+    const urlObject = new URL(url);
+
+    if (token !== undefined) {
+        urlObject.searchParams.set("next", token);
+
+        return urlObject.toString();
+    }
+
+    return urlObject.toString();
+}
+
+function aborted(signal) {
+    return signal && signal.aborted;
 }
 
 /*
@@ -185,5 +249,6 @@ export {
     qualifiedNameToId,
     getValue,
     accumulateResults,
-    addLimitInformation
+    addLimitInformation,
+    yieldResults
 };

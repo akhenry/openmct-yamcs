@@ -24,7 +24,8 @@ import {
     idToQualifiedName,
     getValue,
     addLimitInformation,
-    accumulateResults
+    accumulateResults,
+    yieldResults
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
@@ -54,12 +55,11 @@ export default class YamcsHistoricalTelemetryProvider {
         let id = domainObject.identifier.key;
         let url = this.buildUrl(id, options);
         let requestArguments = [id, url, options];
-
-        if (
-            !this.isImagery(domainObject)
+        let isMinMax = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax'
-        ) {
+            && options.strategy === 'minmax';
+
+        if (isMinMax) {
             return this.getMinMaxHistory(...requestArguments);
         }
 
@@ -67,24 +67,36 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getHistory(id, url, options) {
-        let responseKeyName = this.getResponseKeyById(id);
+        options.responseKeyName = this.getResponseKeyById(id);
 
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertPointHistory(id, res));
+        if (!options.onPartialResponse) {
+            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
+                .then((res) => this.convertPointHistory(id, res));
+        } else {
+            options.formatter = (res) => this.convertPointHistory(id, res);
+
+            return yieldResults(url, options);
+        }
     }
 
     getMinMaxHistory(id, url, options) {
-        let responseKeyName = 'sample';
+        options.responseKeyName = 'sample';
 
-        return accumulateResults(url, { signal: options.signal }, responseKeyName, [], options.totalRequestSize)
-            .then((res) => this.convertSampleHistory(id, res));
+        if (!options.onPartialResponse) {
+            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
+                .then((res) => this.convertSampleHistory(id, res));
+        } else {
+            options.formatter = (res) => this.convertSampleHistory(id, res);
+
+            return yieldResults(url, options);
+        }
     }
 
     standardizeOptions(options, domainObject) {
         options.sizeType = 'limit';
         options.order = 'asc';
         options.isSamples = false;
-        options.totalRequestSize = options.size;
+        options.totalRequestSize = options.size || 1000000;
 
         options.size = this.getAppropriateSize(options.size);
 
