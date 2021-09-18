@@ -220,7 +220,7 @@ function formatUrl(url, token) {
         return urlObject.toString();
     }
 
-    return urlObject;
+    return urlObject.toString();
 }
 
 function aborted(signal) {
