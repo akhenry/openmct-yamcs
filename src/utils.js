@@ -215,11 +215,12 @@ function formatUrl(url, token) {
     const urlObject = new URL(url);
 
     if (token !== undefined) {
-        urlObject.searchParams.set("next", token);
-        urlObject.search = decodeURIComponent(urlObject.search);
+        urlObject.searchParams.set("next", token); // encodes automatically
 
         return urlObject.toString();
     }
+
+    urlObject.search = encodeURIComponent(urlObject.search);
 
     return urlObject.toString();
 }

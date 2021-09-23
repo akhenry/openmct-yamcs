@@ -124,10 +124,12 @@ export default class YamcsHistoricalTelemetryProvider {
             url += '/samples';
         }
 
-        url += `?start=${new Date(options.start).toISOString()}`;
+        url += '?source=ParameterArchive';
+        url += `&start=${new Date(options.start).toISOString()}`;
         url += `&stop=${new Date(options.end).toISOString()}`;
         url += `&${options.sizeType}=${options.size}`;
         url += `&order=${options.order}`;
+        url += '&processor=realtime';
 
         return url;
     }
