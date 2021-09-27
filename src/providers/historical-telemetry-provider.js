@@ -52,10 +52,9 @@ export default class YamcsHistoricalTelemetryProvider {
     request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
-        console.log('request standardized options', {...options});
+
         let id = domainObject.identifier.key;
         let url = this.buildUrl(id, options);
-        console.log('request url', url);
         let requestArguments = [id, url, options];
         let isMinMax = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
