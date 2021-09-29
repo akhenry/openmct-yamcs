@@ -216,9 +216,9 @@ function formatUrl(url, token) {
 
     if (token !== undefined) {
         urlObject.searchParams.set("next", token);
-
-        return urlObject.toString();
     }
+
+    urlObject.search = decodeURIComponent(urlObject.search);
 
     return urlObject.toString();
 }
