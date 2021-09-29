@@ -28,6 +28,8 @@ import {
     yieldResults
 } from '../utils.js';
 
+const REQUEST_LIMIT = 999;
+
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance) {
         this.url = url;
@@ -135,8 +137,8 @@ export default class YamcsHistoricalTelemetryProvider {
 
     // cap size at 1000, temporarily to prevent errors
     getAppropriateSize(size) {
-        if (!size || size > 1000) {
-            size = 1000;
+        if (!size || size > REQUEST_LIMIT) {
+            size = REQUEST_LIMIT;
         }
 
         return size;
