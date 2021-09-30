@@ -61,7 +61,6 @@ const VALUE_EXTRACT_MAP = {
 function getValue(item) {
     let value = item.engValue || item;
 
-    console.log('parameter', parameter, 'value', value);
     if (VALUE_EXTRACT_MAP[value.type]) {
         return VALUE_EXTRACT_MAP[value.type](value);
     }
@@ -83,7 +82,7 @@ function getValue(item) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        return getAggregateValues(value, parameter.id.name);
+        return getAggregateValues(value, item.id.name);
     }
 
     warnUnsupportedType(value.type);
