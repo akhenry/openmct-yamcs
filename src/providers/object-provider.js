@@ -382,7 +382,7 @@ export default class YamcsObjectProvider {
 
     formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
         let formatted = [];
-        console.log('format aggregate members', members, parentKey);
+
         members.forEach(member => {
             let key = member.name;
             let name = member.name;
@@ -401,12 +401,11 @@ export default class YamcsObjectProvider {
                     }
                 });
             } else if (this.aggregateHasMembers(member)) {
-                console.log(name, key);
                 let formattedSubMembers = this.formatAggregateMembers(member.type.member, key, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
             }
         });
-
+        if (parentKey === 'pose') console.log('formatted', formatted);
         return formatted;
     }
 
