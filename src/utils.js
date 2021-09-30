@@ -58,7 +58,9 @@ const VALUE_EXTRACT_MAP = {
  *     depending on value type: an appropriate value, a string
  *     of appropriate values or an "unsupported" notification string
  */
-function getValue(value) {
+function getValue(parameter) {
+    let value = parameter.engValue;
+
     if (VALUE_EXTRACT_MAP[value.type]) {
         return VALUE_EXTRACT_MAP[value.type](value);
     }
@@ -80,7 +82,7 @@ function getValue(value) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        return getAggregateValues(value);
+        return getAggregateValues(value, parameter.id.name);
     }
 
     warnUnsupportedType(value.type);
@@ -89,10 +91,12 @@ function getValue(value) {
 
 }
 
-function getAggregateValues(value, existing = {}) {
+function getAggregateValues(value, name, existing = {}) {
     let values = value.aggregateValue.value;
     let names = value.aggregateValue.name;
-    console.log(values, names);
+
+    // map parent name so keys are unique for aggregates
+    names = names.map(n => [name, n].join('.'));
 
     for (let i = 0, len = values.length; i < len; i++) {
         let currentValue = values[i];
@@ -100,7 +104,7 @@ function getAggregateValues(value, existing = {}) {
         if (currentValue.type !== AGGREGATE_TYPE) {
             existing[names[i]] = getValue(currentValue);
         } else {
-            existing = { ...existing, ...getAggregateValues(currentValue) };
+            existing = { ...existing, ...getAggregateValues(currentValue, names[i]) };
         }
     }
     console.log(existing);

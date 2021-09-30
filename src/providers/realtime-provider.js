@@ -200,7 +200,7 @@ export default class RealtimeProvider {
                             id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter.generationTimeUTC
                         };
-                        let value = getValue(parameter.engValue);
+                        let value = getValue(parameter);
 
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             point.value = value;
