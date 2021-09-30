@@ -92,6 +92,7 @@ function getValue(value) {
 function getAggregateValues(value, existing = {}) {
     let values = value.aggregateValue.value;
     let names = value.aggregateValue.name;
+    console.log(values, names);
 
     for (let i = 0, len = values.length; i < len; i++) {
         let currentValue = values[i];
