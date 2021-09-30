@@ -339,9 +339,7 @@ export default class YamcsObjectProvider {
             aggregateHasMembers = this.aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
-                console.log(parameter.name);
                 let memberMetadata = this.formatAggregateMembers(parameter.type.member, parameter.name);
-                console.log(memberMetadata);
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
@@ -389,8 +387,9 @@ export default class YamcsObjectProvider {
             let name = member.name;
 
             if (parentKey) {
-                key = parentKey + '.' + key;
-                name = parentKey.split('.').pop() + ' ' + name;
+                let formattedKey = parentKey.split('.').pop();
+                key = formattedKey + '.' + key;
+                name = formattedKey + ' ' + name;
             }
 
             if (!this.isAggregate(member)) {
