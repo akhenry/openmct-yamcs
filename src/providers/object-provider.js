@@ -401,6 +401,7 @@ export default class YamcsObjectProvider {
                     }
                 });
             } else if (this.aggregateHasMembers(member)) {
+                console.log(name, key);
                 let formattedSubMembers = this.formatAggregateMembers(member.type.member, key, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
             }
