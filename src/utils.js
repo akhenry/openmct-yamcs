@@ -58,9 +58,10 @@ const VALUE_EXTRACT_MAP = {
  *     depending on value type: an appropriate value, a string
  *     of appropriate values or an "unsupported" notification string
  */
-function getValue(parameter) {
-    let value = parameter.engValue;
-    console.log('parameter', parameter, 'value', value)
+function getValue(item) {
+    let value = item.engValue || item;
+
+    console.log('parameter', parameter, 'value', value);
     if (VALUE_EXTRACT_MAP[value.type]) {
         return VALUE_EXTRACT_MAP[value.type](value);
     }
