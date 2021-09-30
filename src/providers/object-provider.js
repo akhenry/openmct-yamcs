@@ -381,7 +381,7 @@ export default class YamcsObjectProvider {
 
     formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
         let formatted = [];
-
+        console.log('format aggregate members', members, parentKey);
         members.forEach(member => {
             let key = member.name;
             let name = member.name;
