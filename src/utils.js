@@ -102,7 +102,7 @@ function getAggregateValues(value, existing = {}) {
             existing = { ...existing, ...getAggregateValues(currentValue) };
         }
     }
-
+    console.log(existing);
     return existing;
 }
 
