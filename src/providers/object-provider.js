@@ -389,7 +389,7 @@ export default class YamcsObjectProvider {
 
             if (parentKey) {
                 key = parentKey + '.' + key;
-                name = parentKey.split('.').shift() + ' ' + name;
+                name = parentKey.split('.').pop() + ' ' + name;
             }
 
             if (!this.isAggregate(member)) {
