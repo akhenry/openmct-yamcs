@@ -60,7 +60,7 @@ const VALUE_EXTRACT_MAP = {
  */
 function getValue(parameter) {
     let value = parameter.engValue;
-
+    console.log('parameter', parameter, 'value', value)
     if (VALUE_EXTRACT_MAP[value.type]) {
         return VALUE_EXTRACT_MAP[value.type](value);
     }
