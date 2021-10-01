@@ -89,7 +89,7 @@ function getValue(item) {
         } else {
             console.log('no name?', item);
         }
-        return getAggregateValues(value, item.id.name);
+        return getAggregateValues(value, item.id && item.id.name ? item.id.name : '');
     }
 
     warnUnsupportedType(value.type);

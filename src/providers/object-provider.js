@@ -340,7 +340,9 @@ export default class YamcsObjectProvider {
             obj.composition = [];
             if (aggregateHasMembers) {
                 let memberMetadata = this.formatAggregateMembers(parameter.type.member, parameter.name);
-                console.log(name, memberMetadata);
+                if (['pose', 'pose_orientation', 'pose_position'].includes(name)) {
+                    console.log('metadata', name, memberMetadata);
+                }
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
