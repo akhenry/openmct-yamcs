@@ -103,7 +103,10 @@ function getAggregateValues(value, name, existing = {}) {
     let names = value.aggregateValue.name;
 
     // map parent name so keys are unique for aggregates
-    names = names.map(n => [name, n].join('.'));
+    names = names.map(n => {
+        let parentRemovedName = name.split('.').pop();
+        return [parentRemovedName, n].join('.');
+    });
 
     for (let i = 0, len = values.length; i < len; i++) {
         let currentValue = values[i];
