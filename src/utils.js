@@ -82,16 +82,9 @@ function getValue(item, name) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        let parentName;
+        let parentName = item.id && item.id.name ?
+            item.id.name : name || '';
 
-        if (item.id && item.id.name) {
-            parentName = item.id.name;
-            if (['pose', 'pose.orientation', 'pose.position'].includes(name)) {
-                console.log('sup', item);
-            }
-        } else if (name) {
-            parentName = name;
-        }
         return getAggregateValues(value, parentName);
     }
 
