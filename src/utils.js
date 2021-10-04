@@ -58,7 +58,7 @@ const VALUE_EXTRACT_MAP = {
  *     depending on value type: an appropriate value, a string
  *     of appropriate values or an "unsupported" notification string
  */
-function getValue(item) {
+function getValue(item, name) {
     let value = item.engValue || item;
 
     if (VALUE_EXTRACT_MAP[value.type]) {
@@ -82,17 +82,17 @@ function getValue(item) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        let name = '';
+        let parentName;
 
         if (item.id && item.id.name) {
-            name = item.id.name;
+            parentName = item.id.name;
             if (['pose', 'pose.orientation', 'pose.position'].includes(name)) {
                 console.log('sup', item);
             }
-        } else {
-            console.log('no name?', item);
+        } else if (name) {
+            parentName = name;
         }
-        return getAggregateValues(value, name);
+        return getAggregateValues(value, parentName);
     }
 
     warnUnsupportedType(value.type);
