@@ -339,7 +339,7 @@ export default class YamcsObjectProvider {
             aggregateHasMembers = this.aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
-                let memberMetadata = this.formatAggregateMembers(parameter.type.member, parameter.name);
+                let memberMetadata = this.formatAggregateMembers(parameter.type.member, name.replace('_', '.'));
                 if (['pose', 'pose_orientation', 'pose_position'].includes(name)) {
                     console.log('parameter', name, memberMetadata, parameter);
                 }
