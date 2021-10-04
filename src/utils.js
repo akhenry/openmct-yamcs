@@ -82,14 +82,17 @@ function getValue(item) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        if (item && item.id && item.id.name) {
-            if (['pose', 'pose.orientation', 'pose.position'].includes(item.id.name)) {
+        let name = '';
+
+        if (item.id && item.id.name) {
+            name = item.id.name;
+            if (['pose', 'pose.orientation', 'pose.position'].includes(name)) {
                 console.log('sup', item);
             }
         } else {
             console.log('no name?', item);
         }
-        return getAggregateValues(value, item.id && item.id.name ? item.id.name : '');
+        return getAggregateValues(value, name);
     }
 
     warnUnsupportedType(value.type);
@@ -98,22 +101,22 @@ function getValue(item) {
 
 }
 
-function getAggregateValues(value, name, existing = {}) {
+function getAggregateValues(value, parentName, existing = {}) {
     let values = value.aggregateValue.value;
     let names = value.aggregateValue.name;
 
     for (let i = 0, len = values.length; i < len; i++) {
         let currentValue = values[i];
+        let key = names[i];
 
-        let key = name.split('.');
-        key.shift();
-        key = key.join('.');
-        console.log('key', key);
+        if (parentName) {
+            key = [parentName, key].join('.');
+        }
 
         if (currentValue.type !== AGGREGATE_TYPE) {
-            existing[[key, names[i]].join('.')] = getValue(currentValue);
+            existing[key] = getValue(currentValue);
         } else {
-            existing = { ...existing, ...getAggregateValues(currentValue, names[i]) };
+            existing = { ...existing, ...getAggregateValues(currentValue, key) };
         }
     }
     console.log('existing', existing);

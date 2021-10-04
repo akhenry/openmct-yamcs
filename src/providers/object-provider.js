@@ -390,11 +390,11 @@ export default class YamcsObjectProvider {
             let name = member.name;
 
             if (parentKey) {
-                let formattedKey = parentKey.split('.');
-                formattedKey.shift();
+                key = parentKey + '.' + key;
 
-                key = formattedKey.join('.') + '.' + key;
-                name = formattedKey + ' ' + name;
+                if (parentKey.includes('.')) {
+                    name = parentKey.split('.').pop() + ' ' + name;
+                }
             }
 
             if (!this.isAggregate(member)) {
