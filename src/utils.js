@@ -107,7 +107,7 @@ function getAggregateValues(value, name, existing = {}) {
 
         let key = name.split('.');
         key.shift();
-        key.join('.');
+        key = key.join('.');
         console.log('key', key);
 
         if (currentValue.type !== AGGREGATE_TYPE) {
