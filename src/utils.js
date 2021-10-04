@@ -85,6 +85,10 @@ function getValue(item, name) {
         let parentName = item.id && item.id.name ?
             item.id.name : name || '';
 
+        if (parentName.includes('_')) {
+            parentName = parentName.replace('_', '.');
+        }
+
         return getAggregateValues(value, parentName);
     }
 
