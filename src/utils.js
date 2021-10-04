@@ -116,7 +116,7 @@ function getAggregateValues(value, parentName, existing = {}) {
             existing = { ...existing, ...getAggregateValues(currentValue, key) };
         }
     }
-    console.log('existing', existing);
+
     return existing;
 }
 
