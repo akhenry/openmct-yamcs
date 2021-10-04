@@ -390,7 +390,8 @@ export default class YamcsObjectProvider {
             let name = member.name;
 
             if (parentKey) {
-                let formattedKey = parentKey.split('.').pop();
+                let formattedKey = parentKey.split('.');
+                formattedKey.shift();
                 key = formattedKey + '.' + key;
                 name = formattedKey + ' ' + name;
             }

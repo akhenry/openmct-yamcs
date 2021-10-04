@@ -109,7 +109,7 @@ function getAggregateValues(value, name, existing = {}) {
         console.log('key', key);
 
         if (currentValue.type !== AGGREGATE_TYPE) {
-            existing[key + '.' + names[i]] = getValue(currentValue);
+            existing[[key, names[i]].join('.')] = getValue(currentValue);
         } else {
             existing = { ...existing, ...getAggregateValues(currentValue, names[i]) };
         }
