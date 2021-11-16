@@ -327,13 +327,27 @@ export default class YamcsObjectProvider {
 
         if (!isAggregate) {
             let key = 'value';
-            obj.telemetry.values.push({
+            const metadatum = {
                 key,
                 name: 'Value',
                 hints: {
                     range: 1
                 }
-            });
+            };
+            // if (parameter.engType === 'boolean') {
+            //     metadatum.format = 'enum';
+            //     metadatum.enumerations = [
+            //         {
+            //             value: 0,
+            //             string: 'FALSE'
+            //         },
+            //         {
+            //             value: 1,
+            //             string: 'TRUE'
+            //         }
+            //     ];
+            // }
+            obj.telemetry.values.push(metadatum);
 
             this.addHints(key, obj);
         } else {
@@ -363,6 +377,7 @@ export default class YamcsObjectProvider {
 
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};
+            metadatum.format = 'string';
         } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
             metadatum.hints = { image: 1 };
             metadatum.format = 'image';
