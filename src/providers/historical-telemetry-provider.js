@@ -193,7 +193,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 id: result.id.name,
                 timestamp: result.generationTimeUTC
             };
-            let value = getValue(result.engValue);
+            let value = getValue(result);
 
             if (result.engValue.type !== AGGREGATE_TYPE) {
                 point.value = value;
