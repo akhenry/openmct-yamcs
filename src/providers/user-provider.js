@@ -53,57 +53,35 @@ export default class UserProvider extends EventEmitter {
     }
 
     _login() {
-        const id = uuid();
-        const loginPromise = new Promise((resolve, reject) => {
-            let overlay = this.openmct.overlays.overlay({
-                element: this._getLoginForm(),
-                dismissable: false,
-                size: 'small',
-                buttons: [
-                    {
-                        label: 'Login',
-                        emphasis: 'true',
-                        callback: () => {
-                            let username = document.getElementById('example-user-form-username').value;
+        // const id = uuid();
+        // const loginPromise = new Promise((resolve, reject) => {
+        //     let overlay = this.openmct.overlays.overlay({
+        //         element: this._getLoginForm(),
+        //         dismissable: false,
+        //         size: 'small',
+        //         buttons: [
+        //             {
+        //                 label: 'Login',
+        //                 emphasis: 'true',
+        //                 callback: () => {
+        //                     let username = document.getElementById('example-user-form-username').value;
 
-                            if (username !== '') {
-                                this.user = new this.ExampleUser(id, username, ['example-role']);
-                                this.loggedIn = true;
-                                resolve();
-                                overlay.dismiss();
-                            } else {
-                                this.openmct.notifications.info('Please enter a username.');
-                            }
-                        }
-                    }
-                ],
-                onDestroy: () => this.loginForm = undefined
-            });
-        });
+        //                     if (username !== '') {
+        //                         this.user = new this.ExampleUser(id, username, ['example-role']);
+        //                         this.loggedIn = true;
+        //                         resolve();
+        //                         overlay.dismiss();
+        //                     } else {
+        //                         this.openmct.notifications.info('Please enter a username.');
+        //                     }
+        //                 }
+        //             }
+        //         ],
+        //         onDestroy: () => this.loginForm = undefined
+        //     });
+        // });
 
-        return loginPromise;
+        // return loginPromise;
     }
 
-    logout() {
-        this.loggedIn = false;
-
-        return Promise.resolve('logout');
-    }
-
-    _getLoginForm() {
-        let div = document.createElement('div');
-        div.innerHTML = `
-            <div id="loginForm" class="form">
-                <div class="c-overlay__dialog-title">
-                    Please enter your username and password.
-                </div>
-                <div class="form-row">
-                    <div class="c-form__row__label">Username</div>
-                    <input id="example-user-form-username" class="c-form__row__controls" type="text" />
-                </div>
-            </div>
-        `.trim();
-
-        return div.firstChild;
-    }
 }

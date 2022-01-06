@@ -24,6 +24,7 @@ import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-p
 import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
+import UserProvider from './providers/user-provider';
 
 
 import { OBJECT_TYPES } from './const';
@@ -32,6 +33,9 @@ export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
         //TODO: Validate provided configuration
+
+        const userProvider = new UserProvider(openmct);
+        openmct.user.addProvider(userProvider);
 
         openmct.install(openmct.plugins.ISOTimeFormat());
         openmct.install(openmct.plugins.NonEditableFolder());
