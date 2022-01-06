@@ -35,7 +35,7 @@ export default function installYamcsPlugin(configuration) {
         //TODO: Validate provided configuration
 
         const userProvider = new UserProvider(openmct);
-        openmct.user.addProvider(userProvider);
+        openmct.user.setProvider(userProvider);
 
         openmct.install(openmct.plugins.ISOTimeFormat());
         openmct.install(openmct.plugins.NonEditableFolder());
