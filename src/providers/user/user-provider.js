@@ -21,14 +21,18 @@
  *****************************************************************************/
 
 import EventEmitter from 'eventemitter3';
+import createYamcsUser from './createYamcsUser';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct) {
+    constructor(openmct, url, instance) {
         super();
 
         this.openmct = openmct;
+        this.userApi = [url, instance, 'api/user'].join('/');
         this.user = undefined;
         this.loggedIn = false;
+
+        this.YamcsUser = createYamcsUser(openmct.user.User);
     }
 
     isLoggedIn() {
@@ -38,10 +42,10 @@ export default class UserProvider extends EventEmitter {
     getCurrentUser() {
         console.log('get current user');
         if (this.loggedIn) {
-            return Promise.resolve(this.user.getUserInfo());
+            return Promise.resolve(this.user);
         }
 
-        return this._login().then(() => this.user.getUserInfo());
+        return this._getUserInfo().then(() => this.user.getUserInfo());
     }
 
     hasRole(roleId) {
@@ -52,36 +56,18 @@ export default class UserProvider extends EventEmitter {
         return Promise.resolve(this.user.getRoles().includes(roleId));
     }
 
-    _login() {
-        // const id = uuid();
-        // const loginPromise = new Promise((resolve, reject) => {
-        //     let overlay = this.openmct.overlays.overlay({
-        //         element: this._getLoginForm(),
-        //         dismissable: false,
-        //         size: 'small',
-        //         buttons: [
-        //             {
-        //                 label: 'Login',
-        //                 emphasis: 'true',
-        //                 callback: () => {
-        //                     let username = document.getElementById('example-user-form-username').value;
+    async _getUserInfo() {
+        try {
+            const res = await fetch(this.userApi);
+            const info = await res.json();
 
-        //                     if (username !== '') {
-        //                         this.user = new this.ExampleUser(id, username, ['example-role']);
-        //                         this.loggedIn = true;
-        //                         resolve();
-        //                         overlay.dismiss();
-        //                     } else {
-        //                         this.openmct.notifications.info('Please enter a username.');
-        //                     }
-        //                 }
-        //             }
-        //         ],
-        //         onDestroy: () => this.loginForm = undefined
-        //     });
-        // });
+            this.user = new this.YamcsUser(info);
+            this.loggedIn = true;
+        } catch(error) {
+            throw new Error(error);
+        }
 
-        // return loginPromise;
+        return this.user.getUserInfo();
     }
 
 }
