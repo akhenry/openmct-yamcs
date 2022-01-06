@@ -30,7 +30,7 @@ export default function createExampleUser(UserClass) {
             confirmationTime,
             lastLoginTime
         }) {
-            super(name, name);
+            super(name, name); // id, name (yamcs doesn't provide an id)
 
             this.active = active;
             this.superuser = superuser;
