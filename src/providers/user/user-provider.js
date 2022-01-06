@@ -40,20 +40,11 @@ export default class UserProvider extends EventEmitter {
     }
 
     getCurrentUser() {
-        console.log('get current user');
         if (this.loggedIn) {
-            return Promise.resolve(this.user);
+            return Promise.resolve(this.user.getUserInfo());
         }
 
-        return this._getUserInfo().then(() => this.user.getUserInfo());
-    }
-
-    hasRole(roleId) {
-        if (!this.loggedIn) {
-            Promise.resolve(undefined);
-        }
-
-        return Promise.resolve(this.user.getRoles().includes(roleId));
+        return this._getUserInfo();
     }
 
     async _getUserInfo() {
