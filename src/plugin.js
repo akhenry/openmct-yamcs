@@ -37,7 +37,8 @@ export default function installYamcsPlugin(configuration) {
         const userProvider = new UserProvider(openmct);
         openmct.user.setProvider(
             userProvider,
-            configuration.yamcsDictionaryEndpoint
+            configuration.yamcsDictionaryEndpoint,
+            configuration.yamcsInstance
         );
 
         openmct.install(openmct.plugins.ISOTimeFormat());

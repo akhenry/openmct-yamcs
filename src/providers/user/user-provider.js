@@ -29,6 +29,7 @@ export default class UserProvider extends EventEmitter {
 
         this.openmct = openmct;
         this.userApi = [url, instance, 'api/user'].join('/');
+        console.log('user api', this.userApi);
         this.user = undefined;
         this.loggedIn = false;
 
@@ -49,10 +50,12 @@ export default class UserProvider extends EventEmitter {
 
     async _getUserInfo() {
         try {
+            console.log('gettin user');
             const res = await fetch(this.userApi);
             const info = await res.json();
 
             this.user = new this.YamcsUser(info);
+            console.log('this.user', this.user);
             this.loggedIn = true;
         } catch(error) {
             throw new Error(error);
