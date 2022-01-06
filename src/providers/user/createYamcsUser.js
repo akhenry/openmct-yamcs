@@ -34,9 +34,18 @@ export default function createExampleUser(UserClass) {
 
             this.active = active;
             this.superuser = superuser;
+            this.creationTime = creationTime;
+            this.confirmationTime = confirmationTime;
+            this.lastLoginTime = lastLoginTime;
 
             this.isSuperuser = this.isSuperuser.bind(this);
             this.isActive = this.isActive.bind(this);
+        }
+
+        getValue(key) {
+            if (this[key]) {
+                return this[key];
+            }
         }
 
         isActive() {
