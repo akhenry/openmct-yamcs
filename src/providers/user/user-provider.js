@@ -29,7 +29,7 @@ export default class UserProvider extends EventEmitter {
 
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
-        console.log('user api', this.userApi);
+        console.log('user api', this.userEndpoint);
         this.user = undefined;
         this.loggedIn = false;
 
