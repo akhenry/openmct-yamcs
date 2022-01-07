@@ -24,12 +24,11 @@ import EventEmitter from 'eventemitter3';
 import createYamcsUser from './createYamcsUser';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, userEndpoint, instance) {
+    constructor(openmct, userEndpoint) {
         super();
 
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
-        console.log('user api', this.userEndpoint);
         this.user = undefined;
         this.loggedIn = false;
 
@@ -38,6 +37,14 @@ export default class UserProvider extends EventEmitter {
 
     isLoggedIn() {
         return this.loggedIn;
+    }
+
+    isActive() {
+        return this.user.isActive();
+    }
+
+    isSuperuser() {
+        return this.user.isSuperuser();
     }
 
     getCurrentUser() {
@@ -55,7 +62,6 @@ export default class UserProvider extends EventEmitter {
             const info = await res.json();
 
             this.user = new this.YamcsUser(info);
-            console.log('this.user', this.user);
             this.loggedIn = true;
         } catch(error) {
             throw new Error(error);
