@@ -20,13 +20,10 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import EventEmitter from 'eventemitter3';
 import createYamcsUser from './createYamcsUser';
 
-export default class UserProvider extends EventEmitter {
+export default class UserProvider {
     constructor(openmct, userEndpoint) {
-        super();
-
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
         this.user = undefined;
