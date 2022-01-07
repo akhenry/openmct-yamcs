@@ -24,11 +24,11 @@ import EventEmitter from 'eventemitter3';
 import createYamcsUser from './createYamcsUser';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, url, instance) {
+    constructor(openmct, userEndpoint, instance) {
         super();
 
         this.openmct = openmct;
-        this.userApi = [url, instance, 'api/user'].join('/');
+        this.userEndpoint = userEndpoint;
         console.log('user api', this.userApi);
         this.user = undefined;
         this.loggedIn = false;
@@ -51,7 +51,7 @@ export default class UserProvider extends EventEmitter {
     async _getUserInfo() {
         try {
             console.log('gettin user');
-            const res = await fetch(this.userApi);
+            const res = await fetch(this.userEndpoint);
             const info = await res.json();
 
             this.user = new this.YamcsUser(info);

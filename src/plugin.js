@@ -37,7 +37,7 @@ export default function installYamcsPlugin(configuration) {
         const userProvider = new UserProvider(openmct);
         openmct.user.setProvider(
             userProvider,
-            configuration.yamcsDictionaryEndpoint,
+            configuration.yamcsUserEndpoint,
             configuration.yamcsInstance
         );
 
