@@ -54,7 +54,6 @@ export default class UserProvider {
 
     async _getUserInfo() {
         try {
-            console.log('gettin user');
             const res = await fetch(this.userEndpoint);
             const info = await res.json();
 
