@@ -38,7 +38,7 @@ export default class UserProvider {
 
     getCurrentUser() {
         if (this.loggedIn) {
-            return Promise.resolve(this.user.getUserInfo());
+            return Promise.resolve(this.user);
         }
 
         return this._getUserInfo();
@@ -55,7 +55,7 @@ export default class UserProvider {
             throw new Error(error);
         }
 
-        return this.user.getUserInfo();
+        return this.user;
     }
 
 }
