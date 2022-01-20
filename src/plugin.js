@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2022, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -24,6 +24,7 @@ import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-p
 import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
+import UserProvider from './providers/user/user-provider';
 
 
 import { OBJECT_TYPES } from './const';
@@ -32,6 +33,12 @@ export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
         //TODO: Validate provided configuration
+
+        const userProvider = new UserProvider(
+            openmct,
+            configuration.yamcsUserEndpoint
+        );
+        openmct.user.setProvider(userProvider);
 
         openmct.install(openmct.plugins.ISOTimeFormat());
         openmct.install(openmct.plugins.NonEditableFolder());
