@@ -36,14 +36,6 @@ export default class UserProvider {
         return this.loggedIn;
     }
 
-    isActive() {
-        return this.user.isActive();
-    }
-
-    isSuperuser() {
-        return this.user.isSuperuser();
-    }
-
     getCurrentUser() {
         if (this.loggedIn) {
             return Promise.resolve(this.user.getUserInfo());

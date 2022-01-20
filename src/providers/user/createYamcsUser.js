@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export default function createExampleUser(UserClass) {
+export default function createYamcsUser(UserClass) {
     return class YamcsUser extends UserClass {
         constructor({
             name,
@@ -37,23 +37,6 @@ export default function createExampleUser(UserClass) {
             this.creationTime = creationTime;
             this.confirmationTime = confirmationTime;
             this.lastLoginTime = lastLoginTime;
-
-            this.isSuperuser = this.isSuperuser.bind(this);
-            this.isActive = this.isActive.bind(this);
-        }
-
-        getValue(key) {
-            if (this[key]) {
-                return this[key];
-            }
-        }
-
-        isActive() {
-            return this.active;
-        }
-
-        isSuperuser() {
-            return this.superuser;
         }
     };
 }
