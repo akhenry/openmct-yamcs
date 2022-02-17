@@ -1,6 +1,6 @@
 {
   "name": "openmct-yamcs",
-  "version": "1.8.5",
+  "version": "2.0.0",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
@@ -27,6 +27,6 @@
     "webpack-dev-server": "^3.10.3"
   },
   "peerDependencies": {
-    "openmct": "nasa/openmct#release/1.8.5"
+    "openmct": "nasa/openmct#release/2.0.0"
   }
 }
