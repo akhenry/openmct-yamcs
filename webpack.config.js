@@ -37,9 +37,11 @@ const WEBPACK_CONFIG = {
     },
     mode: 'production',
     output: {
-        filename: '[name].js',
+	globalObject: "this",
+	filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+	library: 'openmctYamcs'
     },
     devtool: devMode ? 'eval-source-map' : 'source-map',
     devServer: {
