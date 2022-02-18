@@ -27,6 +27,6 @@
     "webpack-dev-server": "^3.10.3"
   },
   "peerDependencies": {
-    "openmct": "nasa/openmct#release/2.0.0"
+    "openmct": "^2.0.0"
   }
 }
