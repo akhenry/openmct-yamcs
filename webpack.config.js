@@ -49,27 +49,27 @@ const WEBPACK_CONFIG = {
         compress: true,
         port: 9000,
         open: true,
-        openPage: '/example/index.html',
+        openPage: 'example/index.html',
         proxy: {
             "/yamcs-proxy/*": {
                 target: "http://localhost:8090/",
                 secure: false,
                 changeOrigin: true,
-                pathRewrite: {'^/yamcs-proxy' : ''}
+                pathRewrite: {'^/yamcs-proxy/' : ''}
             },
             "/yamcs-proxy-ws-v2/*": {
                 target: "ws://localhost:8090/api/websocket",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws-v2' : ''}
+                pathRewrite: {'^/yamcs-proxy-ws-v2/' : ''}
             },
             "/yamcs-proxy-ws/*": {
                 target: "ws://localhost:8090/",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws' : ''}
+                pathRewrite: {'^/yamcs-proxy-ws/' : ''}
             }
         }
     }
