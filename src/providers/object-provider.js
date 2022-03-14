@@ -55,7 +55,7 @@ export default class YamcsObjectProvider {
                 namespace: this.namespace
             },
             name: this.folderName,
-            type: 'noneditable.folder',
+            type: 'folder',
             location: 'ROOT',
             composition: []
         };
@@ -253,7 +253,7 @@ export default class YamcsObjectProvider {
                     namespace: this.namespace
                 },
                 name: spaceSystem.name,
-                type: 'noneditable.folder',
+                type: 'folder',
                 composition: composition,
                 location: location
             };
