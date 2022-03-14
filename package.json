@@ -8,7 +8,7 @@
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
-    "prepublish": "npm install openmct@1.8.4 --no-save",
+    "prepublish": "npm install openmct@unstable --no-save",
     "start": "NODE_ENV=dev webpack-dev-server",
     "prepare": "npm run build:dist"
   },
