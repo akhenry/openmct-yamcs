@@ -327,13 +327,19 @@ export default class YamcsObjectProvider {
 
         if (!isAggregate) {
             let key = 'value';
-            obj.telemetry.values.push({
+            const telemetryValue = {
                 key,
                 name: 'Value',
                 hints: {
                     range: 1
                 }
-            });
+            };
+
+            if (this.isEnumeration(parameter)) {
+                telemetryValue.format = 'string';
+            }
+
+            obj.telemetry.values.push(telemetryValue);
 
             this.addHints(key, obj);
         } else {
@@ -378,6 +384,16 @@ export default class YamcsObjectProvider {
         }
 
         return isAggregate;
+    }
+
+    isEnumeration(parameter) {
+        let isEnumeration = false;
+
+        if (parameter.type !== undefined) {
+            isEnumeration = parameter.type.engType === 'enumeration';
+        }
+
+        return isEnumeration;
     }
 
     formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
