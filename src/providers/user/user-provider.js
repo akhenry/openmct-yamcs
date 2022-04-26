@@ -44,6 +44,14 @@ export default class UserProvider {
         return this._getUserInfo();
     }
 
+    async hasRole(roleName) {
+        const user = await this.getCurrentUser();
+
+        return user.roles.some(role => {
+            return role.name === roleName;
+        });
+    }
+
     async _getUserInfo() {
         try {
             const res = await fetch(this.userEndpoint);

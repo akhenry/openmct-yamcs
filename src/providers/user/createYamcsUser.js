@@ -28,7 +28,8 @@ export default function createYamcsUser(UserClass) {
             superuser,
             creationTime,
             confirmationTime,
-            lastLoginTime
+            lastLoginTime,
+            roles
         }) {
             super(name, name); // id, name (yamcs doesn't provide an id)
 
@@ -37,6 +38,7 @@ export default function createYamcsUser(UserClass) {
             this.creationTime = creationTime;
             this.confirmationTime = confirmationTime;
             this.lastLoginTime = lastLoginTime;
+            this.roles = roles;
         }
     };
 }
