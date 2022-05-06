@@ -6,6 +6,7 @@ const config = {
     "yamcsHistoricalEndpoint": "http://localhost:9000/yamcs-proxy/",
     "yamcsRealtimeEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
     "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws-v2/",
+    "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user",
     "yamcsInstance": "myproject",
     "yamcsFolder": "myproject"
 };

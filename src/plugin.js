@@ -33,12 +33,15 @@ export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
         //TODO: Validate provided configuration
-
-        const userProvider = new UserProvider(
-            openmct,
-            configuration.yamcsUserEndpoint
-        );
-        openmct.user.setProvider(userProvider);
+        if (configuration.yamcsUserEndpoint !== undefined) {
+            const userProvider = new UserProvider(
+                openmct,
+                configuration.yamcsUserEndpoint
+            );
+            openmct.user.setProvider(userProvider);
+        } else {
+            console.warn('No user endpoint configured, user API unavailable in this deployment.');
+        }
 
         openmct.install(openmct.plugins.ISOTimeFormat());
 
