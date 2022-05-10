@@ -29,7 +29,7 @@ export default function createYamcsUser(UserClass) {
             creationTime,
             confirmationTime,
             lastLoginTime,
-            roles
+            roles = []
         }) {
             super(name, name); // id, name (yamcs doesn't provide an id)
 

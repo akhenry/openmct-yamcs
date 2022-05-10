@@ -336,7 +336,20 @@ export default class YamcsObjectProvider {
             };
 
             if (this.isEnumeration(parameter)) {
-                telemetryValue.format = 'string';
+                telemetryValue.format = 'enum';
+                const yamcsEnumerations = parameter.type.enumValue;
+                telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
+                    let rawValue = enumValue.value;
+
+                    if (!isNaN(rawValue)) {
+                        rawValue = parseInt(rawValue);
+                    }
+
+                    return {
+                        value: rawValue,
+                        string: enumValue.label
+                    };
+                });
             }
 
             obj.telemetry.values.push(telemetryValue);
@@ -452,7 +465,9 @@ export default class YamcsObjectProvider {
         /* Built-in Yamcs telemetry does not supply type information. */
         if (
             parameter.type === undefined
-            || (parameter.type.engType==='integer' || parameter.type.engType==='float')
+            || (parameter.type.engType==='integer'
+            || parameter.type.engType==='float'
+            || parameter.type.engType==='enumeration')
         ) {
             return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }

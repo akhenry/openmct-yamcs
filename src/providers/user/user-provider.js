@@ -23,11 +23,12 @@
 import createYamcsUser from './createYamcsUser';
 
 export default class UserProvider {
-    constructor(openmct, userEndpoint) {
+    constructor(openmct, userEndpoint, statusRoles=[]) {
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
         this.user = undefined;
         this.loggedIn = false;
+        this.statusRoles = statusRoles;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
     }
@@ -37,11 +38,17 @@ export default class UserProvider {
     }
 
     getCurrentUser() {
-        if (this.loggedIn) {
-            return Promise.resolve(this.user);
+        if (!this.loginPromise) {
+            this.loginPromise = this._getUserInfo();
         }
 
-        return this._getUserInfo();
+        return this.loginPromise;
+    }
+
+    async canProvideStatus() {
+        return Promise.all(this.statusRoles
+            .map(role => this.hasRole(role)))
+            .then(hasRoles => hasRoles.some(hasRole => hasRole));
     }
 
     async hasRole(roleName) {
