@@ -28,16 +28,18 @@ import UserProvider from './providers/user/user-provider';
 
 
 import { OBJECT_TYPES } from './const';
+import RoleStatus from './providers/role-status.js';
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
-        //TODO: Validate provided configuration
+        const roleStatus = new RoleStatus();
+
         if (configuration.yamcsUserEndpoint !== undefined) {
             const userProvider = new UserProvider(
                 openmct,
                 configuration.yamcsUserEndpoint,
-                configuration.statusRoles
+                roleStatus
             );
             openmct.user.setProvider(userProvider);
         } else {
@@ -68,7 +70,8 @@ export default function installYamcsPlugin(configuration) {
             openmct,
             configuration.yamcsDictionaryEndpoint,
             configuration.yamcsInstance,
-            configuration.yamcsFolder
+            configuration.yamcsFolder,
+            roleStatus
         );
 
         openmct.objects.addRoot({

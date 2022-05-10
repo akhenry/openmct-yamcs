@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2022, United States Government
+ * Open MCT, Copyright (c) 2014-2020, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,25 +20,27 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export default function createYamcsUser(UserClass) {
-    return class YamcsUser extends UserClass {
-        constructor({
-            name,
-            active,
-            superuser,
-            creationTime,
-            confirmationTime,
-            lastLoginTime,
-            roles = []
-        }) {
-            super(name, name); // id, name (yamcs doesn't provide an id)
+const OPERATOR_STATUS_TYPE = 'yamcs.operatorStatus';
 
-            this.active = active;
-            this.superuser = superuser;
-            this.creationTime = creationTime;
-            this.confirmationTime = confirmationTime;
-            this.lastLoginTime = lastLoginTime;
-            this.roles = roles.map(role => role.name);
-        }
-    };
+export default class OperatorStatusParameter {
+    constructor() {
+
+    }
+
+    isOperatorStatusParameter(parameter) {
+        const aliases = parameter.alias;
+
+        return aliases !== undefined
+            && aliases.some(alias => alias.name === OPERATOR_STATUS_TYPE);
+    }
+
+    getRoleFromParameter(parameter) {
+        const aliases = parameter.alias;
+
+        return aliases.find(alias => alias.namespace === 'OpenMCT:role').name;
+    }
+
+    getPossibleStatusesFromParameter(parameter) {
+        return parameter.type.enumValue;
+    }
 }

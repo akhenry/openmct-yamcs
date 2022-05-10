@@ -26,14 +26,16 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES } from '../const';
+import OperatorStatusParameter from './operator-status-parameter.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
+const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName) {
+    constructor(openmct, url, instance, folderName, roleStatus) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -43,6 +45,7 @@ export default class YamcsObjectProvider {
         this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
+        this.roleStatus = roleStatus;
 
         this.createRootObject();
         this.createEventObject();
@@ -177,7 +180,12 @@ export default class YamcsObjectProvider {
             return Promise.resolve(this.dictionary);
         }
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
-            .then((dictionary) => this.dictionary = dictionary);
+            .then((dictionary) => {
+                this.dictionary = dictionary;
+                this.roleStatus.ready();
+
+                return dictionary;
+            });
     }
 
     fetchTelemetryDictionary() {
@@ -334,6 +342,12 @@ export default class YamcsObjectProvider {
                     range: 1
                 }
             };
+
+            if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
+                const role = operatorStatusParameter.getRoleFromParameter(parameter);
+                const possibleStates = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
+                this.roleStatus.setPossibleStatusesForRole(role, possibleStates);
+            }
 
             if (this.isEnumeration(parameter)) {
                 telemetryValue.format = 'enum';

@@ -23,12 +23,12 @@
 import createYamcsUser from './createYamcsUser';
 
 export default class UserProvider {
-    constructor(openmct, userEndpoint, statusRoles=[]) {
+    constructor(openmct, userEndpoint, roleStatus) {
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
         this.user = undefined;
         this.loggedIn = false;
-        this.statusRoles = statusRoles;
+        this.roleStatus = roleStatus;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
     }
@@ -45,10 +45,18 @@ export default class UserProvider {
         return this.loginPromise;
     }
 
+    async getActiveStatusRole() {
+        const user = await this.getCurrentUser();
+        const userRoles = user.roles || [];
+        const statusRoles = await this.roleStatus.getStatusRoles();
+
+        return statusRoles.find(statusRole => userRoles.includes(statusRole));
+    }
+
     async canProvideStatus() {
-        return Promise.all(this.statusRoles
-            .map(role => this.hasRole(role)))
-            .then(hasRoles => hasRoles.some(hasRole => hasRole));
+        const activeStatusRole = await this.getActiveStatusRole();
+
+        return activeStatusRole !== undefined;
     }
 
     async hasRole(roleName) {
@@ -57,6 +65,35 @@ export default class UserProvider {
         return user.roles.some(role => {
             return role.name === roleName;
         });
+    }
+
+    async getPollQuestion() {
+        return Promise.resolve({
+            question: 'Do the thing?',
+            timestamp: Date.now()
+        });
+    }
+
+    async setPollQuestion() {
+        return Promise.resolve(true);
+    }
+
+    async getStatus() {
+        return Promise.resolve({
+            key: "NO_STATUS",
+            label: "No Status",
+            iconClass: "icon-info"
+        });
+    }
+
+    async setStatus() {
+        return Promise(true);
+    }
+
+    async getPossibleStatuses() {
+        const activeStatusRole = await this.getActiveStatusRole();
+
+        return this.roleStatus.getPossibleStatusesForRole(activeStatusRole);
     }
 
     async _getUserInfo() {
@@ -74,3 +111,12 @@ export default class UserProvider {
     }
 
 }
+
+/**
+        //await this.openmct.user.getActiveStatusRole();
+        //async canProvideStatus()
+        //async fetchPossibleStatusesForUser()
+        //async getPollQuestion()
+        setPollQuestion(pollQuestion)
+        async fetchMyStatus()
+ */
