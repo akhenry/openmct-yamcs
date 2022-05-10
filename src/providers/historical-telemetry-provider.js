@@ -50,6 +50,10 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     request(domainObject, options) {
+        if (this.isAlarms(domainObject)) {
+            return this.getAlarms();
+        }
+
         options = { ...options };
         this.standardizeOptions(options, domainObject);
 
@@ -142,10 +146,20 @@ export default class YamcsHistoricalTelemetryProvider {
         return size;
     }
 
+    getAlarms() {
+        let url = `${this.url}api/processors/${this.instance}/realtime/alarms`;
+
+        return fetch(url).then(res => res.json());
+    }
+
     isImagery(domainObject) {
         let metadata = this.openmct.telemetry.getMetadata(domainObject);
 
-        return metadata.valuesForHints(['image']).length !== 0;
+        return metadata && metadata.valuesForHints(['image']).length !== 0;
+    }
+
+    isAlarms(domainObject) {
+        return domainObject.type === OBJECT_TYPES.FAULTS_OBJECT_TYPE;
     }
 
     getLinkParamsSpecificToId(id) {

@@ -72,7 +72,7 @@ export default class RealtimeProvider {
         let id = subscriptionDetails.subscriptionId;
 
         this.subscriptionsById[id] = subscriptionDetails;
-
+        console.log('subscribe this.connected', this.connected);
         if (this.connected) {
             this.sendSubscribeMessage(subscriptionDetails);
         }
@@ -102,6 +102,8 @@ export default class RealtimeProvider {
     sendSubscribeMessage(subscriptionDetails) {
         let domainObject = subscriptionDetails.domainObject;
         let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+
+        console.log('sendSubscribeMessage message', message);
 
         this.sendOrQueueMessage(message);
     }
@@ -189,8 +191,8 @@ export default class RealtimeProvider {
                     return;
                 }
 
-                // only event is handled differently
-                if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
+                // only alarms and events are handled differently
+                if (data.type === DATA_TYPES.DATA_TYPE_EVENTS || data.type === DATA_TYPES.DATA_TYPE_ALARMS) {
                     subscriptionDetails.callback(data.data);
                 } else if (data.data.values) {
                     let values = data.data.values;
