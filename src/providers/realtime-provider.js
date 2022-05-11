@@ -56,7 +56,10 @@ export default class RealtimeProvider {
     }
 
     supportsSubscribe(domainObject) {
-        return this.isSupportedObjectType(domainObject.type);
+        const isSupportedObjectType = this.isSupportedObjectType(domainObject.type);
+        console.log('supportsSubscribe', isSupportedObjectType, domainObject, this.supportedObjectTypes);
+
+        return isSupportedObjectType;
     }
 
     isSupportedObjectType(type) {
@@ -154,7 +157,10 @@ export default class RealtimeProvider {
         let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
+        console.log('WebSocket url', wsUrl);
         this.socket = new WebSocket(wsUrl);
+
+        window.socket = this.socket;
 
         this.socket.onopen = () => {
             clearTimeout(this.reconnectTimeout);
@@ -169,6 +175,11 @@ export default class RealtimeProvider {
 
         this.socket.onmessage = (event) => {
             let data = JSON.parse(event.data);
+
+            console.log('data.type', data.type);
+            if (data.type === DATA_TYPES.DATA_TYPE_ALARMS) {
+                console.log('onmessage', data);
+            }
 
             if (!this.isSupportedDataType(data.type)) {
                 return;
@@ -262,5 +273,4 @@ export default class RealtimeProvider {
     sendMessage(message) {
         this.socket.send(message);
     }
-
 }
