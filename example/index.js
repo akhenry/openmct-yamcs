@@ -19,6 +19,7 @@ const openmct = window.openmct;
 
     installDefaultPlugins();
     openmct.install(installYamcsPlugin(config));
+    openmct.install(openmct.plugins.OperatorStatus());
 
     openmct.start();
 

@@ -29,24 +29,17 @@ import UserProvider from './providers/user/user-provider';
 
 import { OBJECT_TYPES } from './const';
 import RoleStatus from './providers/role-status.js';
+import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
-        const roleStatus = new RoleStatus();
-
-        if (configuration.yamcsUserEndpoint !== undefined) {
-            const userProvider = new UserProvider(
-                openmct,
-                configuration.yamcsUserEndpoint,
-                roleStatus
-            );
-            openmct.user.setProvider(userProvider);
-        } else {
-            console.warn('No user endpoint configured, user API unavailable in this deployment.');
-        }
-
         openmct.install(openmct.plugins.ISOTimeFormat());
+
+        const latestTelemetryProvider = new LatestTelemetryProvider({
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+        });
 
         const historicalProvider = new YamcsHistoricalTelemetryProvider(
             openmct,
@@ -65,6 +58,23 @@ export default function installYamcsPlugin(configuration) {
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
+
+        const roleStatus = new RoleStatus(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+        });
+
+        if (configuration.yamcsUserEndpoint !== undefined) {
+            const userProvider = new UserProvider(
+                openmct,
+                configuration.yamcsUserEndpoint,
+                roleStatus,
+                latestTelemetryProvider
+            );
+            openmct.user.setProvider(userProvider);
+        } else {
+            console.warn('No user endpoint configured, user API unavailable in this deployment.');
+        }
 
         const objectProvider = new YamcsObjectProvider(
             openmct,
@@ -109,6 +119,18 @@ export default function installYamcsPlugin(configuration) {
             name: "Events",
             description: "To view events",
             cssClass: "icon-generator-events"
+        });
+
+        openmct.types.addType(OBJECT_TYPES.POLL_QUESTION_TYPE, {
+            name: 'Operator Status Poll',
+            description: 'Operator status Poll Question',
+            cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.OPERATOR_STATUS_TYPE, {
+            name: 'Operator Status',
+            description: 'Operator status',
+            cssClass: 'icon-telemetry'
         });
     };
 }

@@ -21,14 +21,18 @@
  *****************************************************************************/
 
 import createYamcsUser from './createYamcsUser';
+import { EventEmitter } from 'eventemitter3';
 
-export default class UserProvider {
-    constructor(openmct, userEndpoint, roleStatus) {
+export default class UserProvider extends EventEmitter {
+    constructor(openmct, userEndpoint, roleStatus, latestTelemetryProvider) {
+        super();
+
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
         this.user = undefined;
         this.loggedIn = false;
         this.roleStatus = roleStatus;
+        this.latestTelemetryProvider = latestTelemetryProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
     }
@@ -79,15 +83,23 @@ export default class UserProvider {
     }
 
     async getStatus() {
-        return Promise.resolve({
-            key: "NO_STATUS",
-            label: "No Status",
-            iconClass: "icon-info"
-        });
+        const role = await this.getActiveStatusRole();
+        const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
+        const status = await this.latestTelemetryProvider.requestLatest(statusTelemetryObject);
+        if (status !== undefined) {
+            return this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, status);
+        } else {
+            const defaultStatus = await this.roleStatus.getDefaultStatusForRole(role);
+
+            return defaultStatus;
+        }
+
     }
 
-    async setStatus() {
-        return Promise(true);
+    async setStatus(status) {
+        const role = await this.getActiveStatusRole();
+
+        return this.roleStatus.setStatusForRole(role, status);
     }
 
     async getPossibleStatuses() {
@@ -112,11 +124,3 @@ export default class UserProvider {
 
 }
 
-/**
-        //await this.openmct.user.getActiveStatusRole();
-        //async canProvideStatus()
-        //async fetchPossibleStatusesForUser()
-        //async getPollQuestion()
-        setPollQuestion(pollQuestion)
-        async fetchMyStatus()
- */
