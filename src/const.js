@@ -34,5 +34,7 @@ export const DATA_TYPES = {
     DATA_TYPE_REPLY: 'reply'
 };
 
+export const METADATA_TIME_KEY = 'generationTime';
+
 export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 export const AGGREGATE_TYPE = 'AGGREGATE';
