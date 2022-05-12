@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE } from '../const';
+import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY } from '../const';
 import {
     idToQualifiedName,
     qualifiedNameToId,
@@ -199,7 +199,7 @@ export default class RealtimeProvider {
                     values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter.generationTimeUTC
+                            timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);
 
