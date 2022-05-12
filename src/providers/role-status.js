@@ -43,9 +43,8 @@ export default class RoleStatus {
                 sint64Value: status.key
             })
         });
-        const resultObject = await result.json();
 
-        return resultObject;
+        return result.ok === true;
     }
     async getDefaultStatusForRole(role) {
         const possibleStatuses = await this.getPossibleStatusesForRole(role);

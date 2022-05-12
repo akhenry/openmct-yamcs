@@ -66,11 +66,12 @@ export default function installYamcsPlugin(configuration) {
 
         if (configuration.yamcsUserEndpoint !== undefined) {
             const userProvider = new UserProvider(
-                openmct,
-                configuration.yamcsUserEndpoint,
-                roleStatus,
-                latestTelemetryProvider
-            );
+                openmct, {
+                    userEndpoint: configuration.yamcsUserEndpoint,
+                    roleStatus,
+                    latestTelemetryProvider,
+                    realtimeProvider
+                });
             openmct.user.setProvider(userProvider);
         } else {
             console.warn('No user endpoint configured, user API unavailable in this deployment.');

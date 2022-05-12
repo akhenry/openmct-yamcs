@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, userEndpoint, roleStatus, latestTelemetryProvider) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider}) {
         super();
 
         this.openmct = openmct;
@@ -33,8 +33,14 @@ export default class UserProvider extends EventEmitter {
         this.loggedIn = false;
         this.roleStatus = roleStatus;
         this.latestTelemetryProvider = latestTelemetryProvider;
+        this.realtimeTelemetryProvider = realtimeProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
+        this.openmct.once('destroy', () => {
+            if (this.unsubscribe !== undefined) {
+                this.unsubscribe();
+            }
+        });
     }
 
     isLoggedIn() {
@@ -85,6 +91,11 @@ export default class UserProvider extends EventEmitter {
     async getStatus() {
         const role = await this.getActiveStatusRole();
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
+        if (this.unsubscribe === undefined) {
+            this.unsubscribe = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
+                this.emit('statusChange', this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum));
+            });
+        }
         const status = await this.latestTelemetryProvider.requestLatest(statusTelemetryObject);
         if (status !== undefined) {
             return this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, status);
