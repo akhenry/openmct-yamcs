@@ -1,10 +1,9 @@
 import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants';
 
 export default class HistoricalFaultProvider {
-    constructor(openmct, url, instance) {
+    constructor(url, instance) {
         this.url = url;
         this.instance = instance;
-        this.openmct = openmct;
     }
 
     supportsRequest(domainObject) {

@@ -62,7 +62,6 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
 
         openmct.faults.addHistoricalProvider(new HistoricalFaultProvider(
-            openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance
         ));
@@ -72,7 +71,10 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsInstance
         ));
 
-        openmct.faults.addFaultActionProvider(new FaultActionrovider(configuration));
+        openmct.faults.addFaultActionProvider(new FaultActionrovider(
+            configuration.yamcsHistoricalEndpoint,
+            configuration.yamcsInstance
+        ));
 
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
