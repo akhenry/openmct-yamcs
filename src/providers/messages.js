@@ -18,13 +18,13 @@ function buildSubscribeMessages() {
         subscriptionMessages[objectType] = (subscriptionDetails) => {
             let message;
 
-            if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE || objectType === OBJECT_TYPES.FAULTS_OBJECT_TYPE) {
+            if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
                 message = `{
                     "type": "${dataType}",
                     "id": "${subscriptionDetails.subscriptionId}",
                     "options": {
                         "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime",
+                        "processor": "realtime"
                     }
                 }`;
             } else {

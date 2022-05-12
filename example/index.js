@@ -58,5 +58,7 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.Notebook());
         openmct.install(openmct.plugins.LADTable());
         openmct.install(openmct.plugins.ClearData(['table', 'telemetry.plot.overlay', 'telemetry.plot.stacked']));
+
+        openmct.install(openmct.plugins.FaultManagementPlugin());
     }
 })();
