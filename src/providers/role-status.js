@@ -25,7 +25,7 @@ export default class RoleStatus {
     async getPossibleStatusesForRole(role) {
         return this._readyPromise.then(() => this._stateMap[role].map(this.toStatusFromMdbEntry));
     }
-    async getStatusRoles() {
+    async getAllStatusRoles() {
         return this._readyPromise.then(() => Object.keys(this._stateMap));
     }
     async setStatusForRole(role, status) {
