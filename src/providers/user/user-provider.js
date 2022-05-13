@@ -142,6 +142,20 @@ export default class UserProvider extends EventEmitter {
         }
     }
 
+    async getRolesInStatus(status) {
+        const statusRoles = await this.roleStatus.getStatusRoles();
+        const telemetryObjects = await Promise.all(statusRoles.map(role => this.roleStatus.getTelemetryObjectForRole(role)));
+        const latestTelemetryValues = await Promise.all(telemetryObjects.map(telemetryObject => this.latestTelemetryProvider.requestLatest(telemetryObject)));
+        const latestStatuses = latestTelemetryValues.map((statusTelemetry, i) => this.roleStatus.toStatusFromTelemetry(telemetryObjects[i], statusTelemetry));
+        return latestStatuses.reduce((rolesInStatus, thisStatus, i) => {
+            if (thisStatus.key === status) {
+                rolesInStatus.push(statusRoles[i]);
+            }
+
+            return rolesInStatus;
+        }, []);
+    }
+
     async _getUserInfo() {
         try {
             const res = await fetch(this.userEndpoint);
