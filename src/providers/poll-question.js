@@ -37,11 +37,6 @@ export default class PollQuestion {
 
         return result.ok === true;
     }
-    async getDefaultStatusForRole(role) {
-        const possibleStatuses = await this.getPossibleStatusesForRole(role);
-
-        return possibleStatuses[0];
-    }
     toPollQuestionObjectFromTelemetry(telemetryObject, datum) {
         const metadata = this._openmct.telemetry.getMetadata(telemetryObject);
         const questionMetadata = metadata.getDefaultDisplayValue();

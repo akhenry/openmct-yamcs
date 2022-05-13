@@ -34,14 +34,16 @@ export default class UserProvider extends EventEmitter {
         this.roleStatus = roleStatus;
         this.pollQuestionParameterParser = pollQuestionParameterParser;
         this.pollQuestion = pollQuestion;
+        this.unsubscribeStatus = {};
 
         this.latestTelemetryProvider = latestTelemetryProvider;
         this.realtimeTelemetryProvider = realtimeProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
         this.openmct.once('destroy', () => {
-            if (this.unsubscribeStatus !== undefined) {
-                this.unsubscribeStatus();
+            const subscriptions = Object.values(this.unsubscribeStatus);
+            if (subscriptions.length > 0) {
+                subscriptions.forEach(unsubscribe => unsubscribe());
             }
             if (this.unsubscribePollQuestion !== undefined) {
                 this.unsubscribePollQuestion();
@@ -98,9 +100,12 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getStatusForRole(role) {
+        console.log(`Role: ${role}`);
+
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
-        if (this.unsubscribeStatus === undefined) {
-            this.unsubscribeStatus = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
+        console.log(`tlm object: ${JSON.stringify(statusTelemetryObject)}`);
+        if (this.unsubscribeStatus[role] === undefined) {
+            this.unsubscribeStatus[role] = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
                 this.emit('statusChange', {role, status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)});
             });
         }
@@ -125,9 +130,7 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getPossibleStatuses() {
-        const activeStatusRole = await this.getStatusRoleForCurrentUser();
-
-        return this.roleStatus.getPossibleStatusesForRole(activeStatusRole);
+        return this.roleStatus.getPossibleStatuses();
     }
 
     async getPollQuestion() {

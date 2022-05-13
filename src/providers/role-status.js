@@ -22,8 +22,10 @@ export default class RoleStatus {
     async getTelemetryObjectForRole(role) {
         return this._readyPromise.then(() => this._roleToTelemetryObjectMap[role]);
     }
-    async getPossibleStatusesForRole(role) {
-        return this._readyPromise.then(() => this._stateMap[role].map(this.toStatusFromMdbEntry));
+    async getPossibleStatuses() {
+        return this._readyPromise.then(() => {
+            return Object.values(this._stateMap)[0].map(this.toStatusFromMdbEntry);
+        });
     }
     async getAllStatusRoles() {
         return this._readyPromise.then(() => Object.keys(this._stateMap));
@@ -46,8 +48,8 @@ export default class RoleStatus {
 
         return result.ok === true;
     }
-    async getDefaultStatusForRole(role) {
-        const possibleStatuses = await this.getPossibleStatusesForRole(role);
+    async getDefaultStatusForRole() {
+        const possibleStatuses = await this.getPossibleStatuses();
 
         return possibleStatuses[0];
     }
