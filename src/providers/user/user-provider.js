@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider}) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider, pollQuestionParameterParser, pollQuestion}) {
         super();
 
         this.openmct = openmct;
@@ -32,13 +32,19 @@ export default class UserProvider extends EventEmitter {
         this.user = undefined;
         this.loggedIn = false;
         this.roleStatus = roleStatus;
+        this.pollQuestionParameterParser = pollQuestionParameterParser;
+        this.pollQuestion = pollQuestion;
+
         this.latestTelemetryProvider = latestTelemetryProvider;
         this.realtimeTelemetryProvider = realtimeProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
         this.openmct.once('destroy', () => {
-            if (this.unsubscribe !== undefined) {
-                this.unsubscribe();
+            if (this.unsubscribeStatus !== undefined) {
+                this.unsubscribeStatus();
+            }
+            if (this.unsubscribePollQuestion !== undefined) {
+                this.unsubscribePollQuestion();
             }
         });
     }
@@ -77,22 +83,25 @@ export default class UserProvider extends EventEmitter {
         });
     }
 
-    async getPollQuestion() {
-        return Promise.resolve({
-            question: 'Do the thing?',
-            timestamp: Date.now()
-        });
+    async canSetPollQuestion() {
+        const user = await this.getCurrentUser();
+        const writeParameters = user.getWriteParameters();
+
+        return Promise.all(writeParameters
+            .map(parameterName => this.pollQuestionParameterParser.isPollQuestionParameterName(parameterName)))
+            .then(areParametersPollQuestion => areParametersPollQuestion
+                .some(isParameterPollQuestion => isParameterPollQuestion));
     }
 
-    async setPollQuestion() {
-        return Promise.resolve(true);
+    async setPollQuestion(question) {
+        return this.pollQuestion.setPollQuestion(question);
     }
 
     async getStatus() {
         const role = await this.getActiveStatusRole();
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
-        if (this.unsubscribe === undefined) {
-            this.unsubscribe = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
+        if (this.unsubscribeStatus === undefined) {
+            this.unsubscribeStatus = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
                 this.emit('statusChange', this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum));
             });
         }
@@ -104,7 +113,6 @@ export default class UserProvider extends EventEmitter {
 
             return defaultStatus;
         }
-
     }
 
     async setStatus(status) {
@@ -117,6 +125,21 @@ export default class UserProvider extends EventEmitter {
         const activeStatusRole = await this.getActiveStatusRole();
 
         return this.roleStatus.getPossibleStatusesForRole(activeStatusRole);
+    }
+
+    async getPollQuestion() {
+        const pollQuestionTelemetryObject = await this.pollQuestion.getTelemetryObject();
+
+        if (this.unsubscribePollQuestion === undefined) {
+            this.unsubscribePollQuestion = this.realtimeTelemetryProvider.subscribe(pollQuestionTelemetryObject, (datum) => {
+                const formattedPollQuestion = this.pollQuestion.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, datum);
+                this.emit("pollQuestionChange", formattedPollQuestion);
+            });
+        }
+        const pollQuestion = await this.latestTelemetryProvider.requestLatest(pollQuestionTelemetryObject);
+        if (pollQuestion !== undefined) {
+            return this.pollQuestion.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, pollQuestion);
+        }
     }
 
     async _getUserInfo() {

@@ -26,16 +26,16 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES } from '../const';
-import OperatorStatusParameter from './operator-status-parameter.js';
+import OperatorStatusParameterParser from './operator-status-parameter-parser.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
-const operatorStatusParameter = new OperatorStatusParameter();
+const operatorStatusParameter = new OperatorStatusParameterParser();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatus) {
+    constructor(openmct, url, instance, folderName, roleStatus, pollQuestionParameterParser, pollQuestion) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -46,6 +46,8 @@ export default class YamcsObjectProvider {
         this.objects = {};
         this.dictionaryPromise = undefined;
         this.roleStatus = roleStatus;
+        this.pollQuestionParameterParser = pollQuestionParameterParser;
+        this.pollQuestion = pollQuestion;
 
         this.createRootObject();
         this.createEventObject();
@@ -182,7 +184,7 @@ export default class YamcsObjectProvider {
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
             .then((dictionary) => {
                 this.dictionary = dictionary;
-                this.roleStatus.ready();
+                this.roleStatus.dictionaryLoadComplete();
 
                 return dictionary;
             });
@@ -348,6 +350,12 @@ export default class YamcsObjectProvider {
                 const possibleStates = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
                 this.roleStatus.setPossibleStatusesForRole(role, possibleStates);
                 this.roleStatus.setTelemetryObjectForRole(role, obj);
+            }
+
+            if (this.pollQuestionParameterParser.isPollQuestionParameter(parameter)) {
+                this.pollQuestionParameterParser.setPollQuestionParameter(parameter);
+                this.pollQuestion.setTelemetryObject(obj);
+                telemetryValue.format = 'string';
             }
 
             if (this.isEnumeration(parameter)) {

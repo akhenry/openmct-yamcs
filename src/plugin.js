@@ -30,6 +30,8 @@ import UserProvider from './providers/user/user-provider';
 import { OBJECT_TYPES } from './const';
 import RoleStatus from './providers/role-status.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
+import PollQuestionParameterParser from './providers/poll-question-parameter-parser.js';
+import PollQuestion from './providers/poll-question.js';
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -64,13 +66,22 @@ export default function installYamcsPlugin(configuration) {
             instance: configuration.yamcsInstance
         });
 
+        const pollQuestionParameterParser = new PollQuestionParameterParser();
+        const pollQuestion = new PollQuestion(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+
+        });
+
         if (configuration.yamcsUserEndpoint !== undefined) {
             const userProvider = new UserProvider(
                 openmct, {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus,
                     latestTelemetryProvider,
-                    realtimeProvider
+                    realtimeProvider,
+                    pollQuestionParameterParser,
+                    pollQuestion
                 });
             openmct.user.setProvider(userProvider);
         } else {
@@ -82,7 +93,9 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsDictionaryEndpoint,
             configuration.yamcsInstance,
             configuration.yamcsFolder,
-            roleStatus
+            roleStatus,
+            pollQuestionParameterParser,
+            pollQuestion
         );
 
         openmct.objects.addRoot({

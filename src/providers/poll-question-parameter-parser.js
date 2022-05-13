@@ -20,33 +20,32 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export default function createYamcsUser(UserClass) {
-    return class YamcsUser extends UserClass {
-        constructor({
-            name,
-            active,
-            superuser,
-            creationTime,
-            confirmationTime,
-            lastLoginTime,
-            roles = [],
-            objectPrivilege
-        }) {
-            super(name, name); // id, name (yamcs doesn't provide an id)
+const POLL_QUESTION_TYPE = 'yamcs.pollQuestion';
 
-            this.active = active;
-            this.superuser = superuser;
-            this.creationTime = creationTime;
-            this.confirmationTime = confirmationTime;
-            this.lastLoginTime = lastLoginTime;
-            this.roles = roles.map(role => role.name);
-            this.objectPrivileges = objectPrivilege;
-        }
+export default class PollQuestionParameterParser {
+    constructor() {
+        this._pollQuestionParameterName = undefined;
+        this._pollQuestionParameterResolve = undefined;
+        this._pollQuestionParameterPromise = new Promise((resolve) => {
+            this._pollQuestionParameterResolve = resolve;
+        });
+    }
 
-        getWriteParameters() {
-            const writeParameters = this.objectPrivileges.find(entry => entry.type === 'WriteParameter')?.object || [];
+    async isPollQuestionParameterName(parameterName) {
+        return this._pollQuestionParameterPromise.then(() => {
+            return this._pollQuestionParameter.qualifiedName === parameterName;
+        });
+    }
 
-            return writeParameters;
-        }
-    };
+    isPollQuestionParameter(parameter) {
+        const aliases = parameter.alias;
+
+        return aliases !== undefined
+            && aliases.some(alias => alias.name === POLL_QUESTION_TYPE);
+    }
+
+    setPollQuestionParameter(parameter) {
+        this._pollQuestionParameter = parameter;
+        this._pollQuestionParameterResolve();
+    }
 }

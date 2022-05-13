@@ -73,7 +73,7 @@ export default class RoleStatus {
 
         return url;
     }
-    ready() {
+    dictionaryLoadComplete() {
         this._setReady();
     }
 }
