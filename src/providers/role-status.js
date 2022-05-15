@@ -3,7 +3,7 @@ import {
 } from '../utils.js';
 
 export default class RoleStatus {
-    constructor(openmct, {url, instance, processor = 'realtime'}) {
+    constructor(openmct, {url, instance, processor = 'realtime', styleConfig}) {
         this._stateMap = {};
         this._roleToTelemetryObjectMap = {};
         this._setReady = undefined;
@@ -12,6 +12,7 @@ export default class RoleStatus {
         this._instance = instance;
         this._processor = processor;
         this._openmct = openmct;
+        this._statusStyles = styleConfig;
     }
     setPossibleStatusesForRole(role, possibleStates) {
         this._stateMap[role] = possibleStates;
@@ -24,7 +25,7 @@ export default class RoleStatus {
     }
     async getPossibleStatuses() {
         return this._readyPromise.then(() => {
-            return Object.values(this._stateMap)[0].map(this.toStatusFromMdbEntry);
+            return Object.values(this._stateMap)[0].map(status => this.toStatusFromMdbEntry(status));
         });
     }
     async getAllStatusRoles() {
@@ -54,21 +55,24 @@ export default class RoleStatus {
         return possibleStatuses[0];
     }
     toStatusFromMdbEntry(yamcsStatus) {
-        return {
+        return this._applyStyling({
             key: parseInt(yamcsStatus.value),
             label: yamcsStatus.label
-        };
+        });
     }
     toStatusFromTelemetry(telemetryObject, datum) {
         const metadata = this._openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
         const formatter = this._openmct.telemetry.getValueFormatter(rangeMetadata);
 
-        return {
+        return this._applyStyling({
             key: formatter.parse(datum),
             label: formatter.format(datum)
-        };
+        });
 
+    }
+    _applyStyling(status) {
+        return {...status, ...this._statusStyles[status.label]};
     }
     _buildUrl(id) {
         let url = `${this._url}api/processors/${this._instance}/${this._processor}/parameters/${idToQualifiedName(id.key)}`;

@@ -63,7 +63,8 @@ export default function installYamcsPlugin(configuration) {
 
         const roleStatus = new RoleStatus(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
-            instance: configuration.yamcsInstance
+            instance: configuration.yamcsInstance,
+            styleConfig: configuration.statusStyles
         });
 
         const pollQuestionParameterParser = new PollQuestionParameterParser();
