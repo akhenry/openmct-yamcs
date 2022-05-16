@@ -17,14 +17,14 @@ export default class FaultActionrovider {
         this._sendRequest(url, options);
     }
 
-    shelveFault(fault, { unshelved = true, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
+    shelveFault(fault, { shelved = false, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
         let payload = {};
-        if (unshelved) {
-            payload.state = 'unshelved';
-        } else {
+        if (shelved) {
             payload.comment = comment;
             payload.shelveDuration = shelveDuration;
             payload.state = 'shelved';
+        } else {
+            payload.state = 'unshelved';
         }
 
         const options = this._getOptions(payload);
