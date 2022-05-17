@@ -23,8 +23,9 @@ import {
     idToQualifiedName
 } from '../../utils.js';
 
-export default class RoleStatusTelemetry {
-    #stateMap;
+export default class OperatorStatusTelemetry {
+    #statusMap;
+    #statusRoles;
     #roleToTelemetryObjectMap;
     #setReady;
     #readyPromise;
@@ -35,7 +36,8 @@ export default class RoleStatusTelemetry {
     #statusStyles;
 
     constructor(openmct, {url, instance, processor = 'realtime', styleConfig}) {
-        this.#stateMap = {};
+        this.#statusMap = {};
+        this.#statusRoles = new Set();
         this.#roleToTelemetryObjectMap = {};
         this.#readyPromise = new Promise((resolve) => this.#setReady = resolve);
         this.#url = url;
@@ -43,31 +45,6 @@ export default class RoleStatusTelemetry {
         this.#processor = processor;
         this.#openmct = openmct;
         this.#statusStyles = styleConfig;
-    }
-    #applyStyling(status) {
-        return {...status, ...this.#statusStyles[status.label]};
-    }
-    #buildUrl(id) {
-        let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
-
-        return url;
-    }
-    setPossibleStatusesForRole(role, possibleStates) {
-        this.#stateMap[role] = possibleStates;
-    }
-    setTelemetryObjectForRole(role, telemetryObject) {
-        this.#roleToTelemetryObjectMap[role] = telemetryObject;
-    }
-    async getTelemetryObjectForRole(role) {
-        return this.#readyPromise.then(() => this.#roleToTelemetryObjectMap[role]);
-    }
-    async getPossibleStatuses() {
-        return this.#readyPromise.then(() => {
-            return Object.values(this.#stateMap)[0].map(status => this.toStatusFromMdbEntry(status));
-        });
-    }
-    async getAllStatusRoles() {
-        return this.#readyPromise.then(() => Object.keys(this.#stateMap));
     }
     async setStatusForRole(role, status) {
         //TODO Error handling.
@@ -94,6 +71,29 @@ export default class RoleStatusTelemetry {
 
         return success;
     }
+    async getPossibleStatuses() {
+        return this.#readyPromise.then(() => {
+            return Object.values(this.#statusMap).map(status => this.toStatusFromMdbEntry(status));
+        });
+    }
+    addStatus(status) {
+        this.#statusMap[status.value] = status;
+    }
+    setPossibleStatusesForRole(role, possibleStates) {
+        this.#statusMap[role] = possibleStates;
+    }
+    async getTelemetryObjectForRole(role) {
+        return this.#readyPromise.then(() => this.#roleToTelemetryObjectMap[role]);
+    }
+    setTelemetryObjectForRole(role, telemetryObject) {
+        this.#roleToTelemetryObjectMap[role] = telemetryObject;
+    }
+    async addStatusRole(role) {
+        this.#statusRoles.add(role);
+    }
+    async getAllStatusRoles() {
+        return this.#readyPromise.then(() => Array.from(this.#statusRoles));
+    }
     async getDefaultStatusForRole() {
         const possibleStatuses = await this.getPossibleStatuses();
 
@@ -118,5 +118,13 @@ export default class RoleStatusTelemetry {
     }
     dictionaryLoadComplete() {
         this.#setReady();
+    }
+    #applyStyling(status) {
+        return {...status, ...this.#statusStyles[status.label]};
+    }
+    #buildUrl(id) {
+        let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
+
+        return url;
     }
 }

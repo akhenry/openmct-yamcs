@@ -347,8 +347,9 @@ export default class YamcsObjectProvider {
 
             if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
                 const role = operatorStatusParameter.getRoleFromParameter(parameter);
-                const possibleStates = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
-                this.roleStatusTelemetry.setPossibleStatusesForRole(role, possibleStates);
+                const possibleStatuses = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
+                possibleStatuses.forEach(state => this.roleStatusTelemetry.addStatus(state));
+                this.roleStatusTelemetry.addStatusRole(role);
                 this.roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
             }
 

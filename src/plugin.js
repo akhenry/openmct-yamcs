@@ -28,7 +28,7 @@ import UserProvider from './providers/user/user-provider';
 
 
 import { OBJECT_TYPES } from './const';
-import RoleStatusTelemetry from './providers/user/role-status-telemetry.js';
+import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
@@ -61,7 +61,7 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
 
-        const roleStatusTelemetry = new RoleStatusTelemetry(openmct, {
+        const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance,
             styleConfig: configuration.statusStyles
