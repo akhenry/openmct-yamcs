@@ -1,8 +1,8 @@
 import {
     idToQualifiedName
-} from '../utils.js';
+} from '../../utils.js';
 
-export default class PollQuestion {
+export default class PollQuestionTelemetry {
     constructor(openmct, {url, instance, processor = 'realtime'}) {
         this._setReady = undefined;
         this._readyPromise = new Promise((resolve) => this._setReady = resolve);
@@ -20,22 +20,27 @@ export default class PollQuestion {
         return this._readyPromise.then(() => this._telemetryObject);
     }
     async setPollQuestion(question) {
-        //TODO Error handling.
         const telemetryObject = await this.getTelemetryObject();
         const setParameterUrl = this._buildUrl(telemetryObject.identifier);
+        let success  = false;
 
-        const result = await fetch(setParameterUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'STRING',
-                stringValue: question
-            })
-        });
+        try {
+            const result = await fetch(setParameterUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: 'STRING',
+                    stringValue: question
+                })
+            });
+            success = result.ok === true;
+        } catch (error) {
+            console.error(error);
+        }
 
-        return result.ok === true;
+        return success;
     }
     toPollQuestionObjectFromTelemetry(telemetryObject, datum) {
         const metadata = this._openmct.telemetry.getMetadata(telemetryObject);

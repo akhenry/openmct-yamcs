@@ -26,16 +26,16 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES } from '../const';
-import OperatorStatusParameterParser from './operator-status-parameter-parser.js';
+import OperatorStatusParameter from './user/operator-status-parameter.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
-const operatorStatusParameter = new OperatorStatusParameterParser();
+const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatus, pollQuestionParameterParser, pollQuestion) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -45,9 +45,9 @@ export default class YamcsObjectProvider {
         this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
-        this.roleStatus = roleStatus;
-        this.pollQuestionParameterParser = pollQuestionParameterParser;
-        this.pollQuestion = pollQuestion;
+        this.roleStatusTelemetry = roleStatusTelemetry;
+        this.pollQuestionParameter = pollQuestionParameter;
+        this.pollQuestionTelemetry = pollQuestionTelemetry;
 
         this.createRootObject();
         this.createEventObject();
@@ -184,7 +184,7 @@ export default class YamcsObjectProvider {
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
             .then((dictionary) => {
                 this.dictionary = dictionary;
-                this.roleStatus.dictionaryLoadComplete();
+                this.roleStatusTelemetry.dictionaryLoadComplete();
 
                 return dictionary;
             });
@@ -348,13 +348,13 @@ export default class YamcsObjectProvider {
             if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
                 const role = operatorStatusParameter.getRoleFromParameter(parameter);
                 const possibleStates = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
-                this.roleStatus.setPossibleStatusesForRole(role, possibleStates);
-                this.roleStatus.setTelemetryObjectForRole(role, obj);
+                this.roleStatusTelemetry.setPossibleStatusesForRole(role, possibleStates);
+                this.roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
             }
 
-            if (this.pollQuestionParameterParser.isPollQuestionParameter(parameter)) {
-                this.pollQuestionParameterParser.setPollQuestionParameter(parameter);
-                this.pollQuestion.setTelemetryObject(obj);
+            if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {
+                this.pollQuestionParameter.setPollQuestionParameter(parameter);
+                this.pollQuestionTelemetry.setTelemetryObject(obj);
                 telemetryValue.format = 'string';
             }
 

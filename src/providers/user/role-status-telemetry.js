@@ -1,8 +1,8 @@
 import {
     idToQualifiedName
-} from '../utils.js';
+} from '../../utils.js';
 
-export default class RoleStatus {
+export default class RoleStatusTelemetry {
     constructor(openmct, {url, instance, processor = 'realtime', styleConfig}) {
         this._stateMap = {};
         this._roleToTelemetryObjectMap = {};
@@ -35,19 +35,26 @@ export default class RoleStatus {
         //TODO Error handling.
         const telemetryObject = await this.getTelemetryObjectForRole(role);
         const setParameterUrl = this._buildUrl(telemetryObject.identifier);
+        let success = false;
 
-        const result = await fetch(setParameterUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'SINT64',
-                sint64Value: status.key
-            })
-        });
+        try {
+            const result = await fetch(setParameterUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: 'SINT64',
+                    sint64Value: status.key
+                })
+            });
 
-        return result.ok === true;
+            success = result.ok === true;
+        } catch (error) {
+            console.error(error);
+        }
+
+        return success;
     }
     async getDefaultStatusForRole() {
         const possibleStatuses = await this.getPossibleStatuses();

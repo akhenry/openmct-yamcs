@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider, pollQuestionParameterParser, pollQuestion}) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider, pollQuestionParameter, pollQuestionTelemetry}) {
         super();
 
         this.openmct = openmct;
@@ -32,8 +32,8 @@ export default class UserProvider extends EventEmitter {
         this.user = undefined;
         this.loggedIn = false;
         this.roleStatus = roleStatus;
-        this.pollQuestionParameterParser = pollQuestionParameterParser;
-        this.pollQuestion = pollQuestion;
+        this.pollQuestionParameter = pollQuestionParameter;
+        this.pollQuestionTelemetry = pollQuestionTelemetry;
         this.unsubscribeStatus = {};
 
         this.latestTelemetryProvider = latestTelemetryProvider;
@@ -90,20 +90,17 @@ export default class UserProvider extends EventEmitter {
         const writeParameters = user.getWriteParameters();
 
         return Promise.all(writeParameters
-            .map(parameterName => this.pollQuestionParameterParser.isPollQuestionParameterName(parameterName)))
+            .map(parameterName => this.pollQuestionParameter.isPollQuestionParameterName(parameterName)))
             .then(areParametersPollQuestion => areParametersPollQuestion
                 .some(isParameterPollQuestion => isParameterPollQuestion));
     }
 
     async setPollQuestion(question) {
-        return this.pollQuestion.setPollQuestion(question);
+        return this.pollQuestionTelemetry.setPollQuestion(question);
     }
 
     async getStatusForRole(role) {
-        console.log(`Role: ${role}`);
-
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
-        console.log(`tlm object: ${JSON.stringify(statusTelemetryObject)}`);
         if (this.unsubscribeStatus[role] === undefined) {
             this.unsubscribeStatus[role] = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
                 this.emit('statusChange', {role, status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)});
@@ -128,17 +125,17 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getPollQuestion() {
-        const pollQuestionTelemetryObject = await this.pollQuestion.getTelemetryObject();
+        const pollQuestionTelemetryObject = await this.pollQuestionTelemetry.getTelemetryObject();
 
         if (this.unsubscribePollQuestion === undefined) {
             this.unsubscribePollQuestion = this.realtimeTelemetryProvider.subscribe(pollQuestionTelemetryObject, (datum) => {
-                const formattedPollQuestion = this.pollQuestion.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, datum);
+                const formattedPollQuestion = this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, datum);
                 this.emit("pollQuestionChange", formattedPollQuestion);
             });
         }
-        const pollQuestion = await this.latestTelemetryProvider.requestLatest(pollQuestionTelemetryObject);
-        if (pollQuestion !== undefined) {
-            return this.pollQuestion.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, pollQuestion);
+        const pollQuestionTelemetryValue = await this.latestTelemetryProvider.requestLatest(pollQuestionTelemetryObject);
+        if (pollQuestionTelemetryValue !== undefined) {
+            return this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, pollQuestionTelemetryValue);
         }
     }
 

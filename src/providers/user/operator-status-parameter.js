@@ -20,32 +20,27 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const POLL_QUESTION_TYPE = 'yamcs.pollQuestion';
+const OPERATOR_STATUS_TYPE = 'yamcs.operatorStatus';
 
-export default class PollQuestionParameterParser {
+export default class OperatorStatusParameter {
     constructor() {
-        this._pollQuestionParameterName = undefined;
-        this._pollQuestionParameterResolve = undefined;
-        this._pollQuestionParameterPromise = new Promise((resolve) => {
-            this._pollQuestionParameterResolve = resolve;
-        });
+
     }
 
-    async isPollQuestionParameterName(parameterName) {
-        return this._pollQuestionParameterPromise.then(() => {
-            return this._pollQuestionParameter.qualifiedName === parameterName;
-        });
-    }
-
-    isPollQuestionParameter(parameter) {
+    isOperatorStatusParameter(parameter) {
         const aliases = parameter.alias;
 
         return aliases !== undefined
-            && aliases.some(alias => alias.name === POLL_QUESTION_TYPE);
+            && aliases.some(alias => alias.name === OPERATOR_STATUS_TYPE);
     }
 
-    setPollQuestionParameter(parameter) {
-        this._pollQuestionParameter = parameter;
-        this._pollQuestionParameterResolve();
+    getRoleFromParameter(parameter) {
+        const aliases = parameter.alias;
+
+        return aliases.find(alias => alias.namespace === 'OpenMCT:role').name;
+    }
+
+    getPossibleStatusesFromParameter(parameter) {
+        return parameter.type.enumValue;
     }
 }
