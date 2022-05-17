@@ -33,15 +33,28 @@ const WEBPACK_CONFIG = {
         } else {
             entries['openmct-yamcs'] = './src/plugin.js';
         }
-	return entries;
+
+        return entries;
+    },
+    performance: {
+        hints: false
     },
     mode: 'production',
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                enforce: "pre",
+                use: ["source-map-loader"]
+            }
+        ]
+    },
     output: {
-	globalObject: "this",
-	filename: '[name].js',
+        globalObject: "this",
+        filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'umd',
-	library: 'openmctYamcs'
+        library: 'openmctYamcs'
     },
     devtool: devMode ? 'eval-source-map' : 'source-map',
     devServer: {
@@ -50,6 +63,12 @@ const WEBPACK_CONFIG = {
         port: 9000,
         open: true,
         openPage: 'example/index.html',
+        static: [{
+            directory: path.join(__dirname, 'example')
+        }, {
+            directory: path.join(__dirname, '/node_modules/openmct/dist'),
+            publicPath: '/node_modules/openmct/dist'
+        }],
         proxy: {
             "/yamcs-proxy/*": {
                 target: "http://localhost:8090/",
