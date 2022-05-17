@@ -23,17 +23,19 @@
 const POLL_QUESTION_TYPE = 'yamcs.pollQuestion';
 
 export default class PollQuestionParameter {
+    #pollQuestionParameterResolve;
+    #pollQuestionParameterPromise;
+    #pollQuestionParameter;
+
     constructor() {
-        this._pollQuestionParameterName = undefined;
-        this._pollQuestionParameterResolve = undefined;
-        this._pollQuestionParameterPromise = new Promise((resolve) => {
-            this._pollQuestionParameterResolve = resolve;
+        this.#pollQuestionParameterPromise = new Promise((resolve) => {
+            this.#pollQuestionParameterResolve = resolve;
         });
     }
 
     async isPollQuestionParameterName(parameterName) {
-        return this._pollQuestionParameterPromise.then(() => {
-            return this._pollQuestionParameter.qualifiedName === parameterName;
+        return this.#pollQuestionParameterPromise.then(() => {
+            return this.#pollQuestionParameter.qualifiedName === parameterName;
         });
     }
 
@@ -45,7 +47,7 @@ export default class PollQuestionParameter {
     }
 
     setPollQuestionParameter(parameter) {
-        this._pollQuestionParameter = parameter;
-        this._pollQuestionParameterResolve();
+        this.#pollQuestionParameter = parameter;
+        this.#pollQuestionParameterResolve();
     }
 }

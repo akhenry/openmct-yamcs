@@ -3,38 +3,55 @@ import {
 } from '../../utils.js';
 
 export default class RoleStatusTelemetry {
+    #stateMap;
+    #roleToTelemetryObjectMap;
+    #setReady;
+    #readyPromise;
+    #url;
+    #instance;
+    #processor;
+    #openmct;
+    #statusStyles;
+
     constructor(openmct, {url, instance, processor = 'realtime', styleConfig}) {
-        this._stateMap = {};
-        this._roleToTelemetryObjectMap = {};
-        this._setReady = undefined;
-        this._readyPromise = new Promise((resolve) => this._setReady = resolve);
-        this._url = url;
-        this._instance = instance;
-        this._processor = processor;
-        this._openmct = openmct;
-        this._statusStyles = styleConfig;
+        this.#stateMap = {};
+        this.#roleToTelemetryObjectMap = {};
+        this.#readyPromise = new Promise((resolve) => this.#setReady = resolve);
+        this.#url = url;
+        this.#instance = instance;
+        this.#processor = processor;
+        this.#openmct = openmct;
+        this.#statusStyles = styleConfig;
+    }
+    #applyStyling(status) {
+        return {...status, ...this.#statusStyles[status.label]};
+    }
+    #buildUrl(id) {
+        let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
+
+        return url;
     }
     setPossibleStatusesForRole(role, possibleStates) {
-        this._stateMap[role] = possibleStates;
+        this.#stateMap[role] = possibleStates;
     }
     setTelemetryObjectForRole(role, telemetryObject) {
-        this._roleToTelemetryObjectMap[role] = telemetryObject;
+        this.#roleToTelemetryObjectMap[role] = telemetryObject;
     }
     async getTelemetryObjectForRole(role) {
-        return this._readyPromise.then(() => this._roleToTelemetryObjectMap[role]);
+        return this.#readyPromise.then(() => this.#roleToTelemetryObjectMap[role]);
     }
     async getPossibleStatuses() {
-        return this._readyPromise.then(() => {
-            return Object.values(this._stateMap)[0].map(status => this.toStatusFromMdbEntry(status));
+        return this.#readyPromise.then(() => {
+            return Object.values(this.#stateMap)[0].map(status => this.toStatusFromMdbEntry(status));
         });
     }
     async getAllStatusRoles() {
-        return this._readyPromise.then(() => Object.keys(this._stateMap));
+        return this.#readyPromise.then(() => Object.keys(this.#stateMap));
     }
     async setStatusForRole(role, status) {
         //TODO Error handling.
         const telemetryObject = await this.getTelemetryObjectForRole(role);
-        const setParameterUrl = this._buildUrl(telemetryObject.identifier);
+        const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
         let success = false;
 
         try {
@@ -62,31 +79,23 @@ export default class RoleStatusTelemetry {
         return possibleStatuses[0];
     }
     toStatusFromMdbEntry(yamcsStatus) {
-        return this._applyStyling({
+        return this.#applyStyling({
             key: parseInt(yamcsStatus.value),
             label: yamcsStatus.label
         });
     }
     toStatusFromTelemetry(telemetryObject, datum) {
-        const metadata = this._openmct.telemetry.getMetadata(telemetryObject);
+        const metadata = this.#openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
-        const formatter = this._openmct.telemetry.getValueFormatter(rangeMetadata);
+        const formatter = this.#openmct.telemetry.getValueFormatter(rangeMetadata);
 
-        return this._applyStyling({
+        return this.#applyStyling({
             key: formatter.parse(datum),
             label: formatter.format(datum)
         });
 
     }
-    _applyStyling(status) {
-        return {...status, ...this._statusStyles[status.label]};
-    }
-    _buildUrl(id) {
-        let url = `${this._url}api/processors/${this._instance}/${this._processor}/parameters/${idToQualifiedName(id.key)}`;
-
-        return url;
-    }
     dictionaryLoadComplete() {
-        this._setReady();
+        this.#setReady();
     }
 }

@@ -57,7 +57,7 @@ export default class UserProvider extends EventEmitter {
 
     getCurrentUser() {
         if (!this.loginPromise) {
-            this.loginPromise = this._getUserInfo();
+            this.loginPromise = this.#getUserInfo();
         }
 
         return this.loginPromise;
@@ -157,7 +157,7 @@ export default class UserProvider extends EventEmitter {
         }, []);
     }
 
-    async _getUserInfo() {
+    async #getUserInfo() {
         try {
             const res = await fetch(this.userEndpoint);
             const info = await res.json();
