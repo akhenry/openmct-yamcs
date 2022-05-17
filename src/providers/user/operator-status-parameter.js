@@ -23,10 +23,6 @@
 const OPERATOR_STATUS_TYPE = 'yamcs.operatorStatus';
 
 export default class OperatorStatusParameter {
-    constructor() {
-
-    }
-
     isOperatorStatusParameter(parameter) {
         const aliases = parameter.alias;
 
