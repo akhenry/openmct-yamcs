@@ -8,12 +8,11 @@
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
-    "prepublish": "npm install openmct@unstable --no-save",
+    "prepublish": "npm install nasa/openmct#fault-management --no-save",
     "start": "NODE_ENV=dev webpack-dev-server",
     "prepare": "npm run build:dist"
   },
   "keywords": [
-    "openmct",
     "yamcs"
   ],
   "author": "National Aeronautics and Space Administration",
