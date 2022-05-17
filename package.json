@@ -4,6 +4,7 @@
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
+    "clean": "rm -rf ./dist ./node_modules ./package-lock.json",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
