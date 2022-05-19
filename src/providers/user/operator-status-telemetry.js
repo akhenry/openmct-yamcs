@@ -35,7 +35,7 @@ export default class OperatorStatusTelemetry {
     #openmct;
     #statusStyles;
 
-    constructor(openmct, {url, instance, processor = 'realtime', styleConfig}) {
+    constructor(openmct, {url, instance, processor = 'realtime', styleConfig = {}}) {
         this.#statusMap = {};
         this.#statusRoles = new Set();
         this.#roleToTelemetryObjectMap = {};
