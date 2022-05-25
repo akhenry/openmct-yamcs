@@ -7,33 +7,33 @@ const config = {
     "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
     "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user",
     "yamcsInstance": "myproject",
-    "yamcsFolder": "myproject",
-    "statusStyles": {
-        "NO_STATUS": {
-            iconClass: "icon-question-mark",
-            iconClassPoll: "icon-status-poll-question-mark"
-        },
-        "GO": {
-            iconClass: "icon-check",
-            iconClassPoll: "icon-status-poll-question-mark",
-            statusClass: "s-status-ok",
-            statusBgColor: "#33cc33",
-            statusFgColor: "#000"
-        },
-        "MAYBE": {
-            iconClass: "icon-alert-triangle",
-            iconClassPoll: "icon-status-poll-question-mark",
-            statusClass: "s-status-warning",
-            statusBgColor: "#ffb66c",
-            statusFgColor: "#000"
-        },
-        "NO_GO": {
-            iconClass: "icon-circle-slash",
-            iconClassPoll: "icon-status-poll-question-mark",
-            statusClass: "s-status-error",
-            statusBgColor: "#9900cc",
-            statusFgColor: "#fff"
-        }
+    "yamcsFolder": "myproject"
+};
+const STATUS_STYLES = {
+    "NO_STATUS": {
+        iconClass: "icon-question-mark",
+        iconClassPoll: "icon-status-poll-question-mark"
+    },
+    "GO": {
+        iconClass: "icon-check",
+        iconClassPoll: "icon-status-poll-question-mark",
+        statusClass: "s-status-ok",
+        statusBgColor: "#33cc33",
+        statusFgColor: "#000"
+    },
+    "MAYBE": {
+        iconClass: "icon-alert-triangle",
+        iconClassPoll: "icon-status-poll-question-mark",
+        statusClass: "s-status-warning",
+        statusBgColor: "#ffb66c",
+        statusFgColor: "#000"
+    },
+    "NO_GO": {
+        iconClass: "icon-circle-slash",
+        iconClassPoll: "icon-status-poll-question-mark",
+        statusClass: "s-status-error",
+        statusBgColor: "#9900cc",
+        statusFgColor: "#fff"
     }
 };
 const openmct = window.openmct;
@@ -45,7 +45,7 @@ const openmct = window.openmct;
 
     installDefaultPlugins();
     openmct.install(installYamcsPlugin(config));
-    openmct.install(openmct.plugins.OperatorStatus());
+    openmct.install(openmct.plugins.OperatorStatus({statusStyles: STATUS_STYLES}));
 
     openmct.start();
 

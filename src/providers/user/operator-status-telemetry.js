@@ -33,9 +33,8 @@ export default class OperatorStatusTelemetry {
     #instance;
     #processor;
     #openmct;
-    #statusStyles;
 
-    constructor(openmct, {url, instance, processor = 'realtime', styleConfig = {}}) {
+    constructor(openmct, {url, instance, processor = 'realtime'}) {
         this.#statusMap = {};
         this.#statusRoles = new Set();
         this.#roleToTelemetryObjectMap = {};
@@ -44,7 +43,6 @@ export default class OperatorStatusTelemetry {
         this.#instance = instance;
         this.#processor = processor;
         this.#openmct = openmct;
-        this.#statusStyles = styleConfig;
     }
     async setStatusForRole(role, status) {
         //TODO Error handling.
@@ -100,27 +98,24 @@ export default class OperatorStatusTelemetry {
         return possibleStatuses[0];
     }
     toStatusFromMdbEntry(yamcsStatus) {
-        return this.#applyStyling({
+        return {
             key: parseInt(yamcsStatus.value),
             label: yamcsStatus.label
-        });
+        };
     }
     toStatusFromTelemetry(telemetryObject, datum) {
         const metadata = this.#openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
         const formatter = this.#openmct.telemetry.getValueFormatter(rangeMetadata);
 
-        return this.#applyStyling({
+        return {
             key: formatter.parse(datum),
             label: formatter.format(datum)
-        });
+        };
 
     }
     dictionaryLoadComplete() {
         this.#setReady();
-    }
-    #applyStyling(status) {
-        return {...status, ...this.#statusStyles[status.label]};
     }
     #buildUrl(id) {
         let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
