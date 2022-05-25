@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, OBJECT_TYPES } from '../const';
+import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -198,7 +198,7 @@ export default class YamcsHistoricalTelemetryProvider {
         results.forEach(result => {
             let point = {
                 id: result.id.name,
-                timestamp: result.generationTimeUTC
+                timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);
 

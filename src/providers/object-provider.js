@@ -25,7 +25,7 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import { OBJECT_TYPES } from '../const';
+import { OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 
 const YAMCS_API_MAP = {
@@ -91,7 +91,7 @@ export default class YamcsObjectProvider {
                     },
                     {
                         key: 'utc',
-                        source: 'generationTime',
+                        source: METADATA_TIME_KEY,
                         name: 'Generation Time',
                         format: 'iso',
                         hints: {
