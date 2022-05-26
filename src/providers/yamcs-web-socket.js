@@ -25,7 +25,6 @@ export default class YamcsWebSocket {
 
             this._currentWaitIndex = 0;
 
-            this._resubscribeToAll();
             this._flushQueue();
 
             this._onopenSubscribers.forEach(onopenSubscriber => onopenSubscriber.callback());
