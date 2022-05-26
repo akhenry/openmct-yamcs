@@ -131,7 +131,7 @@ export default class YamcsWebSocket {
         }
     }
 
-    _sendMessage() {
+    _sendMessage(message) {
         this._socket.send(message);
     }
 
