@@ -25,6 +25,9 @@ export default class YamcsWebSocket {
 
             this._currentWaitIndex = 0;
 
+            this._resubscribeToAll();
+            this._flushQueue();
+
             this._onopenSubscribers.forEach(onopenSubscriber => onopenSubscriber.callback());
         };
 
@@ -92,10 +95,26 @@ export default class YamcsWebSocket {
 
     sendMessage(message) {
         if (!this._connected) {
+            this.requests.push(message);
+
             return;
         }
 
-        this._socket.send(message);
+        this._sendOrQueueMessage(message);
+    }
+
+    _flushQueue() {
+        this.requests = this.requests.filter(request => {
+            try {
+                this._sendMessage(request);
+            } catch (error) {
+                console.error(error);
+
+                return true;
+            }
+
+            return false;
+        });
     }
 
     _reconnect() {
@@ -110,6 +129,20 @@ export default class YamcsWebSocket {
 
         if (this._currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
             this._currentWaitIndex++;
+        }
+    }
+
+    _sendMessage() {
+        this._socket.send(message);
+    }
+
+    _sendOrQueueMessage(message) {
+        try {
+            this._sendMessage(message);
+        } catch (error) {
+            console.error(error);
+
+            this.requests.push(message);
         }
     }
 }

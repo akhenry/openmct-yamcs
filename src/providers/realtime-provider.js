@@ -35,7 +35,6 @@ export default class RealtimeProvider {
         this.instance = instance;
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
-        this.requests = [];
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
@@ -43,7 +42,6 @@ export default class RealtimeProvider {
         this._addSupportedDataTypes(Object.values(DATA_TYPES));
         this._addSupportedObjectTypes(Object.values(OBJECT_TYPES));
     }
-
 
     subscribe(domainObject, callback) {
         this._connect();
@@ -91,20 +89,6 @@ export default class RealtimeProvider {
     _connect() {
         this.socket.onopen(this._onopen.bind(this));
         this.socket.onmessage(this._onmessage.bind(this));
-    }
-
-    _flushQueue() {
-        this.requests = this.requests.filter(request => {
-            try {
-                this._sendMessage(request);
-            } catch (error) {
-                console.error(error);
-
-                return true;
-            }
-
-            return false;
-        });
     }
 
     _isSupportedDataType(type) {
@@ -168,7 +152,6 @@ export default class RealtimeProvider {
 
     _onopen() {
         this._resubscribeToAll();
-        this._flushQueue();
     }
 
     _resubscribeToAll() {
@@ -179,28 +162,16 @@ export default class RealtimeProvider {
         this.socket.sendMessage(message);
     }
 
-    _sendOrQueueMessage(request) {
-        try {
-            this._sendMessage(request);
-        } catch (error) {
-            console.error(error);
-
-            this.requests.push(request);
-        }
-    }
-
     _sendSubscribeMessage(subscriptionDetails) {
         let domainObject = subscriptionDetails.domainObject;
         let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
 
-        console.log('_sendSubscribeMessage message', message, subscriptionDetails);
-
-        this._sendOrQueueMessage(message);
+        this._sendMessage(message);
     }
 
     _sendUnsubscribeMessage(subscriptionDetails) {
         let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
 
-        this._sendOrQueueMessage(message);
+        this._sendMessage(message);
     }
 }

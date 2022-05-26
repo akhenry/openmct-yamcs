@@ -6,7 +6,6 @@ export default class RealtimeFaultProvider {
         this.socket = socket;
         this.instance = instance;
 
-        this.requests = [];
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
@@ -32,6 +31,7 @@ export default class RealtimeFaultProvider {
             callback
         };
 
+        this.socket.onopen(this._onopen.bind(this));
         this.socket.onmessage(this._onmessage.bind(this));
 
         this._sendSubscribeMessage(this.subscriptionsById[globalAlarmSubscriptionId]);
@@ -85,6 +85,14 @@ export default class RealtimeFaultProvider {
             fault: eventData.data,
             type: subscriptionDetails.type
         });
+    }
+
+    _onopen() {
+        this._resubscribeToAll();
+    }
+
+    _resubscribeToAll() {
+        this.subscriptionsByCall.forEach(this._sendSubscribeMessage);
     }
 
     _sendSubscribeMessage(subscriptionDetails) {
