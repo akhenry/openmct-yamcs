@@ -123,7 +123,7 @@ export default class RealtimeProvider {
                 return;
             }
 
-            // only alarms and events are handled differently
+            // only events are handled differently
             if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
                 subscriptionDetails.callback(data.data);
             } else if (data.data.values) {
