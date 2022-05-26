@@ -2,13 +2,15 @@ import HistoricalFaultProvider from './historical-fault-provider';
 import RealtimeFaultProvider from './realtime-fault-provider';
 
 export default class YamcsFaultProvider {
-    constructor({ historicalEndpoint, yamcsInstance, yamcsWebSocket } = {}) {
+    constructor({ faultModelConvertor, historicalEndpoint, yamcsInstance, yamcsWebSocket } = {}) {
         this.historicalFaultProvider = new HistoricalFaultProvider(
+            faultModelConvertor,
             historicalEndpoint,
             yamcsInstance
         );
 
         this.realtimeFaultProvider = new RealtimeFaultProvider(
+            faultModelConvertor,
             yamcsWebSocket,
             yamcsInstance
         );

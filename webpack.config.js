@@ -40,15 +40,6 @@ const WEBPACK_CONFIG = {
         hints: false
     },
     mode: devMode ? 'development' : 'production',
-    module: {
-        rules: [
-            {
-                test: /\.js$/,
-                enforce: "pre",
-                use: ["source-map-loader"]
-            }
-        ]
-    },
     output: {
         globalObject: "this",
         filename: '[name].js',

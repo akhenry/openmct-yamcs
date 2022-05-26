@@ -59,7 +59,9 @@ export default function installYamcsPlugin(configuration) {
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
 
+        const faultModelConvertor = openmct.faults.getFaultModel;
         openmct.faults.addProvider(new YamcsFaultProvider({
+            faultModelConvertor,
             historicalEndpoint: configuration.yamcsHistoricalEndpoint,
             yamcsInstance: configuration.yamcsInstance,
             yamcsWebSocket

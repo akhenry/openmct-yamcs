@@ -2,7 +2,8 @@ import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_GLOBAL_ALARMS, FAULT_MANAGEME
 import { DATA_TYPES } from '../../const';
 
 export default class RealtimeFaultProvider {
-    constructor(socket, instance) {
+    constructor(faultModelConvertor, socket, instance) {
+        this.faultModelConvertor = faultModelConvertor;
         this.socket = socket;
         this.instance = instance;
 
@@ -82,8 +83,8 @@ export default class RealtimeFaultProvider {
         }
 
         subscriptionDetails.callback({
-            fault: eventData.data,
-            type: subscriptionDetails.type
+            fault: this.faultModelConvertor(eventData.data),
+            type: eventData.type
         });
     }
 
