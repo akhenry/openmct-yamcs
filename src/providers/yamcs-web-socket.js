@@ -63,10 +63,10 @@ export default class YamcsWebSocket {
     onerror(callback) {
         const onerrorCallback = { callback };
 
-        this.onerrorSubscribers.add(onerrorCallback);
+        this._onerrorSubscribers.add(onerrorCallback);
 
         return () => {
-            this.onerrorSubscribers.delete(onerrorCallback);
+            this._onerrorSubscribers.delete(onerrorCallback);
         };
     }
 

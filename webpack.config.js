@@ -58,11 +58,9 @@ const WEBPACK_CONFIG = {
     },
     devtool: devMode ? 'eval-source-map' : 'source-map',
     devServer: {
-        serveIndex: false,
         compress: true,
         port: 9000,
         open: true,
-        openPage: 'example/index.html',
         static: [{
             directory: path.join(__dirname, 'example')
         }, {

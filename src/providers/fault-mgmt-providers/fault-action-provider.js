@@ -14,10 +14,10 @@ export default class FaultActionrovider {
         const options = this._getOptions(payload);
         const url = this._getUrl(fault);
 
-        this._sendRequest(url, options);
+        return this._sendRequest(url, options);
     }
 
-    shelveFault(fault, { shelved = false, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
+    shelveFault(fault, { shelved = true, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
         let payload = {};
         if (shelved) {
             payload.comment = comment;
@@ -30,7 +30,7 @@ export default class FaultActionrovider {
         const options = this._getOptions(payload);
         let url = this._getUrl(fault);
 
-        this._sendRequest(url, options);
+        return this._sendRequest(url, options);
     }
 
     _getOptions(payload) {

@@ -26,10 +26,8 @@ import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 import UserProvider from './providers/user/user-provider';
 
-import HistoricalFaultProvider from './providers/fault-mgmt-providers/historical-fault-provider';
-import RealtimeFaultProvider from './providers/fault-mgmt-providers/realtime-fault-provider';
-import FaultActionrovider from './providers/fault-mgmt-providers/fault-action-provider';
-
+import FaultActionProvider from './providers/fault-mgmt-providers/fault-action-provider';
+import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
 import YamcsWebSocket from './providers/yamcs-web-socket';
 
 import { OBJECT_TYPES } from './const';
@@ -61,17 +59,13 @@ export default function installYamcsPlugin(configuration) {
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
 
-        openmct.faults.addHistoricalProvider(new HistoricalFaultProvider(
-            configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance
-        ));
+        openmct.faults.addProvider(new YamcsFaultProvider({
+            historicalEndpoint: configuration.yamcsHistoricalEndpoint,
+            yamcsInstance: configuration.yamcsInstance,
+            yamcsWebSocket
+        }));
 
-        openmct.faults.addRealtimeProvider(new RealtimeFaultProvider(
-            yamcsWebSocket,
-            configuration.yamcsInstance
-        ));
-
-        openmct.faults.addFaultActionProvider(new FaultActionrovider(
+        openmct.faults.addFaultActionProvider(new FaultActionProvider(
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance
         ));

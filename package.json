@@ -13,6 +13,7 @@
     "prepare": "npm run build:dist"
   },
   "keywords": [
+    "openmct",
     "yamcs"
   ],
   "author": "National Aeronautics and Space Administration",

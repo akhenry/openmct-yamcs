@@ -145,7 +145,7 @@ export default class YamcsHistoricalTelemetryProvider {
     isImagery(domainObject) {
         let metadata = this.openmct.telemetry.getMetadata(domainObject);
 
-        return metadata && metadata.valuesForHints(['image']).length !== 0;
+        return metadata.valuesForHints(['image']).length !== 0;
     }
 
     getLinkParamsSpecificToId(id) {
