@@ -94,7 +94,7 @@ export default class YamcsWebSocket {
 
     sendMessage(message) {
         if (!this._connected) {
-            this.requests.push(message);
+            this._requests.push(message);
 
             return;
         }
@@ -103,7 +103,7 @@ export default class YamcsWebSocket {
     }
 
     _flushQueue() {
-        this.requests = this.requests.filter(request => {
+        this._requests = this._requests.filter(request => {
             try {
                 this._sendMessage(request);
             } catch (error) {
@@ -141,7 +141,7 @@ export default class YamcsWebSocket {
         } catch (error) {
             console.error(error);
 
-            this.requests.push(message);
+            this._requests.push(message);
         }
     }
 }
