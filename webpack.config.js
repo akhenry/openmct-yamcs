@@ -39,7 +39,7 @@ const WEBPACK_CONFIG = {
     performance: {
         hints: false
     },
-    mode: 'production',
+    mode: devMode ? 'development' : 'production',
     module: {
         rules: [
             {
