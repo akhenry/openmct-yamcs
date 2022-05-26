@@ -113,6 +113,8 @@ export default class RealtimeProvider {
     }
 
     reconnect() {
+        this.subscriptionsByCall.clear();
+
         if (this.reconnectTimeout) {
             return;
         }
@@ -231,7 +233,7 @@ export default class RealtimeProvider {
     }
 
     resubscribeToAll() {
-        this.subscriptionsByCall.forEach((subscriptionDetails) => {
+        Object.values(this.subscriptionsById).forEach((subscriptionDetails) => {
             this.sendSubscribeMessage(subscriptionDetails);
         });
     }

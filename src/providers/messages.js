@@ -35,7 +35,7 @@ function buildSubscribeMessages() {
                         "id": [{
                             "name": "${subscriptionDetails.name}"
                         }],
-                        "sendFromCache": false
+                        "sendFromCache": true
                     }
                 }`;
             }
