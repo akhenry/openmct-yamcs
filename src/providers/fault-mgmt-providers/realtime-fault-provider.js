@@ -67,6 +67,10 @@ export default class RealtimeFaultProvider {
             let id = eventData.data.replyTo;
             let call = eventData.call;
             subscriptionDetails = this.subscriptionsById[id];
+            if (!subscriptionDetails) {
+                return;
+            }
+
             subscriptionDetails.call = call;
             this.subscriptionsById[id] = subscriptionDetails;
             this.subscriptionsByCall.set(call, subscriptionDetails);

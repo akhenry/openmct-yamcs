@@ -113,6 +113,10 @@ export default class RealtimeProvider {
             let id = data.data.replyTo;
             let call = data.call;
             subscriptionDetails = this.subscriptionsById[id];
+            if (!subscriptionDetails) {
+                return;
+            }
+
             subscriptionDetails.call = call;
             this.subscriptionsByCall.set(call, subscriptionDetails);
         } else {
