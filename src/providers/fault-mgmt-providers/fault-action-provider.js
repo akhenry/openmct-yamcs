@@ -46,12 +46,9 @@ export default class FaultActionrovider {
     }
 
     _getUrl(fault) {
-        const faultName = fault.parameterDetail.triggerValue.id.name;
-        const seqNum = fault.seqNum;
-
         let url = `${this.url}api/processors/${this.instance}/realtime/${FAULT_MANAGEMENT_ALARMS}`;
-        url += `${faultName}`;
-        url += `/${seqNum}`;
+        url += `${fault.namespace}/${fault.name}`;
+        url += `/${fault.seqNum}`;
 
         return url;
     }
