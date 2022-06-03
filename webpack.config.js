@@ -72,29 +72,13 @@ const WEBPACK_CONFIG = {
                 secure: false,
                 changeOrigin: true,
                 pathRewrite: {'^/yamcs-proxy/' : ''},
-                headers: {
-                    'Authorization': 'Basic YWtoZW5yeTpwYXNzd29yZA=='
-                }
-            },
-            "/yamcs-proxy-ws-v2/*": {
-                target: "ws://localhost:8090/api/websocket",
-                secure: false,
-                changeOrigin: true,
-                ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws-v2/' : ''},
-                headers: {
-                    'Authorization': 'Basic YWtoZW5yeTpwYXNzd29yZA=='
-                }
             },
             "/yamcs-proxy-ws/*": {
                 target: "ws://localhost:8090/",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws/' : ''},
-                headers: {
-                    'Authorization': 'Basic YWtoZW5yeTpwYXNzd29yZA=='
-                }
+                pathRewrite: {'^/yamcs-proxy-ws/' : ''}
             }
         }
     }
