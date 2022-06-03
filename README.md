@@ -18,6 +18,7 @@ An example is provided in this repository that can be configured to run against 
 git clone https://github.com/akhenry/openmct-yamcs.git
 cd openmct-yamcs
 npm install
+npm build:example
 npm start
 ```
 
