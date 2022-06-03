@@ -26,6 +26,7 @@ import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 import UserProvider from './providers/user/user-provider';
 
+import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
 import FaultActionProvider from './providers/fault-mgmt-providers/fault-action-provider';
 import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
 import YamcsWebSocket from './providers/yamcs-web-socket';
@@ -59,7 +60,6 @@ export default function installYamcsPlugin(configuration) {
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
 
-        const faultModelConvertor = openmct.faults.getFaultModel;
         openmct.faults.addProvider(new YamcsFaultProvider({
             faultModelConvertor,
             historicalEndpoint: configuration.yamcsHistoricalEndpoint,
