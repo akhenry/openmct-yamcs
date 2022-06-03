@@ -27,7 +27,6 @@ import LimitProvider from './providers/limit-provider';
 import UserProvider from './providers/user/user-provider';
 
 import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
-import FaultActionProvider from './providers/fault-mgmt-providers/fault-action-provider';
 import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
 import YamcsWebSocket from './providers/yamcs-web-socket';
 
@@ -66,11 +65,6 @@ export default function installYamcsPlugin(configuration) {
             yamcsInstance: configuration.yamcsInstance,
             yamcsWebSocket
         }));
-
-        openmct.faults.addFaultActionProvider(new FaultActionProvider(
-            configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance
-        ));
 
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
