@@ -1,6 +1,6 @@
 import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } from './fault-mgmt-constants';
 
-export default class FaultActionrovider {
+export default class FaultActionProvider {
     constructor(url, instance) {
         this.url = url;
         this.instance = instance;
