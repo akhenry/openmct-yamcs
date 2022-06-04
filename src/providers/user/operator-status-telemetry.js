@@ -45,7 +45,6 @@ export default class OperatorStatusTelemetry {
         this.#openmct = openmct;
     }
     async setStatusForRole(role, status) {
-        //TODO Error handling.
         const telemetryObject = await this.getTelemetryObjectForRole(role);
         const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
         let success = false;
@@ -76,9 +75,6 @@ export default class OperatorStatusTelemetry {
     }
     addStatus(status) {
         this.#statusMap[status.value] = status;
-    }
-    setPossibleStatusesForRole(role, possibleStates) {
-        this.#statusMap[role] = possibleStates;
     }
     async getTelemetryObjectForRole(role) {
         return this.#readyPromise.then(() => this.#roleToTelemetryObjectMap[role]);
