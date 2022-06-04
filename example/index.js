@@ -5,7 +5,7 @@ const config = {
     "yamcsDictionaryEndpoint": "http://localhost:9000/yamcs-proxy/",
     "yamcsHistoricalEndpoint": "http://localhost:9000/yamcs-proxy/",
     "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
-    "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user",
+    "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user/",
     "yamcsInstance": "myproject",
     "yamcsFolder": "myproject"
 };
