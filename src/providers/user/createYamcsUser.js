@@ -21,7 +21,28 @@
  *****************************************************************************/
 
 export default function createYamcsUser(UserClass) {
+    /**
+     * @typedef {Object} YamcsUserInfo
+     * @property {String} name
+     * @property {Boolean} active
+     * @property {Boolean} superuser
+     * @property {String} creationTime an ISO 8601 string
+     * @property {String} confirmationTime an ISO 8601 string
+     * @property {String} lastLoginTime an ISO 8601 string
+     * @property {String[]} roles
+     * @property {ObjectPrivilege[]} objectPrivilege
+     * See the Yamcs documentation for more details on the Yamcs User type
+     * @see https://docs.yamcs.org/javadoc/yamcs/latest/org/yamcs/security/User.html
+     */
+    /**
+     * @typedef ObjectPrivilege
+     * @property {String} type
+     * @property {String[]} object An array of parameter identifiers
+     */
     return class YamcsUser extends UserClass {
+        /**
+         * @param {YamcsUserInfo} userInfo
+         */
         constructor({
             name,
             active,

@@ -347,6 +347,10 @@ export default class YamcsObjectProvider {
 
             if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
                 const role = operatorStatusParameter.getRoleFromParameter(parameter);
+                if (role === undefined) {
+                    throw new Error(`Operator Status Parameter "${parameter.qualifiedName}" does not specify a role`);
+                }
+
                 const possibleStatuses = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
                 possibleStatuses.forEach(state => this.roleStatusTelemetry.addStatus(state));
                 this.roleStatusTelemetry.addStatusRole(role);

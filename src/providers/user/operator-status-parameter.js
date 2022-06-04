@@ -33,7 +33,7 @@ export default class OperatorStatusParameter {
     getRoleFromParameter(parameter) {
         const aliases = parameter.alias;
 
-        return aliases.find(alias => alias.namespace === 'OpenMCT:role').name;
+        return aliases.find(alias => alias.namespace === 'OpenMCT:role')?.name;
     }
 
     getPossibleStatusesFromParameter(parameter) {
