@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2021, United States Government
+ * Open MCT, Copyright (c) 2014-2022, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -19,24 +19,39 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+import {
+    getValue,
+    idToQualifiedName
+} from '../utils.js';
 
-export const OBJECT_TYPES = {
-    EVENTS_OBJECT_TYPE: 'yamcs.events',
-    TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
-    IMAGE_OBJECT_TYPE: 'yamcs.image',
-    STRING_OBJECT_TYPE: 'yamcs.string',
-    AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate',
-    OPERATOR_STATUS_TYPE: 'yamcs.operatorStatus',
-    POLL_QUESTION_TYPE: 'yamcs.pollQuestion'
-};
+export default class LatestTelemetryProvider {
+    constructor({url, instance, processor = 'realtime'}) {
+        this.url = url;
+        this.instance = instance;
+        this.processor = processor;
+    }
+    async requestLatest(domainObject) {
+        const url = this._buildUrl(domainObject.identifier);
+        const response = await fetch(url);
 
-export const DATA_TYPES = {
-    DATA_TYPE_EVENTS: 'events',
-    DATA_TYPE_TELEMETRY: 'parameters',
-    DATA_TYPE_REPLY: 'reply'
-};
+        let result = await response.json();
+        let openMctStyleDatum = undefined;
 
-export const METADATA_TIME_KEY = 'generationTime';
+        if (result !== undefined) {
+            if (result.acquisitionStatus !== undefined) {
+                openMctStyleDatum = {
+                    id: result.id.name,
+                    timestamp: result.generationTimeUTC,
+                    value: getValue(result)
+                };
+            }
+        }
 
-export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
-export const AGGREGATE_TYPE = 'AGGREGATE';
+        return openMctStyleDatum;
+    }
+    _buildUrl(id) {
+        let url = `${this.url}api/processors/${this.instance}/${this.processor}/parameters/${idToQualifiedName(id.key)}`;
+
+        return url;
+    }
+}

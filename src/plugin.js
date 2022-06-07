@@ -28,19 +28,20 @@ import UserProvider from './providers/user/user-provider';
 
 
 import { OBJECT_TYPES } from './const';
+import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
+import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
+import PollQuestionParameter from './providers/user/poll-question-parameter.js';
+import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
 
-        //TODO: Validate provided configuration
-
-        const userProvider = new UserProvider(
-            openmct,
-            configuration.yamcsUserEndpoint
-        );
-        openmct.user.setProvider(userProvider);
-
         openmct.install(openmct.plugins.ISOTimeFormat());
+
+        const latestTelemetryProvider = new LatestTelemetryProvider({
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+        });
 
         const historicalProvider = new YamcsHistoricalTelemetryProvider(
             openmct,
@@ -60,11 +61,42 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
 
+        const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance,
+            styleConfig: configuration.statusStyles
+        });
+
+        const pollQuestionParameter = new PollQuestionParameter();
+        const pollQuestionTelemetry = new PollQuestionTelemetry(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+
+        });
+
+        if (configuration.yamcsUserEndpoint !== undefined) {
+            const userProvider = new UserProvider(
+                openmct, {
+                    userEndpoint: configuration.yamcsUserEndpoint,
+                    roleStatus: roleStatusTelemetry,
+                    latestTelemetryProvider,
+                    realtimeProvider,
+                    pollQuestionParameter,
+                    pollQuestionTelemetry
+                });
+            openmct.user.setProvider(userProvider);
+        } else {
+            console.warn('No user endpoint configured, user API unavailable in this deployment.');
+        }
+
         const objectProvider = new YamcsObjectProvider(
             openmct,
             configuration.yamcsDictionaryEndpoint,
             configuration.yamcsInstance,
-            configuration.yamcsFolder
+            configuration.yamcsFolder,
+            roleStatusTelemetry,
+            pollQuestionParameter,
+            pollQuestionTelemetry
         );
 
         openmct.objects.addRoot({
@@ -102,6 +134,18 @@ export default function installYamcsPlugin(configuration) {
             name: "Events",
             description: "To view events",
             cssClass: "icon-generator-events"
+        });
+
+        openmct.types.addType(OBJECT_TYPES.POLL_QUESTION_TYPE, {
+            name: 'Operator Status Poll',
+            description: 'Operator status Poll Question',
+            cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.OPERATOR_STATUS_TYPE, {
+            name: 'Operator Status',
+            description: 'Operator status',
+            cssClass: 'icon-telemetry'
         });
     };
 }
