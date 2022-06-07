@@ -345,6 +345,13 @@ export default class YamcsObjectProvider {
                 }
             };
 
+            const hasUnits = this.#hasUnit(parameter);
+
+            if (hasUnits) {
+                const unitSuffix = this.#getUnit(parameter);
+                telemetryValue.unit = unitSuffix;
+            }
+
             if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
                 const role = operatorStatusParameter.getRoleFromParameter(parameter);
                 if (role === undefined) {
@@ -501,5 +508,16 @@ export default class YamcsObjectProvider {
         }
 
         return OBJECT_TYPES.STRING_OBJECT_TYPE;
+    }
+
+    #hasUnit(parameter) {
+        const units = parameter.type.unitSet;
+
+        return units instanceof Array
+           && units.length > 0;
+    }
+
+    #getUnit(parameter) {
+        return parameter.type.unitSet?.map(unit => unit.unit).join(',');
     }
 }
