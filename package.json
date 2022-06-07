@@ -9,7 +9,7 @@
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
-    "prepublish": "npm install openmct@unstable --no-save",
+    "build:example": "npm install openmct@unstable --no-save",
     "start": "NODE_ENV=dev webpack-dev-server",
     "prepare": "npm run build:dist"
   },
@@ -21,10 +21,11 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "babel-eslint": "^10.1.0",
-    "copy-webpack-plugin": "^5.1.1",
     "eslint": "^6.8.0",
-    "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3"
+    "eventemitter3": "^4.0.7",
+    "source-map-loader": "^3.0.1",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.0"
   }
 }
