@@ -8,13 +8,13 @@ const MONITORING_RESULT_CSS = {
     'DISTRESS': 'is-limit--red',
     'CRITICAL': 'is-limit--red',
     'SEVERE': 'is-limit--red'
-}
+};
 
 /* CSS classes for Yamcs range condition values. */
 const RANGE_CONDITION_CSS = {
     'LOW': 'is-limit--lwr',
     'HIGH': 'is-limit--upr'
-}
+};
 
 /**
  * @typedef {Object} Datum

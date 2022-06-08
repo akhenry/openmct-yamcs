@@ -26,6 +26,9 @@ import YamcsObjectProvider from './providers/object-provider.js';
 import LimitProvider from './providers/limit-provider';
 import UserProvider from './providers/user/user-provider';
 
+import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
+import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
+import YamcsWebSocket from './providers/yamcs-web-socket';
 
 import { OBJECT_TYPES } from './const';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
@@ -43,18 +46,27 @@ export default function installYamcsPlugin(configuration) {
             instance: configuration.yamcsInstance
         });
 
-        const historicalProvider = new YamcsHistoricalTelemetryProvider(
+        const yamcsWebSocket = new YamcsWebSocket(configuration.yamcsWebsocketEndpoint);
+        yamcsWebSocket.createWebsocket();
+
+        const historicalTelemetryProvider = new YamcsHistoricalTelemetryProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance);
-        openmct.telemetry.addProvider(historicalProvider);
+        openmct.telemetry.addProvider(historicalTelemetryProvider);
 
-        const realtimeProvider = new RealtimeProvider(
-            configuration.yamcsWebsocketEndpoint,
+        const realtimeTelemetryProvider = new RealtimeProvider(
+            yamcsWebSocket,
             configuration.yamcsInstance
         );
-        openmct.telemetry.addProvider(realtimeProvider);
-        realtimeProvider.connect();
+        openmct.telemetry.addProvider(realtimeTelemetryProvider);
+
+        openmct.faults.addProvider(new YamcsFaultProvider({
+            faultModelConvertor,
+            historicalEndpoint: configuration.yamcsHistoricalEndpoint,
+            yamcsInstance: configuration.yamcsInstance,
+            yamcsWebSocket
+        }));
 
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
@@ -80,7 +92,7 @@ export default function installYamcsPlugin(configuration) {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus: roleStatusTelemetry,
                     latestTelemetryProvider,
-                    realtimeProvider,
+                    realtimeTelemetryProvider,
                     pollQuestionParameter,
                     pollQuestionTelemetry
                 });
