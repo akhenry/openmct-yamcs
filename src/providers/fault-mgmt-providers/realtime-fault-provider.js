@@ -87,7 +87,7 @@ export default class RealtimeFaultProvider {
         }
 
         const faultData = this.faultModelConvertor(eventData.data, eventData.type);
-        console.log('_onmessage faultData', faultData);
+
         subscriptionDetails.callback(faultData);
     }
 
