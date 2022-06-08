@@ -45,11 +45,11 @@ export default function installYamcsPlugin(configuration) {
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance
         });
-  
+
         const yamcsWebSocket = new YamcsWebSocket(configuration.yamcsWebsocketEndpoint);
         yamcsWebSocket.createWebsocket();
 
-        const historicalProvider = new YamcsHistoricalTelemetryProvider(
+        const historicalTelemetryProvider = new YamcsHistoricalTelemetryProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance);
@@ -92,7 +92,7 @@ export default function installYamcsPlugin(configuration) {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus: roleStatusTelemetry,
                     latestTelemetryProvider,
-                    realtimeProvider,
+                    realtimeTelemetryProvider,
                     pollQuestionParameter,
                     pollQuestionTelemetry
                 });

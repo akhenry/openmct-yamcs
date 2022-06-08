@@ -40,7 +40,7 @@ export default class YamcsWebSocket {
             this._connected = false;
             this._reconnect();
 
-            this.onerrorSubscribers.forEach(onerrorSubscriber => onerrorSubscriber.callback(error));
+            this._onerrorSubscribers.forEach(onerrorSubscriber => onerrorSubscriber.callback(error));
         };
 
         this._socket.onclose = () => {
@@ -92,14 +92,22 @@ export default class YamcsWebSocket {
         };
     }
 
-    sendMessage(message) {
-        if (!this._connected) {
-            this._requests.push(message);
+    sendOrQueueMessage(request) {
+        if (this.connected) {
+            try {
+                this._sendMessage(request);
+                return true;
+            } catch (error) {
+                this.connected = false;
+                console.error(error);
+                console.warn("Error while attempting to send to websocket. Reconnecting...");
 
-            return;
+                this._requests.push(request);
+                this._reconnect();
+            }
+        } else {
+            this._requests.push(request);
         }
-
-        this._sendOrQueueMessage(message);
     }
 
     _flushQueue() {
@@ -133,15 +141,5 @@ export default class YamcsWebSocket {
 
     _sendMessage(message) {
         this._socket.send(message);
-    }
-
-    _sendOrQueueMessage(message) {
-        try {
-            this._sendMessage(message);
-        } catch (error) {
-            console.error(error);
-
-            this._requests.push(message);
-        }
     }
 }

@@ -163,7 +163,7 @@ export default class RealtimeProvider {
     }
 
     _sendMessage(message) {
-        this.socket.sendMessage(message);
+        this.socket.sendOrQueueMessage(message);
     }
 
     _sendSubscribeMessage(subscriptionDetails) {

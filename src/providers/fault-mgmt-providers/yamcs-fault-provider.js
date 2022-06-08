@@ -1,6 +1,6 @@
 import HistoricalFaultProvider from './historical-fault-provider';
 import RealtimeFaultProvider from './realtime-fault-provider';
-import faultActionProvider from './fault-action-provider';
+import FaultActionProvider from './fault-action-provider';
 
 export default class YamcsFaultProvider {
     constructor({ faultModelConvertor, historicalEndpoint, yamcsInstance, yamcsWebSocket } = {}) {
@@ -16,10 +16,10 @@ export default class YamcsFaultProvider {
             yamcsInstance
         );
 
-        this.faultActionProvider = new FaultActionrovider(
+        this.faultActionProvider = new FaultActionProvider(
             historicalEndpoint,
             yamcsInstance
-        )
+        );
 
         this.request = this.historicalFaultProvider.request.bind(this.historicalFaultProvider);
         this.subscribe = this.realtimeFaultProvider.subscribe.bind(this.realtimeFaultProvider);

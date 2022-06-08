@@ -49,4 +49,4 @@ function faultModelConvertor(faultData, type) {
 
 export {
     faultModelConvertor
-}
+};

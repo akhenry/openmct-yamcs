@@ -110,7 +110,7 @@ export default class RealtimeFaultProvider {
             }
         };
 
-        this.socket.sendMessage(JSON.stringify(message));
+        this.socket.sendOrQueueMessage(JSON.stringify(message));
     }
 
     _sendUnsubscribeMessage({ call }) {
@@ -121,6 +121,6 @@ export default class RealtimeFaultProvider {
             }
         };
 
-        this.socket.sendMessage(JSON.stringify(message));
+        this.socket.sendOrQueueMessage(JSON.stringify(message));
     }
 }
