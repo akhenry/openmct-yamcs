@@ -158,12 +158,14 @@ export default class RealtimeProvider {
         this._resubscribeToAll();
     }
 
-    _resubscribeToAll() {
-        this.subscriptionsByCall.forEach(this._sendSubscribeMessage);
-    }
-
     _sendMessage(message) {
         this.socket.sendOrQueueMessage(message);
+    }
+
+    _resubscribeToAll() {
+        Object.values(this.subscriptionsById).forEach((subscriptionDetails) => {
+            this.sendSubscribeMessage(subscriptionDetails);
+        });
     }
 
     _sendSubscribeMessage(subscriptionDetails) {
