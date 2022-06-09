@@ -21,15 +21,34 @@
  *****************************************************************************/
 
 import createYamcsUser from './createYamcsUser';
+import { EventEmitter } from 'eventemitter3';
 
-export default class UserProvider {
-    constructor(openmct, userEndpoint) {
+export default class UserProvider extends EventEmitter {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider, pollQuestionParameter, pollQuestionTelemetry}) {
+        super();
+
         this.openmct = openmct;
         this.userEndpoint = userEndpoint;
         this.user = undefined;
         this.loggedIn = false;
+        this.roleStatus = roleStatus;
+        this.pollQuestionParameter = pollQuestionParameter;
+        this.pollQuestionTelemetry = pollQuestionTelemetry;
+        this.unsubscribeStatus = {};
+
+        this.latestTelemetryProvider = latestTelemetryProvider;
+        this.realtimeTelemetryProvider = realtimeProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
+        this.openmct.once('destroy', () => {
+            const subscriptions = Object.values(this.unsubscribeStatus);
+            if (subscriptions.length > 0) {
+                subscriptions.forEach(unsubscribe => unsubscribe());
+            }
+            if (this.unsubscribePollQuestion !== undefined) {
+                this.unsubscribePollQuestion();
+            }
+        });
     }
 
     isLoggedIn() {
@@ -37,14 +56,108 @@ export default class UserProvider {
     }
 
     getCurrentUser() {
-        if (this.loggedIn) {
-            return Promise.resolve(this.user);
+        if (!this.loginPromise) {
+            this.loginPromise = this.#getUserInfo();
         }
 
-        return this._getUserInfo();
+        return this.loginPromise;
     }
 
-    async _getUserInfo() {
+    async getStatusRoleForCurrentUser() {
+        const user = await this.getCurrentUser();
+        const userRoles = user.roles || [];
+        const statusRoles = await this.roleStatus.getAllStatusRoles();
+
+        return statusRoles.find(statusRole => userRoles.includes(statusRole));
+    }
+
+    async canProvideStatusForRole(role) {
+        const statusRoles = await this.roleStatus.getAllStatusRoles();
+
+        return statusRoles.includes(role);
+    }
+
+    async hasRole(roleName) {
+        const user = await this.getCurrentUser();
+
+        return user.roles.some(role => {
+            return role.name === roleName;
+        });
+    }
+
+    async canSetPollQuestion() {
+        const user = await this.getCurrentUser();
+        const writeParameters = user.getWriteParameters();
+
+        return Promise.all(writeParameters
+            .map(parameterName => this.pollQuestionParameter.isPollQuestionParameterName(parameterName)))
+            .then(areParametersPollQuestion => areParametersPollQuestion
+                .some(isParameterPollQuestion => isParameterPollQuestion));
+    }
+
+    async setPollQuestion(question) {
+        return this.pollQuestionTelemetry.setPollQuestion(question);
+    }
+
+    async getStatusForRole(role) {
+        const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
+        if (this.unsubscribeStatus[role] === undefined) {
+            this.unsubscribeStatus[role] = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
+                this.emit('statusChange', {role, status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)});
+            });
+        }
+        const status = await this.latestTelemetryProvider.requestLatest(statusTelemetryObject);
+        if (status !== undefined) {
+            return this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, status);
+        } else {
+            const defaultStatus = await this.roleStatus.getDefaultStatusForRole(role);
+
+            return defaultStatus;
+        }
+    }
+
+    async setStatusForRole(role, status) {
+        return this.roleStatus.setStatusForRole(role, status);
+    }
+
+    async getPossibleStatuses() {
+        return this.roleStatus.getPossibleStatuses();
+    }
+
+    async getPollQuestion() {
+        const pollQuestionTelemetryObject = await this.pollQuestionTelemetry.getTelemetryObject();
+
+        if (this.unsubscribePollQuestion === undefined) {
+            this.unsubscribePollQuestion = this.realtimeTelemetryProvider.subscribe(pollQuestionTelemetryObject, (datum) => {
+                const formattedPollQuestion = this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, datum);
+                this.emit("pollQuestionChange", formattedPollQuestion);
+            });
+        }
+        const pollQuestionTelemetryValue = await this.latestTelemetryProvider.requestLatest(pollQuestionTelemetryObject);
+        if (pollQuestionTelemetryValue !== undefined) {
+            return this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, pollQuestionTelemetryValue);
+        }
+    }
+
+    async getAllStatusRoles() {
+        return this.roleStatus.getAllStatusRoles();
+    }
+
+    async getRolesInStatus(status) {
+        const statusRoles = await this.roleStatus.getAllStatusRoles();
+        const telemetryObjects = await Promise.all(statusRoles.map(role => this.roleStatus.getTelemetryObjectForRole(role)));
+        const latestTelemetryValues = await Promise.all(telemetryObjects.map(telemetryObject => this.latestTelemetryProvider.requestLatest(telemetryObject)));
+        const latestStatuses = latestTelemetryValues.map((statusTelemetry, i) => this.roleStatus.toStatusFromTelemetry(telemetryObjects[i], statusTelemetry));
+        return latestStatuses.reduce((rolesInStatus, thisStatus, i) => {
+            if (thisStatus.key === status) {
+                rolesInStatus.push(statusRoles[i]);
+            }
+
+            return rolesInStatus;
+        }, []);
+    }
+
+    async #getUserInfo() {
         try {
             const res = await fetch(this.userEndpoint);
             const info = await res.json();
@@ -59,3 +172,4 @@ export default class UserProvider {
     }
 
 }
+

@@ -4,10 +4,37 @@ import installYamcsPlugin from '../src/plugin.js';
 const config = {
     "yamcsDictionaryEndpoint": "http://localhost:9000/yamcs-proxy/",
     "yamcsHistoricalEndpoint": "http://localhost:9000/yamcs-proxy/",
-    "yamcsRealtimeEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
-    "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws-v2/",
+    "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
+    "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user/",
     "yamcsInstance": "myproject",
     "yamcsFolder": "myproject"
+};
+const STATUS_STYLES = {
+    "NO_STATUS": {
+        iconClass: "icon-question-mark",
+        iconClassPoll: "icon-status-poll-question-mark"
+    },
+    "GO": {
+        iconClass: "icon-check",
+        iconClassPoll: "icon-status-poll-question-mark",
+        statusClass: "s-status-ok",
+        statusBgColor: "#33cc33",
+        statusFgColor: "#000"
+    },
+    "MAYBE": {
+        iconClass: "icon-alert-triangle",
+        iconClassPoll: "icon-status-poll-question-mark",
+        statusClass: "s-status-warning",
+        statusBgColor: "#ffb66c",
+        statusFgColor: "#000"
+    },
+    "NO_GO": {
+        iconClass: "icon-circle-slash",
+        iconClassPoll: "icon-status-poll-question-mark",
+        statusClass: "s-status-error",
+        statusBgColor: "#9900cc",
+        statusFgColor: "#fff"
+    }
 };
 const openmct = window.openmct;
 
@@ -18,6 +45,7 @@ const openmct = window.openmct;
 
     installDefaultPlugins();
     openmct.install(installYamcsPlugin(config));
+    openmct.install(openmct.plugins.OperatorStatus({statusStyles: STATUS_STYLES}));
 
     openmct.start();
 
@@ -58,5 +86,7 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.Notebook());
         openmct.install(openmct.plugins.LADTable());
         openmct.install(openmct.plugins.ClearData(['table', 'telemetry.plot.overlay', 'telemetry.plot.stacked']));
+
+        openmct.install(openmct.plugins.FaultManagement());
     }
 })();

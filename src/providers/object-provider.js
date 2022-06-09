@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2022, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -26,14 +26,16 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
+import OperatorStatusParameter from './user/operator-status-parameter.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
+const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -43,6 +45,9 @@ export default class YamcsObjectProvider {
         this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
+        this.roleStatusTelemetry = roleStatusTelemetry;
+        this.pollQuestionParameter = pollQuestionParameter;
+        this.pollQuestionTelemetry = pollQuestionTelemetry;
 
         this.createRootObject();
         this.createEventObject();
@@ -177,7 +182,12 @@ export default class YamcsObjectProvider {
             return Promise.resolve(this.dictionary);
         }
         return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
-            .then((dictionary) => this.dictionary = dictionary);
+            .then((dictionary) => {
+                this.dictionary = dictionary;
+                this.roleStatusTelemetry.dictionaryLoadComplete();
+
+                return dictionary;
+            });
     }
 
     fetchTelemetryDictionary() {
@@ -327,13 +337,57 @@ export default class YamcsObjectProvider {
 
         if (!isAggregate) {
             let key = 'value';
-            obj.telemetry.values.push({
+            const telemetryValue = {
                 key,
                 name: 'Value',
                 hints: {
                     range: 1
                 }
-            });
+            };
+
+            const hasUnits = this.#hasUnit(parameter);
+
+            if (hasUnits) {
+                const unitSuffix = this.#getUnit(parameter);
+                telemetryValue.unit = unitSuffix;
+            }
+
+            if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
+                const role = operatorStatusParameter.getRoleFromParameter(parameter);
+                if (role === undefined) {
+                    throw new Error(`Operator Status Parameter "${parameter.qualifiedName}" does not specify a role`);
+                }
+
+                const possibleStatuses = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
+                possibleStatuses.forEach(state => this.roleStatusTelemetry.addStatus(state));
+                this.roleStatusTelemetry.addStatusRole(role);
+                this.roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
+            }
+
+            if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {
+                this.pollQuestionParameter.setPollQuestionParameter(parameter);
+                this.pollQuestionTelemetry.setTelemetryObject(obj);
+                telemetryValue.format = 'string';
+            }
+
+            if (this.isEnumeration(parameter)) {
+                telemetryValue.format = 'enum';
+                const yamcsEnumerations = parameter.type.enumValue;
+                telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
+                    let rawValue = enumValue.value;
+
+                    if (!isNaN(rawValue)) {
+                        rawValue = parseInt(rawValue);
+                    }
+
+                    return {
+                        value: rawValue,
+                        string: enumValue.label
+                    };
+                });
+            }
+
+            obj.telemetry.values.push(telemetryValue);
 
             this.addHints(key, obj);
         } else {
@@ -378,6 +432,16 @@ export default class YamcsObjectProvider {
         }
 
         return isAggregate;
+    }
+
+    isEnumeration(parameter) {
+        let isEnumeration = false;
+
+        if (parameter.type !== undefined) {
+            isEnumeration = parameter.type.engType === 'enumeration';
+        }
+
+        return isEnumeration;
     }
 
     formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
@@ -436,11 +500,24 @@ export default class YamcsObjectProvider {
         /* Built-in Yamcs telemetry does not supply type information. */
         if (
             parameter.type === undefined
-            || (parameter.type.engType==='integer' || parameter.type.engType==='float')
+            || (parameter.type.engType==='integer'
+            || parameter.type.engType==='float'
+            || parameter.type.engType==='enumeration')
         ) {
             return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }
 
         return OBJECT_TYPES.STRING_OBJECT_TYPE;
+    }
+
+    #hasUnit(parameter) {
+        const units = parameter.type.unitSet;
+
+        return units instanceof Array
+           && units.length > 0;
+    }
+
+    #getUnit(parameter) {
+        return parameter.type.unitSet?.map(unit => unit.unit).join(',');
     }
 }
