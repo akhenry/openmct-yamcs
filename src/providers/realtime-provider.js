@@ -29,56 +29,31 @@ import {
     addLimitInformation
 } from '../utils.js';
 
-const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
-    constructor(url, instance) {
-        this.url = url;
+    constructor(socket, instance) {
+        this.socket = socket;
         this.instance = instance;
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
-        this.connected = false;
-        this.requests = [];
-        this.currentWaitIndex = 0;
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
 
-        this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
-        this.addSupportedDataTypes(Object.values(DATA_TYPES));
-    }
-
-    addSupportedObjectTypes(types) {
-        types.forEach(type => this.supportedObjectTypes[type] = type);
-    }
-
-    addSupportedDataTypes(dataTypes) {
-        dataTypes.forEach(dataType => this.supportedDataTypes[dataType] = dataType);
-    }
-
-    supportsSubscribe(domainObject) {
-        return this.isSupportedObjectType(domainObject.type);
-    }
-
-    isSupportedObjectType(type) {
-        return this.supportedObjectTypes[type];
-    }
-
-    isSupportedDataType(type) {
-        return this.supportedDataTypes[type];
+        this._addSupportedDataTypes(Object.values(DATA_TYPES));
+        this._addSupportedObjectTypes(Object.values(OBJECT_TYPES));
     }
 
     subscribe(domainObject, callback) {
-        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+        this._connect();
+
+        let subscriptionDetails = this._buildSubscriptionDetails(domainObject, callback);
         let id = subscriptionDetails.subscriptionId;
 
         this.subscriptionsById[id] = subscriptionDetails;
-
-        if (this.connected) {
-            this.sendSubscribeMessage(subscriptionDetails);
-        }
+        this._sendSubscribeMessage(subscriptionDetails);
 
         return () => {
-            this.sendUnsubscribeMessage(subscriptionDetails);
+            this._sendUnsubscribeMessage(subscriptionDetails);
 
             if (this.subscriptionsById[id]) {
                 this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
@@ -87,7 +62,19 @@ export default class RealtimeProvider {
         };
     }
 
-    buildSubscriptionDetails(domainObject, callback) {
+    supportsSubscribe(domainObject) {
+        return this._isSupportedObjectType(domainObject.type);
+    }
+
+    _addSupportedDataTypes(dataTypes) {
+        dataTypes.forEach(dataType => this.supportedDataTypes[dataType] = dataType);
+    }
+
+    _addSupportedObjectTypes(types) {
+        types.forEach(type => this.supportedObjectTypes[type] = type);
+    }
+
+    _buildSubscriptionDetails(domainObject, callback) {
         let subscriptionId = this.lastSubscriptionId++;
 
         return {
@@ -99,168 +86,97 @@ export default class RealtimeProvider {
         };
     }
 
-    sendSubscribeMessage(subscriptionDetails) {
-        let domainObject = subscriptionDetails.domainObject;
-        let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
-
-        this.sendOrQueueMessage(message);
+    _connect() {
+        this.socket.onopen(this._onopen.bind(this));
+        this.socket.onmessage(this._onmessage.bind(this));
     }
 
-    sendUnsubscribeMessage(subscriptionDetails) {
-        let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
-
-        this.sendOrQueueMessage(message);
+    _isSupportedDataType(type) {
+        return this.supportedDataTypes[type];
     }
 
-    reconnect() {
-        this.subscriptionsByCall.clear();
+    _isSupportedObjectType(type) {
+        return this.supportedObjectTypes[type];
+    }
 
-        if (this.reconnectTimeout) {
+    _onmessage(event) {
+        let data = JSON.parse(event.data);
+
+        if (!this._isSupportedDataType(data.type)) {
             return;
         }
 
-        this.reconnectTimeout = setTimeout(() => {
-            this.connect();
-            delete this.reconnectTimeout;
-        }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
+        let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
+        let subscriptionDetails;
 
-        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
-            this.currentWaitIndex++;
-        }
-    }
-
-    sendOrQueueMessage(request) {
-        if (this.connected) {
-            try {
-                this.sendMessage(request);
-                return true;
-            } catch (error) {
-                this.connected = false;
-                console.error(error);
-                console.warn("Error while attempting to send to websocket. Reconnecting...");
-
-                this.requests.push(request);
-                this.reconnect();
-            }
-        } else {
-            this.requests.push(request);
-        }
-    }
-
-    connect() {
-        if (this.connected) {
-            return;
-        }
-        let wsUrl = `${this.url}`;
-        this.lastSubscriptionId = 1;
-        this.connected = false;
-        this.socket = new WebSocket(wsUrl);
-
-        this.socket.onopen = () => {
-            clearTimeout(this.reconnectTimeout);
-
-            this.connected = true;
-            console.log(`Established websocket connection to ${wsUrl}`);
-
-            this.currentWaitIndex = 0;
-            this.resubscribeToAll();
-            this.flushQueue();
-        };
-
-        this.socket.onmessage = (event) => {
-            let data = JSON.parse(event.data);
-
-            if (!this.isSupportedDataType(data.type)) {
+        if (isReply) {
+            let id = data.data.replyTo;
+            let call = data.call;
+            subscriptionDetails = this.subscriptionsById[id];
+            if (!subscriptionDetails) {
                 return;
             }
 
-            let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
-            let subscriptionDetails;
+            subscriptionDetails.call = call;
+            this.subscriptionsByCall.set(call, subscriptionDetails);
+        } else {
+            subscriptionDetails = this.subscriptionsByCall.get(data.call);
 
-            if (isReply) {
-                let id = data.data.replyTo;
-                let call = data.call;
-                subscriptionDetails = this.subscriptionsById[id];
-                subscriptionDetails.call = call;
-                this.subscriptionsByCall.set(call, subscriptionDetails);
-            } else {
-                subscriptionDetails = this.subscriptionsByCall.get(data.call);
-
-                // possibly cancelled
-                if (!subscriptionDetails) {
-                    return;
-                }
-
-                // only event is handled differently
-                if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
-                    subscriptionDetails.callback(data.data);
-                } else if (data.data.values) {
-                    let values = data.data.values;
-                    let parentName = subscriptionDetails.domainObject.name;
-
-                    values.forEach(parameter => {
-                        let point = {
-                            id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter[METADATA_TIME_KEY]
-                        };
-                        let value = getValue(parameter, parentName);
-
-                        if (parameter.engValue.type !== AGGREGATE_TYPE) {
-                            point.value = value;
-                        } else {
-                            point = { ...point, ...value };
-                        }
-
-                        addLimitInformation(parameter, point);
-                        subscriptionDetails.callback(point);
-                    });
-                }
+            // possibly cancelled
+            if (!subscriptionDetails) {
+                return;
             }
-        };
 
-        this.socket.onerror = (error) => {
-            console.error(error);
-            console.warn("Websocket error, attempting reconnect...");
-            this.connected = false;
-            this.reconnect();
-        };
+            // only events are handled differently
+            if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
+                subscriptionDetails.callback(data.data);
+            } else if (data.data.values) {
+                let values = data.data.values;
+                let parentName = subscriptionDetails.domainObject.name;
 
-        this.socket.onclose = () => {
-            this.connected = false;
-            console.warn("Websocket closed. Attempting to reconnect...");
-            this.reconnect();
-        };
+                values.forEach(parameter => {
+                    let point = {
+                        id: qualifiedNameToId(subscriptionDetails.name),
+                        timestamp: parameter[METADATA_TIME_KEY]
+                    };
+                    let value = getValue(parameter, parentName);
+
+                    if (parameter.engValue.type !== AGGREGATE_TYPE) {
+                        point.value = value;
+                    } else {
+                        point = { ...point, ...value };
+                    }
+
+                    addLimitInformation(parameter, point);
+                    subscriptionDetails.callback(point);
+                });
+            }
+        }
+    }
+
+    _onopen() {
+        this._resubscribeToAll();
     }
 
     resubscribeToAll() {
         Object.values(this.subscriptionsById).forEach((subscriptionDetails) => {
-            this.sendSubscribeMessage(subscriptionDetails);
+            this._sendSubscribeMessage(subscriptionDetails);
         });
     }
-
-    flushQueue() {
-        let shouldReconnect = false;
-        this.requests = this.requests.filter((request) => {
-            try {
-                this.sendMessage(request);
-            } catch (error) {
-                this.connected = false;
-                console.error(error);
-                console.warn("Error while attempting to send to websocket. Reconnecting...");
-
-                shouldReconnect = true;
-                return true;
-            }
-            return false;
-        });
-
-        if (shouldReconnect) {
-            this.reconnect();
-        }
+    _sendMessage(message) {
+        this.socket.sendOrQueueMessage(message);
     }
 
-    sendMessage(message) {
-        this.socket.send(message);
+    _sendSubscribeMessage(subscriptionDetails) {
+        let domainObject = subscriptionDetails.domainObject;
+        let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+
+        this._sendMessage(message);
     }
 
+    _sendUnsubscribeMessage(subscriptionDetails) {
+        let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
+
+        this._sendMessage(message);
+    }
 }

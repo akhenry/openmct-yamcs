@@ -55,16 +55,24 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let id = domainObject.identifier.key;
         let url = this.buildUrl(id, options);
+        let hasEnumValue = this.hasEnumValue(domainObject);
         let requestArguments = [id, url, options];
-        let isMinMax = !this.isImagery(domainObject)
+        options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax';
+            && options.strategy === 'minmax'
+            && !hasEnumValue;
 
-        if (isMinMax) {
+        if (options.isSamples) {
             return this.getMinMaxHistory(...requestArguments);
         }
 
         return this.getHistory(...requestArguments);
+    }
+
+    hasEnumValue(domainObject) {
+        const metadata = this.openmct.telemetry.getMetadata(domainObject);
+
+        return metadata.values().some(metadatum => metadatum.format === 'enum');
     }
 
     getHistory(id, url, options) {
@@ -113,7 +121,6 @@ export default class YamcsHistoricalTelemetryProvider {
                 && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             ) {
                 options.sizeType = 'count';
-                options.isSamples = true;
             }
         }
     }
