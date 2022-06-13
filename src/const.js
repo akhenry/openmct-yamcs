@@ -28,8 +28,8 @@ export const OBJECT_TYPES = {
     AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate',
     OPERATOR_STATUS_TYPE: 'yamcs.operatorStatus',
     POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
-    ALARMS_TYPE: 'yamcs.pollQuestion',
-    GLOBAL_STATUS_TYPE: 'yamcs.pollQuestion'
+    ALARMS_TYPE: 'yamcs.alarms',
+    GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
 };
 
 export const DATA_TYPES = {

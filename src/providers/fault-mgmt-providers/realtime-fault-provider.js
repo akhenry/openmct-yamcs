@@ -1,5 +1,5 @@
 import { FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants';
-import { NAMESPACE } from '../../const';
+import { DATA_TYPES, NAMESPACE } from '../../const';
 import { OBJECT_TYPES } from '../../const';
 
 export default class RealtimeFaultProvider {
@@ -34,8 +34,8 @@ export default class RealtimeFaultProvider {
     }
 
     subscribe(domainObject, callback) {
-        const globalUnsubscribe = this.realtimeProvider.subscribe(this.GLOBAL_STATUS_OBJECT, (response) => this.handleResponse(response, callback));
-        const alarmsUnsubscribe = this.realtimeProvider.subscribe(this.ALARMS_OBJECT, (response) => this.handleResponse(response, callback));
+        const globalUnsubscribe = this.realtimeProvider.subscribe(this.GLOBAL_STATUS_OBJECT, (response) => this.handleResponse(DATA_TYPES.DATA_TYPE_GLOBAL_STATUS, response, callback));
+        const alarmsUnsubscribe = this.realtimeProvider.subscribe(this.ALARMS_OBJECT, (response) => this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback));
 
         return () => {
             globalUnsubscribe();
@@ -43,9 +43,8 @@ export default class RealtimeFaultProvider {
         };
     }
 
-    handleResponse(response, callback) {
-        const eventData = JSON.parse(response.data);
-        const faultData = this.faultModelConvertor(eventData.data, eventData.type);
+    handleResponse(type, response, callback) {
+        const faultData = this.faultModelConvertor(response, type);
 
         callback(faultData);
     }

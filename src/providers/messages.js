@@ -21,7 +21,9 @@ function buildSubscribeMessages() {
         subscriptionMessages[objectType] = (subscriptionDetails) => {
             let message;
 
-            if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+            if (objectType === OBJECT_TYPES.EVENTS_OBJECT_TYPE
+                || objectType === OBJECT_TYPES.ALARMS_TYPE
+                || objectType === OBJECT_TYPES.GLOBAL_STATUS_TYPE) {
                 message = `{
                     "type": "${dataType}",
                     "id": "${subscriptionDetails.subscriptionId}",
