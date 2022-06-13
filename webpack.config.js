@@ -74,7 +74,7 @@ const WEBPACK_CONFIG = {
                 pathRewrite: {'^/yamcs-proxy/' : ''}
             },
             "/yamcs-proxy-ws/*": {
-                target: "ws://localhost:8090/",
+                target: "ws://localhost:8090/api/websocket",
                 secure: false,
                 changeOrigin: true,
                 ws: true,

@@ -27,16 +27,22 @@ export const OBJECT_TYPES = {
     STRING_OBJECT_TYPE: 'yamcs.string',
     AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate',
     OPERATOR_STATUS_TYPE: 'yamcs.operatorStatus',
-    POLL_QUESTION_TYPE: 'yamcs.pollQuestion'
+    POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
+    ALARMS_TYPE: 'yamcs.pollQuestion',
+    GLOBAL_STATUS_TYPE: 'yamcs.pollQuestion'
 };
 
 export const DATA_TYPES = {
     DATA_TYPE_EVENTS: 'events',
     DATA_TYPE_TELEMETRY: 'parameters',
-    DATA_TYPE_REPLY: 'reply'
+    DATA_TYPE_FAULTS: 'parameters',
+    DATA_TYPE_REPLY: 'reply',
+    DATA_TYPE_ALARMS: 'alarms',
+    DATA_TYPE_GLOBAL_STATUS: 'global-alarm-status'
 };
 
 export const METADATA_TIME_KEY = 'generationTime';
 
 export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 export const AGGREGATE_TYPE = 'AGGREGATE';
+export const NAMESPACE = 'taxonomy';

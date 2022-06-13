@@ -28,7 +28,6 @@ import UserProvider from './providers/user/user-provider';
 
 import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
 import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
-import YamcsWebSocket from './providers/yamcs-web-socket';
 
 import { OBJECT_TYPES } from './const';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
@@ -46,9 +45,6 @@ export default function installYamcsPlugin(configuration) {
             instance: configuration.yamcsInstance
         });
 
-        const yamcsWebSocket = new YamcsWebSocket(configuration.yamcsWebsocketEndpoint);
-        yamcsWebSocket.createWebsocket();
-
         const historicalTelemetryProvider = new YamcsHistoricalTelemetryProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
@@ -56,16 +52,17 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(historicalTelemetryProvider);
 
         const realtimeTelemetryProvider = new RealtimeProvider(
-            yamcsWebSocket,
+            configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
+        realtimeTelemetryProvider.connect();
 
         openmct.faults.addProvider(new YamcsFaultProvider({
             faultModelConvertor,
             historicalEndpoint: configuration.yamcsHistoricalEndpoint,
             yamcsInstance: configuration.yamcsInstance,
-            yamcsWebSocket
+            realtimeTelemetryProvider
         }));
 
         openmct.telemetry.addProvider(new LimitProvider(
@@ -158,6 +155,18 @@ export default function installYamcsPlugin(configuration) {
             name: 'Operator Status',
             description: 'Operator status',
             cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.ALARMS_TYPE, {
+            name: 'Alarms',
+            description: 'Alarms',
+            cssClass: 'icon-alert-rect'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.GLOBAL_STATUS_TYPE, {
+            name: 'Global Status',
+            description: 'Global Status',
+            cssClass: 'icon-bell'
         });
     };
 }
