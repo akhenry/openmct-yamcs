@@ -34,8 +34,17 @@ export default class RealtimeFaultProvider {
     }
 
     subscribe(domainObject, callback) {
-        const globalUnsubscribe = this.realtimeProvider.subscribe(this.GLOBAL_STATUS_OBJECT, (response) => this.handleResponse(DATA_TYPES.DATA_TYPE_GLOBAL_STATUS, response, callback));
-        const alarmsUnsubscribe = this.realtimeProvider.subscribe(this.ALARMS_OBJECT, (response) => this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback));
+        const globalUnsubscribe = this.realtimeProvider.subscribe(
+            this.GLOBAL_STATUS_OBJECT,
+            (response) => {
+                this.handleResponse(DATA_TYPES.DATA_TYPE_GLOBAL_STATUS, response, callback);
+            });
+
+        const alarmsUnsubscribe = this.realtimeProvider.subscribe(
+            this.ALARMS_OBJECT,
+            (response) => {
+                this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback)
+            });
 
         return () => {
             globalUnsubscribe();
