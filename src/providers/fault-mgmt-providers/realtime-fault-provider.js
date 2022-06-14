@@ -3,8 +3,8 @@ import { DATA_TYPES, NAMESPACE } from '../../const';
 import { OBJECT_TYPES } from '../../const';
 
 export default class RealtimeFaultProvider {
-    constructor(faultModelConvertor, instance, realtimeTelemetryProvider) {
-        this.faultModelConvertor = faultModelConvertor;
+    constructor(faultModelConverter, instance, realtimeTelemetryProvider) {
+        this.faultModelConverter = faultModelConverter;
         this.instance = instance;
         this.realtimeProvider = realtimeTelemetryProvider;
 
@@ -44,7 +44,7 @@ export default class RealtimeFaultProvider {
     }
 
     handleResponse(type, response, callback) {
-        const faultData = this.faultModelConvertor(response, type);
+        const faultData = this.faultModelConverter(response, type);
 
         callback(faultData);
     }

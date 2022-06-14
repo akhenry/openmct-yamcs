@@ -1,8 +1,8 @@
 import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants';
 
 export default class HistoricalFaultProvider {
-    constructor(faultModelConvertor, url, instance) {
-        this.faultModelConvertor = faultModelConvertor;
+    constructor(faultModelConverter, url, instance) {
+        this.faultModelConverter = faultModelConverter;
         this.url = url;
         this.instance = instance;
     }
@@ -17,7 +17,7 @@ export default class HistoricalFaultProvider {
         return fetch(url)
             .then(res => res.json())
             .then(faultsData => {
-                return faultsData.alarms?.map(this.faultModelConvertor);
+                return faultsData.alarms?.map(this.faultModelConverter);
             });
     }
 }
