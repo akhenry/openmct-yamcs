@@ -133,7 +133,6 @@ export default class RealtimeProvider {
         if (this.connected) {
             try {
                 this.sendMessage(request);
-                return true;
             } catch (error) {
                 this.connected = false;
                 console.error(error);
@@ -221,13 +220,19 @@ export default class RealtimeProvider {
         this.socket.onerror = (error) => {
             console.error(error);
             console.warn("Websocket error, attempting reconnect...");
+
             this.connected = false;
+            this.socket = undefined;
+
             this.reconnect();
         };
 
         this.socket.onclose = () => {
-            this.connected = false;
             console.warn("Websocket closed. Attempting to reconnect...");
+
+            this.connected = false;
+            this.socket = undefined;
+
             this.reconnect();
         };
     }
