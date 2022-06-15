@@ -54,13 +54,16 @@ export default class YamcsHistoricalTelemetryProvider {
         this.standardizeOptions(options, domainObject);
 
         let id = domainObject.identifier.key;
-        let url = this.buildUrl(id, options);
         let hasEnumValue = this.hasEnumValue(domainObject);
-        let requestArguments = [id, url, options];
+
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax'
             && !hasEnumValue;
+
+        let url = this.buildUrl(id, options);
+        let requestArguments = [id, url, options];
+
 
         if (options.isSamples) {
             return this.getMinMaxHistory(...requestArguments);

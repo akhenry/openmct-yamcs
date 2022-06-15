@@ -25,7 +25,7 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import { OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
+import { OBJECT_TYPES, METADATA_TIME_KEY, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 
 const YAMCS_API_MAP = {
@@ -41,7 +41,7 @@ export default class YamcsObjectProvider {
         this.instance = instance;
         this.folderName = folderName;
         this.dictionary = undefined;
-        this.namespace = 'taxonomy';
+        this.namespace = NAMESPACE;
         this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
