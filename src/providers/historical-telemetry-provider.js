@@ -135,9 +135,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
         // handle exclusive start/stop functionality from yamcs
         if (options.order === 'asc') {
-            start--;
-        } else if (options.order === 'desc') {
             end++;
+        } else if (options.order === 'desc') {
+            start--;
         }
 
         if (options.isSamples) {
