@@ -129,14 +129,23 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     buildUrl(id, options) {
+        let start = options.start;
+        let end = options.end;
         let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
+
+        // handle exclusive start/stop functionality from yamcs
+        if (options.order === 'asc') {
+            end++;
+        } else if (options.order === 'desc') {
+            start--;
+        }
 
         if (options.isSamples) {
             url += '/samples';
         }
 
-        url += `?start=${new Date(options.start).toISOString()}`;
-        url += `&stop=${new Date(options.end).toISOString()}`;
+        url += `?start=${new Date(start).toISOString()}`;
+        url += `&stop=${new Date(end).toISOString()}`;
         url += `&${options.sizeType}=${options.size}`;
         url += `&order=${options.order}`;
 
