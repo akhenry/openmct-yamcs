@@ -192,7 +192,7 @@ export default class RealtimeProvider {
 
                 // only event is handled differently
                 if (this.isTelemetryMessage(data)) {
-                    let values = data.data.values;
+                    let values = data.data.values || [];
                     let parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {
@@ -269,7 +269,7 @@ export default class RealtimeProvider {
     }
 
     isTelemetryMessage(message) {
-        return message.data.values;
+        return message.type === 'parameters';
     }
 
 }
