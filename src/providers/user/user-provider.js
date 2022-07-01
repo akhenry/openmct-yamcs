@@ -24,6 +24,9 @@ import createYamcsUser from './createYamcsUser';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
+    #latestPollQuestion;
+    #latestStatusByRole;
+
     constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry}) {
         super();
 
@@ -49,6 +52,9 @@ export default class UserProvider extends EventEmitter {
                 this.unsubscribePollQuestion();
             }
         });
+
+        this.#latestPollQuestion = undefined;
+        this.#latestStatusByRole = new Map();
     }
 
     isLoggedIn() {

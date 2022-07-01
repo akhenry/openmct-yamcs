@@ -87,6 +87,17 @@ export default class RealtimeProvider {
         };
     }
 
+    getSubscriptionDetails(domainObject) {
+        return Object.values(this.subscriptionsById)
+            .find((entry) => {
+                this.openmct.objects.areIdsEqual(entry.domainObject.identifier, domainObject.identifier);
+            });
+    }
+
+    isSubscribed(domainObject) {
+        return this.getSubscriptionDetails(domainObject) !== undefined;
+    }
+
     buildSubscriptionDetails(domainObject, callback) {
         let subscriptionId = this.lastSubscriptionId++;
 

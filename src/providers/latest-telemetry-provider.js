@@ -19,39 +19,71 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import {
-    getValue,
-    idToQualifiedName
-} from '../utils.js';
 
 export default class LatestTelemetryProvider {
-    constructor({url, instance, processor = 'realtime'}) {
-        this.url = url;
-        this.instance = instance;
-        this.processor = processor;
+    #pendingRequests;
+    #telemetryCache;
+
+    constructor() {
+        this.#pendingRequests = new Map();
+        this.#telemetryCache = new Map();
     }
+
     async requestLatest(domainObject) {
-        const url = this._buildUrl(domainObject.identifier);
-        const response = await fetch(url);
+        const keystring = this.openmct.object.makeKeyString(domainObject.identifier);
 
-        let result = await response.json();
-        let openMctStyleDatum = undefined;
-
-        if (result !== undefined) {
-            if (result.acquisitionStatus !== undefined) {
-                openMctStyleDatum = {
-                    id: result.id.name,
-                    timestamp: result.generationTimeUTC,
-                    value: getValue(result)
-                };
+        if (this.#isPending(keystring)) {
+            return this.#pendingRequests.get(keystring).promise;
+        } else {
+            if (this.#hasValidCache(keystring)) {
+                return Promise.resolve(this.#telemetryCache.get(keystring));
+            } else {
+                return this.#issueNewRequest(domainObject);
             }
         }
-
-        return openMctStyleDatum;
     }
-    _buildUrl(id) {
-        let url = `${this.url}api/processors/${this.instance}/${this.processor}/parameters/${idToQualifiedName(id.key)}`;
+    setPending(keystring) {
+        if (this.#isPending(keystring)) {
+            throw new Error(`Request for ${keystring} is already pending`);
+        } else {
+            let resolveFunction;
+            let pendingPromise = new Promise((resolve, reject) => {
+                resolveFunction = resolve;
+                //What to do with reject? What would this even mean?
+            });
 
-        return url;
+            this.#pendingRequests.set(keystring, {
+                promise: pendingPromise,
+                resolve: resolveFunction
+            });
+        }
+    }
+    setDatum(keystring, datum) {
+        this.#telemetryCache.set(keystring, datum);
+
+        if (this.#isPending(keystring)) {
+            const resolveFunction = this.#pendingRequests.get(keystring).resolve;
+            resolveFunction(datum);
+            this.#pendingRequests.delete(keystring);
+        }
+    }
+    invalidateCache(keystring) {
+        this.#telemetryCache.delete(keystring);
+    }
+    #issueNewRequest(domainObject) {
+        const keystring = this.openmct.object.makeKeyString(domainObject.identifier);
+        this.setPending(keystring);
+        const unsubscribe = this.openmct.telemetry.subscribe(domainObject, (datum) => {
+            this.setDatum(keystring, datum);
+            unsubscribe();
+        });
+
+        return this.#pendingRequests.get(keystring).promise;
+    }
+    #hasValidCache(keystring) {
+        return this.#telemetryCache.has(keystring);
+    }
+    #isPending(keystring) {
+        return this.#pendingRequests.has(keystring);
     }
 }
