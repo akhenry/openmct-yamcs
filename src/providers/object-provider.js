@@ -140,6 +140,10 @@ export default class YamcsObjectProvider {
         });
     }
 
+    supportsSearchType(type) {
+        return type === this.openmct.objects.SEARCH_TYPES.OBJECTS;
+    }
+
     search(query, options) {
         const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
         const parametersSearch = this.searchMdbApi('parameters', query, options);
