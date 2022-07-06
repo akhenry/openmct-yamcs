@@ -41,7 +41,7 @@ export default class LatestTelemetryProvider {
             if (result.acquisitionStatus !== undefined) {
                 openMctStyleDatum = {
                     id: result.id.name,
-                    timestamp: result.generationTimeUTC,
+                    timestamp: result.generationTime,
                     value: getValue(result)
                 };
             }
