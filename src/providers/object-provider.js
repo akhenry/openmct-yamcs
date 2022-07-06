@@ -376,7 +376,7 @@ export default class YamcsObjectProvider {
 
             if (this.isEnumeration(parameter)) {
                 telemetryValue.format = 'enum';
-                const yamcsEnumerations = parameter.type.enumValue;
+                const yamcsEnumerations = parameter.type.enumValue || [];
                 telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
                     let rawValue = enumValue.value;
 
