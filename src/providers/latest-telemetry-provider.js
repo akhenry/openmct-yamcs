@@ -27,12 +27,14 @@ import {
 export default class LatestTelemetryProvider {
     #bulkPromise;
     #batchIds;
+    #openmct;
 
-    constructor({url, instance, processor = 'realtime'}) {
+    constructor({url, instance, processor = 'realtime', openmct}) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
         this.#batchIds = [];
+        this.#openmct = openmct;
     }
     async requestLatest(domainObject) {
         const yamcsId = idToQualifiedName(domainObject.identifier.key);
@@ -59,6 +61,11 @@ export default class LatestTelemetryProvider {
                 }
 
                 return openMctStyleDatum;
+            }).catch((error) => {
+                console.error(error);
+                this.#openmct.notifications.error(`Unable to fetch latest telemetry for ${domainObject.name}`);
+
+                return undefined;
             });
     }
     #deferBatchedGet() {
@@ -66,7 +73,7 @@ export default class LatestTelemetryProvider {
         // requests triggered in this iteration of the event loop
 
         return this.#waitOneEventCycle().then(() => {
-            let batchIds = this.#batchIds;
+            let batchIds = [...new Set(this.#batchIds)];
 
             this.#clearBatch();
 
