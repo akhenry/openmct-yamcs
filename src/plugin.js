@@ -42,7 +42,8 @@ export default function installYamcsPlugin(configuration) {
 
         const latestTelemetryProvider = new LatestTelemetryProvider({
             url: configuration.yamcsHistoricalEndpoint,
-            instance: configuration.yamcsInstance
+            instance: configuration.yamcsInstance,
+            openmct
         });
 
         const historicalTelemetryProvider = new YamcsHistoricalTelemetryProvider(
