@@ -25,32 +25,97 @@ import {
 } from '../utils.js';
 
 export default class LatestTelemetryProvider {
+    #bulkPromise;
+    #batchIds;
+
     constructor({url, instance, processor = 'realtime'}) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
+        this.#batchIds = [];
     }
     async requestLatest(domainObject) {
-        const url = this._buildUrl(domainObject.identifier);
-        const response = await fetch(url);
+        const yamcsId = idToQualifiedName(domainObject.identifier.key);
+        this.#batchIds.push(yamcsId);
 
-        let result = await response.json();
-        let openMctStyleDatum = undefined;
-
-        if (result !== undefined) {
-            if (result.acquisitionStatus !== undefined) {
-                openMctStyleDatum = {
-                    id: result.id.name,
-                    timestamp: result.generationTime,
-                    value: getValue(result)
-                };
-            }
+        if (this.#bulkPromise === undefined) {
+            this.#bulkPromise = this.#deferBatchedGet();
         }
 
-        return openMctStyleDatum;
+        return this.#bulkPromise
+            .then((datumMap) => {
+                const result = datumMap[yamcsId];
+
+                let openMctStyleDatum = undefined;
+
+                if (result !== undefined) {
+                    if (result.acquisitionStatus !== undefined) {
+                        openMctStyleDatum = {
+                            id: result.id.name,
+                            timestamp: result.generationTime,
+                            value: getValue(result)
+                        };
+                    }
+                }
+
+                return openMctStyleDatum;
+            });
     }
-    _buildUrl(id) {
-        let url = `${this.url}api/processors/${this.instance}/${this.processor}/parameters/${idToQualifiedName(id.key)}`;
+    #deferBatchedGet() {
+        // We until the next event loop cycle to "collect" all of the get
+        // requests triggered in this iteration of the event loop
+
+        return this.#waitOneEventCycle().then(() => {
+            let batchIds = this.#batchIds;
+
+            this.#clearBatch();
+
+            return this.#bulkGet(batchIds);
+        });
+    }
+    async #bulkGet(batchIds) {
+        const yamcsIds = batchIds.map((yamcsId) => { 
+                return {
+                    name: yamcsId
+                }
+        });
+
+        const requestBody = {
+            id: yamcsIds,
+            fromCache: true
+        }
+
+        const response = await fetch(this.#buildUrl(), {
+            method: 'POST',
+            body: JSON.stringify(requestBody)
+        });
+
+        const json = await response.json();
+
+        if (json.value !== undefined) {
+            return json.value.reduce((map, parameterValue) => {
+                map[parameterValue.id.name] = parameterValue;
+
+                return map;
+            }, {});
+        } else {
+            return {};
+        }
+    }
+
+    #clearBatch() {
+        this.#batchIds = [];
+        this.#bulkPromise = undefined;
+    }
+
+    #waitOneEventCycle() {
+        return new Promise((resolve) => {
+            setTimeout(resolve);
+        });
+    }
+
+    #buildUrl() {
+        let url = `${this.url}api/processors/${this.instance}/${this.processor}/parameters:batchGet`;
 
         return url;
     }
