@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeProvider, pollQuestionParameter, pollQuestionTelemetry}) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry}) {
         super();
 
         this.openmct = openmct;
@@ -37,7 +37,7 @@ export default class UserProvider extends EventEmitter {
         this.unsubscribeStatus = {};
 
         this.latestTelemetryProvider = latestTelemetryProvider;
-        this.realtimeTelemetryProvider = realtimeProvider;
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
         this.openmct.once('destroy', () => {
@@ -114,6 +114,10 @@ export default class UserProvider extends EventEmitter {
 
             return defaultStatus;
         }
+    }
+
+    async getDefaultStatusForRole(role) {
+        return this.roleStatus.getDefaultStatusForRole(role);
     }
 
     async setStatusForRole(role, status) {

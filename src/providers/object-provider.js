@@ -25,7 +25,7 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import { OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
+import { OBJECT_TYPES, METADATA_TIME_KEY, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 
 const YAMCS_API_MAP = {
@@ -41,7 +41,7 @@ export default class YamcsObjectProvider {
         this.instance = instance;
         this.folderName = folderName;
         this.dictionary = undefined;
-        this.namespace = 'taxonomy';
+        this.namespace = NAMESPACE;
         this.key = 'spacecraft';
         this.objects = {};
         this.dictionaryPromise = undefined;
@@ -138,6 +138,10 @@ export default class YamcsObjectProvider {
         return this.getTelemetryDictionary().then(dictionary => {
             return dictionary[identifier.key];
         });
+    }
+
+    supportsSearchType(type) {
+        return type === this.openmct.objects.SEARCH_TYPES.OBJECTS;
     }
 
     search(query, options) {
@@ -372,7 +376,7 @@ export default class YamcsObjectProvider {
 
             if (this.isEnumeration(parameter)) {
                 telemetryValue.format = 'enum';
-                const yamcsEnumerations = parameter.type.enumValue;
+                const yamcsEnumerations = parameter.type.enumValue || [];
                 telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
                     let rawValue = enumValue.value;
 
