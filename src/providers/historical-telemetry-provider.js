@@ -171,6 +171,9 @@ export default class YamcsHistoricalTelemetryProvider {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return 'events';
         }
+        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+            return 'commands';
+        }
 
         return 'parameters' + idToQualifiedName(id);
     }
@@ -178,6 +181,9 @@ export default class YamcsHistoricalTelemetryProvider {
     getResponseKeyById(id) {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return 'event';
+        }
+        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+            return 'entry';
         }
 
         return 'parameter';
@@ -196,9 +202,25 @@ export default class YamcsHistoricalTelemetryProvider {
         });
     }
 
+    convertCommandHistory(id, results) {
+        if (!results) {
+            return [];
+        }
+
+        return results.map(e => {
+            return {
+                id,
+                ...e
+            };
+        });
+    }
+
     convertPointHistory(id, results) {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
             return this.convertEventHistory(id, results);
+        }
+        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+            return this.convertCommandHistory(id, results);
         }
 
 

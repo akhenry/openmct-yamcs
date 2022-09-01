@@ -81,16 +81,16 @@ export default class LatestTelemetryProvider {
         });
     }
     async #bulkGet(batchIds) {
-        const yamcsIds = batchIds.map((yamcsId) => { 
-                return {
-                    name: yamcsId
-                }
+        const yamcsIds = batchIds.map((yamcsId) => {
+            return {
+                name: yamcsId
+            };
         });
 
         const requestBody = {
             id: yamcsIds,
             fromCache: true
-        }
+        };
 
         const response = await fetch(this.#buildUrl(), {
             method: 'POST',

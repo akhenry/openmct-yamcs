@@ -51,6 +51,7 @@ export default class YamcsObjectProvider {
 
         this.createRootObject();
         this.createEventObject();
+        this.createCommandObject();
     }
 
     createRootObject() {
@@ -130,8 +131,66 @@ export default class YamcsObjectProvider {
         this.objects[this.key].composition.push(identifier);
     }
 
+    createCommandObject() {
+        const location = this.openmct.objects.makeKeyString({
+            key: this.key,
+            namespace: this.namespace
+        });
+
+        const identifier = {
+            key: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
+            namespace: this.namespace
+        };
+        const commandObject = {
+            identifier,
+            location,
+            name: 'Commands',
+            type: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
+            telemetry: {
+                values: [
+                    {
+                        key: 'id',
+                        name: "ID"
+                    },
+                    {
+                        key: 'commandName',
+                        name: 'Command Name'
+                    },
+                    {
+                        key: 'origin',
+                        name: 'Origin'
+                    },
+                    {
+                        key: 'sequenceNumber',
+                        name: 'Sequence Number'
+                    },
+                    {
+                        key: 'commandId',
+                        name: 'Command ID'
+                    },
+                    {
+                        key: 'attr',
+                        name: 'Attributes'
+                    },
+                    {
+                        key: 'utc',
+                        source: METADATA_TIME_KEY,
+                        name: 'Generation Time',
+                        format: 'iso',
+                        hints: {
+                            domain: 1
+                        }
+                    }
+                ]
+            }
+        };
+
+        this.addObject(commandObject);
+        this.objects[this.key].composition.push(identifier);
+    }
+
     get(identifier) {
-        if (identifier.key === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+        if (identifier.key === OBJECT_TYPES.EVENTS_OBJECT_TYPE || identifier.key === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
             return Promise.resolve(this.objects[identifier.key]);
         }
 
