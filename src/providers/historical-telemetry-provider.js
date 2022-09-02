@@ -207,12 +207,36 @@ export default class YamcsHistoricalTelemetryProvider {
             return [];
         }
 
-        return results.map(e => {
-            return {
+        const commands = [];
+        results.forEach(result => {
+            const {
+                commandName,
+                generationTime,
+                origin
+            } = result;
+            let point = {
                 id,
-                ...e
+                commandName,
+                generationTime,
+                origin
             };
+
+            const { attr, assignments } = result;
+            point = attr.reduce((obj, item) => {
+                const { value, name } = item;
+                const val = getValue(value, name);
+                obj[item.name] = val;
+                return obj;
+            }, point);
+            point = assignments.reduce((obj, item) => {
+                const { value, name } = item;
+                const val = getValue(value, name);
+                obj[item.name] = val;
+                return obj;
+            }, point);
+            commands.push(point);
         });
+        return commands;
     }
 
     convertPointHistory(id, results) {
