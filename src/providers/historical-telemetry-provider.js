@@ -25,7 +25,8 @@ import {
     getValue,
     addLimitInformation,
     accumulateResults,
-    yieldResults
+    yieldResults,
+    flattenObjectArray
 } from '../utils.js';
 
 export default class YamcsHistoricalTelemetryProvider {
@@ -222,18 +223,8 @@ export default class YamcsHistoricalTelemetryProvider {
             };
 
             const { attr, assignments } = result;
-            point = attr.reduce((obj, item) => {
-                const { value, name } = item;
-                const val = getValue(value, name);
-                obj[item.name] = val;
-                return obj;
-            }, point);
-            point = assignments.reduce((obj, item) => {
-                const { value, name } = item;
-                const val = getValue(value, name);
-                obj[item.name] = val;
-                return obj;
-            }, point);
+            point = flattenObjectArray(attr, point);
+            point = flattenObjectArray(assignments, point);
             commands.push(point);
         });
         return commands;

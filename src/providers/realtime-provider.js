@@ -26,7 +26,8 @@ import {
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
-    addLimitInformation
+    addLimitInformation,
+    flattenObjectArray
 } from '../utils.js';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
@@ -211,6 +212,23 @@ export default class RealtimeProvider {
                         addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);
                     });
+                } else if (this.isCommandMessage(data)) {
+                    const {
+                        commandName,
+                        generationTime,
+                        origin
+                    } = data.data;
+                    let point = {
+                        id: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
+                        commandName,
+                        generationTime,
+                        origin
+                    };
+
+                    const { attr, assignments } = data.data;
+                    point = attr ? flattenObjectArray(attr, point) : point;
+                    point = assignments ? flattenObjectArray(assignments, point) : point;
+                    subscriptionDetails.callback(point);
                 } else {
                     subscriptionDetails.callback(data.data);
                 }
@@ -270,6 +288,10 @@ export default class RealtimeProvider {
 
     isTelemetryMessage(message) {
         return message.type === 'parameters';
+    }
+
+    isCommandMessage(message) {
+        return message.type === 'commands';
     }
 
 }
