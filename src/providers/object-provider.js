@@ -149,28 +149,8 @@ export default class YamcsObjectProvider {
             telemetry: {
                 values: [
                     {
-                        key: 'id',
-                        name: "ID"
-                    },
-                    {
                         key: 'commandName',
-                        name: 'Command Name'
-                    },
-                    {
-                        key: 'origin',
-                        name: 'Origin'
-                    },
-                    {
-                        key: 'sequenceNumber',
-                        name: 'Sequence Number'
-                    },
-                    {
-                        key: 'commandId',
-                        name: 'Command ID'
-                    },
-                    {
-                        key: 'attr',
-                        name: 'Attributes'
+                        name: 'Command'
                     },
                     {
                         key: 'utc',
@@ -180,6 +160,42 @@ export default class YamcsObjectProvider {
                         hints: {
                             domain: 1
                         }
+                    },
+                    {
+                        key: 'comment',
+                        name: 'Comment'
+                    },
+                    {
+                        key: 'Acknowledge_Queued_Status',
+                        name: 'Acknowledge Queued Status'
+                    },
+                    {
+                        key: 'Acknowledge_Queued_Time',
+                        name: 'Acknowledge Queued Time'
+                    },
+                    {
+                        key: 'Acknowledge_Released_Status',
+                        name: 'Acknowledge Released Status'
+                    },
+                    {
+                        key: 'Acknowledge_Released_Time',
+                        name: 'Acknowledge Released Time'
+                    },
+                    {
+                        key: 'Acknowledge_Sent_Status',
+                        name: 'Acknowledge Sent Status'
+                    },
+                    {
+                        key: 'Acknowledge_Sent_Time',
+                        name: 'Acknowledge Sent Time'
+                    },
+                    {
+                        key: 'username',
+                        name: 'Issuer'
+                    },
+                    {
+                        key: 'origin',
+                        name: 'Origin'
                     }
                 ]
             }
