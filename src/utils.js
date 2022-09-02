@@ -44,7 +44,8 @@ const VALUE_EXTRACT_MAP = {
     'STRING': (value) => value.stringValue,
     'ENUMERATED': (value) => value.stringValue,
     'TIMESTAMP': (value) => value.stringValue,
-    'BOOLEAN': (value) => value.booleanValue
+    'BOOLEAN': (value) => value.booleanValue,
+    'BINARY': (value) => value.binaryValue
 };
 
 /*
@@ -258,9 +259,19 @@ function addLimitInformation(parameter, point) {
     }
 }
 
+function flattenObjectArray(array, baseObj = {}) {
+    return array.reduce((obj, item) => {
+        const { value, name } = item;
+        const val = getValue(value, name);
+        obj[item.name] = val;
+        return obj;
+    }, baseObj);
+}
+
 export {
     idToQualifiedName,
     qualifiedNameToId,
+    flattenObjectArray,
     getValue,
     accumulateResults,
     addLimitInformation,
