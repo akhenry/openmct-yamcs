@@ -210,19 +210,16 @@ export default class YamcsHistoricalTelemetryProvider {
 
         const commands = [];
         results.forEach(result => {
-            const {
-                commandName,
-                generationTime,
-                origin
-            } = result;
+            const { generationTime, commandId, attr, assignments } = result;
+            const { origin, sequenceNumber, commandName } = commandId;
             let point = {
                 id,
-                commandName,
                 generationTime,
-                origin
+                origin,
+                sequenceNumber,
+                commandName
             };
 
-            const { attr, assignments } = result;
             point = flattenObjectArray(attr, point);
             point = flattenObjectArray(assignments, point);
             commands.push(point);

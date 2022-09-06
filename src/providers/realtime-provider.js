@@ -174,12 +174,12 @@ export default class RealtimeProvider {
                 return;
             }
 
-            let isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
+            const isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
             let subscriptionDetails;
 
             if (isReply) {
-                let id = data.data.replyTo;
-                let call = data.call;
+                const id = data.data.replyTo;
+                const call = data.call;
                 subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = call;
                 this.subscriptionsByCall.set(call, subscriptionDetails);
@@ -191,7 +191,6 @@ export default class RealtimeProvider {
                     return;
                 }
 
-                // only event is handled differently
                 if (this.isTelemetryMessage(data)) {
                     let values = data.data.values || [];
                     let parentName = subscriptionDetails.domainObject.name;
@@ -213,19 +212,15 @@ export default class RealtimeProvider {
                         subscriptionDetails.callback(point);
                     });
                 } else if (this.isCommandMessage(data)) {
-                    const {
-                        commandName,
-                        generationTime,
-                        origin
-                    } = data.data;
+                    const { generationTime, commandId, attr, assignments } = data.data;
+                    const { origin, sequenceNumber, commandName } = commandId;
                     let point = {
                         id: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
-                        commandName,
                         generationTime,
-                        origin
+                        origin,
+                        sequenceNumber,
+                        commandName
                     };
-
-                    const { attr, assignments } = data.data;
                     point = attr ? flattenObjectArray(attr, point) : point;
                     point = assignments ? flattenObjectArray(assignments, point) : point;
                     subscriptionDetails.callback(point);

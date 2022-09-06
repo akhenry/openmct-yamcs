@@ -162,8 +162,28 @@ export default class YamcsObjectProvider {
                         }
                     },
                     {
+                        key: 'sequenceNumber',
+                        name: 'Sequence Number'
+                    },
+                    {
                         key: 'comment',
                         name: 'Comment'
+                    },
+                    {
+                        key: 'source',
+                        name: 'Source'
+                    },
+                    {
+                        key: 'queue',
+                        name: 'Queue'
+                    },
+                    {
+                        key: 'binary',
+                        name: 'Binary'
+                    },
+                    {
+                        key: 'unprocessedBinary',
+                        name: 'Unprocessed Binary'
                     },
                     {
                         key: 'Acknowledge_Queued_Status',
@@ -196,6 +216,30 @@ export default class YamcsObjectProvider {
                     {
                         key: 'origin',
                         name: 'Origin'
+                    },
+                    {
+                        key: 'CCSDS_Version',
+                        name: 'CCSDS Version'
+                    },
+                    {
+                        key: 'CCSDS_Type',
+                        name: 'CCSDS Type'
+                    },
+                    {
+                        key: 'CCSDS_Sec_Hdr_Flag',
+                        name: 'CCSDS Sec Hdr Flag'
+                    },
+                    {
+                        key: 'CCSDS_APID',
+                        name: 'CCSDS APID'
+                    },
+                    {
+                        key: 'CCSDS_Group_Flags',
+                        name: 'CCSDS Group Flags'
+                    },
+                    {
+                        key: 'Packet_ID',
+                        name: 'Packet ID'
                     }
                 ]
             }
