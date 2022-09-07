@@ -54,16 +54,16 @@ export default class YamcsHistoricalTelemetryProvider {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
 
-        let id = domainObject.identifier.key;
-        let hasEnumValue = this.hasEnumValue(domainObject);
+        const id = domainObject.identifier.key;
+        const hasEnumValue = this.hasEnumValue(domainObject);
 
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax'
             && !hasEnumValue;
 
-        let url = this.buildUrl(id, options);
-        let requestArguments = [id, url, options];
+        const url = this.buildUrl(id, options);
+        const requestArguments = [id, url, options];
 
 
         if (options.isSamples) {
@@ -79,12 +79,13 @@ export default class YamcsHistoricalTelemetryProvider {
         return metadata.values().some(metadatum => metadatum.format === 'enum');
     }
 
-    getHistory(id, url, options) {
+    async getHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
 
         if (!options.onPartialResponse) {
-            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
-                .then((res) => this.convertPointHistory(id, res));
+            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+
+            return this.convertPointHistory(id, results);
         } else {
             options.formatter = (res) => this.convertPointHistory(id, res);
 
@@ -92,12 +93,13 @@ export default class YamcsHistoricalTelemetryProvider {
         }
     }
 
-    getMinMaxHistory(id, url, options) {
+    async getMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
 
         if (!options.onPartialResponse) {
-            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
-                .then((res) => this.convertSampleHistory(id, res));
+            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+
+            return this.convertSampleHistory(id, results);
         } else {
             options.formatter = (res) => this.convertSampleHistory(id, res);
 
@@ -222,6 +224,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
             point = flattenObjectArray(attr, point);
             point = flattenObjectArray(assignments, point);
+
             commands.push(point);
         });
         return commands;

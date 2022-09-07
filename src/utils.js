@@ -145,26 +145,25 @@ function warnUnsupportedType(type) {
  * Returns:
  *     a promise for an array of results accumulated over the requests
  */
-function accumulateResults(url, options, property, soFar, totalLimit, token) {
+async function accumulateResults(url, options, property, soFar, totalLimit, token) {
     if (aborted(options.signal)) {
         return [];
     }
 
     let newUrl = formatUrl(url, token);
 
-    const result = fetch(newUrl, options)
-        .then(res => res.json());
+    const result = await fetch(newUrl, options);
+    await result.json();
 
-    return result.then(res => {
-        if (property in res) {
-            soFar = soFar.concat(res[property]);
-        }
-        if (res.continuationToken===undefined || soFar.length >= totalLimit) {
-            return soFar;
-        }
-        return accumulateResults(url, options, property, soFar, totalLimit,
-            res.continuationToken);
-    });
+    if (property in result) {
+        soFar = soFar.concat(result[property]);
+    }
+
+    if (result.continuationToken === undefined || soFar.length >= totalLimit) {
+        return soFar;
+    }
+
+    return accumulateResults(url, options, property, soFar, totalLimit, result.continuationToken);
 }
 
 async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
