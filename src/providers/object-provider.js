@@ -25,8 +25,10 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import { OBJECT_TYPES, METADATA_TIME_KEY, NAMESPACE } from '../const';
+import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
+import { createCommandsObject } from './commands.js';
+import { createEventsObject } from './events.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -49,12 +51,23 @@ export default class YamcsObjectProvider {
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
 
-        this.createRootObject();
-        this.createEventObject();
-        this.createCommandObject();
+        this.#initialize();
     }
 
-    createRootObject() {
+    #initialize() {
+        this.#createRootObject();
+        const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
+        const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
+
+        this.addObject(commandsObject);
+        this.addObject(eventsObject);
+        this.rootObject.composition.push(
+            eventsObject.identifier,
+            commandsObject.identifier
+        );
+    }
+
+    #createRootObject() {
         this.rootObject = {
             identifier: {
                 key: this.key,
@@ -69,193 +82,14 @@ export default class YamcsObjectProvider {
         this.addObject(this.rootObject);
     }
 
-    createEventObject() {
-        const location = this.openmct.objects.makeKeyString({
-            key: this.key,
-            namespace: this.namespace
-        });
-
-        const identifier = {
-            key: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-            namespace: this.namespace
-        };
-        const eventObject = {
-            identifier,
-            location,
-            name: 'Events',
-            type: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-            telemetry: {
-                values: [
-                    {
-                        key: 'severity',
-                        name: 'Severity'
-                    },
-                    {
-                        key: 'utc',
-                        source: METADATA_TIME_KEY,
-                        name: 'Generation Time',
-                        format: 'iso',
-                        hints: {
-                            domain: 1
-                        }
-                    },
-                    {
-                        key: 'receptionTime',
-                        name: 'Reception Time'
-                    },
-                    {
-                        key: 'seqNumber',
-                        name: 'Sequence Number'
-                    },
-                    {
-                        key: 'message',
-                        name: 'Message'
-                    },
-                    {
-                        key: 'type',
-                        name: 'Type'
-                    },
-                    {
-                        key: 'source',
-                        name: 'Source'
-                    },
-                    {
-                        key: 'createdBy',
-                        name: 'Created By'
-                    }
-                ]
-            }
-        };
-
-        this.addObject(eventObject);
-        this.objects[this.key].composition.push(identifier);
-    }
-
-    createCommandObject() {
-        const location = this.openmct.objects.makeKeyString({
-            key: this.key,
-            namespace: this.namespace
-        });
-
-        const identifier = {
-            key: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
-            namespace: this.namespace
-        };
-        const commandObject = {
-            identifier,
-            location,
-            name: 'Commands',
-            type: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
-            telemetry: {
-                values: [
-                    {
-                        key: 'commandName',
-                        name: 'Command'
-                    },
-                    {
-                        key: 'utc',
-                        source: METADATA_TIME_KEY,
-                        name: 'Generation Time',
-                        format: 'iso',
-                        hints: {
-                            domain: 1
-                        }
-                    },
-                    {
-                        key: 'sequenceNumber',
-                        name: 'Sequence Number'
-                    },
-                    {
-                        key: 'comment',
-                        name: 'Comment'
-                    },
-                    {
-                        key: 'source',
-                        name: 'Source'
-                    },
-                    {
-                        key: 'queue',
-                        name: 'Queue'
-                    },
-                    {
-                        key: 'binary',
-                        name: 'Binary'
-                    },
-                    {
-                        key: 'unprocessedBinary',
-                        name: 'Unprocessed Binary'
-                    },
-                    {
-                        key: 'Acknowledge_Queued_Status',
-                        name: 'Acknowledge Queued Status'
-                    },
-                    {
-                        key: 'Acknowledge_Queued_Time',
-                        name: 'Acknowledge Queued Time'
-                    },
-                    {
-                        key: 'Acknowledge_Released_Status',
-                        name: 'Acknowledge Released Status'
-                    },
-                    {
-                        key: 'Acknowledge_Released_Time',
-                        name: 'Acknowledge Released Time'
-                    },
-                    {
-                        key: 'Acknowledge_Sent_Status',
-                        name: 'Acknowledge Sent Status'
-                    },
-                    {
-                        key: 'Acknowledge_Sent_Time',
-                        name: 'Acknowledge Sent Time'
-                    },
-                    {
-                        key: 'username',
-                        name: 'Issuer'
-                    },
-                    {
-                        key: 'origin',
-                        name: 'Origin'
-                    },
-                    {
-                        key: 'CCSDS_Version',
-                        name: 'CCSDS Version'
-                    },
-                    {
-                        key: 'CCSDS_Type',
-                        name: 'CCSDS Type'
-                    },
-                    {
-                        key: 'CCSDS_Sec_Hdr_Flag',
-                        name: 'CCSDS Sec Hdr Flag'
-                    },
-                    {
-                        key: 'CCSDS_APID',
-                        name: 'CCSDS APID'
-                    },
-                    {
-                        key: 'CCSDS_Group_Flags',
-                        name: 'CCSDS Group Flags'
-                    },
-                    {
-                        key: 'Packet_ID',
-                        name: 'Packet ID'
-                    }
-                ]
-            }
-        };
-
-        this.addObject(commandObject);
-        this.objects[this.key].composition.push(identifier);
-    }
-
     get(identifier) {
-        if (identifier.key === OBJECT_TYPES.EVENTS_OBJECT_TYPE || identifier.key === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
-            return Promise.resolve(this.objects[identifier.key]);
+        const { key } = identifier;
+        if (key !== this.key && Object.hasOwn(this.objects, key)) {
+            return Promise.resolve(this.objects[key]);
         }
 
         return this.getTelemetryDictionary().then(dictionary => {
-            return dictionary[identifier.key];
+            return dictionary[key];
         });
     }
 

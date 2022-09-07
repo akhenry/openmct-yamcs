@@ -26,9 +26,10 @@ import {
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
-    addLimitInformation,
-    flattenObjectArray
+    addLimitInformation
 } from '../utils.js';
+import { commandToTelemetryPoint } from './commands';
+import { eventToTelemetryPoint } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -168,31 +169,31 @@ export default class RealtimeProvider {
         };
 
         this.socket.onmessage = (event) => {
-            let data = JSON.parse(event.data);
+            const message = JSON.parse(event.data);
 
-            if (!this.isSupportedDataType(data.type)) {
+            if (!this.isSupportedDataType(message.type)) {
                 return;
             }
 
-            const isReply = data.type === DATA_TYPES.DATA_TYPE_REPLY;
+            const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
             let subscriptionDetails;
 
             if (isReply) {
-                const id = data.data.replyTo;
-                const call = data.call;
+                const id = message.data.replyTo;
+                const call = message.call;
                 subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = call;
                 this.subscriptionsByCall.set(call, subscriptionDetails);
             } else {
-                subscriptionDetails = this.subscriptionsByCall.get(data.call);
+                subscriptionDetails = this.subscriptionsByCall.get(message.call);
 
                 // possibly cancelled
                 if (!subscriptionDetails) {
                     return;
                 }
 
-                if (this.isTelemetryMessage(data)) {
-                    let values = data.data.values || [];
+                if (this.isTelemetryMessage(message)) {
+                    let values = message.data.values || [];
                     let parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {
@@ -211,21 +212,14 @@ export default class RealtimeProvider {
                         addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);
                     });
-                } else if (this.isCommandMessage(data)) {
-                    const { generationTime, commandId, attr, assignments } = data.data;
-                    const { origin, sequenceNumber, commandName } = commandId;
-                    let point = {
-                        id: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
-                        generationTime,
-                        origin,
-                        sequenceNumber,
-                        commandName
-                    };
-                    point = attr ? flattenObjectArray(attr, point) : point;
-                    point = assignments ? flattenObjectArray(assignments, point) : point;
+                } else if (this.isCommandMessage(message)) {
+                    const point = commandToTelemetryPoint(message.data);
+                    subscriptionDetails.callback(point);
+                } else if (this.isEventMessage(message)) {
+                    const point = eventToTelemetryPoint(message.data);
                     subscriptionDetails.callback(point);
                 } else {
-                    subscriptionDetails.callback(data.data);
+                    subscriptionDetails.callback(message.data);
                 }
             }
         };
@@ -289,4 +283,7 @@ export default class RealtimeProvider {
         return message.type === 'commands';
     }
 
+    isEventMessage(message) {
+        return message.type === 'events';
+    }
 }

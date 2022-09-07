@@ -25,9 +25,10 @@ import {
     getValue,
     addLimitInformation,
     accumulateResults,
-    yieldResults,
-    flattenObjectArray
+    yieldResults
 } from '../utils.js';
+import { commandToTelemetryPoint } from './commands';
+import { eventToTelemetryPoint } from './events';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance) {
@@ -192,55 +193,16 @@ export default class YamcsHistoricalTelemetryProvider {
         return 'parameter';
     }
 
-    convertEventHistory(id, results) {
-        if (!results) {
-            return [];
-        }
-
-        return results.map(e => {
-            return {
-                id,
-                ...e
-            };
-        });
-    }
-
-    convertCommandHistory(id, results) {
-        if (!results) {
-            return [];
-        }
-
-        const commands = [];
-        results.forEach(result => {
-            const { generationTime, commandId, attr, assignments } = result;
-            const { origin, sequenceNumber, commandName } = commandId;
-            let point = {
-                id,
-                generationTime,
-                origin,
-                sequenceNumber,
-                commandName
-            };
-
-            point = flattenObjectArray(attr, point);
-            point = flattenObjectArray(assignments, point);
-
-            commands.push(point);
-        });
-        return commands;
-    }
-
     convertPointHistory(id, results) {
+        if (!results) {
+            return [];
+        }
+
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return this.convertEventHistory(id, results);
+            return results.map(event => eventToTelemetryPoint(event));
         }
         if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
-            return this.convertCommandHistory(id, results);
-        }
-
-
-        if (!(results)) {
-            return [];
+            return results.map(command => commandToTelemetryPoint(command));
         }
 
         let values = [];
