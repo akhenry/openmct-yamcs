@@ -258,7 +258,18 @@ function addLimitInformation(parameter, point) {
     }
 }
 
+/**
+ * Flattens a YAMCS-style array of telemetry objects
+ * into a single object.
+ * @param {Array<Object>} array
+ * @param {Object} baseObj
+ * @returns {Object} flattened object
+ */
 function flattenObjectArray(array, baseObj = {}) {
+    if(!Array.isArray(array)) {
+        throw new Error(`Expected array, got ${typeof array}`);
+    }
+
     return array.reduce((obj, item) => {
         const { value, name } = item;
         const val = getValue(value, name);

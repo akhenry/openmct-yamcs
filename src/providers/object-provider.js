@@ -84,10 +84,12 @@ export default class YamcsObjectProvider {
 
     get(identifier) {
         const { key } = identifier;
+        // If it's a custom telemetry object we've added, return it
         if (key !== this.key && Object.hasOwn(this.objects, key)) {
             return Promise.resolve(this.objects[key]);
         }
 
+        // Otherwise, return a telemetry object from the telemetry dictionary
         return this.getTelemetryDictionary().then(dictionary => {
             return dictionary[key];
         });
