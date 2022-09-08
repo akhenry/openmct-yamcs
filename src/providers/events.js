@@ -82,6 +82,12 @@ export function createEventsObject(openmct, parentKey, namespace) {
     return eventsObject;
 }
 
+/**
+ * Convert raw event data from YAMCS to a format which
+ * can be consumed by Open MCT as telemetry.
+ * @param {Object} command
+ * @returns {Object} telemetryPoint
+ */
 export function eventToTelemetryPoint(event) {
     const {
         severity,

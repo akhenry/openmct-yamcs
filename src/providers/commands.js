@@ -140,6 +140,12 @@ export function createCommandsObject(openmct, parentKey, namespace) {
     return commandObject;
 }
 
+/**
+ * Convert raw command data from YAMCS to a format which
+ * can be consumed by Open MCT as telemetry.
+ * @param {Object} command
+ * @returns {Object} telemetryPoint
+ */
 export function commandToTelemetryPoint(command) {
     const { generationTime, commandId, attr, assignments } = command;
     const { origin, sequenceNumber, commandName } = commandId;
