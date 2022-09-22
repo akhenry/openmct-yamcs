@@ -23,15 +23,17 @@ jobs:
           node-version: "16"
       - run: npm install
       - run: npx playwright@1.25.2 install
-      - run: ls -latr
       - run: npm run build:example
       - run: npm run test:getopensource
+      - run: ls -latr
       - run: npm run test:e2e:quickstart
       - name: Archive test results
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           path: test-results
       - name: Archive html test results
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           path: html-test-results
