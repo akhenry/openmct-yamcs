@@ -7,19 +7,19 @@ on:
       - opened
 
 jobs:
-  e2e-couchdb:
+  yamcs-quickstart-e2e:
     if: ${{ github.event.label.name == 'pr:e2e:quickstart' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "16"
       - uses: actions/checkout@v3
         with:
           repository: yamcs/quickstart
           ref: master
       - run: make all
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
       - run: npm install
       - run: npx playwright@1.25.2 install
       - run: ls -latr
