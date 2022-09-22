@@ -243,18 +243,18 @@ function aborted(signal) {
 
 /*
  * Adds information about limit violations and ranges to a telemetry
- * point object.
+ * datum object.
  */
-function addLimitInformation(parameter, point) {
+function addLimitInformation(parameter, datum) {
     /* Add information for the limit evaluator, if present. */
     if (parameter.monitoringResult) {
-        point.monitoringResult = parameter.monitoringResult;
+        datum.monitoringResult = parameter.monitoringResult;
     }
     if (parameter.rangeCondition) {
-        point.rangeCondition = parameter.rangeCondition;
+        datum.rangeCondition = parameter.rangeCondition;
     }
     if (parameter.alarmRange) {
-        point.alarmRange = parameter.alarmRange;
+        datum.alarmRange = parameter.alarmRange;
     }
 }
 

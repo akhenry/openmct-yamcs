@@ -28,8 +28,8 @@ import {
     getValue,
     addLimitInformation
 } from '../utils.js';
-import { commandToTelemetryPoint } from './commands';
-import { eventToTelemetryPoint } from './events';
+import { commandToTelemetryDatum } from './commands';
+import { eventToTelemetryDatum } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -197,27 +197,27 @@ export default class RealtimeProvider {
                     let parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {
-                        let point = {
+                        let datum = {
                             id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);
 
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
-                            point.value = value;
+                            datum.value = value;
                         } else {
-                            point = { ...point, ...value };
+                            datum = { ...datum, ...value };
                         }
 
-                        addLimitInformation(parameter, point);
-                        subscriptionDetails.callback(point);
+                        addLimitInformation(parameter, datum);
+                        subscriptionDetails.callback(datum);
                     });
                 } else if (this.isCommandMessage(message)) {
-                    const point = commandToTelemetryPoint(message.data);
-                    subscriptionDetails.callback(point);
+                    const datum = commandToTelemetryDatum(message.data);
+                    subscriptionDetails.callback(datum);
                 } else if (this.isEventMessage(message)) {
-                    const point = eventToTelemetryPoint(message.data);
-                    subscriptionDetails.callback(point);
+                    const datum = eventToTelemetryDatum(message.data);
+                    subscriptionDetails.callback(datum);
                 } else {
                     subscriptionDetails.callback(message.data);
                 }

@@ -27,8 +27,8 @@ import {
     accumulateResults,
     yieldResults
 } from '../utils.js';
-import { commandToTelemetryPoint } from './commands';
-import { eventToTelemetryPoint } from './events';
+import { commandToTelemetryDatum } from './commands';
+import { eventToTelemetryDatum } from './events';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance) {
@@ -86,9 +86,9 @@ export default class YamcsHistoricalTelemetryProvider {
         if (!options.onPartialResponse) {
             const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
 
-            return this.convertPointHistory(id, results);
+            return this.convertDataHistory(id, results);
         } else {
-            options.formatter = (res) => this.convertPointHistory(id, res);
+            options.formatter = (res) => this.convertDataHistory(id, res);
 
             return yieldResults(url, options);
         }
@@ -193,37 +193,37 @@ export default class YamcsHistoricalTelemetryProvider {
         return 'parameter';
     }
 
-    convertPointHistory(id, results) {
+    convertDataHistory(id, results) {
         if (!results) {
             return [];
         }
 
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return results.map(event => eventToTelemetryPoint(event));
+            return results.map(event => eventToTelemetryDatum(event));
         }
         if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
-            return results.map(command => commandToTelemetryPoint(command));
+            return results.map(command => commandToTelemetryDatum(command));
         }
 
-        let values = [];
+        let data = [];
         results.forEach(result => {
-            let point = {
+            let datum = {
                 id: result.id.name,
                 timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);
 
             if (result.engValue.type !== AGGREGATE_TYPE) {
-                point.value = value;
+                datum.value = value;
             } else {
-                point = { ...point, ...value };
+                datum = { ...datum, ...value };
             }
 
-            addLimitInformation(result, point);
-            values.push(point);
+            addLimitInformation(result, datum);
+            data.push(datum);
         });
 
-        return values;
+        return data;
     }
 
     convertSampleHistory(id, results) {
