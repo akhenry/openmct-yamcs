@@ -8,13 +8,14 @@ on:
 
 jobs:
   yamcs-quickstart-e2e:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           repository: yamcs/quickstart
           ref: master
-      - run: cd docker;make all
+      - run: cd docker;make all & #run and orphan
       - run: cd ..
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
