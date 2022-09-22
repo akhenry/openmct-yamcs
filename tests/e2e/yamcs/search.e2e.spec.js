@@ -26,8 +26,8 @@ Search Specific Tests
 
 const { test, expect } = require('../opensource/pluginFixtures');
 
-test.describe("Quickstart search tests", async () => {
-    test.only('Validate aggregate in search result', async ({ page }) => {
+test.describe("Quickstart search tests @yamcs", async () => {
+    test('Validate aggregate in search result', async ({ page }) => {
         //Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
