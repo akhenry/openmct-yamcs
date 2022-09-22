@@ -14,8 +14,7 @@ const config = {
         trace: 'on',
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
-        myItemsFolderName: "My Items",
-        failOnConsoleError: false
+        myItemsFolderName: "My Items"
     },
     webServer: {
         command: 'npm run start',
