@@ -48,7 +48,7 @@ test.describe("Quickstart smoke tests @yamcs", async () => {
         await expect(page.locator(':nth-match(:text("Folder"), 2)')).toBeEnabled();
     });
 
-    test('Verify that the default tree is correct', async ({ page }) => {
+    test('Verify that the default yamcs items appear in the tree', async ({ page }) => {
         //Go to baseURL
         await page.goto('./', { waitUntil: 'networkidle' });
 
