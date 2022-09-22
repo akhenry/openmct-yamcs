@@ -6,5 +6,5 @@
 5. cd openmct-yamcs
 6. npm install
 7. npm run build:example
-8. npm run getopenmcte2e
+8. npm run test:getopensource
 9. npm run test:e2e:quickstart
