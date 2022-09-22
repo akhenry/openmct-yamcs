@@ -1,7 +1,9 @@
 dist/
 node_modules/
-tests/e2e/opensource/
 
 package-lock.json
 
+# e2e tests
 tests/html-test-results/
+test-results/
+tests/e2e/opensource/
