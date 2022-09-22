@@ -14,7 +14,8 @@ jobs:
         with:
           repository: yamcs/quickstart
           ref: master
-      - run: make all
+      - run: cd docker;make all
+      - run: cd ..
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
