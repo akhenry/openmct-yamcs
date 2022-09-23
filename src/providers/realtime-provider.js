@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE } from '../const';
+import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY } from '../const';
 import {
     idToQualifiedName,
     qualifiedNameToId,
@@ -113,6 +113,8 @@ export default class RealtimeProvider {
     }
 
     reconnect() {
+        this.subscriptionsByCall.clear();
+
         if (this.reconnectTimeout) {
             return;
         }
@@ -131,7 +133,6 @@ export default class RealtimeProvider {
         if (this.connected) {
             try {
                 this.sendMessage(request);
-                return true;
             } catch (error) {
                 this.connected = false;
                 console.error(error);
@@ -190,16 +191,14 @@ export default class RealtimeProvider {
                 }
 
                 // only event is handled differently
-                if (data.type === DATA_TYPES.DATA_TYPE_EVENTS) {
-                    subscriptionDetails.callback(data.data);
-                } else if (data.data.values) {
-                    let values = data.data.values;
+                if (this.isTelemetryMessage(data)) {
+                    let values = data.data.values || [];
                     let parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {
                         let point = {
                             id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter.generationTimeUTC
+                            timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);
 
@@ -212,6 +211,8 @@ export default class RealtimeProvider {
                         addLimitInformation(parameter, point);
                         subscriptionDetails.callback(point);
                     });
+                } else {
+                    subscriptionDetails.callback(data.data);
                 }
             }
         };
@@ -219,19 +220,25 @@ export default class RealtimeProvider {
         this.socket.onerror = (error) => {
             console.error(error);
             console.warn("Websocket error, attempting reconnect...");
+
             this.connected = false;
+            this.socket = undefined;
+
             this.reconnect();
         };
 
         this.socket.onclose = () => {
-            this.connected = false;
             console.warn("Websocket closed. Attempting to reconnect...");
+
+            this.connected = false;
+            this.socket = undefined;
+
             this.reconnect();
         };
     }
 
     resubscribeToAll() {
-        this.subscriptionsByCall.forEach((subscriptionDetails) => {
+        Object.values(this.subscriptionsById).forEach((subscriptionDetails) => {
             this.sendSubscribeMessage(subscriptionDetails);
         });
     }
@@ -259,6 +266,10 @@ export default class RealtimeProvider {
 
     sendMessage(message) {
         this.socket.send(message);
+    }
+
+    isTelemetryMessage(message) {
+        return message.type === 'parameters';
     }
 
 }

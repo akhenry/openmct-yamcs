@@ -33,41 +33,52 @@ const WEBPACK_CONFIG = {
         } else {
             entries['openmct-yamcs'] = './src/plugin.js';
         }
-	return entries;
+        return entries;
+    },
+    performance: {
+        hints: false
     },
     mode: 'production',
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                enforce: "pre",
+                use: ["source-map-loader"]
+            }
+        ]
+    },
     output: {
+        globalObject: "this",
         filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        library: 'openmctYamcs'
     },
     devtool: devMode ? 'eval-source-map' : 'source-map',
     devServer: {
-        serveIndex: false,
         compress: true,
         port: 9000,
         open: true,
-        openPage: '/example/index.html',
+        static: [{
+            directory: path.join(__dirname, 'example')
+        }, {
+            directory: path.join(__dirname, '/node_modules/openmct/dist'),
+            publicPath: '/node_modules/openmct/dist'
+        }],
         proxy: {
             "/yamcs-proxy/*": {
                 target: "http://localhost:8090/",
                 secure: false,
                 changeOrigin: true,
-                pathRewrite: {'^/yamcs-proxy' : ''}
+                pathRewrite: {'^/yamcs-proxy/' : ''}
             },
-            "/yamcs-proxy-ws-v2/*": {
+            "/yamcs-proxy-ws/*": {
                 target: "ws://localhost:8090/api/websocket",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws-v2' : ''}
-            },
-            "/yamcs-proxy-ws/*": {
-                target: "ws://localhost:8090/",
-                secure: false,
-                changeOrigin: true,
-                ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws' : ''}
+                pathRewrite: {'^/yamcs-proxy-ws/' : ''}
             }
         }
     }

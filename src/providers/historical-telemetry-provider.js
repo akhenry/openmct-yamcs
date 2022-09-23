@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, OBJECT_TYPES } from '../const';
+import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -54,17 +54,28 @@ export default class YamcsHistoricalTelemetryProvider {
         this.standardizeOptions(options, domainObject);
 
         let id = domainObject.identifier.key;
+        let hasEnumValue = this.hasEnumValue(domainObject);
+
+        options.isSamples = !this.isImagery(domainObject)
+            && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
+            && options.strategy === 'minmax'
+            && !hasEnumValue;
+
         let url = this.buildUrl(id, options);
         let requestArguments = [id, url, options];
-        let isMinMax = !this.isImagery(domainObject)
-            && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax';
 
-        if (isMinMax) {
+
+        if (options.isSamples) {
             return this.getMinMaxHistory(...requestArguments);
         }
 
         return this.getHistory(...requestArguments);
+    }
+
+    hasEnumValue(domainObject) {
+        const metadata = this.openmct.telemetry.getMetadata(domainObject);
+
+        return metadata.values().some(metadatum => metadatum.format === 'enum');
     }
 
     getHistory(id, url, options) {
@@ -113,20 +124,28 @@ export default class YamcsHistoricalTelemetryProvider {
                 && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             ) {
                 options.sizeType = 'count';
-                options.isSamples = true;
             }
         }
     }
 
     buildUrl(id, options) {
+        let start = options.start;
+        let end = options.end;
         let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
+
+        // handle exclusive start/stop functionality from yamcs
+        if (options.order === 'asc') {
+            end++;
+        } else if (options.order === 'desc') {
+            start--;
+        }
 
         if (options.isSamples) {
             url += '/samples';
         }
 
-        url += `?start=${new Date(options.start).toISOString()}`;
-        url += `&stop=${new Date(options.end).toISOString()}`;
+        url += `?start=${new Date(start).toISOString()}`;
+        url += `&stop=${new Date(end).toISOString()}`;
         url += `&${options.sizeType}=${options.size}`;
         url += `&order=${options.order}`;
 
@@ -191,7 +210,7 @@ export default class YamcsHistoricalTelemetryProvider {
         results.forEach(result => {
             let point = {
                 id: result.id.name,
-                timestamp: result.generationTimeUTC
+                timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);
 

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2021, United States Government
+ * Open MCT, Copyright (c) 2014-2022, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,29 +20,34 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export const OBJECT_TYPES = {
-    EVENTS_OBJECT_TYPE: 'yamcs.events',
-    TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
-    IMAGE_OBJECT_TYPE: 'yamcs.image',
-    STRING_OBJECT_TYPE: 'yamcs.string',
-    AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate',
-    OPERATOR_STATUS_TYPE: 'yamcs.operatorStatus',
-    POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
-    ALARMS_TYPE: 'yamcs.alarms',
-    GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
-};
+const POLL_QUESTION_TYPE = 'yamcs.pollQuestion';
 
-export const DATA_TYPES = {
-    DATA_TYPE_EVENTS: 'events',
-    DATA_TYPE_TELEMETRY: 'parameters',
-    DATA_TYPE_FAULTS: 'parameters',
-    DATA_TYPE_REPLY: 'reply',
-    DATA_TYPE_ALARMS: 'alarms',
-    DATA_TYPE_GLOBAL_STATUS: 'global-alarm-status'
-};
+export default class PollQuestionParameter {
+    #pollQuestionParameterResolve;
+    #pollQuestionParameterPromise;
+    #pollQuestionParameter;
 
-export const METADATA_TIME_KEY = 'generationTime';
+    constructor() {
+        this.#pollQuestionParameterPromise = new Promise((resolve) => {
+            this.#pollQuestionParameterResolve = resolve;
+        });
+    }
 
-export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
-export const AGGREGATE_TYPE = 'AGGREGATE';
-export const NAMESPACE = 'taxonomy';
+    async isPollQuestionParameterName(parameterName) {
+        return this.#pollQuestionParameterPromise.then(() => {
+            return this.#pollQuestionParameter.qualifiedName === parameterName;
+        });
+    }
+
+    isPollQuestionParameter(parameter) {
+        const aliases = parameter.alias;
+
+        return aliases !== undefined
+            && aliases.some(alias => alias.name === POLL_QUESTION_TYPE);
+    }
+
+    setPollQuestionParameter(parameter) {
+        this.#pollQuestionParameter = parameter;
+        this.#pollQuestionParameterResolve();
+    }
+}
