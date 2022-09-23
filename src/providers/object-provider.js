@@ -167,7 +167,7 @@ export default class YamcsObjectProvider {
         let telemetries = [];
 
         // first check if we match the query
-        if ((hit.name.includes(query))) {
+        if ((hit.qualifiedName.includes(query))) {
             const telemetry = await this.#convertSingleSearchHitToTelemetry(hit.qualifiedName);
 
             telemetries.push(telemetry);
@@ -175,16 +175,12 @@ export default class YamcsObjectProvider {
 
         // Are we an aggregated type?
         if (hit.type?.member) {
-        // check to see members match too
+        // recurse through members to see if they match too
             await Promise.all(hit.type.member.map(async (memberParameter) => {
-                const nameWithoutProject = `${hit.name}.${memberParameter.name}`;
-                if (nameWithoutProject.includes(query)) {
-                    // another hit!
-                    const qualifiedName = `${hit.qualifiedName}.${memberParameter.name}`;
-                    const telemetry = await this.#convertSingleSearchHitToTelemetry(qualifiedName);
-
-                    telemetries.push(telemetry);
-                }
+                const qualifiedName = `${hit.qualifiedName}.${memberParameter.name}`;
+                memberParameter.qualifiedName = qualifiedName;
+                const memberTelemetriesThatMatch = await this.#convertSearchHitToTelemetries(query, memberParameter);
+                telemetries.push(...memberTelemetriesThatMatch);
             }));
         }
 
