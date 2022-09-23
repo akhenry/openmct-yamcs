@@ -107,7 +107,7 @@ export default class LimitProvider {
         const res = await fetch(encodeURI(url));
         const results = await res.json();
 
-        return convertToLimits(results);
+        return convertToLimits(id, results);
     }
 
     convertToLimits(id, results) {
