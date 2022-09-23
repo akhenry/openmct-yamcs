@@ -17,7 +17,7 @@ const config = {
         myItemsFolderName: "My Items"
     },
     webServer: {
-        command: 'npm run start',
+        command: 'NODE_ENV=development npm run start',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
         reuseExistingServer: false
