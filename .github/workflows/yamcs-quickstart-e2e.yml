@@ -30,7 +30,7 @@ jobs:
       - run: npm run test:e2e:quickstart
       - name: view test results
         if: always()
-        run: ls -latr
+        run: ls -latR
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -40,4 +40,4 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          path: html-test-results
+          path: tests/html-test-results
