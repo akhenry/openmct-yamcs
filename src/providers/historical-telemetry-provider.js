@@ -78,25 +78,24 @@ export default class YamcsHistoricalTelemetryProvider {
         return metadata.values().some(metadatum => metadatum.format === 'enum');
     }
 
-    getHistory(id, url, options) {
+    async getHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
 
         if (!options.onPartialResponse) {
-            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
-                .then((res) => this.convertPointHistory(id, res));
+            const res = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+            return this.convertPointHistory(id, res);
         } else {
             options.formatter = (res) => this.convertPointHistory(id, res);
-
             return yieldResults(url, options);
         }
     }
 
-    getMinMaxHistory(id, url, options) {
+    async getMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
 
         if (!options.onPartialResponse) {
-            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
-                .then((res) => this.convertSampleHistory(id, res));
+            const res = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+            return this.convertSampleHistory(id, res);
         } else {
             options.formatter = (res) => this.convertSampleHistory(id, res);
 

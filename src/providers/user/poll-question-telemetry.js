@@ -44,7 +44,8 @@ export default class PollQuestionTelemetry {
         this.#setReady();
     }
     async getTelemetryObject() {
-        return this.#readyPromise.then(() => this.#telemetryObject);
+        await this.#readyPromise;
+        return this.#telemetryObject;
     }
     async setPollQuestion(question) {
         const telemetryObject = await this.getTelemetryObject();

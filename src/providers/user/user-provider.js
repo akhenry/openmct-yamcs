@@ -89,10 +89,10 @@ export default class UserProvider extends EventEmitter {
         const user = await this.getCurrentUser();
         const writeParameters = user.getWriteParameters();
 
-        return Promise.all(writeParameters
-            .map(parameterName => this.pollQuestionParameter.isPollQuestionParameterName(parameterName)))
-            .then(areParametersPollQuestion => areParametersPollQuestion
-                .some(isParameterPollQuestion => isParameterPollQuestion));
+        const areParametersPollQuestion = Promise.all(
+            writeParameters.map(parameterName => this.pollQuestionParameter.isPollQuestionParameterName(parameterName))
+        );
+        return areParametersPollQuestion.some(isParameterPollQuestion => isParameterPollQuestion);
     }
 
     async setPollQuestion(question) {

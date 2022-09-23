@@ -116,7 +116,7 @@ export default class LimitProvider {
             return {};
         }
 
-        return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);;
+        return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);
     }
 
     getLimitFromAlarmRange(id, alarmRange) {
@@ -131,7 +131,7 @@ export default class LimitProvider {
                     color: limitConfig[alarm.level],
                     value: alarm.maxInclusive || alarm.maxExclusive
                 }
-            }
+            };
         });
         return limits;
     }

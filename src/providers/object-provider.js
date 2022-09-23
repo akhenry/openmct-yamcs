@@ -144,14 +144,12 @@ export default class YamcsObjectProvider {
         return type === this.openmct.objects.SEARCH_TYPES.OBJECTS;
     }
 
-    search(query, options) {
+    async search(query, options) {
         const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
         const parametersSearch = this.searchMdbApi('parameters', query, options);
 
-        return Promise.all([spaceSystemsSearch, parametersSearch])
-            .then(([spaceSystemsResults, parametersResults]) => {
-                return [...spaceSystemsResults, ...parametersResults];
-            });
+        const [spaceSystemsResults, parametersResults] = await Promise.all([spaceSystemsSearch, parametersSearch]);
+        return [...spaceSystemsResults, ...parametersResults];
     }
 
     async searchMdbApi(operation, query, options) {
@@ -230,9 +228,11 @@ export default class YamcsObjectProvider {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
-    fetchMdbApi(operation, name='') {
-        return fetch(this.url + 'api/mdb/' + this.instance + '/' + operation + name)
-            .then(res => {return res.json();});
+    async fetchMdbApi(operation, name='') {
+        const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}/${name}`;
+        const response = await fetch(mdbURL);
+        const parsedJSON = await response.json();
+        return parsedJSON;
     }
 
     addSpaceSystem(spaceSystem) {
@@ -310,13 +310,13 @@ export default class YamcsObjectProvider {
     }
 
     addParameter(parameter, qualifiedName, parent, prefix) {
-        let id = qualifiedNameToId(qualifiedName);
-        let name = prefix + parameter.name;
+        const id = qualifiedNameToId(qualifiedName);
+        const name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
             namespace: parent.identifier.namespace
         });
-        let obj = {
+        const obj = {
             identifier: {
                 key: id,
                 namespace: this.namespace
@@ -336,11 +336,11 @@ export default class YamcsObjectProvider {
                 }]
             }
         };
-        let isAggregate = this.isAggregate(parameter);
+        const isAggregate = this.isAggregate(parameter);
         let aggregateHasMembers = false;
 
         if (!isAggregate) {
-            let key = 'value';
+            const key = 'value';
             const telemetryValue = {
                 key,
                 name: 'Value',
@@ -409,7 +409,7 @@ export default class YamcsObjectProvider {
 
         if (aggregateHasMembers) {
             parameter.type.member.forEach(member => {
-                let memberQualifiedName = qualifiedName + '.' + member.name;
+                const memberQualifiedName = qualifiedName + '.' + member.name;
                 /* Use current name as a prefix for the member name. */
                 this.addParameter(member, memberQualifiedName, obj, name + '_');
             });
@@ -417,7 +417,7 @@ export default class YamcsObjectProvider {
     }
 
     addHints(key, obj) {
-        let metadatum = obj.telemetry.values.find(md => md.key === key);
+        const metadatum = obj.telemetry.values.find(md => md.key === key);
 
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};

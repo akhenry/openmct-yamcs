@@ -43,7 +43,7 @@ export default class RealtimeFaultProvider {
         const alarmsUnsubscribe = this.realtimeProvider.subscribe(
             this.ALARMS_OBJECT,
             (response) => {
-                this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback)
+                this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback);
             });
 
         return () => {

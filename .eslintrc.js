@@ -28,9 +28,10 @@ module.exports = {
         "amd": true
     },
     "extends": "eslint:recommended",
-    "parser": "babel-eslint",
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
         "allowImportExportEverywhere": true,
+        "requireConfigFile": false,
         "ecmaVersion": 2015,
         "ecmaFeatures": {
             "impliedStrict": true
