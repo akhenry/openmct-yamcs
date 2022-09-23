@@ -35,6 +35,7 @@ export default class PollQuestionParameter {
 
     async isPollQuestionParameterName(parameterName) {
         await this.#pollQuestionParameterPromise;
+
         return this.#pollQuestionParameter.qualifiedName === parameterName;
     }
 

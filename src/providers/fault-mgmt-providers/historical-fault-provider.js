@@ -16,6 +16,7 @@ export default class HistoricalFaultProvider {
 
         const res = await fetch(url);
         const faultsData = await res.json();
+
         return faultsData.alarms?.map(this.faultModelConverter);
     }
 }

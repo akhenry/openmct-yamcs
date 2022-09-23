@@ -70,6 +70,7 @@ export default class OperatorStatusTelemetry {
     }
     async getPossibleStatuses() {
         await this.#readyPromise;
+
         return Object.values(this.#statusMap).map(status => this.toStatusFromMdbEntry(status));
     }
     addStatus(status) {
@@ -77,16 +78,18 @@ export default class OperatorStatusTelemetry {
     }
     async getTelemetryObjectForRole(role) {
         await this.#readyPromise;
+
         return this.#roleToTelemetryObjectMap[role];
     }
     setTelemetryObjectForRole(role, telemetryObject) {
         this.#roleToTelemetryObjectMap[role] = telemetryObject;
     }
-    async addStatusRole(role) {
+    addStatusRole(role) {
         this.#statusRoles.add(role);
     }
     async getAllStatusRoles() {
         await this.#readyPromise;
+
         return Array.from(this.#statusRoles);
     }
     async getDefaultStatusForRole() {
@@ -96,6 +99,7 @@ export default class OperatorStatusTelemetry {
     }
     toStatusFromMdbEntry(yamcsStatus) {
         return {
+            // eslint-disable-next-line radix
             key: parseInt(yamcsStatus.value),
             label: yamcsStatus.label
         };

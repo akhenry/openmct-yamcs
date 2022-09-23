@@ -68,6 +68,7 @@ export default function createYamcsUser(UserClass) {
             if (!this.objectPrivileges) {
                 return [];
             }
+
             const writeParameters = this.objectPrivileges.find(entry => entry.type === 'WriteParameter')?.object || [];
 
             return writeParameters;

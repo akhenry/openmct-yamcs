@@ -64,7 +64,6 @@ export default class YamcsHistoricalTelemetryProvider {
         let url = this.buildUrl(id, options);
         let requestArguments = [id, url, options];
 
-
         if (options.isSamples) {
             return this.getMinMaxHistory(...requestArguments);
         }
@@ -83,9 +82,11 @@ export default class YamcsHistoricalTelemetryProvider {
 
         if (!options.onPartialResponse) {
             const res = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+
             return this.convertPointHistory(id, res);
         } else {
             options.formatter = (res) => this.convertPointHistory(id, res);
+
             return yieldResults(url, options);
         }
     }
@@ -95,6 +96,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
         if (!options.onPartialResponse) {
             const res = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+
             return this.convertSampleHistory(id, res);
         } else {
             options.formatter = (res) => this.convertSampleHistory(id, res);
@@ -200,7 +202,6 @@ export default class YamcsHistoricalTelemetryProvider {
             return this.convertEventHistory(id, results);
         }
 
-
         if (!(results)) {
             return [];
         }
@@ -216,7 +217,10 @@ export default class YamcsHistoricalTelemetryProvider {
             if (result.engValue.type !== AGGREGATE_TYPE) {
                 point.value = value;
             } else {
-                point = { ...point, ...value };
+                point = {
+                    ...point,
+                    ...value
+                };
             }
 
             addLimitInformation(result, point);

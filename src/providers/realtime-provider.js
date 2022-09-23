@@ -150,6 +150,7 @@ export default class RealtimeProvider {
         if (this.connected) {
             return;
         }
+
         let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
@@ -205,7 +206,10 @@ export default class RealtimeProvider {
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             point.value = value;
                         } else {
-                            point = { ...point, ...value };
+                            point = {
+                                ...point,
+                                ...value
+                            };
                         }
 
                         addLimitInformation(parameter, point);
@@ -254,8 +258,10 @@ export default class RealtimeProvider {
                 console.warn("Error while attempting to send to websocket. Reconnecting...");
 
                 shouldReconnect = true;
+
                 return true;
             }
+
             return false;
         });
 
