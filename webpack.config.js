@@ -60,7 +60,6 @@ const WEBPACK_CONFIG = {
     devServer: {
         compress: true,
         port: 9000,
-        open: true,
         static: [{
             directory: path.join(__dirname, 'example')
         }, {

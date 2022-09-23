@@ -26,15 +26,16 @@ Search Specific Tests
 
 const { test, expect } = require('../opensource/pluginFixtures');
 
-test.describe("Quickstart search tests @yamcs", async () => {
+test.describe("Quickstart search tests @yamcs", () => {
     test('Validate aggregate in search result', async ({ page }) => {
         //Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
         await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').click();
-        //Search for my project
-        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('myproject');
-        // Click text=ADCS_Error_Flag
-        expect(await page.locator('text=ADCS_Error_Flag').click());
+        //Search for Sequence
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('Sequence');
+        await expect(page.locator('[aria-label="Search Result"] >> nth=0')).toContainText("CCSDS_Packet_Sequence");
+        await expect(page.locator('[aria-label="Search Result"] >> nth=1')).toContainText("CCSDS_Packet_Sequence_GroupFlags");
+        await expect(page.locator('[aria-label="Search Result"] >> nth=2')).toContainText("CCSDS_Packet_Sequence_Count");
     });
 });

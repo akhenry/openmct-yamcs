@@ -5,3 +5,4 @@ tests/e2e/opensource/
 package-lock.json
 
 tests/html-test-results/
+test-results
