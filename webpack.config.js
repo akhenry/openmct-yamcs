@@ -33,6 +33,7 @@ const WEBPACK_CONFIG = {
         } else {
             entries['openmct-yamcs'] = './src/plugin.js';
         }
+
         return entries;
     },
     performance: {
@@ -71,14 +72,14 @@ const WEBPACK_CONFIG = {
                 target: "http://localhost:8090/",
                 secure: false,
                 changeOrigin: true,
-                pathRewrite: {'^/yamcs-proxy/' : ''}
+                pathRewrite: {'^/yamcs-proxy/': ''}
             },
             "/yamcs-proxy-ws/*": {
                 target: "ws://localhost:8090/api/websocket",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws/' : ''}
+                pathRewrite: {'^/yamcs-proxy-ws/': ''}
             }
         }
     }

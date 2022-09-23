@@ -153,12 +153,50 @@ export default class YamcsObjectProvider {
         return [...spaceSystemsResults, ...parametersResults];
     }
 
+    async #convertSingleSearchHitToTelemetry(qualifiedName) {
+        const identifier = {
+            key: qualifiedNameToId(qualifiedName),
+            namespace: this.namespace
+        };
+        const telemetry = await this.get(identifier);
+
+        return telemetry;
+    }
+
+    async #convertSearchHitToTelemetries(query, hit) {
+        let telemetries = [];
+
+        // first check if we match the query
+        if ((hit.name.includes(query))) {
+            const telemetry = await this.#convertSingleSearchHitToTelemetry(hit.qualifiedName);
+
+            telemetries.push(telemetry);
+        }
+
+        // Are we an aggregated type?
+        if (hit.type?.member) {
+        // check to see members match too
+            await Promise.all(hit.type.member.map(async (memberParameter) => {
+                const nameWithoutProject = `${hit.name}.${memberParameter.name}`;
+                if (nameWithoutProject.includes(query)) {
+                    // another hit!
+                    const qualifiedName = `${hit.qualifiedName}.${memberParameter.name}`;
+                    const telemetry = await this.#convertSingleSearchHitToTelemetry(qualifiedName);
+
+                    telemetries.push(telemetry);
+                }
+            }));
+        }
+
+        return telemetries;
+    }
+
     async searchMdbApi(operation, query, options) {
         const key = YAMCS_API_MAP[operation];
         const search = await this.fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`);
         const hits = search[key];
 
-        if (hits === undefined) {
+        if (!hits) {
             return [];
         }
 
@@ -166,19 +204,28 @@ export default class YamcsObjectProvider {
         // even though calling get will fetch dictionary if not already loaded
         await this.getTelemetryDictionary();
 
-        const results = await Promise.all(
-            hits.map(async hit => {
-                const identifier = {
-                    key: qualifiedNameToId(hit.qualifiedName),
-                    namespace: this.namespace
-                };
-                const telemetry = await this.get(identifier);
+        // if multiple members match, YAMCS sends us duplicates 🙇‍♂️
+        const hitsWithoutDupes = [];
+        hits.forEach((hit) => {
+            const hitExtant = hitsWithoutDupes.some((existingHit) => {
+                return existingHit.qualifiedName === hit.qualifiedName;
+            });
 
-                return telemetry;
+            if (!hitExtant) {
+                hitsWithoutDupes.push(hit);
+            }
+        });
+
+        const results = await Promise.all(
+            hitsWithoutDupes.map(async hit => {
+                const telemetryResults = await this.#convertSearchHitToTelemetries(query, hit);
+
+                return telemetryResults;
             })
         );
+        const flattenedResults = results.flat();
 
-        return results;
+        return flattenedResults;
     }
 
     async getTelemetryDictionary() {
