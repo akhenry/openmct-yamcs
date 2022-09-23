@@ -28,6 +28,9 @@ jobs:
       - run: npm run test:getopensource
       - run: ls -latr
       - run: npm run test:e2e:quickstart
+      - name: view test results
+        if: always()
+        run: ls -latr
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
