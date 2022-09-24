@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@babel/eslint-parser": "7.18.9",
+    "@babel/core": "7.19.1",
     "sinon": "14.0.0",
     "uuid": "9.0.0",
     "eslint": "8.23.1",
