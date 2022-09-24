@@ -21,8 +21,7 @@ jobs:
         run: |
           cd quickstart/docker
           touch makeout.txt
-          make all > makeout.txt 2>&1 &
-          cd ../..
+          make all &> makeout.txt &
       - run: ls -latR
       - uses: actions/checkout@v3
         with:
@@ -34,7 +33,7 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: ls -latR
+      - run: ls -latr
       - run: npm run test:e2e:quickstart
       - name: Archive makeout.txt
         if: always()
