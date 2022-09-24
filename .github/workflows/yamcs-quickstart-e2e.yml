@@ -16,17 +16,19 @@ jobs:
           repository: yamcs/quickstart
           ref: master
           path: 'quickstart'
-          clean: false
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
+          cd ../..
       - run: ls -latR
-      - uses: actions/checkout@v3
+      - name: Archive makeout.txt #not working due to pathing
+        if: always()
+        uses: actions/upload-artifact@v3
         with:
-          clean: false
-          path: 'openmct-yamcs'
+          path: quickstart/docker/makeout.txt
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: "16"
@@ -34,19 +36,12 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: |
-          pwd
-          ls -latr
-          cd ..
-          ls -latr
-          cd ..
-          ls -latr
       - run: npm run test:e2e:quickstart
-      - name: Archive makeout.txt
+      - name: Archive makeout.txt #not working due to pathing
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          path: /openmct-yamcs/quickstart/docker/makeout.txt
+          path: ~/quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
