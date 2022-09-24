@@ -5,7 +5,7 @@
   "main": "dist/openmct-yamcs.js",
   "scripts": {
     "clean": "rm -rf ./dist ./node_modules ./package-lock.json",
-    "test": "test:getopensource & test:e2e:smoke",
+    "test": "npm run test:getopensource & npm run test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
