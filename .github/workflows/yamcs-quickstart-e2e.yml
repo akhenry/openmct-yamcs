@@ -33,7 +33,13 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: ls -latr
+      - run: |
+          pwd
+          ls -latr
+          cd ..
+          ls -latr
+          cd ..
+          ls -latr
       - run: npm run test:e2e:quickstart
       - name: Archive makeout.txt
         if: always()
