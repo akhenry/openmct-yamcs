@@ -18,6 +18,7 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd docker
+          touch makeout.txt
           make all > makeout.txt 2>&1 &
           cd ..
       - run: ls -latr
@@ -26,7 +27,7 @@ jobs:
         with:
           node-version: "16"
       - run: npm install
-      - run: npx playwright@1.25.2 install chrome
+      - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
       - run: ls -latR
@@ -35,7 +36,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          path: ~/docker/makeout.txt
+          path: docker
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
