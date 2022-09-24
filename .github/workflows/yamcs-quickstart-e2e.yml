@@ -30,9 +30,11 @@ jobs:
       - run: npm run test:getopensource
       - run: ls -latr
       - run: npm run test:e2e:quickstart
-      - name: view test results
+      - name: Archive makeout.txt
         if: always()
-        run: ls -latR
+        uses: actions/upload-artifact@v3
+        with:
+          path: docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
