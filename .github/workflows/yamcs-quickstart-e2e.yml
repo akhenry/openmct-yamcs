@@ -16,6 +16,7 @@ jobs:
           repository: yamcs/quickstart
           ref: master
           path: 'quickstart'
+          clean: false
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
