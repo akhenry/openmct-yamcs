@@ -28,7 +28,7 @@ jobs:
       - run: npx playwright@1.25.2 install
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: ls -latr
+      - run: ls -latR
       - run: npm run test:e2e:quickstart
       - name: Archive makeout.txt
         if: always()
