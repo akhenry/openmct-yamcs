@@ -7,11 +7,20 @@ An example is provided in this repository that can be configured to run against 
  to get you up and running quickly, and should work with no configuration changes if you are running the 
  [YAMCS QuickStart](https://github.com/yamcs/quickstart) server.
 
-### Prerequisites and YAMCS support
-* The YAMCS Quickstart example is assumed to have been installed and to be running successfully. We only intend to support the latest available version of YAMCS. See 
+### Prerequisites
+* The YAMCS Quickstart example is assumed to have been installed and to be running successfully. See 
   https://github.com/yamcs/quickstart
 * [A git client](https://git-scm.com/)
-* [Node 14+](https://nodejs.org/)
+* [NodeJS](https://nodejs.org/)
+
+### Compatibility
+This is a fast moving project and we do our best to support and test what we test and support. 
+
+* Supported NodeJS available in our package.json's `engine` key.
+* Minimum Supported Open MCT version in our package.json's `peerDependencies` key.
+* Minimum YAMCS Version support follows [YAMCS QuickStart](https://github.com/yamcs/quickstart)
+
+If you encounter an issue with our documented compatibility, please file a [GitHub issue](https://github.com/akhenry/openmct-yamcs/issues/new/choose)
 
 ### Installation
 ```

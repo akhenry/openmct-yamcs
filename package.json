@@ -25,6 +25,9 @@
   "engines": {
     "node": ">=14.19.1"
   },
+  "peerDependencies": {
+    "openmct": "^2.0.5"
+  },
   "devDependencies": {
     "@babel/eslint-parser": "7.18.9",
     "sinon": "14.0.0",
