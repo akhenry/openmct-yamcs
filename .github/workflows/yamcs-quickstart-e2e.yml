@@ -15,9 +15,10 @@ jobs:
         with:
           repository: yamcs/quickstart
           ref: master
+          path: 'quickstart'
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          cd docker
+          cd quickstart/docker
           touch makeout.txt
           make all > makeout.txt 2>&1 &
           cd ..
@@ -36,7 +37,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          path: docker
+          path: quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
