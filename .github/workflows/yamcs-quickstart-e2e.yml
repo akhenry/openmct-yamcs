@@ -23,7 +23,7 @@ jobs:
           make all &> makeout.txt &
           cd ../..
       - run: ls -latR
-      - name: Archive makeout.txt #not working due to pathing
+      - name: Archive makeout.txt
         if: always()
         uses: actions/upload-artifact@v3
         with:
@@ -41,7 +41,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          path: ~/quickstart/docker/makeout.txt
+          path: /quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
