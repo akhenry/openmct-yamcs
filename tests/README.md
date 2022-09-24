@@ -11,4 +11,4 @@ This project is using Open MCT's e2e-as-a-dependency model. To learn more, pleas
 7. npx playwright@1.25.2 install
 8. npm run build:example
 9. npm run test:getopensource
-10. npm run test:e2e:quickstart
+10. npm run test:e2e:quickstart:local
