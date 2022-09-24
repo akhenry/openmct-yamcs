@@ -14,10 +14,11 @@ const config = {
         trace: 'on',
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
-        myItemsFolderName: "My Items"
+        myItemsFolderName: "My Items",
+        failOnConsoleError: false
     },
     webServer: {
-        command: 'NODE_ENV=development npm run start',
+        command: 'npm run start',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
         reuseExistingServer: false

@@ -15,9 +15,11 @@ jobs:
         with:
           repository: yamcs/quickstart
           ref: master
-      - run: cd docker;make all &
-      - run: cd ..
-      - run: ls -latr
+      - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
+        run: |
+          cd docker
+          make all > makeout.txt 2>&1 &
+          cd ..
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:

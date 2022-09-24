@@ -7,3 +7,4 @@ package-lock.json
 tests/html-test-results/
 test-results/
 tests/e2e/opensource/
+package-lock.json
