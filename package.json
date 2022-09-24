@@ -5,7 +5,7 @@
   "main": "dist/openmct-yamcs.js",
   "scripts": {
     "clean": "rm -rf ./dist ./node_modules ./package-lock.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "test:getopensource & test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
@@ -22,6 +22,9 @@
   ],
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14.19.1"
+  },
   "devDependencies": {
     "@babel/eslint-parser": "7.18.9",
     "sinon": "14.0.0",
