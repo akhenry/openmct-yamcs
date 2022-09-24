@@ -22,7 +22,7 @@ jobs:
           touch makeout.txt
           make all > makeout.txt 2>&1 &
           cd ../..
-      - run: ls -latr
+      - run: ls -latR
       - uses: actions/checkout@v3
         with:
           clean: false
