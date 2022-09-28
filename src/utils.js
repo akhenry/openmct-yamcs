@@ -150,7 +150,7 @@ function accumulateResults(url, options, property, soFar, totalLimit, token) {
     }
 
     let newUrl = formatUrl(url, token);
-
+    options.priority = 'low';
     const result = fetch(newUrl, options)
         .then(res => res.json());
 
@@ -214,8 +214,10 @@ function getHistoryYieldRequest(signal) {
 
         while (url) {
             url = yield;
-            yield fetch(url, { signal})
-                .then(res => res.json());
+            yield fetch(url, {
+                signal,
+                priority: 'low'
+            }).then(res => res.json());
         }
     }
 

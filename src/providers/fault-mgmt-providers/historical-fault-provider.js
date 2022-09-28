@@ -14,8 +14,9 @@ export default class HistoricalFaultProvider {
     request() {
         let url = `${this.url}api/processors/${this.instance}/realtime/${FAULT_MANAGEMENT_ALARMS}`;
 
-        return fetch(url)
-            .then(res => res.json())
+        return fetch(url, {
+            priority: 'low'
+        }).then(res => res.json())
             .then(faultsData => {
                 return faultsData.alarms?.map(this.faultModelConverter);
             });

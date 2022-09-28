@@ -104,8 +104,9 @@ export default class LimitProvider {
 
         let convertToLimits = (results) => this.convertToLimits(fullId, results);
 
-        return fetch(encodeURI(url))
-            .then(res => res.json())
+        return fetch(encodeURI(url), {
+            priority: 'low'
+        }).then(res => res.json())
             .then(convertToLimits);
     }
 
