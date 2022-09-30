@@ -30,12 +30,12 @@ jobs:
         with:
           path: quickstart/docker/makeout.txt
       - name: "Wait for YAMCS to be ready"
-          uses: mydea/action-wait-for-api@v1
-          with:
-            url: "https://api.example.com/status"
-            method: "GET"
-            timeout: 120000
-            interval: 5
+        uses: mydea/action-wait-for-api@v1
+        with:
+          url: "https://api.example.com/status"
+          method: "GET"
+          timeout: 120000
+          interval: 5
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
