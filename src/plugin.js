@@ -146,6 +146,12 @@ export default function installYamcsPlugin(configuration) {
             cssClass: "icon-generator-events"
         });
 
+        openmct.types.addType(OBJECT_TYPES.COMMANDS_OBJECT_TYPE, {
+            name: "Commands",
+            description: "To view command history",
+            cssClass: "icon-generator-events" // TODO: replace
+        });
+
         openmct.types.addType(OBJECT_TYPES.POLL_QUESTION_TYPE, {
             name: 'Operator Status Poll',
             description: 'Operator status Poll Question',

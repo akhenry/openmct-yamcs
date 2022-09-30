@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 export const OBJECT_TYPES = {
+    COMMANDS_OBJECT_TYPE: 'yamcs.commands',
     EVENTS_OBJECT_TYPE: 'yamcs.events',
     TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
     IMAGE_OBJECT_TYPE: 'yamcs.image',
@@ -33,6 +34,7 @@ export const OBJECT_TYPES = {
 };
 
 export const DATA_TYPES = {
+    DATA_TYPE_COMMANDS: 'commands',
     DATA_TYPE_EVENTS: 'events',
     DATA_TYPE_TELEMETRY: 'parameters',
     DATA_TYPE_FAULTS: 'parameters',

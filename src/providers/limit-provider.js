@@ -43,10 +43,10 @@ export default class LimitProvider {
 
         return {
             /**
-             * Evaluates a telemetry point for limit violations.
+             * Evaluates a telemetry datum for limit violations.
              *
-             * @param {Datum} datum the telemetry point data from the historical or realtime plugin ({@link Datum})
-             * @param {object} valueMetadata metadata about the telemetry point
+             * @param {Datum} datum the telemetry datum from the historical or realtime plugin ({@link Datum})
+             * @param {object} valueMetadata metadata about the telemetry datum
              *
              * @returns {EvaluationResult} ({@link EvaluationResult})
              */
@@ -70,9 +70,9 @@ export default class LimitProvider {
      * Adds limit range information to an object based on the monitoring
      * result.
      *
-     * @param {Datum} datum the telemetry point data from the historical or realtime plugin ({@link Datum})
+     * @param {Datum} datum the telemetry datum from the historical or realtime plugin ({@link Datum})
      * @param {string} result the monitoring result information from Yamcs
-     * @param {object} [valueMetadata] metadata about the telemetry point
+     * @param {object} [valueMetadata] metadata about the telemetry datum
      *
      * @returns {EvaluationResult} ({@link EvaluationResult})
      */
@@ -116,7 +116,7 @@ export default class LimitProvider {
             return {};
         }
 
-        return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);;
+        return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);
     }
 
     getLimitFromAlarmRange(id, alarmRange) {
@@ -131,7 +131,7 @@ export default class LimitProvider {
                     color: limitConfig[alarm.level],
                     value: alarm.maxInclusive || alarm.maxExclusive
                 }
-            }
+            };
         });
         return limits;
     }
