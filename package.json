@@ -28,7 +28,7 @@
     "sinon": "14.0.0",
     "eslint": "8.24.0",
     "eventemitter3": "^4.0.7",
-    "source-map-loader": "^3.0.1",
+    "source-map-loader": "^4.0.0",
     "@playwright/test": "1.25.2",
     "webpack": "^5.72.1",
     "webpack-cli": "^4.9.2",
