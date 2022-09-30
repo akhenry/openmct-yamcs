@@ -22,7 +22,7 @@ jobs:
           touch makeout.txt
           make all &> makeout.txt &
           cd ../..
-          sleep 120
+      - run: find /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/. -name . -o -prune -exec rm -rf -- {} + || true          
       - run: ls -latR
       - name: Archive makeout.txt
         if: always()
