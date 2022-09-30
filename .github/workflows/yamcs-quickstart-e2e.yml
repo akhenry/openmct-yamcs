@@ -30,12 +30,12 @@ jobs:
         with:
           path: quickstart/docker/makeout.txt
       - name: "Wait for YAMCS to be ready"
-        uses: nev7n/wait_for_response@v1
-        with:
-          url: 'https://localhost:8090/api'
-          responseCode: 405 # yamcs api doesn't support HEAD requests, so let's just make sure it's alive
-          timeout: 120000 # 2 minutes
-          interval: 500
+          uses: mydea/action-wait-for-api@v1
+          with:
+            url: "https://api.example.com/status"
+            method: "GET"
+            timeout: 120000
+            interval: 5
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
