@@ -44,7 +44,8 @@ const VALUE_EXTRACT_MAP = {
     'STRING': (value) => value.stringValue,
     'ENUMERATED': (value) => value.stringValue,
     'TIMESTAMP': (value) => value.stringValue,
-    'BOOLEAN': (value) => value.booleanValue
+    'BOOLEAN': (value) => value.booleanValue,
+    'BINARY': (value) => value.binaryValue
 };
 
 /*
@@ -246,26 +247,48 @@ function aborted(signal) {
 
 /*
  * Adds information about limit violations and ranges to a telemetry
- * point object.
+ * datum object.
  */
-function addLimitInformation(parameter, point) {
+function addLimitInformation(parameter, datum) {
     /* Add information for the limit evaluator, if present. */
     if (parameter.monitoringResult) {
-        point.monitoringResult = parameter.monitoringResult;
+        datum.monitoringResult = parameter.monitoringResult;
     }
 
     if (parameter.rangeCondition) {
-        point.rangeCondition = parameter.rangeCondition;
+        datum.rangeCondition = parameter.rangeCondition;
     }
 
     if (parameter.alarmRange) {
-        point.alarmRange = parameter.alarmRange;
+        datum.alarmRange = parameter.alarmRange;
     }
+}
+
+/**
+ * Flattens a YAMCS-style array of telemetry objects
+ * into a single object.
+ * @param {Array<Object>} array
+ * @param {Object} baseObj
+ * @returns {Object} flattened object
+ */
+function flattenObjectArray(array, baseObj = {}) {
+    if (!Array.isArray(array)) {
+        throw new Error(`Expected array, got ${typeof array}`);
+    }
+
+    return array.reduce((obj, item) => {
+        const { value, name } = item;
+        const val = getValue(value, name);
+        obj[item.name] = val;
+
+        return obj;
+    }, baseObj);
 }
 
 export {
     idToQualifiedName,
     qualifiedNameToId,
+    flattenObjectArray,
     getValue,
     accumulateResults,
     addLimitInformation,

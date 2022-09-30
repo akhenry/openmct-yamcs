@@ -25,8 +25,10 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import { OBJECT_TYPES, METADATA_TIME_KEY, NAMESPACE } from '../const';
+import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
+import { createCommandsObject } from './commands.js';
+import { createEventsObject } from './events.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -49,11 +51,23 @@ export default class YamcsObjectProvider {
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
 
-        this.createRootObject();
-        this.createEventObject();
+        this.#initialize();
     }
 
-    createRootObject() {
+    #initialize() {
+        this.#createRootObject();
+        const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
+        const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
+
+        this.addObject(commandsObject);
+        this.addObject(eventsObject);
+        this.rootObject.composition.push(
+            eventsObject.identifier,
+            commandsObject.identifier
+        );
+    }
+
+    #createRootObject() {
         this.rootObject = {
             identifier: {
                 key: this.key,
@@ -68,76 +82,17 @@ export default class YamcsObjectProvider {
         this.addObject(this.rootObject);
     }
 
-    createEventObject() {
-        const location = this.openmct.objects.makeKeyString({
-            key: this.key,
-            namespace: this.namespace
-        });
-
-        const identifier = {
-            key: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-            namespace: this.namespace
-        };
-        const eventObject = {
-            identifier,
-            location,
-            name: 'Events',
-            type: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-            telemetry: {
-                values: [
-                    {
-                        key: 'severity',
-                        name: 'Severity'
-                    },
-                    {
-                        key: 'utc',
-                        source: METADATA_TIME_KEY,
-                        name: 'Generation Time',
-                        format: 'iso',
-                        hints: {
-                            domain: 1
-                        }
-                    },
-                    {
-                        key: 'receptionTime',
-                        name: 'Reception Time'
-                    },
-                    {
-                        key: 'seqNumber',
-                        name: 'Sequence Number'
-                    },
-                    {
-                        key: 'message',
-                        name: 'Message'
-                    },
-                    {
-                        key: 'type',
-                        name: 'Type'
-                    },
-                    {
-                        key: 'source',
-                        name: 'Source'
-                    },
-                    {
-                        key: 'createdBy',
-                        name: 'Created By'
-                    }
-                ]
-            }
-        };
-
-        this.addObject(eventObject);
-        this.objects[this.key].composition.push(identifier);
-    }
-
     async get(identifier) {
-        if (identifier.key === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return Promise.resolve(this.objects[identifier.key]);
+        const { key } = identifier;
+        // If it's a custom telemetry object we've added, return it
+        if (key !== this.key && Object.hasOwn(this.objects, key)) {
+            return this.objects[key];
         }
 
+        // Otherwise, return a telemetry object from the telemetry dictionary
         const dictionary = await this.getTelemetryDictionary();
 
-        return dictionary[identifier.key];
+        return dictionary[key];
     }
 
     supportsSearchType(type) {
