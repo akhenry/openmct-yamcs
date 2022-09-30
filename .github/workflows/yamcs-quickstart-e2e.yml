@@ -18,7 +18,7 @@ jobs:
           path: 'quickstart'
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          echo "address: "0.0.0.0" >> quickstart/src/main/yamcs/etc/yamcs.yaml
+          echo "address: \"0.0.0.0\"" >> quickstart/src/main/yamcs/etc/yamcs.yaml
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
