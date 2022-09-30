@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: yamcs/quickstart
+          repository: unlikelyzero/quickstart
           ref: master
           path: 'quickstart'
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
