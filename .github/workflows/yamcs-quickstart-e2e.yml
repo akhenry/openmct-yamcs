@@ -13,11 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: unlikelyzero/quickstart
+          repository: yamcs/quickstart
           ref: master
           path: 'quickstart'
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
+          echo "address: "0.0.0.0" >> quickstart/src/main/yamcs/etc/yamcs.yaml
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
@@ -28,6 +29,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: quickstart/docker/makeout.txt
+      - name: "Wait for YAMCS to be ready"
+        uses: nev7n/wait_for_response@v1
+        with:
+          url: 'http://localhost:8090/api'
+          responseCode: 200
+          timeout: 10000
+          interval: 500
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
