@@ -23,13 +23,13 @@ jobs:
           touch makeout.txt
           make all &> makeout.txt &
           cd ../..
+          sleep 120
       - run: ls -latR
       - name: Archive makeout.txt
         if: always()
         uses: actions/upload-artifact@v3
         with:
           path: quickstart/docker/makeout.txt
-      - run : sleep 120 # raw timeout to wait for YAMCS to be ready
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
