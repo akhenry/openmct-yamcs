@@ -22,8 +22,10 @@ jobs:
           touch makeout.txt
           make all &> makeout.txt &
           cd ../..
-      - run: find /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/. -name . -o -prune -exec rm -rf -- {} + || true          
       - run: ls -latR
+      - name: Sleep for 2 min while YAMCS starts
+        run: sleep 120s
+        shell: bash
       - name: Archive makeout.txt
         if: always()
         uses: actions/upload-artifact@v3
