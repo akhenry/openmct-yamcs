@@ -44,53 +44,53 @@ export default class LatestTelemetryProvider {
             this.#bulkPromise = this.#deferBatchedGet();
         }
 
-        return this.#bulkPromise
-            .then((datumMap) => {
-                const result = datumMap[yamcsId];
+        try {
+            const datumMap = await this.#bulkPromise;
+            const result = datumMap[yamcsId];
 
-                let openMctStyleDatum = undefined;
+            let openMctStyleDatum = undefined;
 
-                if (result !== undefined) {
-                    if (result.acquisitionStatus !== undefined) {
-                        openMctStyleDatum = {
-                            id: result.id.name,
-                            timestamp: result.generationTime,
-                            value: getValue(result)
-                        };
-                    }
+            if (result !== undefined) {
+                if (result.acquisitionStatus !== undefined) {
+                    openMctStyleDatum = {
+                        id: result.id.name,
+                        timestamp: result.generationTime,
+                        value: getValue(result)
+                    };
                 }
+            }
 
-                return openMctStyleDatum;
-            }).catch((error) => {
-                console.error(error);
-                this.#openmct.notifications.error(`Unable to fetch latest telemetry for ${domainObject.name}`);
+            return openMctStyleDatum;
+        } catch (error) {
+            console.error(error);
+            this.#openmct.notifications.error(`Unable to fetch latest telemetry for ${domainObject.name}`);
 
-                return undefined;
-            });
+            return undefined;
+        }
     }
-    #deferBatchedGet() {
+    async #deferBatchedGet() {
         // We until the next event loop cycle to "collect" all of the get
         // requests triggered in this iteration of the event loop
 
-        return this.#waitOneEventCycle().then(() => {
-            let batchIds = [...new Set(this.#batchIds)];
+        await this.#waitOneEventCycle();
+        let batchIds = [...new Set(this.#batchIds)];
 
-            this.#clearBatch();
+        this.#clearBatch();
 
-            return this.#bulkGet(batchIds);
-        });
+        return this.#bulkGet(batchIds);
+
     }
     async #bulkGet(batchIds) {
-        const yamcsIds = batchIds.map((yamcsId) => { 
-                return {
-                    name: yamcsId
-                }
+        const yamcsIds = batchIds.map((yamcsId) => {
+            return {
+                name: yamcsId
+            };
         });
 
         const requestBody = {
             id: yamcsIds,
             fromCache: true
-        }
+        };
 
         const response = await fetch(this.#buildUrl(), {
             method: 'POST',

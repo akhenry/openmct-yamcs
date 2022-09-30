@@ -27,7 +27,7 @@ If you encounter an issue with our documented compatibility, please file a [GitH
 git clone https://github.com/akhenry/openmct-yamcs.git
 cd openmct-yamcs
 npm install
-npm build:example
+npm run build:example
 npm start
 ```
 

@@ -1,6 +1,5 @@
 import { FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants';
-import { DATA_TYPES, NAMESPACE } from '../../const';
-import { OBJECT_TYPES } from '../../const';
+import { DATA_TYPES, NAMESPACE, OBJECT_TYPES } from '../../const';
 
 export default class RealtimeFaultProvider {
     constructor(faultModelConverter, instance, realtimeTelemetryProvider) {
@@ -43,7 +42,7 @@ export default class RealtimeFaultProvider {
         const alarmsUnsubscribe = this.realtimeProvider.subscribe(
             this.ALARMS_OBJECT,
             (response) => {
-                this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback)
+                this.handleResponse(DATA_TYPES.DATA_TYPE_ALARMS, response, callback);
             });
 
         return () => {

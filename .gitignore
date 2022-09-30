@@ -1,10 +1,13 @@
+# build artifacts and dependencies
 dist/
 node_modules/
 
 package-lock.json
 
-# e2e tests
-tests/html-test-results/
-test-results/
+# e2e test artifacts
 tests/e2e/opensource/
-package-lock.json
+tests/html-test-results/
+test-results
+
+# Misc
+.DS_Store

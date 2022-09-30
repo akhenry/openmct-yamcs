@@ -25,8 +25,10 @@ import {
     accumulateResults
 } from '../utils.js';
 
-import { OBJECT_TYPES, METADATA_TIME_KEY, NAMESPACE } from '../const';
+import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
+import { createCommandsObject } from './commands.js';
+import { createEventsObject } from './events.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -49,11 +51,23 @@ export default class YamcsObjectProvider {
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
 
-        this.createRootObject();
-        this.createEventObject();
+        this.#initialize();
     }
 
-    createRootObject() {
+    #initialize() {
+        this.#createRootObject();
+        const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
+        const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
+
+        this.addObject(commandsObject);
+        this.addObject(eventsObject);
+        this.rootObject.composition.push(
+            eventsObject.identifier,
+            commandsObject.identifier
+        );
+    }
+
+    #createRootObject() {
         this.rootObject = {
             identifier: {
                 key: this.key,
@@ -68,98 +82,72 @@ export default class YamcsObjectProvider {
         this.addObject(this.rootObject);
     }
 
-    createEventObject() {
-        const location = this.openmct.objects.makeKeyString({
-            key: this.key,
-            namespace: this.namespace
-        });
-
-        const identifier = {
-            key: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-            namespace: this.namespace
-        };
-        const eventObject = {
-            identifier,
-            location,
-            name: 'Events',
-            type: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-            telemetry: {
-                values: [
-                    {
-                        key: 'severity',
-                        name: 'Severity'
-                    },
-                    {
-                        key: 'utc',
-                        source: METADATA_TIME_KEY,
-                        name: 'Generation Time',
-                        format: 'iso',
-                        hints: {
-                            domain: 1
-                        }
-                    },
-                    {
-                        key: 'receptionTime',
-                        name: 'Reception Time'
-                    },
-                    {
-                        key: 'seqNumber',
-                        name: 'Sequence Number'
-                    },
-                    {
-                        key: 'message',
-                        name: 'Message'
-                    },
-                    {
-                        key: 'type',
-                        name: 'Type'
-                    },
-                    {
-                        key: 'source',
-                        name: 'Source'
-                    },
-                    {
-                        key: 'createdBy',
-                        name: 'Created By'
-                    }
-                ]
-            }
-        };
-
-        this.addObject(eventObject);
-        this.objects[this.key].composition.push(identifier);
-    }
-
-    get(identifier) {
-        if (identifier.key === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return Promise.resolve(this.objects[identifier.key]);
+    async get(identifier) {
+        const { key } = identifier;
+        // If it's a custom telemetry object we've added, return it
+        if (key !== this.key && Object.hasOwn(this.objects, key)) {
+            return this.objects[key];
         }
 
-        return this.getTelemetryDictionary().then(dictionary => {
-            return dictionary[identifier.key];
-        });
+        // Otherwise, return a telemetry object from the telemetry dictionary
+        const dictionary = await this.getTelemetryDictionary();
+
+        return dictionary[key];
     }
 
     supportsSearchType(type) {
         return type === this.openmct.objects.SEARCH_TYPES.OBJECTS;
     }
 
-    search(query, options) {
+    async search(query, options) {
         const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
         const parametersSearch = this.searchMdbApi('parameters', query, options);
 
-        return Promise.all([spaceSystemsSearch, parametersSearch])
-            .then(([spaceSystemsResults, parametersResults]) => {
-                return [...spaceSystemsResults, ...parametersResults];
-            });
+        const [spaceSystemsResults, parametersResults] = await Promise.all([spaceSystemsSearch, parametersSearch]);
+
+        return [...spaceSystemsResults, ...parametersResults];
+    }
+
+    async #convertSingleSearchHitToTelemetry(qualifiedName) {
+        const identifier = {
+            key: qualifiedNameToId(qualifiedName),
+            namespace: this.namespace
+        };
+        const telemetry = await this.get(identifier);
+
+        return telemetry;
+    }
+
+    async #convertSearchHitToTelemetries(query, hit) {
+        let telemetries = [];
+
+        // first check if we match the query
+        if ((hit.qualifiedName.includes(query))) {
+            const telemetry = await this.#convertSingleSearchHitToTelemetry(hit.qualifiedName);
+
+            telemetries.push(telemetry);
+        }
+
+        // Are we an aggregated type?
+        if (hit.type?.member) {
+        // recurse through members to see if they match too
+            await Promise.all(hit.type.member.map(async (memberParameter) => {
+                const qualifiedName = `${hit.qualifiedName}.${memberParameter.name}`;
+                memberParameter.qualifiedName = qualifiedName;
+                const memberTelemetriesThatMatch = await this.#convertSearchHitToTelemetries(query, memberParameter);
+                telemetries.push(...memberTelemetriesThatMatch);
+            }));
+        }
+
+        return telemetries;
     }
 
     async searchMdbApi(operation, query, options) {
         const key = YAMCS_API_MAP[operation];
-        const search = await this.fetchMdbApi(`${operation}?q=${query}`);
+        const search = await this.fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`);
         const hits = search[key];
 
-        if (hits === undefined) {
+        if (!hits) {
             return [];
         }
 
@@ -167,72 +155,82 @@ export default class YamcsObjectProvider {
         // even though calling get will fetch dictionary if not already loaded
         await this.getTelemetryDictionary();
 
-        const results = await Promise.all(
-            hits.map(async hit => {
-                const identifier = {
-                    key: qualifiedNameToId(hit.qualifiedName),
-                    namespace: this.namespace
-                };
+        // if multiple members match, YAMCS sends us duplicates 🙇‍♂️
+        const hitsWithoutDupes = [];
+        hits.forEach((hit) => {
+            const hitExtant = hitsWithoutDupes.some((existingHit) => {
+                return existingHit.qualifiedName === hit.qualifiedName;
+            });
 
-                return this.get(identifier);
+            if (!hitExtant) {
+                hitsWithoutDupes.push(hit);
+            }
+        });
+
+        const results = await Promise.all(
+            hitsWithoutDupes.map(async hit => {
+                const telemetryResults = await this.#convertSearchHitToTelemetries(query, hit);
+
+                return telemetryResults;
             })
         );
+        const flattenedResults = results.flat();
 
-        return results;
+        return flattenedResults;
     }
 
-    getTelemetryDictionary() {
+    async getTelemetryDictionary() {
         if (this.dictionary !== undefined) {
             return Promise.resolve(this.dictionary);
         }
-        return this.fetchTelemetryDictionary(this.url, this.instance, this.folderName)
-            .then((dictionary) => {
-                this.dictionary = dictionary;
-                this.roleStatusTelemetry.dictionaryLoadComplete();
 
-                return dictionary;
-            });
+        const dictionary = await this.fetchTelemetryDictionary(this.url, this.instance, this.folderName);
+        this.dictionary = dictionary;
+        this.roleStatusTelemetry.dictionaryLoadComplete();
+
+        return dictionary;
     }
 
-    fetchTelemetryDictionary() {
+    async fetchTelemetryDictionary() {
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
 
-        if(this.dictionaryPromise === undefined) {
+        if (this.dictionaryPromise === undefined) {
             let url = this.getMdbUrl('space-systems');
-            this.dictionaryPromise = accumulateResults(url, {}, 'spaceSystems', []).then(spaceSystems => {
-                return accumulateResults(parameterUrl, {}, 'parameters', [])
-                    .then(parameters => {
-                        /* Sort the space systems by name, so that the
-                           children of the root object are in sorted order. */
-                        spaceSystems.sort((a, b) => {
-                            a.name.localeCompare(b.name);
-                        });
-                        spaceSystems.forEach(spaceSystem => {
-                            this.addSpaceSystem(spaceSystem);
-                        });
+            const spaceSystems = this.dictionaryPromise = await accumulateResults(url, {}, 'spaceSystems', []);
 
-                        parameters.forEach(parameter => {
-                            this.addParameterObject(parameter);
-                        });
-
-                        this.dictionaryPromise = undefined;
-
-                        return this.objects;
-                    });
+            const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
+            /* Sort the space systems by name, so that the
+               children of the root object are in sorted order. */
+            spaceSystems.sort((a, b) => {
+                return a.name.localeCompare(b.name);
             });
+            spaceSystems.forEach(spaceSystem => {
+                this.addSpaceSystem(spaceSystem);
+            });
+
+            parameters.forEach(parameter => {
+                this.addParameterObject(parameter);
+            });
+
+            this.dictionaryPromise = undefined;
+
+            return this.objects;
         }
 
         return this.dictionaryPromise;
     }
 
-    getMdbUrl(operation, name='') {
+    getMdbUrl(operation, name = '') {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
-    fetchMdbApi(operation, name='') {
-        return fetch(this.url + 'api/mdb/' + this.instance + '/' + operation + name)
-            .then(res => {return res.json();});
+    async fetchMdbApi(operation, name = '') {
+        const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}${name}`;
+        const response = await fetch(mdbURL);
+        const parsedJSON = await response.json();
+
+        return parsedJSON;
     }
 
     addSpaceSystem(spaceSystem) {
@@ -310,13 +308,13 @@ export default class YamcsObjectProvider {
     }
 
     addParameter(parameter, qualifiedName, parent, prefix) {
-        let id = qualifiedNameToId(qualifiedName);
-        let name = prefix + parameter.name;
+        const id = qualifiedNameToId(qualifiedName);
+        const name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
             namespace: parent.identifier.namespace
         });
-        let obj = {
+        const obj = {
             identifier: {
                 key: id,
                 namespace: this.namespace
@@ -336,11 +334,11 @@ export default class YamcsObjectProvider {
                 }]
             }
         };
-        let isAggregate = this.isAggregate(parameter);
+        const isAggregate = this.isAggregate(parameter);
         let aggregateHasMembers = false;
 
         if (!isAggregate) {
-            let key = 'value';
+            const key = 'value';
             const telemetryValue = {
                 key,
                 name: 'Value',
@@ -381,6 +379,7 @@ export default class YamcsObjectProvider {
                     let rawValue = enumValue.value;
 
                     if (!isNaN(rawValue)) {
+                        // eslint-disable-next-line radix
                         rawValue = parseInt(rawValue);
                     }
 
@@ -409,7 +408,7 @@ export default class YamcsObjectProvider {
 
         if (aggregateHasMembers) {
             parameter.type.member.forEach(member => {
-                let memberQualifiedName = qualifiedName + '.' + member.name;
+                const memberQualifiedName = qualifiedName + '.' + member.name;
                 /* Use current name as a prefix for the member name. */
                 this.addParameter(member, memberQualifiedName, obj, name + '_');
             });
@@ -417,7 +416,7 @@ export default class YamcsObjectProvider {
     }
 
     addHints(key, obj) {
-        let metadatum = obj.telemetry.values.find(md => md.key === key);
+        const metadatum = obj.telemetry.values.find(md => md.key === key);
 
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};
@@ -504,9 +503,9 @@ export default class YamcsObjectProvider {
         /* Built-in Yamcs telemetry does not supply type information. */
         if (
             parameter.type === undefined
-            || (parameter.type.engType==='integer'
-            || parameter.type.engType==='float'
-            || parameter.type.engType==='enumeration')
+            || (parameter.type.engType === 'integer'
+            || parameter.type.engType === 'float'
+            || parameter.type.engType === 'enumeration')
         ) {
             return OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
         }

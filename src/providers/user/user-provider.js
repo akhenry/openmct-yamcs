@@ -45,6 +45,7 @@ export default class UserProvider extends EventEmitter {
             if (subscriptions.length > 0) {
                 subscriptions.forEach(unsubscribe => unsubscribe());
             }
+
             if (this.unsubscribePollQuestion !== undefined) {
                 this.unsubscribePollQuestion();
             }
@@ -89,23 +90,30 @@ export default class UserProvider extends EventEmitter {
         const user = await this.getCurrentUser();
         const writeParameters = user.getWriteParameters();
 
-        return Promise.all(writeParameters
-            .map(parameterName => this.pollQuestionParameter.isPollQuestionParameterName(parameterName)))
-            .then(areParametersPollQuestion => areParametersPollQuestion
-                .some(isParameterPollQuestion => isParameterPollQuestion));
+        const areParametersPollQuestion = await Promise.all(
+            writeParameters.map(parameterName => this.pollQuestionParameter.isPollQuestionParameterName(parameterName))
+        );
+
+        return areParametersPollQuestion.some(isParameterPollQuestion => isParameterPollQuestion);
     }
 
     async setPollQuestion(question) {
-        return this.pollQuestionTelemetry.setPollQuestion(question);
+        const success = await this.pollQuestionTelemetry.setPollQuestion(question);
+
+        return success;
     }
 
     async getStatusForRole(role) {
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
         if (this.unsubscribeStatus[role] === undefined) {
             this.unsubscribeStatus[role] = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
-                this.emit('statusChange', {role, status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)});
+                this.emit('statusChange', {
+                    role,
+                    status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)
+                });
             });
         }
+
         const status = await this.latestTelemetryProvider.requestLatest(statusTelemetryObject);
         if (status !== undefined) {
             return this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, status);
@@ -117,15 +125,21 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getDefaultStatusForRole(role) {
-        return this.roleStatus.getDefaultStatusForRole(role);
+        const status = await this.roleStatus.getDefaultStatusForRole(role);
+
+        return status;
     }
 
     async setStatusForRole(role, status) {
-        return this.roleStatus.setStatusForRole(role, status);
+        const success = await this.roleStatus.setStatusForRole(role, status);
+
+        return success;
     }
 
     async getPossibleStatuses() {
-        return this.roleStatus.getPossibleStatuses();
+        const possibleStatuses = await this.roleStatus.getPossibleStatuses();
+
+        return possibleStatuses;
     }
 
     async getPollQuestion() {
@@ -137,6 +151,7 @@ export default class UserProvider extends EventEmitter {
                 this.emit("pollQuestionChange", formattedPollQuestion);
             });
         }
+
         const pollQuestionTelemetryValue = await this.latestTelemetryProvider.requestLatest(pollQuestionTelemetryObject);
         if (pollQuestionTelemetryValue !== undefined) {
             return this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, pollQuestionTelemetryValue);
@@ -144,7 +159,9 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getAllStatusRoles() {
-        return this.roleStatus.getAllStatusRoles();
+        const statusRoles = await this.roleStatus.getAllStatusRoles();
+
+        return statusRoles;
     }
 
     async getRolesInStatus(status) {
@@ -152,6 +169,7 @@ export default class UserProvider extends EventEmitter {
         const telemetryObjects = await Promise.all(statusRoles.map(role => this.roleStatus.getTelemetryObjectForRole(role)));
         const latestTelemetryValues = await Promise.all(telemetryObjects.map(telemetryObject => this.latestTelemetryProvider.requestLatest(telemetryObject)));
         const latestStatuses = latestTelemetryValues.map((statusTelemetry, i) => this.roleStatus.toStatusFromTelemetry(telemetryObjects[i], statusTelemetry));
+
         return latestStatuses.reduce((rolesInStatus, thisStatus, i) => {
             if (thisStatus.key === status) {
                 rolesInStatus.push(statusRoles[i]);
@@ -168,7 +186,7 @@ export default class UserProvider extends EventEmitter {
 
             this.user = new this.YamcsUser(info);
             this.loggedIn = true;
-        } catch(error) {
+        } catch (error) {
             throw new Error(error);
         }
 

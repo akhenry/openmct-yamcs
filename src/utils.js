@@ -44,7 +44,8 @@ const VALUE_EXTRACT_MAP = {
     'STRING': (value) => value.stringValue,
     'ENUMERATED': (value) => value.stringValue,
     'TIMESTAMP': (value) => value.stringValue,
-    'BOOLEAN': (value) => value.booleanValue
+    'BOOLEAN': (value) => value.booleanValue,
+    'BINARY': (value) => value.binaryValue
 };
 
 /*
@@ -82,8 +83,8 @@ function getValue(item, name) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        let parentName = item.id && item.id.name ?
-            item.id.name : name || '';
+        let parentName = item.id && item.id.name
+            ? item.id.name : name || '';
 
         if (parentName.includes('_')) {
             parentName = parentName.replace('_', '.');
@@ -113,7 +114,10 @@ function getAggregateValues(value, parentName, existing = {}) {
         if (currentValue.type !== AGGREGATE_TYPE) {
             existing[key] = getValue(currentValue);
         } else {
-            existing = { ...existing, ...getAggregateValues(currentValue, key) };
+            existing = {
+                ...existing,
+                ...getAggregateValues(currentValue, key)
+            };
         }
     }
 
@@ -144,26 +148,26 @@ function warnUnsupportedType(type) {
  * Returns:
  *     a promise for an array of results accumulated over the requests
  */
-function accumulateResults(url, options, property, soFar, totalLimit, token) {
+async function accumulateResults(url, options, property, soFar, totalLimit, token) {
     if (aborted(options.signal)) {
         return [];
     }
 
     let newUrl = formatUrl(url, token);
 
-    const result = fetch(newUrl, options)
-        .then(res => res.json());
+    const fetchResult = await fetch(newUrl, options);
+    const result = await fetchResult.json();
 
-    return result.then(res => {
-        if (property in res) {
-            soFar = soFar.concat(res[property]);
-        }
-        if (res.continuationToken===undefined || soFar.length >= totalLimit) {
-            return soFar;
-        }
-        return accumulateResults(url, options, property, soFar, totalLimit,
-            res.continuationToken);
-    });
+    if (property in result) {
+        soFar = soFar.concat(result[property]);
+    }
+
+    if (result.continuationToken === undefined || soFar.length >= totalLimit) {
+        return soFar;
+    }
+
+    return accumulateResults(url, options, property, soFar, totalLimit,
+        result.continuationToken);
 }
 
 async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
@@ -243,24 +247,48 @@ function aborted(signal) {
 
 /*
  * Adds information about limit violations and ranges to a telemetry
- * point object.
+ * datum object.
  */
-function addLimitInformation(parameter, point) {
+function addLimitInformation(parameter, datum) {
     /* Add information for the limit evaluator, if present. */
     if (parameter.monitoringResult) {
-        point.monitoringResult = parameter.monitoringResult;
+        datum.monitoringResult = parameter.monitoringResult;
     }
+
     if (parameter.rangeCondition) {
-        point.rangeCondition = parameter.rangeCondition;
+        datum.rangeCondition = parameter.rangeCondition;
     }
+
     if (parameter.alarmRange) {
-        point.alarmRange = parameter.alarmRange;
+        datum.alarmRange = parameter.alarmRange;
     }
+}
+
+/**
+ * Flattens a YAMCS-style array of telemetry objects
+ * into a single object.
+ * @param {Array<Object>} array
+ * @param {Object} baseObj
+ * @returns {Object} flattened object
+ */
+function flattenObjectArray(array, baseObj = {}) {
+    if (!Array.isArray(array)) {
+        throw new Error(`Expected array, got ${typeof array}`);
+    }
+
+    return array.reduce((obj, item) => {
+        const { value, name } = item;
+        const val = getValue(value, name);
+        obj[item.name] = val;
+
+        return obj;
+    }, baseObj);
 }
 
 export {
     idToQualifiedName,
     qualifiedNameToId,
+    flattenObjectArray,
     getValue,
     accumulateResults,
     addLimitInformation,
