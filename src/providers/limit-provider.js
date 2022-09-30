@@ -1,6 +1,6 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
 import { idToQualifiedName } from "../utils";
-import limitConfig  from "../limits-config.json";
+import limitConfig from "../limits-config.json";
 
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
@@ -97,16 +97,17 @@ export default class LimitProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
-    getLimitsForParameter(id, fullId) {
+    async getLimitsForParameter(id, fullId) {
         let url = `${this.url}api/archive/${this.instance}`;
         url += '/parameters' + idToQualifiedName(id);
         url += '?limit=1&order=desc';
 
         let convertToLimits = (results) => this.convertToLimits(fullId, results);
 
-        return fetch(encodeURI(url))
-            .then(res => res.json())
-            .then(convertToLimits);
+        const res = await fetch(encodeURI(url));
+        const results = await res.json();
+
+        return convertToLimits(id, results);
     }
 
     convertToLimits(id, results) {
@@ -133,6 +134,7 @@ export default class LimitProvider {
                 }
             };
         });
+
         return limits;
     }
 

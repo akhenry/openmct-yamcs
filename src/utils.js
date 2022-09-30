@@ -83,8 +83,8 @@ function getValue(item, name) {
     }
 
     if (value.type === AGGREGATE_TYPE) {
-        let parentName = item.id && item.id.name ?
-            item.id.name : name || '';
+        let parentName = item.id && item.id.name
+            ? item.id.name : name || '';
 
         if (parentName.includes('_')) {
             parentName = parentName.replace('_', '.');
@@ -114,7 +114,10 @@ function getAggregateValues(value, parentName, existing = {}) {
         if (currentValue.type !== AGGREGATE_TYPE) {
             existing[key] = getValue(currentValue);
         } else {
-            existing = { ...existing, ...getAggregateValues(currentValue, key) };
+            existing = {
+                ...existing,
+                ...getAggregateValues(currentValue, key)
+            };
         }
     }
 
@@ -152,8 +155,8 @@ async function accumulateResults(url, options, property, soFar, totalLimit, toke
 
     let newUrl = formatUrl(url, token);
 
-    const result = await fetch(newUrl, options);
-    await result.json();
+    const fetchResult = await fetch(newUrl, options);
+    const result = await fetchResult.json();
 
     if (property in result) {
         soFar = soFar.concat(result[property]);
@@ -163,7 +166,8 @@ async function accumulateResults(url, options, property, soFar, totalLimit, toke
         return soFar;
     }
 
-    return accumulateResults(url, options, property, soFar, totalLimit, result.continuationToken);
+    return accumulateResults(url, options, property, soFar, totalLimit,
+        result.continuationToken);
 }
 
 async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
@@ -250,9 +254,11 @@ function addLimitInformation(parameter, datum) {
     if (parameter.monitoringResult) {
         datum.monitoringResult = parameter.monitoringResult;
     }
+
     if (parameter.rangeCondition) {
         datum.rangeCondition = parameter.rangeCondition;
     }
+
     if (parameter.alarmRange) {
         datum.alarmRange = parameter.alarmRange;
     }
@@ -266,7 +272,7 @@ function addLimitInformation(parameter, datum) {
  * @returns {Object} flattened object
  */
 function flattenObjectArray(array, baseObj = {}) {
-    if(!Array.isArray(array)) {
+    if (!Array.isArray(array)) {
         throw new Error(`Expected array, got ${typeof array}`);
     }
 
@@ -274,6 +280,7 @@ function flattenObjectArray(array, baseObj = {}) {
         const { value, name } = item;
         const val = getValue(value, name);
         obj[item.name] = val;
+
         return obj;
     }, baseObj);
 }

@@ -14,6 +14,7 @@ const typeMap = {
 };
 
 export const SUBSCRIBE = buildSubscribeMessages();
+// eslint-disable-next-line func-style
 export const UNSUBSCRIBE = (subscriptionDetails) => {
     return `{
         "type": "cancel",
