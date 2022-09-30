@@ -29,13 +29,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: quickstart/docker/makeout.txt
-      - name: "Wait for YAMCS to be ready"
-        uses: mydea/action-wait-for-api@v1
-        with:
-          url: "http://localhost:8090/api"
-          method: "GET"
-          timeout: 120
-          interval: 5
+      - run : sleep 120 # raw timeout to wait for YAMCS to be ready
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
