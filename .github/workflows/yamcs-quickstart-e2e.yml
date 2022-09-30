@@ -34,7 +34,7 @@ jobs:
         with:
           url: 'http://localhost:8090/api'
           responseCode: 200
-          timeout: 60000 # 1 minute
+          timeout: 120000 # 2 minutes
           interval: 500
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
