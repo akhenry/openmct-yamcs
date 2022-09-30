@@ -33,7 +33,7 @@ jobs:
         uses: nev7n/wait_for_response@v1
         with:
           url: 'http://localhost:8090/api'
-          responseCode: 200
+          responseCode: 405 # yamcs api doesn't support HEAD requests, so let's just make sure it's alive
           timeout: 120000 # 2 minutes
           interval: 500
       - uses: actions/checkout@v3
