@@ -34,7 +34,7 @@ jobs:
         with:
           url: "http://localhost:8090/api"
           method: "GET"
-          timeout: 120000
+          timeout: 120
           interval: 5
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
