@@ -121,8 +121,8 @@ export default class YamcsObjectProvider {
     async #convertSearchHitToTelemetries(query, hit) {
         let telemetries = [];
 
-        // first check if we match the query
-        if ((hit.qualifiedName.includes(query))) {
+        // first check if we match the query in any case
+        if ((hit.qualifiedName.toLowerCase().includes(query.toLowerCase()))) {
             const telemetry = await this.#convertSingleSearchHitToTelemetry(hit.qualifiedName);
 
             telemetries.push(telemetry);
