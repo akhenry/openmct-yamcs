@@ -27,4 +27,3 @@ Closes <!--- Insert Issue Number(s) this PR addresses. Start by typing # will op
 * [ ] Commit messages meet standards?
 * [ ] Has associated issue been labelled unverified? (only applicable if this PR closes the issue)
 * [ ] Has associated issue been labelled bug? (only applicable if this PR is for a bug fix)
-](https://github.com/nasa/openmct/edit/master/.github/PULL_REQUEST_TEMPLATE.md)
