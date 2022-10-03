@@ -1,4 +1,4 @@
-[<!--- Note: Please open the PR in draft form until you are ready for active review. -->
+<!--- Note: Please open the PR in draft form until you are ready for active review. -->
 Closes <!--- Insert Issue Number(s) this PR addresses. Start by typing # will open a dropdown of recent issues. Note: this does not work on PRs which target release branches -->
 
 ### Describe your changes:
