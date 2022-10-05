@@ -1,0 +1,36 @@
+name: "yamcs-quickstart-e2e"
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - labeled
+      - opened
+
+jobs:
+  e2e-couchdb:
+    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - uses: actions/checkout@v3
+        with:
+          repository: yamcs/quickstart
+          ref: master
+      - run: make all
+      - run: npm install
+      - run: npx playwright@1.25.2 install
+      - run: ls -latr
+      - run: npm run build:example
+      - run: npm run test:getopensource
+      - run: npm run test:e2e:quickstart
+      - name: Archive test results
+        uses: actions/upload-artifact@v3
+        with:
+          path: test-results
+      - name: Archive html test results
+        uses: actions/upload-artifact@v3
+        with:
+          path: html-test-results

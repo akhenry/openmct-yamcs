@@ -11,14 +11,14 @@ export default class HistoricalFaultProvider {
         return domainObject.type === FAULT_MANAGEMENT_TYPE;
     }
 
-    request() {
+    async request() {
         let url = `${this.url}api/processors/${this.instance}/realtime/${FAULT_MANAGEMENT_ALARMS}`;
 
-        return fetch(url, {
+        const res = await fetch(url, {
             priority: 'low'
-        }).then(res => res.json())
-            .then(faultsData => {
-                return faultsData.alarms?.map(this.faultModelConverter);
-            });
+        });
+        const faultsData = await res.json();
+
+        return faultsData.alarms?.map(this.faultModelConverter);
     }
 }

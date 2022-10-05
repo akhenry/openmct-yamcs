@@ -1,6 +1,7 @@
 import { OBJECT_TYPES, DATA_TYPES } from '../const';
 
 const typeMap = {
+    [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
     [OBJECT_TYPES.EVENTS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_EVENTS,
     [OBJECT_TYPES.TELEMETRY_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_TELEMETRY,
     [OBJECT_TYPES.STRING_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_TELEMETRY,
@@ -13,6 +14,7 @@ const typeMap = {
 };
 
 export const SUBSCRIBE = buildSubscribeMessages();
+// eslint-disable-next-line func-style
 export const UNSUBSCRIBE = (subscriptionDetails) => {
     return `{
         "type": "cancel",
@@ -30,7 +32,15 @@ function buildSubscribeMessages() {
         subscriptionMessages[objectType] = (subscriptionDetails) => {
             let message;
 
-            if (isEventOrAlarmType(objectType)) {
+            if (isEventType(objectType)) {
+                message = `{
+                    "type": "${dataType}",
+                    "id": "${subscriptionDetails.subscriptionId}",
+                    "options": {
+                        "instance": "${subscriptionDetails.instance}"
+                    }
+                }`;
+            } else if (isAlarmType(objectType) || isCommandType(objectType)) {
                 message = `{
                     "type": "${dataType}",
                     "id": "${subscriptionDetails.subscriptionId}",
@@ -61,8 +71,15 @@ function buildSubscribeMessages() {
     return subscriptionMessages;
 }
 
-function isEventOrAlarmType(type) {
-    return type === OBJECT_TYPES.EVENTS_OBJECT_TYPE
-        || type === OBJECT_TYPES.ALARMS_TYPE
+function isEventType(type) {
+    return type === OBJECT_TYPES.EVENTS_OBJECT_TYPE;
+}
+
+function isAlarmType(type) {
+    return type === OBJECT_TYPES.ALARMS_TYPE
         || type === OBJECT_TYPES.GLOBAL_STATUS_TYPE;
+}
+
+function isCommandType(type) {
+    return type === OBJECT_TYPES.COMMANDS_OBJECT_TYPE;
 }

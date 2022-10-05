@@ -27,6 +27,8 @@ import {
     accumulateResults,
     yieldResults
 } from '../utils.js';
+import { commandToTelemetryDatum } from './commands';
+import { eventToTelemetryDatum } from './events';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance) {
@@ -53,17 +55,16 @@ export default class YamcsHistoricalTelemetryProvider {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
 
-        let id = domainObject.identifier.key;
-        let hasEnumValue = this.hasEnumValue(domainObject);
+        const id = domainObject.identifier.key;
+        const hasEnumValue = this.hasEnumValue(domainObject);
 
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax'
             && !hasEnumValue;
 
-        let url = this.buildUrl(id, options);
-        let requestArguments = [id, url, options];
-
+        const url = this.buildUrl(id, options);
+        const requestArguments = [id, url, options];
 
         if (options.isSamples) {
             return this.getMinMaxHistory(...requestArguments);
@@ -78,25 +79,27 @@ export default class YamcsHistoricalTelemetryProvider {
         return metadata.values().some(metadatum => metadatum.format === 'enum');
     }
 
-    getHistory(id, url, options) {
+    async getHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
 
         if (!options.onPartialResponse) {
-            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
-                .then((res) => this.convertPointHistory(id, res));
+            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+
+            return this.convertDataHistory(id, results);
         } else {
-            options.formatter = (res) => this.convertPointHistory(id, res);
+            options.formatter = (res) => this.convertDataHistory(id, res);
 
             return yieldResults(url, options);
         }
     }
 
-    getMinMaxHistory(id, url, options) {
+    async getMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
 
         if (!options.onPartialResponse) {
-            return accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize)
-                .then((res) => this.convertSampleHistory(id, res));
+            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+
+            return this.convertSampleHistory(id, results);
         } else {
             options.formatter = (res) => this.convertSampleHistory(id, res);
 
@@ -172,6 +175,10 @@ export default class YamcsHistoricalTelemetryProvider {
             return 'events';
         }
 
+        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+            return 'commands';
+        }
+
         return 'parameters' + idToQualifiedName(id);
     }
 
@@ -180,51 +187,52 @@ export default class YamcsHistoricalTelemetryProvider {
             return 'event';
         }
 
+        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+            return 'entry';
+        }
+
         return 'parameter';
     }
 
-    convertEventHistory(id, results) {
+    convertDataHistory(id, results) {
         if (!results) {
             return [];
         }
 
-        return results.map(e => {
-            return {
-                id,
-                ...e
-            };
-        });
-    }
-
-    convertPointHistory(id, results) {
         if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
-            return this.convertEventHistory(id, results);
+            return results.map(event => eventToTelemetryDatum(event));
         }
 
+        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+            return results.map(command => commandToTelemetryDatum(command));
+        }
 
         if (!(results)) {
             return [];
         }
 
-        let values = [];
+        let data = [];
         results.forEach(result => {
-            let point = {
+            let datum = {
                 id: result.id.name,
                 timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);
 
             if (result.engValue.type !== AGGREGATE_TYPE) {
-                point.value = value;
+                datum.value = value;
             } else {
-                point = { ...point, ...value };
+                datum = {
+                    ...datum,
+                    ...value
+                };
             }
 
-            addLimitInformation(result, point);
-            values.push(point);
+            addLimitInformation(result, datum);
+            data.push(datum);
         });
 
-        return values;
+        return data;
     }
 
     convertSampleHistory(id, results) {
