@@ -23,8 +23,8 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@babel/core": "7.19.1",
-    "@babel/eslint-parser": "7.18.9",
+    "@babel/core": "7.19.3",
+    "@babel/eslint-parser": "7.19.1",
     "sinon": "14.0.0",
     "eslint": "8.24.0",
     "eventemitter3": "^4.0.7",
