@@ -29,6 +29,34 @@ function qualifiedNameToId(name) {
     return name.replace(/\//g, '~');
 }
 
+/**
+ * Convert an object identifier into a , ex:
+ * {namespace: 'scratch', name: 'me'} ==> 'scratch/root'
+ *
+ * Idempotent
+ *
+ * @param objectId
+ * @returns String
+ */
+function joinObjectId(objectId) {
+    if (!objectId) {
+        throw new Error("Cannot make string from null identifier");
+    }
+
+    if (typeof objectId === 'string') {
+        return objectId;
+    }
+
+    if (!objectId.namespace) {
+        return objectId.name;
+    }
+
+    return [
+        objectId.namespace,
+        objectId.name
+    ].join('/');
+}
+
 const VALUE_EXTRACT_MAP = {
     'UINT64': (value) => value.uint64Value,
     'INT64': (value) => value.int64Value,
@@ -288,6 +316,7 @@ function flattenObjectArray(array, baseObj = {}) {
 export {
     idToQualifiedName,
     qualifiedNameToId,
+    joinObjectId,
     flattenObjectArray,
     getValue,
     accumulateResults,
