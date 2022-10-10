@@ -27,7 +27,7 @@ Search Specific Tests
 const { test, expect } = require('../opensource/pluginFixtures');
 
 test.describe("Quickstart historical request tests @yamcs", () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(({ page }) => {
         return page.addInitScript(() => {
             window.__nativeFetch = window.fetch;
 
@@ -57,7 +57,7 @@ test.describe("Quickstart historical request tests @yamcs", () => {
                 const url = args[0];
                 const options = args[1];
 
-                return url.includes('api/archive/myproject/parameters/myproject/Height') 
+                return url.includes('api/archive/myproject/parameters/myproject/Height')
                     && options.priority === 'low';
             });
         });
