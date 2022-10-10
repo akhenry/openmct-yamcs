@@ -68,13 +68,13 @@ const WEBPACK_CONFIG = {
         }],
         proxy: {
             "/yamcs-proxy/*": {
-                target: "http://localhost:8090/",
+                target: "http://0.0.0.0:8090/",
                 secure: false,
                 changeOrigin: true,
                 pathRewrite: {'^/yamcs-proxy/': ''}
             },
             "/yamcs-proxy-ws/*": {
-                target: "ws://localhost:8090/api/websocket",
+                target: "ws://0.0.0.0:8090/api/websocket",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
