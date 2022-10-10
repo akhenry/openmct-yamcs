@@ -32,9 +32,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "16"
-      - name: Sleep for 3 min while YAMCS starts
-        run: sleep 180s
-        shell: bash
       - run: npm install
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
