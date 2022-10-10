@@ -26,7 +26,7 @@
     "@babel/core": "7.19.3",
     "@babel/eslint-parser": "7.19.1",
     "sinon": "14.0.0",
-    "eslint": "8.24.0",
+    "eslint": "8.25.0",
     "eventemitter3": "^4.0.7",
     "source-map-loader": "^3.0.1",
     "@playwright/test": "1.25.2",
