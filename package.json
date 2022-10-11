@@ -15,7 +15,8 @@
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
     "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
-    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/"
+    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "wait-for-yamcs": "wait-on http-get://localhost:8090/"
   },
   "keywords": [
     "openmct",
@@ -40,6 +41,7 @@
     "@playwright/test": "1.25.2",
     "webpack": "5.74.0",
     "webpack-cli": "4.10.0",
-    "webpack-dev-server": "4.11.1"
+    "webpack-dev-server": "4.11.1",
+    "wait-on": "6.0.1"
   }
 }
