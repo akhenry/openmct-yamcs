@@ -410,7 +410,7 @@ export default class YamcsObjectProvider {
                 telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
                     let rawValue = enumValue.value;
 
-                    if (!(Number.isNaN(rawValue))) {
+                    if (!(isNaN(rawValue))) {
                         // eslint-disable-next-line radix
                         rawValue = parseInt(rawValue);
                     }
