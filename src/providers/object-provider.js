@@ -410,7 +410,7 @@ export default class YamcsObjectProvider {
                 telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
                     let rawValue = enumValue.value;
 
-                    if (!Number.isNaN(rawValue)) {
+                    if (!(Number.isNaN(rawValue))) {
                         // eslint-disable-next-line radix
                         rawValue = parseInt(rawValue);
                     }
@@ -429,7 +429,7 @@ export default class YamcsObjectProvider {
             aggregateHasMembers = this.#aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
-                let memberMetadata = this.#formatAggregateMembers(parameter.type.member, name.replace('_', '.'));
+                const memberMetadata = this.#formatAggregateMembers(parameter.type.member, name.replace('_', '.'));
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
@@ -460,23 +460,11 @@ export default class YamcsObjectProvider {
     }
 
     #isAggregate(parameter) {
-        let isAggregate = false;
-
-        if (parameter.type) {
-            isAggregate = parameter.type.engType === 'aggregate';
-        }
-
-        return isAggregate;
+        return parameter?.type?.engType === 'aggregate';
     }
 
     #isEnumeration(parameter) {
-        let isEnumeration = false;
-
-        if (parameter.type) {
-            isEnumeration = parameter.type.engType === 'enumeration';
-        }
-
-        return isEnumeration;
+        return parameter?.type?.engType === 'enumeration';
     }
 
     #formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
@@ -512,13 +500,7 @@ export default class YamcsObjectProvider {
     }
 
     #aggregateHasMembers(parameter) {
-        let hasMembers = false;
-
-        if (this.#isAggregate(parameter) && parameter.type.member) {
-            hasMembers = true;
-        }
-
-        return hasMembers;
+        return this.#isAggregate(parameter) && parameter.type.member;
     }
 
     #getParameterType(parameter) {
