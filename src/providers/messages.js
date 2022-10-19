@@ -30,7 +30,15 @@ function buildSubscribeMessages() {
         subscriptionMessages[objectType] = (subscriptionDetails) => {
             let message;
 
-            if (isEventOrAlarmType(objectType)) {
+            if (isEventType(objectType)) {
+                message = `{
+                    "type": "${dataType}",
+                    "id": "${subscriptionDetails.subscriptionId}",
+                    "options": {
+                        "instance": "${subscriptionDetails.instance}"
+                    }
+                }`;
+            } else if (isAlarmType(objectType)) {
                 message = `{
                     "type": "${dataType}",
                     "id": "${subscriptionDetails.subscriptionId}",
@@ -61,8 +69,11 @@ function buildSubscribeMessages() {
     return subscriptionMessages;
 }
 
-function isEventOrAlarmType(type) {
-    return type === OBJECT_TYPES.EVENTS_OBJECT_TYPE
-        || type === OBJECT_TYPES.ALARMS_TYPE
+function isEventType(type) {
+    return type === OBJECT_TYPES.EVENTS_OBJECT_TYPE;
+}
+
+function isAlarmType(type) {
+    return type === OBJECT_TYPES.ALARMS_TYPE
         || type === OBJECT_TYPES.GLOBAL_STATUS_TYPE;
 }
