@@ -54,8 +54,7 @@ export default class YamcsHistoricalTelemetryProvider {
     request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
-        const isRealtime = this.openmct.time.clock();
-        if ((options.strategy === 'latest') && isRealtime) {
+        if ((options.strategy === 'latest') && options.timeContext?.isRealtime) {
             console.debug(`🍇 Latest requested in realtime, using cached websocket data`);
 
             return [];
