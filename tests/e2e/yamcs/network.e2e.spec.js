@@ -41,16 +41,15 @@ test.describe("Quickstart network requests @yamcs", () => {
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Network requests should be zero in real-time mode (using websocket cache)
-        expect(filterNonFetchRequests(networkRequests).length).toBe(0);
+        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
+        expect(filterNonFetchRequests(networkRequests).length).toBe(2);
 
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Length').click();
         await page.waitForLoadState('networkidle');
-        // Network requests are:
-        // 1. Limit request from parameter archive
-        // 2. Telemetry from parameter archive
-        expect(filterNonFetchRequests(networkRequests).length).toBe(2);
+        // Should only be fetching telemetry from parameter archive,
+        // no second request (for limits) should be made
+        expect(filterNonFetchRequests(networkRequests).length).toBe(1);
 
         // Change to fixed time
         await page.locator('button:has-text("Local Clock")').click();
@@ -59,16 +58,15 @@ test.describe("Quickstart network requests @yamcs", () => {
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Should now fetch from parameter archive, so two requests, one for each item in the aggregate
-        console.debug('🥕', filterNonFetchRequests(networkRequests));
+        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
         expect(filterNonFetchRequests(networkRequests).length).toBe(2);
 
+        networkRequests = [];
         await page.locator('text=CCSDS_Packet_Length').click();
         await page.waitForLoadState('networkidle');
-        // Network requests should remain the same in fixed time:
-        // 1. Limit request from parameter archive
-        // 2. Telemetry from parameter archive
-        expect(filterNonFetchRequests(networkRequests).length).toBe(2);
+        // Should only be fetching telemetry from parameter archive,
+        // no second request (for limits) should be made
+        expect(filterNonFetchRequests(networkRequests).length).toBe(1);
 
     });
 
