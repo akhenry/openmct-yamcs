@@ -20,7 +20,7 @@ jobs:
         run: |
           cd quickstart/docker
           touch makeout.txt
-          make all &> makeout.txt &
+          make yamcs-shell
       - run: |
           docker ps -a
           docker logs -f yamcs
