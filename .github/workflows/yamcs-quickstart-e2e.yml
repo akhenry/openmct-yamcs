@@ -26,11 +26,6 @@ jobs:
           cd quickstart/docker
           docker-compose up -d
           docker ps -a
-      # - name: Archive makeout.txt
-      #   if: always()
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     path: quickstart/docker/makeout.txt
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -39,17 +34,13 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
+      - run: npm run wait-for-yamcs
       - run: npm run test:e2e:quickstart
-      - name: ls
-        if: always()
-        run: |
-          pwd
-          ls -latR
-      - name: Archive makeout.txt #not working due to pathing
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          path: /quickstart/docker/makeout.txt
+      # - name: Archive makeout.txt #not working due to pathing
+      #   if: always()
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     path: /quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
