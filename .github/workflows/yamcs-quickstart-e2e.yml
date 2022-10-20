@@ -25,9 +25,7 @@ jobs:
         run: |
           cd quickstart/docker
           docker-compose up -d
-      - run: |
           docker ps -a
-          docker logs -f yamcs
       # - name: Archive makeout.txt
       #   if: always()
       #   uses: actions/upload-artifact@v3
