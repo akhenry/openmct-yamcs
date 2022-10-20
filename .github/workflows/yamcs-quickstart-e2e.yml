@@ -16,11 +16,15 @@ jobs:
           repository: unlikelyzero/quickstart
           ref: fix-network
           path: 'quickstart'
+      # - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
+      #   run: |
+      #     cd quickstart/docker
+      #     touch makeout.txt
+      #     make all &> makeout.txt &
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
-          touch makeout.txt
-          make yamcs-shell
+          docker-compose up -d
       - run: |
           docker ps -a
           docker logs -f yamcs
