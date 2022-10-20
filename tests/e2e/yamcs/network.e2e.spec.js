@@ -26,7 +26,7 @@ Network Specific Tests
 
 const { test, expect } = require('../opensource/pluginFixtures');
 
-test.describe.only("Quickstart network requests @yamcs", () => {
+test.describe("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS
     let networkRequests = [];
 
