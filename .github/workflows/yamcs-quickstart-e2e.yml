@@ -22,8 +22,8 @@ jobs:
           touch makeout.txt
           make all &> makeout.txt &
       - run: |
-          pwd
-          ls -latR
+          docker ps -a
+          docker logs -f yamcs
       # - name: Archive makeout.txt
       #   if: always()
       #   uses: actions/upload-artifact@v3
@@ -37,9 +37,6 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: |
-          docker ps -a
-          docker logs -f yamcs
       - run: npm run test:e2e:quickstart
       - name: ls
         if: always()
