@@ -34,8 +34,16 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: npm run wait-for-yamcs
+      # - run: npm run wait-for-yamcs
       - run: npm run test:e2e:quickstart
+      - name: archive docker logs
+        if: always()
+        run: docker logs yamcs > yamcs-docker-log.txt 2>&1
+      - name: archive docker logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          path: yamcs-docker-log.txt
       # - name: Archive makeout.txt #not working due to pathing
       #   if: always()
       #   uses: actions/upload-artifact@v3
