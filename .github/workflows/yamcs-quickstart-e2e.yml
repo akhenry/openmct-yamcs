@@ -21,13 +21,14 @@ jobs:
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
-          cd ../..
-      - run: ls -latR
-      - name: Archive makeout.txt
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          path: quickstart/docker/makeout.txt
+      - run: |
+          pwd
+          ls -latR
+      # - name: Archive makeout.txt
+      #   if: always()
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     path: quickstart/docker/makeout.txt
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -38,6 +39,11 @@ jobs:
       - run: npm run test:getopensource
       - run: npm run wait-for-yamcs
       - run: npm run test:e2e:quickstart
+      - name: ls
+        if: always()
+        run: |
+          pwd
+          ls -latR
       - name: Archive makeout.txt #not working due to pathing
         if: always()
         uses: actions/upload-artifact@v3
