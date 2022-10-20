@@ -19,8 +19,12 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
-          touch makeout.txt
-          make all &> makeout.txt &
+          make all
+      # - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
+      #   run: |
+      #     cd quickstart/docker
+      #     touch makeout.txt
+      #     make all &> makeout.txt &
       - run: |
           pwd
           ls -latR
