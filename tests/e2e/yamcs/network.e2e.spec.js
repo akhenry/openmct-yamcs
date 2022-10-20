@@ -26,7 +26,7 @@ Network Specific Tests
 
 const { test, expect } = require('../opensource/pluginFixtures');
 
-test.describe("Quickstart network requests @yamcs", () => {
+test.describe.only("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS
     let networkRequests = [];
 
@@ -62,6 +62,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Should now fetch from parameter archive, so two requests, one for each item in the aggregate
         expect(filterNonFetchRequests(networkRequests).length).toBe(2);
 
+        networkRequests = [];
         await page.locator('text=CCSDS_Packet_Length').click();
         await page.waitForLoadState('networkidle');
         // Network requests should remain the same in fixed time:
