@@ -19,12 +19,8 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
-          make all
-      # - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
-      #   run: |
-      #     cd quickstart/docker
-      #     touch makeout.txt
-      #     make all &> makeout.txt &
+          touch makeout.txt
+          make all &> makeout.txt &
       - run: |
           pwd
           ls -latR
@@ -41,7 +37,9 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: npm run wait-for-yamcs
+      - run: |
+          docker ps -a
+          docker logs -f yamcs
       - run: npm run test:e2e:quickstart
       - name: ls
         if: always()
