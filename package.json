@@ -25,7 +25,7 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=14.19.1"
+    "node": ">=14.19.1 <18.0.0"
   },
   "peerDependencies": {
     "openmct": "^2.0.5"
