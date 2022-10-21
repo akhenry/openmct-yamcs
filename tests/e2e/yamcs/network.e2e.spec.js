@@ -41,8 +41,8 @@ test.describe("Quickstart network requests @yamcs", () => {
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
-        expect(filterNonFetchRequests(networkRequests).length).toBe(2);
+        // Network requests should be zero in real-time mode (using websocket cache)
+        expect(filterNonFetchRequests(networkRequests).length).toBe(0);
 
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Length').click();
