@@ -54,6 +54,11 @@ export default class YamcsHistoricalTelemetryProvider {
     request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
+        if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
+            // Latest requested in realtime, use cached websocket data
+            return [];
+        }
+        // otherwise we're in fixed time mode or historical
 
         const id = domainObject.identifier.key;
         const hasEnumValue = this.hasEnumValue(domainObject);
