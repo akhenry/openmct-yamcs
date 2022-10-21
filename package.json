@@ -1,6 +1,6 @@
 {
   "name": "openmct-yamcs",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
@@ -31,11 +31,11 @@
     "openmct": "^2.0.5"
   },
   "devDependencies": {
-    "@babel/core": "7.19.1",
-    "@babel/eslint-parser": "7.18.9",
+    "@babel/core": "7.19.3",
+    "@babel/eslint-parser": "7.19.1",
     "sinon": "14.0.0",
     "uuid": "9.0.0",
-    "eslint": "8.24.0",
+    "eslint": "8.25.0",
     "eventemitter3": "4.0.7",
     "source-map-loader": "^3.0.1",
     "@playwright/test": "1.25.2",
