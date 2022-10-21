@@ -25,7 +25,6 @@ jobs:
         run: |
           cd quickstart/docker
           docker-compose up -d
-          docker ps -a
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -34,6 +33,7 @@ jobs:
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
+      - run: docker ps -a
       - run: npm run wait-for-yamcs
       - run: npm run test:e2e:quickstart
       - name: archive docker logs
