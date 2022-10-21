@@ -1,6 +1,4 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
-import { idToQualifiedName } from "../utils";
-import limitConfig from "../limits-config.json";
 
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
@@ -32,9 +30,7 @@ const RANGE_CONDITION_CSS = {
  * @property {number} high a higher limit violation
  */
 export default class LimitProvider {
-    constructor(openmct, url, instance) {
-        this.url = url;
-        this.instance = instance;
+    constructor(openmct) {
         this.openmct = openmct;
     }
 
@@ -97,52 +93,12 @@ export default class LimitProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
-    async getLimitsForParameter(id, fullId) {
-        let url = `${this.url}api/archive/${this.instance}`;
-        url += '/parameters' + idToQualifiedName(id);
-        url += '?limit=1&order=desc';
-
-        let convertToLimits = (results) => this.convertToLimits(fullId, results);
-
-        const res = await fetch(encodeURI(url));
-        const results = await res.json();
-
-        return convertToLimits(id, results);
-    }
-
-    convertToLimits(id, results) {
-        if (!(results.parameter)
-            || (results.parameter.length <= 0)
-            || !(results.parameter[0].alarmRange)) {
-            return {};
-        }
-
-        return this.getLimitFromAlarmRange(id, results.parameter[0].alarmRange);
-    }
-
-    getLimitFromAlarmRange(id, alarmRange) {
-        let limits = {};
-        alarmRange.forEach(alarm => {
-            limits[alarm.level] = {
-                low: {
-                    color: limitConfig[alarm.level],
-                    value: alarm.minInclusive || alarm.minExclusive
-                },
-                high: {
-                    color: limitConfig[alarm.level],
-                    value: alarm.maxInclusive || alarm.maxExclusive
-                }
-            };
-        });
-
-        return limits;
-    }
-
     getLimits(domainObject) {
-        const limits = this.getLimitsForParameter(domainObject.identifier.key, this.openmct.objects.makeKeyString(domainObject.identifier));
+        const limits = domainObject.configuration.limits;
 
         return {
-            limits: function () {
+            // eslint-disable-next-line require-await
+            limits: async function () {
                 return limits;
             }
         };
