@@ -24,7 +24,7 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
-          docker-compose up -d
+          docker-compose up
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
