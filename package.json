@@ -31,7 +31,7 @@
     "openmct": "^2.0.5"
   },
   "devDependencies": {
-    "@babel/core": "7.19.3",
+    "@babel/core": "7.19.6",
     "@babel/eslint-parser": "7.19.1",
     "sinon": "14.0.0",
     "uuid": "9.0.0",
