@@ -16,7 +16,7 @@
     "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
-    "wait-for-yamcs": "wait-on http-get://127.0.0.1:8090/ -v"
+    "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
   "keywords": [
     "openmct",

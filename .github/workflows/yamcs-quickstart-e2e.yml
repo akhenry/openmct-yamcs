@@ -20,23 +20,21 @@ jobs:
           repository: unlikelyzero/quickstart
           ref: fix-network
           path: 'quickstart'
-      # - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
-      #   run: |
-      #     cd quickstart/docker
-      #     touch makeout.txt
-      #     make all &> makeout.txt &
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
-          docker-compose up -d
+          touch makeout.txt
+          make all &> makeout.txt &
       - run: npm install
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
-      - run: docker ps -a
-      - run: npm run wait-for-yamcs
+      - name: Check that yamcs is available
+        run: |
+          docker ps -a
+          npm run wait-for-yamcs      
       - run: npm run test:e2e:quickstart
-      - name: archive docker logs
+      - name: Capture docker logs to file
         if: always()
         run: docker logs yamcs > yamcs-docker-log.txt 2>&1
       - name: archive docker logs
@@ -44,11 +42,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: yamcs-docker-log.txt
-      # - name: Archive makeout.txt #not working due to pathing
-      #   if: always()
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     path: /quickstart/docker/makeout.txt
+      - name: Archive makeout.txt
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          path: /quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
