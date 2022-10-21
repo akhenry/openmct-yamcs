@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+      - uses: actions/checkout@v3
         with:
           repository: unlikelyzero/quickstart
           ref: fix-network
@@ -25,10 +29,6 @@ jobs:
         run: |
           cd quickstart/docker
           docker-compose up
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "16"
       - run: npm install
       - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
