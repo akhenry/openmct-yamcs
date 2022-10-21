@@ -137,11 +137,9 @@ export default class RealtimeProvider {
                 this.sendMessage(request);
             } catch (error) {
                 this.connected = false;
-                console.error(error);
-                console.warn("Error while attempting to send to websocket. Reconnecting...");
-
                 this.requests.push(request);
-                this.reconnect();
+                console.error("🚨 Error while attempting to send to websocket, closing websocket", error);
+                this.socket.close();
             }
         } else {
             this.requests.push(request);
@@ -162,7 +160,7 @@ export default class RealtimeProvider {
             clearTimeout(this.reconnectTimeout);
 
             this.connected = true;
-            console.log(`Established websocket connection to ${wsUrl}`);
+            console.log(`🔌 Established websocket connection to ${wsUrl}`);
 
             this.currentWaitIndex = 0;
             this.resubscribeToAll();
@@ -229,20 +227,14 @@ export default class RealtimeProvider {
         };
 
         this.socket.onerror = (error) => {
-            console.error(error);
-            console.warn("Websocket error, attempting reconnect...");
-
-            this.connected = false;
-            this.socket = undefined;
-
-            this.reconnect();
+            console.error(`🚨 Websocket error, closing websocket`, error);
+            this.socket.close();
         };
 
         this.socket.onclose = () => {
-            console.warn("Websocket closed. Attempting to reconnect...");
-
+            console.warn('🚪 Websocket closed. Attempting to reconnect...');
             this.connected = false;
-            this.socket = undefined;
+            this.socket = null;
 
             this.reconnect();
         };
@@ -255,16 +247,15 @@ export default class RealtimeProvider {
     }
 
     flushQueue() {
-        let shouldReconnect = false;
+        let shouldCloseWebsocket = false;
         this.requests = this.requests.filter((request) => {
             try {
                 this.sendMessage(request);
             } catch (error) {
                 this.connected = false;
-                console.error(error);
-                console.warn("Error while attempting to send to websocket. Reconnecting...");
+                console.error('🚨 Error while attempting to send to websocket, closing websocket', error);
 
-                shouldReconnect = true;
+                shouldCloseWebsocket = true;
 
                 return true;
             }
@@ -272,8 +263,8 @@ export default class RealtimeProvider {
             return false;
         });
 
-        if (shouldReconnect) {
-            this.reconnect();
+        if (shouldCloseWebsocket) {
+            this.socket.close();
         }
     }
 
