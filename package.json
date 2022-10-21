@@ -5,7 +5,7 @@
   "main": "dist/openmct-yamcs.js",
   "scripts": {
     "clean": "rm -rf ./dist ./node_modules ./package-lock.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run test:getopensource && npm run test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "NODE_ENV=production webpack",
@@ -13,8 +13,10 @@
     "start": "NODE_ENV=dev webpack-dev-server",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
-    "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome smoke",
-    "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome"
+    "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
+    "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
+    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
   "keywords": [
     "openmct",
@@ -22,16 +24,24 @@
   ],
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14.19.1 <18.0.0"
+  },
+  "peerDependencies": {
+    "openmct": "^2.0.5"
+  },
   "devDependencies": {
     "@babel/core": "7.19.3",
     "@babel/eslint-parser": "7.19.1",
     "sinon": "14.0.0",
+    "uuid": "9.0.0",
     "eslint": "8.25.0",
-    "eventemitter3": "^4.0.7",
+    "eventemitter3": "4.0.7",
     "source-map-loader": "^3.0.1",
     "@playwright/test": "1.25.2",
-    "webpack": "^5.72.1",
-    "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.9.0"
+    "webpack": "5.74.0",
+    "webpack-cli": "4.10.0",
+    "webpack-dev-server": "4.11.1",
+    "wait-on": "6.0.1"
   }
 }

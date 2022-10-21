@@ -14,7 +14,8 @@ const config = {
         trace: 'on',
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
-        myItemsFolderName: "My Items"
+        myItemsFolderName: "My Items",
+        failOnConsoleError: true
     },
     webServer: {
         command: 'npm run start',
@@ -63,7 +64,8 @@ const config = {
             open: 'never',
             outputFolder: '../html-test-results' //Must be in different location due to https://github.com/microsoft/playwright/issues/12840
         }],
-        ['junit', { outputFile: 'test-results/results.xml' }]
+        ['junit', { outputFile: 'test-results/results.xml' }],
+        ['github']
     ]
 };
 

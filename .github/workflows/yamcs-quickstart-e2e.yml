@@ -7,8 +7,8 @@ on:
       - opened
 
 jobs:
-  e2e-couchdb:
-    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }}
+  yamcs-quickstart-e2e:
+    timeout-minutes: 8
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,20 +17,43 @@ jobs:
           node-version: "16"
       - uses: actions/checkout@v3
         with:
-          repository: yamcs/quickstart
-          ref: master
-      - run: make all
+          repository: unlikelyzero/quickstart
+          ref: fix-network
+          path: 'quickstart'
+      - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
+        run: |
+          cd quickstart/docker
+          touch makeout.txt
+          make all &> makeout.txt &
       - run: npm install
-      - run: npx playwright@1.25.2 install
-      - run: ls -latr
+      - run: npx playwright@1.25.2 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
+      - name: Check that yamcs is available
+        run: |
+          docker ps -a
+          npm run wait-for-yamcs      
       - run: npm run test:e2e:quickstart
+      - name: Capture docker logs to file
+        if: always()
+        run: docker logs yamcs > yamcs-docker-log.txt 2>&1
+      - name: archive docker logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          path: yamcs-docker-log.txt
+      - name: Archive makeout.txt
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          path: /quickstart/docker/makeout.txt
       - name: Archive test results
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           path: test-results
       - name: Archive html test results
+        if: always()
         uses: actions/upload-artifact@v3
         with:
-          path: html-test-results
+          path: tests/html-test-results
