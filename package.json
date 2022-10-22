@@ -1,6 +1,6 @@
 {
   "name": "openmct-yamcs",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
