@@ -1,5 +1,5 @@
 # YAMCS Plugin for Open MCT
-This project provides a plugin for connecting Open MCT to a YAMCS backend.
+This project provides a plugin for connecting Open MCT to a YAMCS backend.ff
 
 ## Running the example
 
