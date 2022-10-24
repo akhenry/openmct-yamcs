@@ -30,7 +30,7 @@ function qualifiedNameToId(name) {
 }
 
 /**
- * Convert an object identifier into a , ex:
+ * Convert an object identifier into a qualified name, ex:
  * {namespace: 'scratch', name: 'me'} ==> 'scratch/root'
  *
  * Idempotent
@@ -38,7 +38,7 @@ function qualifiedNameToId(name) {
  * @param objectId
  * @returns String
  */
-function joinObjectId(objectId) {
+function qualifiedNameFromParameterId(objectId) {
     if (!objectId) {
         throw new Error("Cannot make string from null identifier");
     }
@@ -316,7 +316,7 @@ function flattenObjectArray(array, baseObj = {}) {
 export {
     idToQualifiedName,
     qualifiedNameToId,
-    joinObjectId,
+    qualifiedNameFromParameterId,
     flattenObjectArray,
     getValue,
     accumulateResults,

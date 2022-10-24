@@ -26,7 +26,7 @@ import {
     addLimitInformation,
     accumulateResults,
     yieldResults,
-    joinObjectId,
+    qualifiedNameFromParameterId,
     qualifiedNameToId
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
@@ -215,7 +215,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let data = [];
         results.forEach(result => {
-            const id = joinObjectId(result.id);
+            const id = qualifiedNameFromParameterId(result.id);
             let datum = {
                 id: qualifiedNameToId(id),
                 timestamp: result[METADATA_TIME_KEY]

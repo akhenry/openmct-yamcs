@@ -22,7 +22,7 @@
 import {
     getValue,
     idToQualifiedName,
-    joinObjectId,
+    qualifiedNameFromParameterId,
     qualifiedNameToId
 } from '../utils.js';
 import {METADATA_TIME_KEY} from "../const";
@@ -55,7 +55,7 @@ export default class LatestTelemetryProvider {
 
             if (result !== undefined) {
                 if (result.acquisitionStatus !== undefined) {
-                    const id = joinObjectId(result.id);
+                    const id = qualifiedNameFromParameterId(result.id);
                     openMctStyleDatum = {
                         id: qualifiedNameToId(id),
                         timestamp: result.generationTime,
