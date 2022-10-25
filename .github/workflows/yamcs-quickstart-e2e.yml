@@ -17,8 +17,8 @@ jobs:
           node-version: "16"
       - uses: actions/checkout@v3
         with:
-          repository: unlikelyzero/quickstart
-          ref: fix-network
+          repository: yamcs/quickstart
+          ref: master
           path: 'quickstart'
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
