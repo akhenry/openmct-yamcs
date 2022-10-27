@@ -20,26 +20,13 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-/* eslint-disable no-undef */
 const path = require('path');
 
-const devMode = process.env.NODE_ENV !== 'production';
-
-const WEBPACK_CONFIG = {
-    entry: () => {
-        const entries = {};
-        if (devMode) {
-            entries['openmct-yamcs-example'] = './example/index.js';
-        } else {
-            entries['openmct-yamcs'] = './src/plugin.js';
-        }
-
-        return entries;
-    },
+// eslint-disable no-undef
+const WEBPACK_COMMON_CONFIG = {
     performance: {
         hints: false
     },
-    mode: 'production',
     module: {
         rules: [
             {
@@ -52,36 +39,12 @@ const WEBPACK_CONFIG = {
     output: {
         globalObject: "this",
         filename: '[name].js',
+        // eslint-disable-next-line no-undef
         path: path.resolve(__dirname, 'dist'),
         libraryTarget: 'umd',
         library: 'openmctYamcs'
-    },
-    devtool: devMode ? 'eval-source-map' : 'source-map',
-    devServer: {
-        compress: true,
-        port: 9000,
-        static: [{
-            directory: path.join(__dirname, 'example')
-        }, {
-            directory: path.join(__dirname, '/node_modules/openmct/dist'),
-            publicPath: '/node_modules/openmct/dist'
-        }],
-        proxy: {
-            "/yamcs-proxy/*": {
-                target: "http://0.0.0.0:8090/",
-                secure: false,
-                changeOrigin: true,
-                pathRewrite: {'^/yamcs-proxy/': ''}
-            },
-            "/yamcs-proxy-ws/*": {
-                target: "ws://0.0.0.0:8090/api/websocket",
-                secure: false,
-                changeOrigin: true,
-                ws: true,
-                pathRewrite: {'^/yamcs-proxy-ws/': ''}
-            }
-        }
     }
 };
 
-module.exports = WEBPACK_CONFIG;
+// eslint-disable-next-line no-undef
+module.exports = WEBPACK_COMMON_CONFIG;
