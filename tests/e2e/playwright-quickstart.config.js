@@ -18,7 +18,7 @@ const config = {
         failOnConsoleError: true
     },
     webServer: {
-        command: 'npm run start',
+        command: 'npm run start:coverage',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
         reuseExistingServer: false
@@ -69,5 +69,6 @@ const config = {
     ]
 };
 
+// eslint-disable-next-line no-undef
 module.exports = config;
 
