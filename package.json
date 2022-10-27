@@ -10,7 +10,7 @@
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack --config webpack.prod.js",
     "build:example": "npm install openmct@unstable --no-save",
-    "start": "npm run build:example && webpack-dev-server --config ./webpack.dev.js",
+    "start": "webpack-dev-server --config ./webpack.dev.js",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
     "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
