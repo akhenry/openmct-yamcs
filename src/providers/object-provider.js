@@ -442,7 +442,7 @@ export default class YamcsObjectProvider {
             parameter.type.member.forEach(member => {
                 const memberQualifiedName = qualifiedName + '.' + member.name;
                 /* Use current name as a prefix for the member name. */
-                this.#addParameter(member, memberQualifiedName, obj, name + '_');
+                this.#addParameter(member, memberQualifiedName, obj, `${name}.`);
             });
         }
     }
