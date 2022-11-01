@@ -8,6 +8,7 @@ package-lock.json
 tests/e2e/opensource/
 tests/html-test-results/
 test-results
+.nyc_output/
 
 # Misc
 .DS_Store
