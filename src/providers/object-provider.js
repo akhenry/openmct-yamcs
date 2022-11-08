@@ -43,10 +43,10 @@ export default class YamcsObjectProvider {
         this.url = url;
         this.instance = instance;
         this.folderName = folderName;
-        this.dictionary = null;
         this.namespace = NAMESPACE;
         this.key = 'spacecraft';
-        this.objects = {};
+        this.dictionary = {};
+        this.dictionaryLoaded = false;
         this.dictionaryPromise = null;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
@@ -59,7 +59,6 @@ export default class YamcsObjectProvider {
         this.#createRootObject();
         const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
         const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
-
         this.#addObject(commandsObject);
         this.#addObject(eventsObject);
         this.rootObject.composition.push(
@@ -85,12 +84,6 @@ export default class YamcsObjectProvider {
 
     async get(identifier) {
         const { key } = identifier;
-        // If it's a custom telemetry object we've added, return it
-        if (key !== this.key && Object.hasOwn(this.objects, key)) {
-            return this.objects[key];
-        }
-
-        // Otherwise, return a telemetry object from the telemetry dictionary
         const dictionary = await this.#getTelemetryDictionary();
 
         return dictionary[key];
@@ -181,12 +174,13 @@ export default class YamcsObjectProvider {
     }
 
     async #getTelemetryDictionary() {
-        if (this.dictionary) {
+        if (this.dictionaryLoaded) {
             return this.dictionary;
         }
 
         const dictionary = await this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName);
         this.dictionary = dictionary;
+        this.dictionaryLoaded = true;
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
         return dictionary;
@@ -216,7 +210,7 @@ export default class YamcsObjectProvider {
 
             this.dictionaryPromise = null;
 
-            return this.objects;
+            return this.dictionary;
         }
 
         return this.dictionaryPromise;
@@ -284,7 +278,7 @@ export default class YamcsObjectProvider {
     }
 
     #addObject(object) {
-        this.objects[object.identifier.key] = object;
+        this.dictionary[object.identifier.key] = object;
     }
 
     /*
@@ -296,7 +290,7 @@ export default class YamcsObjectProvider {
             let qn = parameter.qualifiedName;
             let lastSlashPos = qn.lastIndexOf('/');
             let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos));
-            let parent = this.objects[parentId];
+            let parent = this.dictionary[parentId];
 
             this.#addParameter(parameter, qn, parent, '');
         }
