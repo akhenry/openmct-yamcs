@@ -17,7 +17,7 @@ An example is provided in this repository that can be configured to run against 
 This is a fast moving project and we do our best to support and test what we test and support. 
 
 * Supported NodeJS available in our package.json's `engine` key.
-* Minimum Supported Open MCT version in our package.json's `peerDependencies` key.
+* Minimum Supported Open MCT version in our package.json's `optionalDependencies` key.
 * Minimum YAMCS Version support follows [YAMCS QuickStart](https://github.com/yamcs/quickstart)
 
 If you encounter an issue with our documented compatibility, please file a [GitHub issue](https://github.com/akhenry/openmct-yamcs/issues/new/choose)
