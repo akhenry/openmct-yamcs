@@ -84,6 +84,7 @@ export default class YamcsObjectProvider {
 
     async get(identifier) {
         const { key } = identifier;
+        console.log('get', key);
         const dictionary = await this.#getTelemetryDictionary();
 
         return dictionary[key];
@@ -147,6 +148,7 @@ export default class YamcsObjectProvider {
 
         // make sure we have the dictionary loaded first
         // even though calling get will fetch dictionary if not already loaded
+        console.log()
         await this.#getTelemetryDictionary();
 
         // if multiple members match, YAMCS sends us duplicates 🙇‍♂️
@@ -174,12 +176,14 @@ export default class YamcsObjectProvider {
     }
 
     async #getTelemetryDictionary() {
+        console.log('get dictionary', this.dictionaryLoaded);
         if (this.dictionaryLoaded) {
             return this.dictionary;
         }
 
         const dictionary = await this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName);
         this.dictionary = dictionary;
+        console.log('dictionary loaded');
         this.dictionaryLoaded = true;
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
