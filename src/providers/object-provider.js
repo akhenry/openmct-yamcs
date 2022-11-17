@@ -176,12 +176,16 @@ export default class YamcsObjectProvider {
     }
 
     async #getTelemetryDictionary() {
-        console.log('get dictionary', this.dictionaryLoaded);
+        console.log('get dictionary');
         if (this.dictionaryLoaded) {
+            console.log('dictionary loaded, return it');
             return this.dictionary;
         } else if (this.dictionaryPromise) {
+            console.log('dictionary promise exists, return it');
             return this.dictionaryPromise;
         }
+
+        console.log('dictionary NOT loaded, NO dictionary promise, set the dictionary promise');
 
         this.dictionaryPromise = this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName)
             .finally(() => {
