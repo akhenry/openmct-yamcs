@@ -179,45 +179,40 @@ export default class YamcsObjectProvider {
         console.log('get dictionary', this.dictionaryLoaded);
         if (this.dictionaryLoaded) {
             return this.dictionary;
+        } else if (this.dictionaryPromise) {
+            return this.dictionaryPromise;
         }
 
-        return this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName).then(dictionary => {
-            this.dictionary = dictionary;
-            this.dictionaryLoaded = true;
-            this.roleStatusTelemetry.dictionaryLoadComplete();
+        this.dictionaryPromise = this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName)
+            .finally(() => {
+                this.dictionaryLoaded = true;
+                this.roleStatusTelemetry.dictionaryLoadComplete();
+            });
 
-            return dictionary;
-        });
+        return this.dictionaryPromise;
     }
 
     async #fetchTelemetryDictionary() {
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
+        const url = this.#getMdbUrl('space-systems');
+        const spaceSystems = await accumulateResults(url, {}, 'spaceSystems', []);
+        const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
+        
+        /* Sort the space systems by name, so that the
+            children of the root object are in sorted order. */
+        spaceSystems.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+        });
+        spaceSystems.forEach(spaceSystem => {
+            this.#addSpaceSystem(spaceSystem);
+        });
 
-        if (!this.dictionaryPromise) {
-            let url = this.#getMdbUrl('space-systems');
-            const spaceSystems = this.dictionaryPromise = await accumulateResults(url, {}, 'spaceSystems', []);
+        parameters.forEach(parameter => {
+            this.#addParameterObject(parameter);
+        });
 
-            const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
-            /* Sort the space systems by name, so that the
-               children of the root object are in sorted order. */
-            spaceSystems.sort((a, b) => {
-                return a.name.localeCompare(b.name);
-            });
-            spaceSystems.forEach(spaceSystem => {
-                this.#addSpaceSystem(spaceSystem);
-            });
-
-            parameters.forEach(parameter => {
-                this.#addParameterObject(parameter);
-            });
-
-            this.dictionaryPromise = null;
-
-            return this.dictionary;
-        }
-
-        return this.dictionaryPromise;
+        return this.dictionary;
     }
 
     #getMdbUrl(operation, name = '') {
