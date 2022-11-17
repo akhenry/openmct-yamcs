@@ -181,13 +181,13 @@ export default class YamcsObjectProvider {
             return this.dictionary;
         }
 
-        const dictionary = await this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName);
-        this.dictionary = dictionary;
-        console.log('dictionary loaded');
-        this.dictionaryLoaded = true;
-        this.roleStatusTelemetry.dictionaryLoadComplete();
+        return this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName).then(dictionary => {
+            this.dictionary = dictionary;
+            this.dictionaryLoaded = true;
+            this.roleStatusTelemetry.dictionaryLoadComplete();
 
-        return dictionary;
+            return dictionary;
+        });
     }
 
     async #fetchTelemetryDictionary() {
