@@ -68,6 +68,16 @@ test.describe("Quickstart network requests @yamcs", () => {
         // no second request (for limits) should be made
         expect(filterNonFetchRequests(networkRequests).length).toBe(1);
 
+        networkRequests = [];
+        await page.reload();
+        await page.waitForLoadState('networkidle');
+        // Should be fetching:
+        // 1. user api
+        // 2. space systems
+        // 3. parameter dictionary
+        // 4. specific parameter telemetry for CCSDS_Packet_Length
+        expect(filterNonFetchRequests(networkRequests).length).toBe(4);
+
     });
 
     // Try to reduce indeterminism of browser requests by only returning fetch requests.
