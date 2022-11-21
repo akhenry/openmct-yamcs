@@ -46,7 +46,6 @@ export default class YamcsObjectProvider {
         this.namespace = NAMESPACE;
         this.key = 'spacecraft';
         this.dictionary = {};
-        this.dictionaryLoaded = false;
         this.dictionaryPromise = null;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
@@ -173,47 +172,39 @@ export default class YamcsObjectProvider {
         return flattenedResults;
     }
 
-    async #getTelemetryDictionary() {
-        if (this.dictionaryLoaded) {
-            return this.dictionary;
-        }
-
-        const dictionary = await this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName);
-        this.dictionary = dictionary;
-        this.dictionaryLoaded = true;
-        this.roleStatusTelemetry.dictionaryLoadComplete();
-
-        return dictionary;
-    }
-
-    async #fetchTelemetryDictionary() {
-        const operation = 'parameters?details=yes&limit=1000';
-        const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
-
+    #getTelemetryDictionary() {
         if (!this.dictionaryPromise) {
-            let url = this.#getMdbUrl('space-systems');
-            const spaceSystems = this.dictionaryPromise = await accumulateResults(url, {}, 'spaceSystems', []);
-
-            const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
-            /* Sort the space systems by name, so that the
-               children of the root object are in sorted order. */
-            spaceSystems.sort((a, b) => {
-                return a.name.localeCompare(b.name);
-            });
-            spaceSystems.forEach(spaceSystem => {
-                this.#addSpaceSystem(spaceSystem);
-            });
-
-            parameters.forEach(parameter => {
-                this.#addParameterObject(parameter);
-            });
-
-            this.dictionaryPromise = null;
-
-            return this.dictionary;
+            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
+                .finally(() => {
+                    this.roleStatusTelemetry.dictionaryLoadComplete();
+                });
         }
 
         return this.dictionaryPromise;
+    }
+
+    async #loadTelemetryDictionary() {
+        console.debug(`🍇 Loading telemetry dictionary`);
+        const operation = 'parameters?details=yes&limit=1000';
+        const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
+        const url = this.#getMdbUrl('space-systems');
+        const spaceSystems = await accumulateResults(url, {}, 'spaceSystems', []);
+        const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
+
+        /* Sort the space systems by name, so that the
+            children of the root object are in sorted order. */
+        spaceSystems.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+        });
+        spaceSystems.forEach(spaceSystem => {
+            this.#addSpaceSystem(spaceSystem);
+        });
+
+        parameters.forEach(parameter => {
+            this.#addParameterObject(parameter);
+        });
+
+        return this.dictionary;
     }
 
     #getMdbUrl(operation, name = '') {
