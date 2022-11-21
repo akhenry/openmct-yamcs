@@ -46,7 +46,6 @@ export default class YamcsObjectProvider {
         this.namespace = NAMESPACE;
         this.key = 'spacecraft';
         this.dictionary = {};
-        this.dictionaryLoaded = false;
         this.dictionaryPromise = null;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
@@ -173,29 +172,25 @@ export default class YamcsObjectProvider {
         return flattenedResults;
     }
 
-    async #getTelemetryDictionary() {
-        if (this.dictionaryLoaded) {
-            return this.dictionary;
-        } else if (this.dictionaryPromise) {
-            return this.dictionaryPromise;
+    #getTelemetryDictionary() {
+        if (!this.dictionaryPromise) {
+            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
+                .finally(() => {
+                    this.roleStatusTelemetry.dictionaryLoadComplete();
+                });
         }
-
-        this.dictionaryPromise = this.#fetchTelemetryDictionary(this.url, this.instance, this.folderName)
-            .finally(() => {
-                this.dictionaryLoaded = true;
-                this.roleStatusTelemetry.dictionaryLoadComplete();
-            });
 
         return this.dictionaryPromise;
     }
 
-    async #fetchTelemetryDictionary() {
+    async #loadTelemetryDictionary() {
+        console.debug(`🍇 Loading telemetry dictionary`);
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
         const url = this.#getMdbUrl('space-systems');
         const spaceSystems = await accumulateResults(url, {}, 'spaceSystems', []);
         const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
-        
+
         /* Sort the space systems by name, so that the
             children of the root object are in sorted order. */
         spaceSystems.sort((a, b) => {
