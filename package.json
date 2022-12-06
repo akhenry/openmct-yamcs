@@ -39,7 +39,7 @@
     "babel-plugin-istanbul": "6.1.1",
     "eslint": "8.29.0",
     "eventemitter3": "4.0.7",
-    "sinon": "14.0.0",
+    "sinon": "15.0.0",
     "source-map-loader": "^4.0.1",
     "uuid": "9.0.0",
     "wait-on": "6.0.1",
