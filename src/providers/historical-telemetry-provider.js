@@ -220,9 +220,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let data = [];
         results.forEach(result => {
-            const id = qualifiedNameFromParameterId(result.id);
+            const qualifiedName = qualifiedNameFromParameterId(result.id);
             let datum = {
-                id: qualifiedNameToId(id),
+                id: qualifiedNameToId(qualifiedName),
                 timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);

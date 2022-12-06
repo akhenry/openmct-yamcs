@@ -25,7 +25,6 @@ import {
     qualifiedNameFromParameterId,
     qualifiedNameToId
 } from '../utils.js';
-import {METADATA_TIME_KEY} from "../const";
 
 export default class LatestTelemetryProvider {
     #bulkPromise;
