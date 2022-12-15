@@ -11,7 +11,16 @@ An example is provided in this repository that can be configured to run against 
 * The YAMCS Quickstart example is assumed to have been installed and to be running successfully. See 
   https://github.com/yamcs/quickstart
 * [A git client](https://git-scm.com/)
-* [Node 10+](https://nodejs.org/)
+* [NodeJS](https://nodejs.org/)
+
+### Compatibility
+This is a fast moving project and we do our best to support and test what we test and support. 
+
+* Supported NodeJS available in our package.json's `engine` key.
+* Minimum Supported Open MCT version in our package.json's `optionalDependencies` key.
+* Minimum YAMCS Version support follows [YAMCS QuickStart](https://github.com/yamcs/quickstart)
+
+If you encounter an issue with our documented compatibility, please file a [GitHub issue](https://github.com/akhenry/openmct-yamcs/issues/new/choose)
 
 ### Installation
 ```
@@ -24,6 +33,12 @@ npm start
 
 This should build the example, and launch a web browser with Open MCT connected to a locally running YAMCS server. By 
 default it is configured to connect to the "myproject" instance provided in the [YAMCS QuickStart](https://github.com/yamcs/quickstart) server.
+
+### Testing
+
+This project is using the openmct-e2e-as-a-dependency model. For getting started with our tests, please see [our README](./tests/README.md)
+
+Each PR is tested for compatibility with YAMCS QuickStart as well as the latest version of Open MCT using GitHub Actions.
 
 ## Using the Open MCT-YAMCS plugin in your own project
 

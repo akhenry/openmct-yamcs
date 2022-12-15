@@ -35,9 +35,8 @@ Make no assumptions about the order that elements appear in the DOM.
 
 const { test, expect } = require('../opensource/baseFixtures');
 
-test.describe("Quickstart smoke tests @yamcs", async () => {
+test.describe("Quickstart smoke tests @yamcs", () => {
     test('Verify that the create button appears and that the Folder Domain Object is available for selection', async ({ page }) => {
-
         //Go to baseURL
         await page.goto('./', { waitUntil: 'networkidle' });
 

@@ -28,14 +28,19 @@ const { test, expect } = require('../opensource/pluginFixtures');
 
 test.describe("Quickstart search tests @yamcs", () => {
     test('Validate aggregate in search result', async ({ page }) => {
-        //Go to baseURL
+        // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
         await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').click();
-        //Search for Sequence
+        // Search for Sequence
         await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('Sequence');
         await expect(page.locator('[aria-label="Search Result"] >> nth=0')).toContainText("CCSDS_Packet_Sequence");
-        await expect(page.locator('[aria-label="Search Result"] >> nth=1')).toContainText("CCSDS_Packet_Sequence_GroupFlags");
-        await expect(page.locator('[aria-label="Search Result"] >> nth=2')).toContainText("CCSDS_Packet_Sequence_Count");
+        await expect(page.locator('[aria-label="Search Result"] >> nth=1')).toContainText("CCSDS_Packet_Sequence.GroupFlags");
+        await expect(page.locator('[aria-label="Search Result"] >> nth=2')).toContainText("CCSDS_Packet_Sequence.Count");
+        // Search for mixed case and get same results
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('seQuence');
+        await expect(page.locator('[aria-label="Search Result"] >> nth=0')).toContainText("CCSDS_Packet_Sequence");
+        await expect(page.locator('[aria-label="Search Result"] >> nth=1')).toContainText("CCSDS_Packet_Sequence.GroupFlags");
+        await expect(page.locator('[aria-label="Search Result"] >> nth=2')).toContainText("CCSDS_Packet_Sequence.Count");
     });
 });

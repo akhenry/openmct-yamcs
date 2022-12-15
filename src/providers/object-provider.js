@@ -29,6 +29,7 @@ import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';
+import limitConfig from "../limits-config.json";
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -42,11 +43,10 @@ export default class YamcsObjectProvider {
         this.url = url;
         this.instance = instance;
         this.folderName = folderName;
-        this.dictionary = undefined;
         this.namespace = NAMESPACE;
         this.key = 'spacecraft';
-        this.objects = {};
-        this.dictionaryPromise = undefined;
+        this.dictionary = {};
+        this.dictionaryPromise = null;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
@@ -58,9 +58,8 @@ export default class YamcsObjectProvider {
         this.#createRootObject();
         const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
         const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
-
-        this.addObject(commandsObject);
-        this.addObject(eventsObject);
+        this.#addObject(commandsObject);
+        this.#addObject(eventsObject);
         this.rootObject.composition.push(
             eventsObject.identifier,
             commandsObject.identifier
@@ -79,18 +78,12 @@ export default class YamcsObjectProvider {
             composition: []
         };
 
-        this.addObject(this.rootObject);
+        this.#addObject(this.rootObject);
     }
 
     async get(identifier) {
         const { key } = identifier;
-        // If it's a custom telemetry object we've added, return it
-        if (key !== this.key && Object.hasOwn(this.objects, key)) {
-            return this.objects[key];
-        }
-
-        // Otherwise, return a telemetry object from the telemetry dictionary
-        const dictionary = await this.getTelemetryDictionary();
+        const dictionary = await this.#getTelemetryDictionary();
 
         return dictionary[key];
     }
@@ -100,8 +93,8 @@ export default class YamcsObjectProvider {
     }
 
     async search(query, options) {
-        const spaceSystemsSearch = this.searchMdbApi('space-systems', query, options);
-        const parametersSearch = this.searchMdbApi('parameters', query, options);
+        const spaceSystemsSearch = this.#searchMdbApi('space-systems', query, options);
+        const parametersSearch = this.#searchMdbApi('parameters', query, options);
 
         const [spaceSystemsResults, parametersResults] = await Promise.all([spaceSystemsSearch, parametersSearch]);
 
@@ -121,8 +114,8 @@ export default class YamcsObjectProvider {
     async #convertSearchHitToTelemetries(query, hit) {
         let telemetries = [];
 
-        // first check if we match the query
-        if ((hit.qualifiedName.includes(query))) {
+        // first check if we match the query in any case
+        if ((hit.qualifiedName.toLowerCase().includes(query.toLowerCase()))) {
             const telemetry = await this.#convertSingleSearchHitToTelemetry(hit.qualifiedName);
 
             telemetries.push(telemetry);
@@ -142,9 +135,9 @@ export default class YamcsObjectProvider {
         return telemetries;
     }
 
-    async searchMdbApi(operation, query, options) {
+    async #searchMdbApi(operation, query, options) {
         const key = YAMCS_API_MAP[operation];
-        const search = await this.fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`);
+        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`);
         const hits = search[key];
 
         if (!hits) {
@@ -153,7 +146,7 @@ export default class YamcsObjectProvider {
 
         // make sure we have the dictionary loaded first
         // even though calling get will fetch dictionary if not already loaded
-        await this.getTelemetryDictionary();
+        await this.#getTelemetryDictionary();
 
         // if multiple members match, YAMCS sends us duplicates 🙇‍♂️
         const hitsWithoutDupes = [];
@@ -179,53 +172,46 @@ export default class YamcsObjectProvider {
         return flattenedResults;
     }
 
-    async getTelemetryDictionary() {
-        if (this.dictionary !== undefined) {
-            return Promise.resolve(this.dictionary);
-        }
-
-        const dictionary = await this.fetchTelemetryDictionary(this.url, this.instance, this.folderName);
-        this.dictionary = dictionary;
-        this.roleStatusTelemetry.dictionaryLoadComplete();
-
-        return dictionary;
-    }
-
-    async fetchTelemetryDictionary() {
-        const operation = 'parameters?details=yes&limit=1000';
-        const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
-
-        if (this.dictionaryPromise === undefined) {
-            let url = this.getMdbUrl('space-systems');
-            const spaceSystems = this.dictionaryPromise = await accumulateResults(url, {}, 'spaceSystems', []);
-
-            const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
-            /* Sort the space systems by name, so that the
-               children of the root object are in sorted order. */
-            spaceSystems.sort((a, b) => {
-                return a.name.localeCompare(b.name);
-            });
-            spaceSystems.forEach(spaceSystem => {
-                this.addSpaceSystem(spaceSystem);
-            });
-
-            parameters.forEach(parameter => {
-                this.addParameterObject(parameter);
-            });
-
-            this.dictionaryPromise = undefined;
-
-            return this.objects;
+    #getTelemetryDictionary() {
+        if (!this.dictionaryPromise) {
+            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
+                .finally(() => {
+                    this.roleStatusTelemetry.dictionaryLoadComplete();
+                });
         }
 
         return this.dictionaryPromise;
     }
 
-    getMdbUrl(operation, name = '') {
+    async #loadTelemetryDictionary() {
+        console.debug(`🍇 Loading telemetry dictionary`);
+        const operation = 'parameters?details=yes&limit=1000';
+        const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
+        const url = this.#getMdbUrl('space-systems');
+        const spaceSystems = await accumulateResults(url, {}, 'spaceSystems', []);
+        const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
+
+        /* Sort the space systems by name, so that the
+            children of the root object are in sorted order. */
+        spaceSystems.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+        });
+        spaceSystems.forEach(spaceSystem => {
+            this.#addSpaceSystem(spaceSystem);
+        });
+
+        parameters.forEach(parameter => {
+            this.#addParameterObject(parameter);
+        });
+
+        return this.dictionary;
+    }
+
+    #getMdbUrl(operation, name = '') {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
-    async fetchMdbApi(operation, name = '') {
+    async #fetchMdbApi(operation, name = '') {
         const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}${name}`;
         const response = await fetch(mdbURL);
         const parsedJSON = await response.json();
@@ -233,11 +219,11 @@ export default class YamcsObjectProvider {
         return parsedJSON;
     }
 
-    addSpaceSystem(spaceSystem) {
+    #addSpaceSystem(spaceSystem) {
         if (spaceSystem.qualifiedName !== '/') {
             let composition = [];
 
-            if (spaceSystem.sub !== undefined) {
+            if (spaceSystem.sub) {
                 /* Sort the subsidiary space systems by name. */
                 spaceSystem.sub.sort((a, b) => {
                     return a.name.localeCompare(b.name);
@@ -270,7 +256,7 @@ export default class YamcsObjectProvider {
                 location: location
             };
 
-            this.addObject(obj);
+            this.#addObject(obj);
 
             /* Add the space system to the root object if it's top-level. */
             if (spaceSystem.qualifiedName.lastIndexOf('/') === 0) {
@@ -282,32 +268,58 @@ export default class YamcsObjectProvider {
         }
     }
 
-    addObject(object) {
-        this.objects[object.identifier.key] = object;
+    #addObject(object) {
+        this.dictionary[object.identifier.key] = object;
     }
 
     /*
      * Add a telemetry parameter object to the object tree, unless it
      * has an alias indicating to omit the parameter from OpenMCT.
      */
-    addParameterObject(parameter) {
-        if (!this.isSuppressed(parameter)) {
+    #addParameterObject(parameter) {
+        if (!this.#isSuppressed(parameter)) {
             let qn = parameter.qualifiedName;
             let lastSlashPos = qn.lastIndexOf('/');
             let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos));
-            let parent = this.objects[parentId];
+            let parent = this.dictionary[parentId];
 
-            this.addParameter(parameter, qn, parent, '');
+            this.#addParameter(parameter, qn, parent, '');
         }
     }
 
-    isSuppressed(parameter) {
+    #isSuppressed(parameter) {
         return (parameter.alias && parameter.alias.some(alias => {
             return (alias.namespace === 'OpenMCT:omit');
         }));
     }
 
-    addParameter(parameter, qualifiedName, parent, prefix) {
+    #getLimitFromAlarmRange(alarmRange) {
+        let limits = {};
+        alarmRange.forEach(alarm => {
+            limits[alarm.level] = {
+                low: {
+                    color: limitConfig[alarm.level],
+                    value: alarm.minInclusive || alarm.minExclusive
+                },
+                high: {
+                    color: limitConfig[alarm.level],
+                    value: alarm.maxInclusive || alarm.maxExclusive
+                }
+            };
+        });
+
+        return limits;
+    }
+
+    #convertToLimits(defaultAlarm) {
+        if (defaultAlarm?.staticAlarmRange) {
+            return this.#getLimitFromAlarmRange(defaultAlarm.staticAlarmRange);
+        } else {
+            throw new Error(`Passed alarm has invalid object syntax for limit conversion`, defaultAlarm);
+        }
+    }
+
+    #addParameter(parameter, qualifiedName, parent, prefix) {
         const id = qualifiedNameToId(qualifiedName);
         const name = prefix + parameter.name;
         const location = this.openmct.objects.makeKeyString({
@@ -319,9 +331,10 @@ export default class YamcsObjectProvider {
                 key: id,
                 namespace: this.namespace
             },
-            type: this.getParameterType(parameter),
+            type: this.#getParameterType(parameter),
             name: name,
             location: location,
+            configuration: {},
             telemetry: {
                 values: [{
                     key: 'utc',
@@ -334,8 +347,12 @@ export default class YamcsObjectProvider {
                 }]
             }
         };
-        const isAggregate = this.isAggregate(parameter);
+        const isAggregate = this.#isAggregate(parameter);
         let aggregateHasMembers = false;
+
+        if (parameter.type.defaultAlarm) {
+            obj.configuration.limits = this.#convertToLimits(parameter.type.defaultAlarm);
+        }
 
         if (!isAggregate) {
             const key = 'value';
@@ -356,7 +373,7 @@ export default class YamcsObjectProvider {
 
             if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
                 const role = operatorStatusParameter.getRoleFromParameter(parameter);
-                if (role === undefined) {
+                if (!role) {
                     throw new Error(`Operator Status Parameter "${parameter.qualifiedName}" does not specify a role`);
                 }
 
@@ -372,13 +389,13 @@ export default class YamcsObjectProvider {
                 telemetryValue.format = 'string';
             }
 
-            if (this.isEnumeration(parameter)) {
+            if (this.#isEnumeration(parameter)) {
                 telemetryValue.format = 'enum';
                 const yamcsEnumerations = parameter.type.enumValue || [];
                 telemetryValue.enumerations = yamcsEnumerations.map(enumValue => {
                     let rawValue = enumValue.value;
 
-                    if (!isNaN(rawValue)) {
+                    if (!(isNaN(rawValue))) {
                         // eslint-disable-next-line radix
                         rawValue = parseInt(rawValue);
                     }
@@ -392,17 +409,17 @@ export default class YamcsObjectProvider {
 
             obj.telemetry.values.push(telemetryValue);
 
-            this.addHints(key, obj);
+            this.#addHints(key, obj);
         } else {
-            aggregateHasMembers = this.aggregateHasMembers(parameter);
+            aggregateHasMembers = this.#aggregateHasMembers(parameter);
             obj.composition = [];
             if (aggregateHasMembers) {
-                let memberMetadata = this.formatAggregateMembers(parameter.type.member, name.replace('_', '.'));
+                const memberMetadata = this.#formatAggregateMembers(parameter.type.member, name.replace('_', '.'));
                 obj.telemetry.values = obj.telemetry.values.concat(memberMetadata);
             }
         }
 
-        this.addObject(obj);
+        this.#addObject(obj);
 
         parent.composition.push(obj.identifier);
 
@@ -410,12 +427,12 @@ export default class YamcsObjectProvider {
             parameter.type.member.forEach(member => {
                 const memberQualifiedName = qualifiedName + '.' + member.name;
                 /* Use current name as a prefix for the member name. */
-                this.addParameter(member, memberQualifiedName, obj, name + '_');
+                this.#addParameter(member, memberQualifiedName, obj, `${name}.`);
             });
         }
     }
 
-    addHints(key, obj) {
+    #addHints(key, obj) {
         const metadatum = obj.telemetry.values.find(md => md.key === key);
 
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
@@ -427,27 +444,15 @@ export default class YamcsObjectProvider {
 
     }
 
-    isAggregate(parameter) {
-        let isAggregate = false;
-
-        if (parameter.type !== undefined) {
-            isAggregate = parameter.type.engType === 'aggregate';
-        }
-
-        return isAggregate;
+    #isAggregate(parameter) {
+        return parameter?.type?.engType === 'aggregate';
     }
 
-    isEnumeration(parameter) {
-        let isEnumeration = false;
-
-        if (parameter.type !== undefined) {
-            isEnumeration = parameter.type.engType === 'enumeration';
-        }
-
-        return isEnumeration;
+    #isEnumeration(parameter) {
+        return parameter?.type?.engType === 'enumeration';
     }
 
-    formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
+    #formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
         let formatted = [];
 
         members.forEach(member => {
@@ -462,7 +467,7 @@ export default class YamcsObjectProvider {
                 }
             }
 
-            if (!this.isAggregate(member)) {
+            if (!this.#isAggregate(member)) {
                 formatted.push({
                     key,
                     name,
@@ -470,8 +475,8 @@ export default class YamcsObjectProvider {
                         range: rangeHint++
                     }
                 });
-            } else if (this.aggregateHasMembers(member)) {
-                let formattedSubMembers = this.formatAggregateMembers(member.type.member, key, rangeHint);
+            } else if (this.#aggregateHasMembers(member)) {
+                let formattedSubMembers = this.#formatAggregateMembers(member.type.member, key, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
             }
         });
@@ -479,30 +484,24 @@ export default class YamcsObjectProvider {
         return formatted;
     }
 
-    aggregateHasMembers(parameter) {
-        let hasMembers = false;
-
-        if (this.isAggregate(parameter)) {
-            hasMembers = parameter.type.member !== undefined;
-        }
-
-        return hasMembers;
+    #aggregateHasMembers(parameter) {
+        return this.#isAggregate(parameter) && parameter.type.member;
     }
 
-    getParameterType(parameter) {
+    #getParameterType(parameter) {
         for (let i in parameter.alias) {
             if (parameter.alias[i].namespace === 'OpenMCT:type') {
                 return parameter.alias[i].name;
             }
         }
 
-        if (this.isAggregate(parameter) && this.aggregateHasMembers(parameter)) {
+        if (this.#isAggregate(parameter) && this.#aggregateHasMembers(parameter)) {
             return OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE;
         }
 
         /* Built-in Yamcs telemetry does not supply type information. */
         if (
-            parameter.type === undefined
+            parameter.type
             || (parameter.type.engType === 'integer'
             || parameter.type.engType === 'float'
             || parameter.type.engType === 'enumeration')

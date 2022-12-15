@@ -25,7 +25,9 @@ import {
     getValue,
     addLimitInformation,
     accumulateResults,
-    yieldResults
+    yieldResults,
+    qualifiedNameFromParameterId,
+    qualifiedNameToId
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum } from './events';
@@ -54,6 +56,11 @@ export default class YamcsHistoricalTelemetryProvider {
     request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
+        if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
+            // Latest requested in realtime, use cached websocket data
+            return [];
+        }
+        // otherwise we're in fixed time mode or historical
 
         const id = domainObject.identifier.key;
         const hasEnumValue = this.hasEnumValue(domainObject);
@@ -213,8 +220,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let data = [];
         results.forEach(result => {
+            const qualifiedName = qualifiedNameFromParameterId(result.id);
             let datum = {
-                id: result.id.name,
+                id: qualifiedNameToId(qualifiedName),
                 timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);
