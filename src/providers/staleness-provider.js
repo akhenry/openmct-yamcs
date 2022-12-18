@@ -14,7 +14,7 @@ export default class StalenessProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
-    subscribe(domainObject, callback) {
+    subscribeToStaleness(domainObject, callback) {
         const UPDATE_ON_EXPIRATION = true;
         const stalenessUnsubscribe = this.realtimeProvider.subscribe(
             domainObject,
