@@ -1,5 +1,3 @@
-import { DATA_TYPES, NAMESPACE, OBJECT_TYPES } from '../../const';
-
 export default class StalenessProvider {
     constructor(instance, realtimeTelemetryProvider) {
         this.instance = instance;
