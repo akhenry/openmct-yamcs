@@ -69,8 +69,8 @@ export default class RealtimeProvider {
         return this.supportedDataTypes[type];
     }
 
-    subscribe(domainObject, callback) {
-        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+    subscribe(domainObject, callback, updateOnExpiration = false) {
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, updateOnExpiration);
         let id = subscriptionDetails.subscriptionId;
 
         this.subscriptionsById[id] = subscriptionDetails;
@@ -89,16 +89,21 @@ export default class RealtimeProvider {
         };
     }
 
-    buildSubscriptionDetails(domainObject, callback) {
+    buildSubscriptionDetails(domainObject, callback, updateOnExpiration = false) {
         let subscriptionId = this.lastSubscriptionId++;
-
-        return {
+        let subscriptionDetails = {
             instance: this.instance,
             subscriptionId: subscriptionId,
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
             callback: callback
         };
+
+        if (updateOnExpiration) {
+            subscriptionDetails.updateOnExpiration = updateOnExpiration;
+        }
+
+        return subscriptionDetails;
     }
 
     sendSubscribeMessage(subscriptionDetails) {

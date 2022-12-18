@@ -28,6 +28,7 @@ import UserProvider from './providers/user/user-provider';
 
 import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
 import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
+import StalenessProvider from './providers/staleness-provider';
 
 import { OBJECT_TYPES } from './const';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
@@ -62,6 +63,11 @@ export default function installYamcsPlugin(configuration) {
         openmct.faults.addProvider(new YamcsFaultProvider({
             faultModelConvertor,
             historicalEndpoint: configuration.yamcsHistoricalEndpoint,
+            yamcsInstance: configuration.yamcsInstance,
+            realtimeTelemetryProvider
+        }));
+
+        openmct.faults.addProvider(new StalenessProvider({
             yamcsInstance: configuration.yamcsInstance,
             realtimeTelemetryProvider
         }));
