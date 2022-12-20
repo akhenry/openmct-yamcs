@@ -26,7 +26,7 @@ jobs:
           touch makeout.txt
           make all &> makeout.txt &
       - run: npm install
-      - run: npx playwright@1.25.2 install chromium
+      - run: npx playwright@1.29.0 install chromium
       - run: npm run build:example
       - run: npm run test:getopensource
       - name: Check that yamcs is available
