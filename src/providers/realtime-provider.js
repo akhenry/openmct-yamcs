@@ -87,6 +87,7 @@ export default class RealtimeProvider {
 
             if (this.subscriptionsById[id]) {
                 this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                console.log('delete id', id);
                 delete this.subscriptionsById[id];
             }
         };
@@ -102,7 +103,7 @@ export default class RealtimeProvider {
             callback: callback
         };
 
-        if (updateOnExpiration) {
+        if (typeof updateOnExpiration === Boolean && updateOnExpiration) {
             subscriptionDetails.updateOnExpiration = updateOnExpiration;
         }
 
