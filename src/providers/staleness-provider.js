@@ -13,6 +13,7 @@ export default class StalenessProvider {
     }
 
     subscribeToStaleness(domainObject, callback) {
+        console.log('yamcs staleness provider, subscribe to staleness', domainObject.name);
         const UPDATE_ON_EXPIRATION = true;
         const stalenessUnsubscribe = this.realtimeProvider.subscribe(
             domainObject,
@@ -28,8 +29,8 @@ export default class StalenessProvider {
     }
 
     handleResponse(type, response, callback) {
-        // determin staleness based on aquisitionStatus
-        console.log('response', response);
+        // determine staleness based on aquisitionStatus
+        console.log('staleness handleResponse', response);
 
         callback(response);
     }

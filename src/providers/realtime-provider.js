@@ -70,9 +70,11 @@ export default class RealtimeProvider {
     }
 
     subscribe(domainObject, callback, updateOnExpiration = false) {
+        console.log('yamcs realtime provider, subscribe', domainObject.name, 'update on exp?', updateOnExpiration);
         let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, updateOnExpiration);
+        console.log('subscription details', subscriptionDetails);
         let id = subscriptionDetails.subscriptionId;
-
+        console.log('subs by id', id, this.subscriptionsById, this.subscriptionsById[id]);
         this.subscriptionsById[id] = subscriptionDetails;
 
         if (this.connected) {
