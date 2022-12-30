@@ -6,10 +6,12 @@ export default class StalenessProvider {
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
+
+        this.subscribeToStaleness = this.subscribeToStaleness.bind(this);
     }
 
     supportsStaleness(domainObject) {
-        console.log('supports staleness?', domainObject.name, domainObject);
+        console.log('supports staleness?', domainObject.name,  domainObject.type.startsWith('yamcs.'));
         return domainObject.type.startsWith('yamcs.');
     }
 
