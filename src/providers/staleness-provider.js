@@ -3,6 +3,8 @@ export default class StalenessProvider {
         this.instance = instance;
         this.realtimeProvider = realtimeTelemetryProvider;
 
+        this.supportsStaleness = true;
+
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
