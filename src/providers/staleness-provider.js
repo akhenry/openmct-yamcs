@@ -27,7 +27,7 @@ export default class StalenessProvider {
         };
     }
 
-    handleResponse(type, response, callback) {
+    handleResponse(response, callback) {
         // determine staleness based on aquisitionStatus
         console.log('staleness handleResponse', response);
 
