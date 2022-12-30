@@ -66,7 +66,7 @@ export default function installYamcsPlugin(configuration) {
             yamcsInstance: configuration.yamcsInstance,
             realtimeTelemetryProvider
         }));
-
+        console.log('yamcsplugin, adding staleness provider');
         openmct.faults.addProvider(new StalenessProvider({
             yamcsInstance: configuration.yamcsInstance,
             realtimeTelemetryProvider

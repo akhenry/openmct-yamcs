@@ -9,6 +9,7 @@ export default class StalenessProvider {
     }
 
     supportsStaleness(domainObject) {
+        console.log('supports staleness?', domainObject.name, domainObject);
         return domainObject.type.startsWith('yamcs.');
     }
 
