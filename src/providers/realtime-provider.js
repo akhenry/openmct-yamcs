@@ -226,7 +226,7 @@ export default class RealtimeProvider {
 
                         if (this.observingStaleness[subscriptionDetails.name]) {
                             const stalenessObserver = this.observingStaleness[subscriptionDetails.name];
-                            const status = stalenessStatusMap[parameter.aquisitionStatus];
+                            const status = stalenessStatusMap[parameter.acquisitionStatus];
 
                             if (stalenessObserver.isStale !== status) {
                                 stalenessObserver.isStale = status;
