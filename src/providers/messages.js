@@ -62,6 +62,10 @@ function buildSubscribeMessages() {
                         "sendFromCache": true
                     }
                 }`;
+
+                if(subscriptionDetails.updateOnExpiration) {
+                    message.options.updateOnExpiration = true;
+                }
             }
 
             return message;

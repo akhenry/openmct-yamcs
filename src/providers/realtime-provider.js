@@ -36,6 +36,7 @@ export default class RealtimeProvider {
     constructor(url, instance) {
         this.url = url;
         this.instance = instance;
+        this.observingStaleness = {};
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -61,6 +62,22 @@ export default class RealtimeProvider {
         return this.isSupportedObjectType(domainObject.type);
     }
 
+    supportsStaleness(domainObject) {
+        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
+    }
+
+    subscribeToStaleness(domainObject, callback) {
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.observingStaleness[qualifiedName] = {
+            isStale: undefined,
+            callback
+        };
+
+        return () => {
+            delete this.observingStaleness[qualifiedName];
+        };
+    }
+
     isSupportedObjectType(type) {
         return this.supportedObjectTypes[type];
     }
@@ -69,13 +86,9 @@ export default class RealtimeProvider {
         return this.supportedDataTypes[type];
     }
 
-    subscribe(domainObject, callback, updateOnExpiration = false) {
-        console.log('yamcs realtime provider, args', arguments);
-        console.log('yamcs realtime provider, subscribe', domainObject.name, 'update on exp?', updateOnExpiration);
-        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, updateOnExpiration);
-        console.log('subscription details', subscriptionDetails);
+    subscribe(domainObject, callback) {
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
         let id = subscriptionDetails.subscriptionId;
-        console.log('subs by id', id, this.subscriptionsById, this.subscriptionsById[id]);
         this.subscriptionsById[id] = subscriptionDetails;
 
         if (this.connected) {
@@ -87,25 +100,21 @@ export default class RealtimeProvider {
 
             if (this.subscriptionsById[id]) {
                 this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
-                console.log('delete id', id);
                 delete this.subscriptionsById[id];
             }
         };
     }
 
-    buildSubscriptionDetails(domainObject, callback, updateOnExpiration = false) {
+    buildSubscriptionDetails(domainObject, callback) {
         let subscriptionId = this.lastSubscriptionId++;
         let subscriptionDetails = {
             instance: this.instance,
             subscriptionId: subscriptionId,
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
+            updateOnExpiration: true,
             callback: callback
         };
-
-        if (typeof updateOnExpiration === Boolean && updateOnExpiration) {
-            subscriptionDetails.updateOnExpiration = updateOnExpiration;
-        }
 
         return subscriptionDetails;
     }
@@ -161,6 +170,10 @@ export default class RealtimeProvider {
         }
 
         let wsUrl = `${this.url}`;
+        let stalenessStatusMap = {
+            'ACQUIRED': false,
+            'EXPIRED': true
+        };
         this.lastSubscriptionId = 1;
         this.connected = false;
         this.socket = new WebSocket(wsUrl);
@@ -210,6 +223,16 @@ export default class RealtimeProvider {
                             timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);
+
+                        if (this.observingStaleness[subscriptionDetails.name]) {
+                            const stalenessObserver = this.observingStaleness[subscriptionDetails.name];
+                            const status = stalenessStatusMap[parameter.aquisitionStatus];
+
+                            if (stalenessObserver.isStale !== status) {
+                                stalenessObserver.isStale = status;
+                                stalenessObserver.callback(status);
+                            }
+                        }
 
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             datum.value = value;
