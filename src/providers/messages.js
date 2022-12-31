@@ -60,7 +60,7 @@ function buildSubscribeMessages() {
                             "name": "${subscriptionDetails.name}"
                         }],
                         "sendFromCache": true,
-                        "updateOnExpiration: true
+                        "updateOnExpiration": true
                     }
                 }`;
             }
