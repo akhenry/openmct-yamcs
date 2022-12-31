@@ -59,13 +59,10 @@ function buildSubscribeMessages() {
                         "id": [{
                             "name": "${subscriptionDetails.name}"
                         }],
-                        "sendFromCache": true
+                        "sendFromCache": true,
+                        "updateOnExpiration: true
                     }
                 }`;
-
-                if(subscriptionDetails.updateOnExpiration) {
-                    message.options.updateOnExpiration = true;
-                }
             }
 
             return message;
