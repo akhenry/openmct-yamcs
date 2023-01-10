@@ -111,7 +111,8 @@ export default class OperatorStatusTelemetry {
 
         return {
             key: formatter.parse(datum),
-            label: formatter.format(datum)
+            label: formatter.format(datum),
+            timestamp: telemetryObject.timestamp
         };
 
     }
