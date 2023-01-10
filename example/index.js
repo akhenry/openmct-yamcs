@@ -41,6 +41,32 @@ const openmct = window.openmct;
 (function () {
     const THIRTY_MINUTES = 30 * 60 * 1000;
 
+    var originalFetch = window.fetch;
+
+    window.fetch = function (input, init) {
+        if (!init) {
+            init = {};
+        }
+
+        if (!init.headers) {
+            init.headers = new Headers();
+        }
+
+        // init.headers could be: 
+        //   `A Headers object, an object literal, 
+        //    or an array of two-item arrays to set request’s headers.`
+        if (init.headers instanceof Headers) {
+            init.headers.append('X-REMOTE-USER', 'andrew');
+        } else if (init.headers instanceof Array) {
+            init.headers.push(['X-REMOTE-USER', 'andrew']);
+        } else {
+            // object ?
+            init.headers['X-REMOTE-USER'] = 'andrew';
+        }
+
+        return originalFetch(input, init);
+    };
+
     openmct.setAssetPath('/node_modules/openmct/dist');
 
     installDefaultPlugins();
@@ -57,6 +83,35 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.example.ExampleImagery());
         openmct.install(openmct.plugins.UTCTimeSystem());
         openmct.install(openmct.plugins.TelemetryMean());
+        openmct.install(openmct.plugins.OperatorStatus({
+            "statusStyles": {
+                "NO_STATUS": {
+                    "iconClass": "icon-question-mark",
+                    "iconClassPoll": "icon-status-poll-question-mark"
+                },
+                "GO": {
+                    "iconClass": "icon-check",
+                    "iconClassPoll": "icon-status-poll-question-mark",
+                    "statusClass": "s-status-ok",
+                    "statusBgColor": "#33cc33",
+                    "statusFgColor": "#000"
+                },
+                "MAYBE": {
+                    "iconClass": "icon-alert-triangle",
+                    "iconClassPoll": "icon-status-poll-question-mark",
+                    "statusClass": "s-status-warning",
+                    "statusBgColor": "#ffb66c",
+                    "statusFgColor": "#000"
+                },
+                "NO_GO": {
+                    "iconClass": "icon-circle-slash",
+                    "iconClassPoll": "icon-status-poll-question-mark",
+                    "statusClass": "s-status-error",
+                    "statusBgColor": "#9900cc",
+                    "statusFgColor": "#fff"
+                }
+            }
+        }));
 
         openmct.install(openmct.plugins.DisplayLayout({
             showAsView: ['summary-widget', 'example.imagery', 'yamcs.image']
