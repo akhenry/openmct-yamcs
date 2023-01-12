@@ -108,10 +108,13 @@ export default class OperatorStatusTelemetry {
         const metadata = this.#openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
         const formatter = this.#openmct.telemetry.getValueFormatter(rangeMetadata);
+        const timestampMetadata = metadata.valuesForHints(['domain'])[0];
+        const dateFormatter = this.#openmct.telemetry.getValueFormatter(timestampMetadata);
 
         return {
             key: formatter.parse(datum),
-            label: formatter.format(datum)
+            label: formatter.format(datum),
+            timestamp: dateFormatter.parse(datum)
         };
 
     }
