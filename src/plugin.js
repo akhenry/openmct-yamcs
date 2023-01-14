@@ -175,5 +175,17 @@ export default function installYamcsPlugin(configuration) {
             description: 'Global Status',
             cssClass: 'icon-bell'
         });
+
+        openmct.telemetry.addFormat({
+            key: 'thumbnail-format',
+            parse(wireFormat) {
+                return wireFormat;
+            },
+            format(imageUrl) {
+                //Do transforming to thumbnail URL here.
+
+                return 'thumbnailUrl';
+            }
+        });
     };
 }

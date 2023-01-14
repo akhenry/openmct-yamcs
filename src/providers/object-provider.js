@@ -409,6 +409,20 @@ export default class YamcsObjectProvider {
 
             obj.telemetry.values.push(telemetryValue);
 
+            if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
+                const thumbnailMetadatum = {
+                    key: 'thumbnail-url',
+                    source: 'value',
+                    hints: {
+                        'thumbnail': 1
+                    },
+                    format: 'thumbnail-format'
+                };
+                obj.telemetry.values.push(thumbnailMetadatum);
+            }
+
+            //If this is an image type, add another metadata value specifying the thumbnail image
+
             this.#addHints(key, obj);
         } else {
             aggregateHasMembers = this.#aggregateHasMembers(parameter);
@@ -438,7 +452,9 @@ export default class YamcsObjectProvider {
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};
         } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
-            metadatum.hints = { image: 1 };
+            metadatum.hints = {
+                image: 1
+            };
             metadatum.format = 'image';
         }
 
