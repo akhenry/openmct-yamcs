@@ -24,7 +24,7 @@ import { OBJECT_TYPES, STALENESS_STATUS_MAP, METADATA_TIME_KEY } from '../const'
 import { buildStalenessResponseObject } from '../utils';
 
 export default class YamcsStalenessProvider {
-    consctructor(openmct, realtimeTelemetryProvider, latestTelemetryProvider) {
+    constructor(openmct, realtimeTelemetryProvider, latestTelemetryProvider) {
         this.openmct = openmct;
         this.realtimeTelemetryProvider = realtimeTelemetryProvider;
         this.latestTelemetryProvider = latestTelemetryProvider;
