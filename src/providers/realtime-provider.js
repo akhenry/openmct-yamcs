@@ -221,11 +221,11 @@ export default class RealtimeProvider {
                             const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
 
                             if (this.observingStaleness[subscriptionDetails.name].isStale !== status) {
-                                this.observingStaleness[subscriptionDetails.name].isStale = status;
                                 const stalenesResponseObject = buildStalenessResponseObject(
-                                    this.observingStaleness.isStale,
+                                    status,
                                     parameter[METADATA_TIME_KEY]
                                 );
+                                this.observingStaleness[subscriptionDetails.name] = stalenesResponseObject;
                                 this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
                             }
                         }
