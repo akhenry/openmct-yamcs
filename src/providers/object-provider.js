@@ -184,7 +184,6 @@ export default class YamcsObjectProvider {
     }
 
     async #loadTelemetryDictionary() {
-        console.debug(`🍇 Loading telemetry dictionary`);
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
         const url = this.#getMdbUrl('space-systems');
