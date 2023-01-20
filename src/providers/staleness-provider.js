@@ -28,6 +28,9 @@ export default class YamcsStalenessProvider {
         this.openmct = openmct;
         this.realtimeTelemetryProvider = realtimeTelemetryProvider;
         this.latestTelemetryProvider = latestTelemetryProvider;
+
+        this.subscribeToStaleness = this.subscribeToStaleness.bind(this);
+        this.isStale = this.isStale.bind(this);
     }
 
     supportsStaleness(domainObject) {
