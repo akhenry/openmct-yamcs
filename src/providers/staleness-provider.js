@@ -26,11 +26,8 @@ import { buildStalenessResponseObject } from '../utils';
 export default class YamcsStalenessProvider {
     consctructor(openmct, realtimeTelemetryProvider, latestTelemetryProvider) {
         this.openmct = openmct;
-        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
-        this.latestTelemetryProvider = latestTelemetryProvider;
-
-        this.subscribeToStaleness = this.subscribeToStaleness.bind(this);
-        this.isStale = this.isStale.bind(this);
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider.bind(this.realtimeTelemetryProvider);
+        this.latestTelemetryProvider = latestTelemetryProvider.bind(this.latestTelemetryProvider);
     }
 
     supportsStaleness(domainObject) {
