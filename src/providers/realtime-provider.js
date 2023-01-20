@@ -66,9 +66,7 @@ export default class RealtimeProvider {
     subscribeToStaleness(domainObject, callback) {
         const qualifiedName = idToQualifiedName(domainObject.identifier.key);
         this.observingStaleness[qualifiedName] = {
-            response: {
-                isStale: undefined
-            },
+            response: buildStalenessResponseObject(undefined, 0),
             callback
         };
 
@@ -220,16 +218,15 @@ export default class RealtimeProvider {
                         let value = getValue(parameter, parentName);
 
                         if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
-                            const stalenessObserver = this.observingStaleness[subscriptionDetails.name];
                             const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
 
-                            if (stalenessObserver.isStale !== status) {
-                                stalenessObserver.isStale = status;
+                            if (observingStaleness[subscriptionDetails.name].isStale !== status) {
+                                observingStaleness[subscriptionDetails.name].isStale = status;
                                 const stalenesResponseObject = buildStalenessResponseObject(
                                     stalenessObserver.isStale,
                                     parameter[METADATA_TIME_KEY]
                                 );
-                                stalenessObserver.callback(stalenesResponseObject);
+                                observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
                             }
                         }
 
