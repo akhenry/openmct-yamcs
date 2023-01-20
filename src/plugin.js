@@ -22,7 +22,8 @@
 
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
 import RealtimeProvider from './providers/realtime-provider.js';
-import YamcsObjectProvider from './providers/object-provider.js';
+import YamcsObjectProvider from './providers/object-provider.js'
+import YamcsStalenessProvider from './providers/staleness-provider.js';
 import LimitProvider from './providers/limit-provider';
 import UserProvider from './providers/user/user-provider';
 
@@ -65,6 +66,13 @@ export default function installYamcsPlugin(configuration) {
             yamcsInstance: configuration.yamcsInstance,
             realtimeTelemetryProvider
         }));
+
+        const stalenessProvider = new YamcsStalenessProvider(
+            openmct,
+            realtimeTelemetryProvider,
+            latestTelemetryProvider
+        );
+        openmct.telemetry.addProvider(stalenessProvider);
 
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,

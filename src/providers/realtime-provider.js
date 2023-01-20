@@ -21,8 +21,9 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY } from '../const';
+import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY, STALENESS_STATUS_MAP } from '../const';
 import {
+    buildStalenessResponseObject,
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
@@ -62,14 +63,12 @@ export default class RealtimeProvider {
         return this.isSupportedObjectType(domainObject.type);
     }
 
-    supportsStaleness(domainObject) {
-        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
-    }
-
     subscribeToStaleness(domainObject, callback) {
         const qualifiedName = idToQualifiedName(domainObject.identifier.key);
         this.observingStaleness[qualifiedName] = {
-            isStale: undefined,
+            response: {
+                isStale: undefined
+            },
             callback
         };
 
@@ -170,10 +169,6 @@ export default class RealtimeProvider {
         }
 
         let wsUrl = `${this.url}`;
-        let stalenessStatusMap = {
-            'ACQUIRED': false,
-            'EXPIRED': true
-        };
         this.lastSubscriptionId = 1;
         this.connected = false;
         this.socket = new WebSocket(wsUrl);
@@ -226,11 +221,15 @@ export default class RealtimeProvider {
 
                         if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
                             const stalenessObserver = this.observingStaleness[subscriptionDetails.name];
-                            const status = stalenessStatusMap[parameter.acquisitionStatus];
+                            const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
 
                             if (stalenessObserver.isStale !== status) {
                                 stalenessObserver.isStale = status;
-                                stalenessObserver.callback(status);
+                                const stalenesResponseObject = buildStalenessResponseObject(
+                                    stalenessObserver.isStale,
+                                    parameter[METADATA_TIME_KEY]
+                                );
+                                stalenessObserver.callback(stalenesResponseObject);
                             }
                         }
 
