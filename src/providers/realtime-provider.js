@@ -220,13 +220,13 @@ export default class RealtimeProvider {
                         if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
                             const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
 
-                            if (observingStaleness[subscriptionDetails.name].isStale !== status) {
-                                observingStaleness[subscriptionDetails.name].isStale = status;
+                            if (this.observingStaleness[subscriptionDetails.name].isStale !== status) {
+                                this.observingStaleness[subscriptionDetails.name].isStale = status;
                                 const stalenesResponseObject = buildStalenessResponseObject(
                                     stalenessObserver.isStale,
                                     parameter[METADATA_TIME_KEY]
                                 );
-                                observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
+                                this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
                             }
                         }
 
