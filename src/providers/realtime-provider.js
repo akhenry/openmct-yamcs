@@ -223,7 +223,7 @@ export default class RealtimeProvider {
                             if (this.observingStaleness[subscriptionDetails.name].isStale !== status) {
                                 this.observingStaleness[subscriptionDetails.name].isStale = status;
                                 const stalenesResponseObject = buildStalenessResponseObject(
-                                    stalenessObserver.isStale,
+                                    this.observingStaleness.isStale,
                                     parameter[METADATA_TIME_KEY]
                                 );
                                 this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
