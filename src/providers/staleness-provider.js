@@ -20,36 +20,31 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export const OBJECT_TYPES = {
-    COMMANDS_OBJECT_TYPE: 'yamcs.commands',
-    EVENTS_OBJECT_TYPE: 'yamcs.events',
-    TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
-    IMAGE_OBJECT_TYPE: 'yamcs.image',
-    STRING_OBJECT_TYPE: 'yamcs.string',
-    AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate',
-    OPERATOR_STATUS_TYPE: 'yamcs.operatorStatus',
-    POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
-    ALARMS_TYPE: 'yamcs.alarms',
-    GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
-};
+import { OBJECT_TYPES, STALENESS_STATUS_MAP, METADATA_TIME_KEY } from '../const';
+import { buildStalenessResponseObject } from '../utils';
 
-export const DATA_TYPES = {
-    DATA_TYPE_COMMANDS: 'commands',
-    DATA_TYPE_EVENTS: 'events',
-    DATA_TYPE_TELEMETRY: 'parameters',
-    DATA_TYPE_FAULTS: 'parameters',
-    DATA_TYPE_REPLY: 'reply',
-    DATA_TYPE_ALARMS: 'alarms',
-    DATA_TYPE_GLOBAL_STATUS: 'global-alarm-status'
-};
+export default class YamcsStalenessProvider {
+    constructor(openmct, realtimeTelemetryProvider, latestTelemetryProvider) {
+        this.openmct = openmct;
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
+        this.latestTelemetryProvider = latestTelemetryProvider;
+    }
 
-export const STALENESS_STATUS_MAP = {
-    'ACQUIRED': false,
-    'EXPIRED': true
-};
+    supportsStaleness(domainObject) {
+        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
+    }
 
-export const METADATA_TIME_KEY = 'generationTime';
+    subscribeToStaleness(domainObject, callback) {
+        return this.realtimeTelemetryProvider.subscribeToStaleness(domainObject, callback);
+    }
 
-export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
-export const AGGREGATE_TYPE = 'AGGREGATE';
-export const NAMESPACE = 'taxonomy';
+    async isStale(domainObject) {
+        const response = await this.latestTelemetryProvider.requestLatest(domainObject);
+        const stalenesObject = buildStalenessResponseObject(
+            STALENESS_STATUS_MAP[response.acquisitionStatus],
+            response[METADATA_TIME_KEY]
+        );
+
+        return stalenesObject;
+    }
+}

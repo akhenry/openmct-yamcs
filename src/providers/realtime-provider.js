@@ -21,8 +21,9 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY } from '../const';
+import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY, STALENESS_STATUS_MAP } from '../const';
 import {
+    buildStalenessResponseObject,
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
@@ -36,6 +37,7 @@ export default class RealtimeProvider {
     constructor(url, instance) {
         this.url = url;
         this.instance = instance;
+        this.observingStaleness = {};
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -61,6 +63,18 @@ export default class RealtimeProvider {
         return this.isSupportedObjectType(domainObject.type);
     }
 
+    subscribeToStaleness(domainObject, callback) {
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.observingStaleness[qualifiedName] = {
+            response: buildStalenessResponseObject(undefined, 0),
+            callback
+        };
+
+        return () => {
+            delete this.observingStaleness[qualifiedName];
+        };
+    }
+
     isSupportedObjectType(type) {
         return this.supportedObjectTypes[type];
     }
@@ -72,7 +86,6 @@ export default class RealtimeProvider {
     subscribe(domainObject, callback) {
         let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
         let id = subscriptionDetails.subscriptionId;
-
         this.subscriptionsById[id] = subscriptionDetails;
 
         if (this.connected) {
@@ -91,14 +104,16 @@ export default class RealtimeProvider {
 
     buildSubscriptionDetails(domainObject, callback) {
         let subscriptionId = this.lastSubscriptionId++;
-
-        return {
+        let subscriptionDetails = {
             instance: this.instance,
             subscriptionId: subscriptionId,
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
+            updateOnExpiration: true,
             callback: callback
         };
+
+        return subscriptionDetails;
     }
 
     sendSubscribeMessage(subscriptionDetails) {
@@ -201,6 +216,19 @@ export default class RealtimeProvider {
                             timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);
+
+                        if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
+                            const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
+
+                            if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
+                                const stalenesResponseObject = buildStalenessResponseObject(
+                                    status,
+                                    parameter[METADATA_TIME_KEY]
+                                );
+                                this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
+                                this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
+                            }
+                        }
 
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             datum.value = value;

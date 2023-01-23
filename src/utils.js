@@ -239,6 +239,10 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
 
 }
 
+function buildStalenessResponseObject(isStale, timestamp) {
+    return { isStale, timestamp };
+}
+
 function getHistoryYieldRequest(signal) {
 
     function* yieldRequestHistory() {
@@ -314,6 +318,7 @@ function flattenObjectArray(array, baseObj = {}) {
 }
 
 export {
+    buildStalenessResponseObject,
     idToQualifiedName,
     qualifiedNameToId,
     qualifiedNameFromParameterId,
