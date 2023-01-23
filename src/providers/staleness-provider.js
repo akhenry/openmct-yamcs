@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, STALENESS_STATUS_MAP, METADATA_TIME_KEY } from '../const';
+import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const';
 import { buildStalenessResponseObject } from '../utils';
 
 export default class YamcsStalenessProvider {
@@ -40,12 +40,9 @@ export default class YamcsStalenessProvider {
 
     async isStale(domainObject) {
         const response = await this.latestTelemetryProvider.requestLatest(domainObject);
-        if (response[METADATA_TIME_KEY] === undefined) {
-            console.log('undefined time', response);
-        }
         const stalenesObject = buildStalenessResponseObject(
             STALENESS_STATUS_MAP[response.acquisitionStatus],
-            response[METADATA_TIME_KEY]
+            response.timestamp
         );
 
         return stalenesObject;
