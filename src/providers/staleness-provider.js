@@ -40,6 +40,9 @@ export default class YamcsStalenessProvider {
 
     async isStale(domainObject) {
         const response = await this.latestTelemetryProvider.requestLatest(domainObject);
+        if (response[METADATA_TIME_KEY] === undefined) {
+            console.log('undefined time', response);
+        }
         const stalenesObject = buildStalenessResponseObject(
             STALENESS_STATUS_MAP[response.acquisitionStatus],
             response[METADATA_TIME_KEY]
