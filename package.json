@@ -37,7 +37,7 @@
     "@playwright/test": "1.29.0",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
-    "eslint": "8.29.0",
+    "eslint": "8.33.0",
     "eventemitter3": "4.0.7",
     "sinon": "14.0.0",
     "source-map-loader": "^4.0.1",
