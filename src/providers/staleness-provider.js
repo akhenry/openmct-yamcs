@@ -45,11 +45,11 @@ export default class YamcsStalenessProvider {
             return;
         }
 
-        const stalenesObject = buildStalenessResponseObject(
+        const stalenessObject = buildStalenessResponseObject(
             STALENESS_STATUS_MAP[response.acquisitionStatus],
             response.timestamp
         );
 
-        return stalenesObject;
+        return stalenessObject;
     }
 }
