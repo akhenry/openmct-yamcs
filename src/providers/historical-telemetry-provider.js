@@ -33,10 +33,11 @@ import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum } from './events';
 
 export default class YamcsHistoricalTelemetryProvider {
-    constructor(openmct, url, instance) {
+    constructor(openmct, url, instance, latestTelemetryProvider) {
         this.url = url;
         this.instance = instance;
         this.openmct = openmct;
+        this.latestTelemetryProvider = latestTelemetryProvider;
         this.supportedTypes = {};
 
         this.addSupportedTypes();
@@ -53,12 +54,15 @@ export default class YamcsHistoricalTelemetryProvider {
         return this.supportedTypes[domainObject.type];
     }
 
-    request(domainObject, options) {
+    async request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
         if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
-            // Latest requested in realtime, use cached websocket data
-            return [];
+            // Latest requested in realtime, use latest telemetry provider instead
+            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+            console.debug(`🤠 Latest telemetry provider returned for ${mctDatum.id}`, mctDatum);
+
+            return [mctDatum];
         }
         // otherwise we're in fixed time mode or historical
 
@@ -74,10 +78,14 @@ export default class YamcsHistoricalTelemetryProvider {
         const requestArguments = [id, url, options];
 
         if (options.isSamples) {
-            return this.getMinMaxHistory(...requestArguments);
+            const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
+
+            return minMaxHistory;
         }
 
-        return this.getHistory(...requestArguments);
+        const history = await this.getHistory(...requestArguments);
+
+        return history;
     }
 
     hasEnumValue(domainObject) {
