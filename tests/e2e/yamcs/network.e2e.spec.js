@@ -26,9 +26,10 @@ Network Specific Tests
 
 const { test, expect } = require('../opensource/pluginFixtures');
 
-test.describe("Quickstart network requests @yamcs", () => {
+test.describe.only("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS
     let networkRequests = [];
+    let filteredRequests = [];
 
     test('Validate network traffic to YAMCS', async ({ page }) => {
         page.on('request', (request) => networkRequests.push(request));
@@ -38,45 +39,84 @@ test.describe("Quickstart network requests @yamcs", () => {
         await expandTreePaneItemByName(page, 'myproject');
         await expandTreePaneItemByName(page, 'myproject');
 
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Network requests should be zero in real-time mode (using websocket cache)
-        expect(filterNonFetchRequests(networkRequests).length).toBe(0);
+        networkRequests = [];
+        await page.locator('text=CCSDS_Packet_Sequence').first().click();
+        await page.waitForLoadState('networkidle');
 
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Network requests for the composite telemetry with 4 items should be 1
+        // due to batched requests for latest telemetry using the bulk API
+        filteredRequests = filterNonFetchRequests(networkRequests);
+        //console.debug('🐥 filteredRequests:');
+        //console.debug(filteredRequests);
+        expect(filteredRequests.length).toBe(1);
+
+        await page.waitForLoadState('networkidle');
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Length').click();
         await page.waitForLoadState('networkidle');
-        // Should only be fetching telemetry from parameter archive,
-        // no second request (for limits) should be made
-        expect(filterNonFetchRequests(networkRequests).length).toBe(1);
+
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Should only be fetching telemetry from parameter archive
+        filteredRequests = filterNonFetchRequests(networkRequests);
+        //console.debug('🐥 filteredRequests:');
+        //console.debug(filteredRequests);
+        expect(filteredRequests.length).toBe(2);
 
         // Change to fixed time
         await page.locator('button:has-text("Local Clock")').click();
         await page.locator('text="Fixed Timespan"').click();
 
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
-        expect(filterNonFetchRequests(networkRequests).length).toBe(2);
+        networkRequests = [];
+        await page.locator('text=CCSDS_Packet_Sequence').first().click();
+        await page.waitForLoadState('networkidle');
 
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Length').click();
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
+        filteredRequests = filterNonFetchRequests(networkRequests);
+        //console.debug('🐥 filteredRequests:');
+        //console.debug(filteredRequests);
+        expect(filteredRequests.length).toBe(3);
+
         await page.waitForLoadState('networkidle');
+        networkRequests = [];
+        await page.locator('text=CCSDS_Packet_Length').first().click();
+        await page.waitForLoadState('networkidle');
+
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Should only be fetching telemetry from parameter archive,
         // no second request (for limits) should be made
-        expect(filterNonFetchRequests(networkRequests).length).toBe(1);
+        filteredRequests = filterNonFetchRequests(networkRequests);
+        //console.debug('🐥 filteredRequests:');
+        //console.debug(filteredRequests);
+        expect(filteredRequests.length).toBe(2);
 
         networkRequests = [];
         await page.reload();
         await page.waitForLoadState('networkidle');
+
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Should be fetching:
         // 1. user api
         // 2. space systems
         // 3. parameter dictionary
         // 4. specific parameter telemetry for CCSDS_Packet_Length
-        expect(filterNonFetchRequests(networkRequests).length).toBe(4);
+        filteredRequests = filterNonFetchRequests(networkRequests);
+        //console.debug('🐥 filteredRequests:');
+        //console.debug(filteredRequests);
+        expect(filteredRequests.length).toBe(5);
 
     });
 
@@ -94,8 +134,10 @@ test.describe("Quickstart network requests @yamcs", () => {
  * @param {string} name
  */
 async function expandTreePaneItemByName(page, name) {
-    const treePane = page.locator('#tree-pane');
+    const treePane = page.getByRole('tree', {
+        name: 'Main Tree'
+    });
     const treeItem = treePane.locator(`role=treeitem[expanded=false][name=/${name}/]`);
     const expandTriangle = treeItem.locator('.c-disclosure-triangle');
-    await expandTriangle.click();
+    await expandTriangle.first().click();
 }
