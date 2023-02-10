@@ -87,7 +87,6 @@ export default class LatestTelemetryProvider {
 
     }
     async #bulkGet(batchIds) {
-        console.debug(`👹 Fetching latest telemetry for ${batchIds.length} parameters`);
         const yamcsIds = batchIds.map((yamcsId) => {
             return {
                 name: yamcsId
