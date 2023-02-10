@@ -26,7 +26,7 @@ Network Specific Tests
 
 const { test, expect } = require('../opensource/pluginFixtures');
 
-test.describe.only("Quickstart network requests @yamcs", () => {
+test.describe("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS
     let networkRequests = [];
     let filteredRequests = [];
@@ -47,11 +47,10 @@ test.describe.only("Quickstart network requests @yamcs", () => {
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Network requests for the composite telemetry with 4 items should be 1
-        // due to batched requests for latest telemetry using the bulk API
         filteredRequests = filterNonFetchRequests(networkRequests);
-        //console.debug('🐥 filteredRequests:');
-        //console.debug(filteredRequests);
+
+        // Network requests for the composite telemetry with multiple items should be:
+        // 1.  batched request for latest telemetry using the bulk API
         expect(filteredRequests.length).toBe(1);
 
         await page.waitForLoadState('networkidle');
@@ -62,10 +61,11 @@ test.describe.only("Quickstart network requests @yamcs", () => {
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Should only be fetching telemetry from parameter archive
         filteredRequests = filterNonFetchRequests(networkRequests);
-        //console.debug('🐥 filteredRequests:');
-        //console.debug(filteredRequests);
+
+        // Should only be fetching:
+        // 1. telemetry from parameter archive
+        // 2. batched request for latest telemetry using the bulk API
         expect(filteredRequests.length).toBe(2);
 
         // Change to fixed time
@@ -80,10 +80,12 @@ test.describe.only("Quickstart network requests @yamcs", () => {
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
         filteredRequests = filterNonFetchRequests(networkRequests);
-        //console.debug('🐥 filteredRequests:');
-        //console.debug(filteredRequests);
+
+        // Should fetch from parameter archive, so:
+        // 1. GET for first telemetry item from parameter archive
+        // 2. GET for second telemetry item from parameter archive
+        // 3. batched request for latest telemetry using the bulk API
         expect(filteredRequests.length).toBe(3);
 
         await page.waitForLoadState('networkidle');
@@ -93,12 +95,12 @@ test.describe.only("Quickstart network requests @yamcs", () => {
 
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
         await new Promise(resolve => setTimeout(resolve, 500));
+        filteredRequests = filterNonFetchRequests(networkRequests);
 
         // Should only be fetching telemetry from parameter archive,
-        // no second request (for limits) should be made
-        filteredRequests = filterNonFetchRequests(networkRequests);
-        //console.debug('🐥 filteredRequests:');
-        //console.debug(filteredRequests);
+        // with no further request for limits should be made. So:
+        // 1. GET for telemetry item from parameter archive
+        // 2. batched request for latest telemetry using the bulk API
         expect(filteredRequests.length).toBe(2);
 
         networkRequests = [];
@@ -113,9 +115,8 @@ test.describe.only("Quickstart network requests @yamcs", () => {
         // 2. space systems
         // 3. parameter dictionary
         // 4. specific parameter telemetry for CCSDS_Packet_Length
+        // 5. batched request for latest telemetry using the bulk API
         filteredRequests = filterNonFetchRequests(networkRequests);
-        //console.debug('🐥 filteredRequests:');
-        //console.debug(filteredRequests);
         expect(filteredRequests.length).toBe(5);
 
     });
