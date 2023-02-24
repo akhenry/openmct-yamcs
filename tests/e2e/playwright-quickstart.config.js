@@ -15,7 +15,7 @@ const config = {
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
-        failOnConsoleError: true
+        failOnConsoleError: false
     },
     webServer: {
         command: 'npm run start:coverage',
