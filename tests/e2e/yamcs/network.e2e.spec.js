@@ -138,7 +138,10 @@ async function expandTreePaneItemByName(page, name) {
     const treePane = page.getByRole('tree', {
         name: 'Main Tree'
     });
-    const treeItem = treePane.locator(`role=treeitem[expanded=false][name=/${name}/]`);
+    const treeItem = treePane
+        .locator(`role=treeitem[expanded=false]`)
+        .filter({ hasText: name })
+        .first();
     const expandTriangle = treeItem.locator('.c-disclosure-triangle');
     await expandTriangle.first().click();
 }
