@@ -32,7 +32,7 @@ export default class ExportToCSVAction {
         this.cssClass = "icon-export";
         this.description = 'Export the values for this telemetry object for a given time range.';
         this.group = 'action';
-        this.priority = 1;
+        this.priority = 2;
 
         this.url = url;
         this.instance = instance;
