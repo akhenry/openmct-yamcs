@@ -35,6 +35,7 @@ import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
+import ExportToCSVAction from "./actions/exportToCSV/plugin";
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -184,5 +185,10 @@ export default function installYamcsPlugin(configuration) {
             description: 'Global Status',
             cssClass: 'icon-bell'
         });
+
+        openmct.install(ExportToCSVAction(
+            configuration.yamcsHistoricalEndpoint,
+            configuration.yamcsInstance));
+
     };
 }
