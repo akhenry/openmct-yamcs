@@ -32,12 +32,15 @@ test.describe("Quickstart network requests @yamcs", () => {
     let filteredRequests = [];
 
     test('Validate network traffic to YAMCS', async ({ page }) => {
+        await page.pause();
         page.on('request', (request) => networkRequests.push(request));
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
-        await expandTreePaneItemByName(page, 'myproject');
-        await expandTreePaneItemByName(page, 'myproject');
+        const firstMyProjectTriangle = page.getByRole('treeitem', { name: /myproject/ }).locator('.c-disclosure-triangle').first();
+        await firstMyProjectTriangle.click();
+        const secondMyProjectTriangle = page.getByRole('treeitem', { name: /myproject/ }).locator('.c-disclosure-triangle').nth(1);
+        await secondMyProjectTriangle.click();
 
         await page.waitForLoadState('networkidle');
         networkRequests = [];
@@ -129,16 +132,3 @@ test.describe("Quickstart network requests @yamcs", () => {
         });
     }
 });
-
-/**
- * @param {import('@playwright/test').Page} page
- * @param {string} name
- */
-async function expandTreePaneItemByName(page, name) {
-    const treePane = page.getByRole('tree', {
-        name: 'Main Tree'
-    });
-    const treeItem = treePane.locator(`role=treeitem[expanded=false][name=/${name}/]`);
-    const expandTriangle = treeItem.locator('.c-disclosure-triangle');
-    await expandTriangle.first().click();
-}
