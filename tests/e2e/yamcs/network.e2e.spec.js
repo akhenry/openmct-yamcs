@@ -32,7 +32,6 @@ test.describe("Quickstart network requests @yamcs", () => {
     let filteredRequests = [];
 
     test('Validate network traffic to YAMCS', async ({ page }) => {
-        await page.pause();
         page.on('request', (request) => networkRequests.push(request));
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
