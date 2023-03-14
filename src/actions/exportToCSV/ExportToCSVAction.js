@@ -36,7 +36,7 @@ export default class ExportToCSVAction {
 
         this.url = url;
         this.instance = instance;
-        this._openmct = openmct;
+        this.openmct = openmct;
     }
 
     // Only allow export to CSV for telemetry objects, aggregates and objects with composition.
@@ -47,49 +47,49 @@ export default class ExportToCSVAction {
         }
 
         const object = objectPath[0];
-        const hasChildren = object.composition && object.composition.length;
+        const composition = this.openmct.composition.get(object);
 
-        //allow if the object has children or if it is a telemetry object
-        return hasChildren || SUPPORTED_TYPES.includes(object.type);
+        //allow if the object has composition or if it is a telemetry object
+        return composition || SUPPORTED_TYPES.includes(object.type);
     }
 
     // Exports telemetry (or groups of telemetry) data into CSV file
     async invoke(objectPath) {
         const object = objectPath[0];
         let parameterIds = [];
-        let objectPromises = [];
+        let parameterIdsPromiseResolve;
+        let parameterIdsPromise = new Promise((resolve) => {
+            parameterIdsPromiseResolve = resolve;
+        });
+        const composition = this.openmct.composition.get(object);
 
-        if (object.composition?.length) {
-            object.composition.forEach((id, index) => {
-                objectPromises.push(
-                    this._openmct.objects.get(id).then((childObject) => {
+        if (composition) {
+            composition.load()
+                .then((childObjects) => {
+                    childObjects.forEach(childObject => {
                         if (SUPPORTED_TYPES.includes(childObject.type)) {
                             parameterIds.push(this.getParameter(childObject.identifier));
                         }
-                        return true;
-                    })
-                );
-            });
+                        parameterIdsPromiseResolve(true);
+                    });
+                })
+                .catch(() => {
+                    parameterIdsPromiseResolve(true);
+                });
         } else {
-            let objectResolve;
-            const objectPromise = new Promise((resolve) => {
-                objectResolve = resolve;
-            });
-            objectPromises.push(objectPromise);
-
             parameterIds.push(this.getParameter(object.identifier));
-            objectResolve(true);
+            parameterIdsPromiseResolve(true);
         }
 
-        Promise.all(objectPromises).then(async () => {
+        parameterIdsPromise.then(async () => {
             if (!parameterIds.length) {
-                this._openmct.notifications.error(`Failed to export: no telemetry objects found`);
+                this.openmct.notifications.error(`Failed to export: no telemetry objects found`);
                 return;
             }
 
             const response = await this.fetchExportedValues(parameterIds);
             if (response?.msg) {
-                this._openmct.notifications.error(`Failed to export: ${response.msg}`);
+                this.openmct.notifications.error(`Failed to export: ${response.msg}`);
             } else {
                 let filename = `${parameterIds.join('-')}.csv`;
                 let blob = new Blob([response], { type: "text/csv" });
@@ -100,13 +100,13 @@ export default class ExportToCSVAction {
 
     //Change openmct id to yamcs name and remove namespace from identifier
     getParameter(identifier) {
-        let id = this._openmct.objects.makeKeyString(identifier);
+        let id = this.openmct.objects.makeKeyString(identifier);
         id = idToQualifiedName(id).replace(/^.*:\//, '');
         return id;
     }
 
     fetchExportedValues(parameterIds) {
-        const bounds = this._openmct.time.bounds();
+        const bounds = this.openmct.time.bounds();
         const start = bounds.start;
         const end = bounds.end;
         const parameterIdsString = parameterIds.join(',');
