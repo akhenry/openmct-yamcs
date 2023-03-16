@@ -8,6 +8,11 @@ const SEVERITY_CSS = {
     'SEVERE': 'is-event--red'
 };
 
+const NOMINAL_SEVERITY = {
+    cssClass: 'is-event--no-style',
+    name: 'NOMINAL'
+};
+
 /**
  * @typedef {Object} EvaluationResult
  * @property {string} cssClass CSS class information
@@ -34,6 +39,8 @@ export default class EventLimitProvider {
                 if (valueMetadata && datum.severity in SEVERITY_CSS) {
                     return self.getSeverity(datum, valueMetadata);
                 }
+
+                return NOMINAL_SEVERITY;
             }
 
         };
