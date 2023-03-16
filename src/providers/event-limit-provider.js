@@ -1,11 +1,11 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
 
 const SEVERITY_CSS = {
-    'WATCH': 'is-event-limit--yellow',
-    'WARNING': 'is-event-limit--yellow',
-    'DISTRESS': 'is-event-limit--red',
-    'CRITICAL': 'is-event-limit--red',
-    'SEVERE': 'is-event-limit--red'
+    'WATCH': 'is-event--yellow',
+    'WARNING': 'is-event--yellow',
+    'DISTRESS': 'is-event--red',
+    'CRITICAL': 'is-event--red',
+    'SEVERE': 'is-event--red'
 };
 
 /**
