@@ -49,44 +49,37 @@ export default class ExportToCSVAction {
         const object = objectPath[0];
         const composition = this.openmct.composition.get(object);
 
-        //allow if the object has composition or if it is a telemetry object
-        return composition || SUPPORTED_TYPES.includes(object.type);
+        //allow if the object has composition or if it is a supported telemetry object
+        return composition !== undefined || SUPPORTED_TYPES.includes(object.type);
     }
 
     // Exports telemetry (or groups of telemetry) data into CSV file
     async invoke(objectPath) {
         const object = objectPath[0];
         let parameterIds = [];
-        let parameterIdsPromiseResolve;
-        let parameterIdsPromise = new Promise((resolve) => {
-            parameterIdsPromiseResolve = resolve;
-        });
+        let parameterIdsPromise;
         const composition = this.openmct.composition.get(object);
 
         if (composition) {
-            composition.load()
-                .then((childObjects) => {
-                    childObjects.forEach(childObject => {
-                        if (SUPPORTED_TYPES.includes(childObject.type)) {
-                            parameterIds.push(this.getParameter(childObject.identifier));
-                        }
-                        parameterIdsPromiseResolve(true);
-                    });
-                })
-                .catch(() => {
-                    parameterIdsPromiseResolve(true);
-                });
+            parameterIdsPromise = Promise.resolve(composition.load());
         } else {
-            parameterIds.push(this.getParameter(object.identifier));
-            parameterIdsPromiseResolve(true);
+            parameterIdsPromise = Promise.resolve([object]);
         }
 
-        parameterIdsPromise.then(async () => {
+        parameterIdsPromise.then(async (childObjects) => {
+            //Check if the objects are of a supported type
+            childObjects.forEach(childObject => {
+                if (SUPPORTED_TYPES.includes(childObject.type)) {
+                    parameterIds.push(this.getParameter(childObject.identifier));
+                }
+            });
+
             if (!parameterIds.length) {
                 this.openmct.notifications.error(`Failed to export: no telemetry objects found`);
                 return;
             }
 
+            //Get the CSV data if some parameter ids are valid
             const response = await this.fetchExportedValues(parameterIds);
             if (response?.msg) {
                 this.openmct.notifications.error(`Failed to export: ${response.msg}`);
@@ -95,6 +88,9 @@ export default class ExportToCSVAction {
                 let blob = new Blob([response], { type: "text/csv" });
                 saveAs(blob, filename);
             }
+        })
+        .catch((error) => {
+            this.openmct.notifications.error(`Failed to export: ${error}`);
         });
     }
 
