@@ -406,6 +406,10 @@ export default class YamcsObjectProvider {
                 });
             }
 
+            if (this.#isArray(parameter)) {
+                telemetryValue.format = parameter.type.engType;
+            }
+
             obj.telemetry.values.push(telemetryValue);
 
             this.#addHints(key, obj);
@@ -451,6 +455,10 @@ export default class YamcsObjectProvider {
         return parameter?.type?.engType === 'enumeration';
     }
 
+    #isArray(parameter) {
+        return parameter?.type?.engType.endsWith('[]');
+    }
+
     #formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
         let formatted = [];
 
@@ -467,13 +475,24 @@ export default class YamcsObjectProvider {
             }
 
             if (!this.#isAggregate(member)) {
-                formatted.push({
-                    key,
-                    name,
-                    hints: {
-                        range: rangeHint++
-                    }
-                });
+                if (this.#isArray(member)) {
+                    formatted.push({
+                        key,
+                        name,
+                        hints: {
+                            range: rangeHint++
+                        },
+                        format: member.type.engType
+                    });
+                } else {
+                    formatted.push({
+                        key,
+                        name,
+                        hints: {
+                            range: rangeHint++
+                        }
+                    });
+                }
             } else if (this.#aggregateHasMembers(member)) {
                 let formattedSubMembers = this.#formatAggregateMembers(member.type.member, key, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);
