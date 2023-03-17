@@ -36,9 +36,11 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
-        const firstMyProjectTriangle = page.getByRole('treeitem', { name: /myproject/ }).locator('.c-disclosure-triangle').first();
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
+        await expect(myProjectTreeItem).toBeVisible();
+        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
         await firstMyProjectTriangle.click();
-        const secondMyProjectTriangle = page.getByRole('treeitem', { name: /myproject/ }).locator('.c-disclosure-triangle').nth(1);
+        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
         await secondMyProjectTriangle.click();
 
         await page.waitForLoadState('networkidle');
