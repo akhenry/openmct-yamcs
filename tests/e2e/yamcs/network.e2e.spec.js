@@ -36,8 +36,10 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
-        await expandTreePaneItemByName(page, 'myproject');
-        await expandTreePaneItemByName(page, 'myproject');
+        const firstMyProjectTriangle = page.getByRole('treeitem', { name: /myproject/ }).locator('.c-disclosure-triangle').first();
+        await firstMyProjectTriangle.click();
+        const secondMyProjectTriangle = page.getByRole('treeitem', { name: /myproject/ }).locator('.c-disclosure-triangle').nth(1);
+        await secondMyProjectTriangle.click();
 
         await page.waitForLoadState('networkidle');
         networkRequests = [];
@@ -125,13 +127,3 @@ test.describe("Quickstart network requests @yamcs", () => {
         });
     }
 });
-
-/**
- * @param {import('@playwright/test').Page} page
- * @param {string} name
- */
-async function expandTreePaneItemByName(page, name) {
-    const treeItem = page.locator(`role=treeitem[expanded=false][name='  ${name}']`);
-    const expandTriangle = await treeItem.locator('.c-disclosure-triangle');
-    await expandTriangle.click();
-}

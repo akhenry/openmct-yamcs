@@ -240,7 +240,10 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
 }
 
 function buildStalenessResponseObject(isStale, timestamp) {
-    return { isStale, timestamp };
+    return {
+        isStale,
+        timestamp
+    };
 }
 
 function getHistoryYieldRequest(signal) {
