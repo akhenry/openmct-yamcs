@@ -36,7 +36,12 @@ export default class EventLimitProvider {
              * @returns {EvaluationResult} ({@link EvaluationResult})
              */
             evaluate: function (datum, valueMetadata) {
-                if (valueMetadata && datum.severity in SEVERITY_CSS) {
+                // prevent applying the class to the tr, only to td
+                if (!valueMetadata) {
+                    return;
+                }
+
+                if (datum.severity in SEVERITY_CSS) {
                     return self.getSeverity(datum, valueMetadata);
                 }
 
