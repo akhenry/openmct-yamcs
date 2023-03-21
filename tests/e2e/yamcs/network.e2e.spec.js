@@ -36,8 +36,12 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
-        await expandTreePaneItemByName(page, 'myproject');
-        await expandTreePaneItemByName(page, 'myproject');
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
+        await expect(myProjectTreeItem).toBeVisible();
+        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
+        await firstMyProjectTriangle.click();
+        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
+        await secondMyProjectTriangle.click();
 
         await page.waitForLoadState('networkidle');
         networkRequests = [];
@@ -65,8 +69,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Should only be fetching:
         // 1. telemetry from parameter archive
-        // 2. batched request for latest telemetry using the bulk API
-        expect(filteredRequests.length).toBe(2);
+        expect(filteredRequests.length).toBe(1);
 
         // Change to fixed time
         await page.locator('button:has-text("Local Clock")').click();
@@ -85,8 +88,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Should fetch from parameter archive, so:
         // 1. GET for first telemetry item from parameter archive
         // 2. GET for second telemetry item from parameter archive
-        // 3. batched request for latest telemetry using the bulk API
-        expect(filteredRequests.length).toBe(3);
+        expect(filteredRequests.length).toBe(2);
 
         await page.waitForLoadState('networkidle');
         networkRequests = [];
@@ -98,10 +100,9 @@ test.describe("Quickstart network requests @yamcs", () => {
         filteredRequests = filterNonFetchRequests(networkRequests);
 
         // Should only be fetching telemetry from parameter archive,
-        // with no further request for limits should be made. So:
+        // with no further request for limits should be made.
         // 1. GET for telemetry item from parameter archive
-        // 2. batched request for latest telemetry using the bulk API
-        expect(filteredRequests.length).toBe(2);
+        expect(filteredRequests.length).toBe(1);
 
         networkRequests = [];
         await page.reload();
@@ -115,9 +116,8 @@ test.describe("Quickstart network requests @yamcs", () => {
         // 2. space systems
         // 3. parameter dictionary
         // 4. specific parameter telemetry for CCSDS_Packet_Length
-        // 5. batched request for latest telemetry using the bulk API
         filteredRequests = filterNonFetchRequests(networkRequests);
-        expect(filteredRequests.length).toBe(5);
+        expect(filteredRequests.length).toBe(4);
 
     });
 
@@ -129,16 +129,3 @@ test.describe("Quickstart network requests @yamcs", () => {
         });
     }
 });
-
-/**
- * @param {import('@playwright/test').Page} page
- * @param {string} name
- */
-async function expandTreePaneItemByName(page, name) {
-    const treePane = page.getByRole('tree', {
-        name: 'Main Tree'
-    });
-    const treeItem = treePane.locator(`role=treeitem[expanded=false][name=/${name}/]`);
-    const expandTriangle = treeItem.locator('.c-disclosure-triangle');
-    await expandTriangle.first().click();
-}

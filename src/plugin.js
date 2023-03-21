@@ -22,9 +22,10 @@
 
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
 import RealtimeProvider from './providers/realtime-provider.js';
-import YamcsObjectProvider from './providers/object-provider.js'
+import YamcsObjectProvider from './providers/object-provider.js';
 import YamcsStalenessProvider from './providers/staleness-provider.js';
 import LimitProvider from './providers/limit-provider';
+import EventLimitProvider from './providers/event-limit-provider';
 import UserProvider from './providers/user/user-provider';
 
 import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
@@ -35,6 +36,7 @@ import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
+import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin";
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -76,6 +78,11 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(stalenessProvider);
 
         openmct.telemetry.addProvider(new LimitProvider(
+            openmct,
+            configuration.yamcsHistoricalEndpoint,
+            configuration.yamcsInstance));
+
+        openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
@@ -184,5 +191,10 @@ export default function installYamcsPlugin(configuration) {
             description: 'Global Status',
             cssClass: 'icon-bell'
         });
+
+        openmct.install(ExportToCSVActionPlugin(
+            configuration.yamcsHistoricalEndpoint,
+            configuration.yamcsInstance));
+
     };
 }

@@ -92,9 +92,9 @@ export default class YamcsObjectProvider {
         return type === this.openmct.objects.SEARCH_TYPES.OBJECTS;
     }
 
-    async search(query, options) {
-        const spaceSystemsSearch = this.#searchMdbApi('space-systems', query, options);
-        const parametersSearch = this.#searchMdbApi('parameters', query, options);
+    async search(query, abortSignal, searchType) {
+        const spaceSystemsSearch = this.#searchMdbApi('space-systems', query, abortSignal);
+        const parametersSearch = this.#searchMdbApi('parameters', query, abortSignal);
 
         const [spaceSystemsResults, parametersResults] = await Promise.all([spaceSystemsSearch, parametersSearch]);
 
@@ -135,9 +135,9 @@ export default class YamcsObjectProvider {
         return telemetries;
     }
 
-    async #searchMdbApi(operation, query, options) {
+    async #searchMdbApi(operation, query, abortSignal) {
         const key = YAMCS_API_MAP[operation];
-        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`);
+        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, abortSignal);
         const hits = search[key];
 
         if (!hits) {
@@ -210,9 +210,9 @@ export default class YamcsObjectProvider {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
-    async #fetchMdbApi(operation, name = '') {
-        const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}${name}`;
-        const response = await fetch(mdbURL);
+    async #fetchMdbApi(operation, abortSignal) {
+        const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
+        const response = await fetch(mdbURL, { signal: abortSignal });
         const parsedJSON = await response.json();
 
         return parsedJSON;
@@ -406,6 +406,10 @@ export default class YamcsObjectProvider {
                 });
             }
 
+            if (this.#isArray(parameter)) {
+                telemetryValue.format = parameter.type.engType;
+            }
+
             obj.telemetry.values.push(telemetryValue);
 
             this.#addHints(key, obj);
@@ -451,6 +455,10 @@ export default class YamcsObjectProvider {
         return parameter?.type?.engType === 'enumeration';
     }
 
+    #isArray(parameter) {
+        return parameter?.type?.engType.endsWith('[]');
+    }
+
     #formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
         let formatted = [];
 
@@ -467,13 +475,24 @@ export default class YamcsObjectProvider {
             }
 
             if (!this.#isAggregate(member)) {
-                formatted.push({
-                    key,
-                    name,
-                    hints: {
-                        range: rangeHint++
-                    }
-                });
+                if (this.#isArray(member)) {
+                    formatted.push({
+                        key,
+                        name,
+                        hints: {
+                            range: rangeHint++
+                        },
+                        format: member.type.engType
+                    });
+                } else {
+                    formatted.push({
+                        key,
+                        name,
+                        hints: {
+                            range: rangeHint++
+                        }
+                    });
+                }
             } else if (this.#aggregateHasMembers(member)) {
                 let formattedSubMembers = this.#formatAggregateMembers(member.type.member, key, rangeHint);
                 formatted = formatted.concat(formattedSubMembers);

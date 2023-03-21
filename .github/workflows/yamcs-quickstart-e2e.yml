@@ -5,6 +5,9 @@ on:
     types:
       - labeled
       - opened
+  schedule:
+    - cron: "0 0 * * 1-5"
+
 
 jobs:
   yamcs-quickstart-e2e:

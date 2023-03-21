@@ -107,7 +107,7 @@ function getValue(item, name) {
             valueResults.push(VALUE_EXTRACT_MAP[arrayValue.type](arrayValue));
         }
 
-        return JSON.stringify(valueResults);
+        return valueResults;
     }
 
     if (value.type === AGGREGATE_TYPE) {
@@ -240,7 +240,10 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
 }
 
 function buildStalenessResponseObject(isStale, timestamp) {
-    return { isStale, timestamp };
+    return {
+        isStale,
+        timestamp
+    };
 }
 
 function getHistoryYieldRequest(signal) {
