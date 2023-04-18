@@ -13,6 +13,15 @@ jobs:
   yamcs-quickstart-e2e:
     timeout-minutes: 8
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        yamcs-version:
+          - latest
+          - ab
+          - viper
+        openmct-version:
+          - latest
+          - stable
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -25,6 +34,7 @@ jobs:
           path: 'quickstart'
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
+          mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ yamcs-version }}
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
