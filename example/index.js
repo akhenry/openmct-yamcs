@@ -47,7 +47,9 @@ const openmct = window.openmct;
     openmct.install(installYamcsPlugin(config));
     openmct.install(openmct.plugins.OperatorStatus({statusStyles: STATUS_STYLES}));
 
-    openmct.start();
+    document.addEventListener('DOMContentLoaded', function () {
+        openmct.start();
+    });
 
     function installDefaultPlugins() {
         openmct.install(openmct.plugins.LocalStorage());
