@@ -69,7 +69,8 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Should only be fetching:
         // 1. telemetry from parameter archive
-        expect(filteredRequests.length).toBe(1);
+        // 2. POST: batchGet for staleness
+        expect(filteredRequests.length).toBe(2);
 
         // Change to fixed time
         await page.locator('button:has-text("Local Clock")').click();
@@ -88,7 +89,8 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Should fetch from parameter archive, so:
         // 1. GET for first telemetry item from parameter archive
         // 2. GET for second telemetry item from parameter archive
-        expect(filteredRequests.length).toBe(2);
+        // 3. POST: batchGet for staleness
+        expect(filteredRequests.length).toBe(3);
 
         await page.waitForLoadState('networkidle');
         networkRequests = [];
@@ -102,7 +104,8 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Should only be fetching telemetry from parameter archive,
         // with no further request for limits should be made.
         // 1. GET for telemetry item from parameter archive
-        expect(filteredRequests.length).toBe(1);
+        // 2. POST: batchGet for staleness
+        expect(filteredRequests.length).toBe(2);
 
         networkRequests = [];
         await page.reload();
@@ -116,8 +119,9 @@ test.describe("Quickstart network requests @yamcs", () => {
         // 2. space systems
         // 3. parameter dictionary
         // 4. specific parameter telemetry for CCSDS_Packet_Length
+        // 5. POST: batchGet for staleness
         filteredRequests = filterNonFetchRequests(networkRequests);
-        expect(filteredRequests.length).toBe(4);
+        expect(filteredRequests.length).toBe(5);
 
     });
 
