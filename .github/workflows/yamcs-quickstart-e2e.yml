@@ -7,7 +7,9 @@ on:
       - opened
   schedule:
     - cron: "0 0 * * 1-5"
-
+  push:
+    branches:
+      - master
 
 jobs:
   yamcs-quickstart-e2e:
@@ -52,10 +54,11 @@ jobs:
             npm run build:example
           fi
       - run: npm run test:getopensource
-      - name: Check that yamcs is available
+      - name: Check that yamcs is available and check it's version
         run: |
           docker ps -a
-          npm run wait-for-yamcs      
+          npm run wait-for-yamcs
+          curl -s http://localhost:8090/api/version | jq '.version'
       - run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
