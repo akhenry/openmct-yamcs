@@ -58,6 +58,8 @@ jobs:
         run: |
           docker ps -a
           npm run wait-for-yamcs
+      - name: Check Yamcs installed version
+        run: |
           curl -s http://localhost:8090/api/version | jq '.version'
       - run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
