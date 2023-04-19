@@ -59,10 +59,15 @@ jobs:
         run: |
           docker ps -a
           npm run wait-for-yamcs
-      - name: Get jq and Check Yamcs installed version
+      - name: Check Yamcs installed version
         run: |
-          sudo apt-get update && sudo apt-get install -y jq
-          curl -s http://localhost:8090/api/version | jq '.version'
+          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api/version)
+          if [ "$response" -eq 200 ]; then
+            cat yamcs_version.json | jq '.version'
+          else
+            echo "Error: Unable to fetch Yamcs version. HTTP status code: $response"
+            exit 1
+          fi
       - run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
