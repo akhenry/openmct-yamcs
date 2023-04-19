@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         yamcs-version:
-          - no_changes
-          - 5.8.0
-          - 5.3.2
+          - default
+          - 5.8.0 #viper
+          - 5.3.2 #ab
         openmct-version:
           - latest
           - stable
@@ -33,7 +33,7 @@ jobs:
           ref: master
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
-        if: matrix.yamcs-version != 'no_changes'
+        if: matrix.yamcs-version != 'default'
         run: |
           cd quickstart
           mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ matrix.yamcs-version }}
@@ -44,7 +44,13 @@ jobs:
           make all &> makeout.txt &
       - run: npm install
       - run: npx playwright@1.32.3 install chromium
-      - run: npm run build:example
+      - name: Run build:example based on openmct-version
+        run: |
+          if [ "${{ matrix.openmct-version }}" = "latest" ]; then
+            npm run build:example:master
+          elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
+            npm run build:example
+          fi
       - run: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
