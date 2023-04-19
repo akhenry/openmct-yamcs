@@ -35,6 +35,7 @@ jobs:
       - name: replace yamcsVersion with matrix param
         if: matrix.yamcs-version != 'no_changes'
         run: |
+          cd quickstart
           mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ matrix.yamcs-version }}
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
