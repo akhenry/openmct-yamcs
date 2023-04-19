@@ -54,7 +54,7 @@ export default class ExportToCSVAction {
     }
 
     // Exports telemetry (or groups of telemetry) data into CSV file
-    async invoke(objectPath) {
+    invoke(objectPath) {
         const object = objectPath[0];
         let parameterIds = [];
         let parameterIdsPromise;
@@ -76,6 +76,7 @@ export default class ExportToCSVAction {
 
             if (!parameterIds.length) {
                 this.openmct.notifications.error(`Failed to export: no telemetry objects found`);
+
                 return;
             }
 
@@ -89,19 +90,20 @@ export default class ExportToCSVAction {
                 saveAs(blob, filename);
             }
         })
-        .catch((error) => {
-            this.openmct.notifications.error(`Failed to export: ${error}`);
-        });
+            .catch((error) => {
+                this.openmct.notifications.error(`Failed to export: ${error}`);
+            });
     }
 
     //Change openmct id to yamcs name and remove namespace from identifier
     getParameter(identifier) {
         let id = this.openmct.objects.makeKeyString(identifier);
         id = idToQualifiedName(id).replace(/^.*:\//, '');
+
         return id;
     }
 
-    fetchExportedValues(parameterIds) {
+    async fetchExportedValues(parameterIds) {
         const bounds = this.openmct.time.bounds();
         const start = bounds.start;
         const end = bounds.end;
@@ -113,14 +115,12 @@ export default class ExportToCSVAction {
         url += `&parameters=${parameterIdsString}`;
         url += `&delimiter=COMMA`;
 
-        return fetch(url)
-            .then(async response => {
-                if (!response.ok) {
-                    return response.json();
-                } else {
-                    return response.text();
-                }
-            });
+        const response = await fetch(url);
+        if (!response.ok) {
+            return response.json();
+        } else {
+            return response.text();
+        }
 
     }
 }
