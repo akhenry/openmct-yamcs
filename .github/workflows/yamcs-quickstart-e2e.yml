@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         yamcs-version:
-          - latest
-          - ab
-          - viper
+          - no_changes
+          - 5.8.0
+          - 5.3.2
         openmct-version:
           - latest
           - stable
@@ -32,9 +32,12 @@ jobs:
           repository: yamcs/quickstart
           ref: master
           path: 'quickstart'
+      - name: replace yamcsVersion with matrix param
+        if: matrix.yamcs-version != 'no_changes'
+        run: |
+          mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ matrix.yamcs-version }}
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ yamcs-version }}
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
