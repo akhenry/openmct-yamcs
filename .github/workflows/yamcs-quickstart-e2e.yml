@@ -61,9 +61,9 @@ jobs:
           npm run wait-for-yamcs
       - name: Check Yamcs installed version
         run: |
-          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api/version)
+          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api)
           if [ "$response" -eq 200 ]; then
-            cat yamcs_version.json | jq '.version'
+            cat yamcs_version.json | jq '.yamcsVersion'
           else
             echo "Error: Unable to fetch Yamcs version. HTTP status code: $response"
             exit 1
