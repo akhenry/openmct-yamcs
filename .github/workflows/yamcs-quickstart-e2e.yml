@@ -18,7 +18,7 @@ jobs:
         yamcs-version:
           - default
           - 5.8.0 #viper
-          - 5.3.2 #ab
+          ## disabling until we get confirmation- 5.3.2 #ab
         openmct-version:
           - latest
           - stable
