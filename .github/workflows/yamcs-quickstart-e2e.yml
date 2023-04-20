@@ -39,7 +39,7 @@ jobs:
         if: matrix.yamcs-version != 'default'
         run: |
           cd quickstart
-          mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ matrix.yamcs-version }}
+          mvn versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
           cat pom.xml
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
