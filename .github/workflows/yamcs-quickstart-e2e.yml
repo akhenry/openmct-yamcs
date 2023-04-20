@@ -7,12 +7,23 @@ on:
       - opened
   schedule:
     - cron: "0 0 * * 1-5"
-
+  push:
+    branches:
+      - master
 
 jobs:
   yamcs-quickstart-e2e:
-    timeout-minutes: 8
+    timeout-minutes: 10
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        yamcs-version:
+          - default
+          - 5.8.0 #viper
+          ## disabling until we get confirmation- 5.3.2 #ab
+        openmct-version:
+          - latest
+          - stable
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -23,6 +34,11 @@ jobs:
           repository: yamcs/quickstart
           ref: master
           path: 'quickstart'
+      - name: replace yamcsVersion with matrix param
+        if: matrix.yamcs-version != 'default'
+        run: |
+          cd quickstart
+          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
@@ -30,13 +46,31 @@ jobs:
           make all &> makeout.txt &
       - run: npm install
       - run: npx playwright@1.32.3 install chromium
-      - run: npm run build:example
+      - name: Run build:example based on openmct-version
+        run: |
+          if [ "${{ matrix.openmct-version }}" = "latest" ]; then
+            npm run build:example:master
+          elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
+            npm run build:example
+          fi
       - run: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
-          npm run wait-for-yamcs      
-      - run: npm run test:e2e:quickstart
+          npm run wait-for-yamcs
+      - name: Check Yamcs installed version
+        run: |
+          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api/)
+          if [ "$response" -eq 200 ]; then
+            cat yamcs_version.json | jq '.yamcsVersion'
+          else
+            echo "Error: Unable to fetch Yamcs version. HTTP status code: $response"
+            exit 1
+          fi
+      - name: Run Quickstart tests and publish to deploysentinel
+        env:
+          DEPLOYSENTINEL_API_KEY: ${{ secrets.DEPLOYSENTINEL_API_KEY }} 
+        run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
         run: docker logs yamcs > yamcs-docker-log.txt 2>&1

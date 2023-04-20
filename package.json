@@ -4,12 +4,13 @@
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
-    "clean": "rm -rf ./dist ./node_modules ./package-lock.json",
+    "clean": "rm -rf ./dist ./node_modules ./package-lock.json ./coverage ./test-results ./tests/html-test-results ./tests/e2e/test-results ./.nyc_output ./tests/e2e/opensource",
     "test": "npm run test:getopensource && npm run test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack --config webpack.prod.js",
     "build:example": "npm install openmct@unstable --no-save",
+    "build:example:master": "npm install nasa/openmct#master --no-save",
     "start": "npx webpack serve --config ./webpack.dev.js",
     "start:coverage": "npx webpack serve --config ./webpack.coverage.js",
     "prepare": "npm run build:dist",
@@ -26,7 +27,7 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=14.19.1"
+    "node": ">=16.19.1"
   },
   "optionalDependencies": {
     "openmct": "^2.0.5"
@@ -34,6 +35,7 @@
   "devDependencies": {
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.19.1",
+    "@deploysentinel/playwright": "0.3.4",
     "@playwright/test": "1.32.3",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
@@ -41,7 +43,7 @@
     "eventemitter3": "4.0.7",
     "file-saver": "2.0.5",
     "sinon": "14.0.0",
-    "source-map-loader": "^4.0.1",
+    "source-map-loader": "4.0.1",
     "uuid": "9.0.0",
     "wait-on": "7.0.1",
     "webpack": "5.75.0",
