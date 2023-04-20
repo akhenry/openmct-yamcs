@@ -9,12 +9,11 @@ on:
     - cron: "0 0 * * 1-5"
   push:
     branches:
-      - e2e-fixes ##Temp
       - master
 
 jobs:
   yamcs-quickstart-e2e:
-    timeout-minutes: 8
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     strategy:
       matrix:
