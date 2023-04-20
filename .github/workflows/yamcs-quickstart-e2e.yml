@@ -20,7 +20,7 @@ jobs:
       matrix:
         yamcs-version:
           - default
-          - 5.8.0 #viper
+          - 5.7.0 #viper
           ## disabling until we get confirmation- 5.3.2 #ab
         openmct-version:
           - latest
@@ -61,7 +61,7 @@ jobs:
           npm run wait-for-yamcs
       - name: Check Yamcs installed version
         run: |
-          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api/)
+          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api)
           if [ "$response" -eq 200 ]; then
             cat yamcs_version.json | jq '.yamcsVersion'
           else
