@@ -40,6 +40,7 @@ jobs:
         run: |
           cd quickstart
           mvn versions:set-property -Dproperty=yamcs.version -DnewVersion=${{ matrix.yamcs-version }}
+          cat pom.xml
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
