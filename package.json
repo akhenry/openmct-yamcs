@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
-    "@babel/eslint-parser": "7.19.1",
+    "@babel/eslint-parser": "7.21.3",
     "@deploysentinel/playwright": "0.3.4",
     "@playwright/test": "1.32.3",
     "babel-loader": "9.1.0",
