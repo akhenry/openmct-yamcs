@@ -39,8 +39,7 @@ jobs:
         if: matrix.yamcs-version != 'default'
         run: |
           cd quickstart
-          mvn versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
-          cat pom.xml
+          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
@@ -56,13 +55,13 @@ jobs:
             npm run build:example
           fi
       - run: npm run test:getopensource
-      - name: Check that yamcs is available and check it's version
+      - name: Check that yamcs is available
         run: |
           docker ps -a
           npm run wait-for-yamcs
       - name: Check Yamcs installed version
         run: |
-          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api)
+          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api/)
           if [ "$response" -eq 200 ]; then
             cat yamcs_version.json | jq '.yamcsVersion'
           else
