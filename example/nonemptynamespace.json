@@ -1,0 +1,119 @@
+{
+  "openmct": {
+    "foobar:mine": {
+      "identifier": {
+        "key": "mine",
+        "namespace": "foobar"
+      },
+      "name": "My Items",
+      "type": "folder",
+      "composition": [
+        {
+          "key": "fc16d735-6308-4ed7-a689-b5626f8c5f57",
+          "namespace": "foobar"
+        },
+        {
+          "key": "45f0e9d4-87c0-48a9-b076-9def7d4777ee",
+          "namespace": "foobar"
+        }
+      ],
+      "location": "ROOT",
+      "modified": 1680819943525,
+      "created": 1680819920532,
+      "persisted": 1680819943525
+    },
+    "foobar:fc16d735-6308-4ed7-a689-b5626f8c5f57": {
+      "identifier": {
+        "key": "fc16d735-6308-4ed7-a689-b5626f8c5f57",
+        "namespace": "foobar"
+      },
+      "name": "Unnamed Clock",
+      "type": "clock",
+      "configuration": {
+        "baseFormat": "YYYY/MM/DD hh:mm:ss",
+        "use24": "clock12",
+        "timezone": "UTC"
+      },
+      "modified": 1680819928739,
+      "location": "foobar:mine",
+      "created": 1680819928739,
+      "persisted": 1680819928739
+    },
+    "foobar:45f0e9d4-87c0-48a9-b076-9def7d4777ee": {
+      "identifier": {
+        "key": "45f0e9d4-87c0-48a9-b076-9def7d4777ee",
+        "namespace": "foobar"
+      },
+      "name": "Cool Layout",
+      "type": "layout",
+      "composition": [
+        {
+          "key": "fc16d735-6308-4ed7-a689-b5626f8c5f57",
+          "namespace": "foobar"
+        }
+      ],
+      "configuration": {
+        "items": [
+          {
+            "width": 32,
+            "height": 18,
+            "x": 9,
+            "y": 7,
+            "identifier": {
+              "key": "fc16d735-6308-4ed7-a689-b5626f8c5f57",
+              "namespace": "foobar"
+            },
+            "hasFrame": true,
+            "fontSize": "default",
+            "font": "default",
+            "type": "subobject-view",
+            "id": "de79bec7-c124-4b2d-8dd5-e592278dc91d"
+          },
+          {
+            "fill": "#666666",
+            "stroke": "",
+            "x": 42,
+            "y": 13,
+            "width": 10,
+            "height": 5,
+            "type": "box-view",
+            "id": "14f47888-3011-4278-bd37-42f4c9b0225b"
+          },
+          {
+            "fill": "#666666",
+            "stroke": "",
+            "x": 29,
+            "y": 53,
+            "width": 10,
+            "height": 10,
+            "type": "ellipse-view",
+            "id": "2912d25e-05d4-4d4c-b2f9-0446564c6321"
+          },
+          {
+            "fill": "",
+            "stroke": "",
+            "color": "",
+            "x": 30,
+            "y": 27,
+            "width": 10,
+            "height": 5,
+            "text": "henlo",
+            "fontSize": "default",
+            "font": "default",
+            "type": "text-view",
+            "id": "6285f8ff-4235-47f3-a0c0-af23b7a5f175"
+          }
+        ],
+        "layoutGrid": [
+          10,
+          10
+        ]
+      },
+      "modified": 1680819975848,
+      "location": "foobar:mine",
+      "created": 1680819943523,
+      "persisted": 1680819975848
+    }
+  },
+  "rootId": "foobar:mine"
+}

@@ -3,7 +3,7 @@
 
 /** @type {import('@playwright/test').PlaywrightTestConfig<{ failOnConsoleError: boolean, myItemsFolderName: string }>} */
 const config = {
-    retries: 1,
+    retries: 0,
     testDir: '.',
     testMatch: '**/*.e2e.spec.js',
     timeout: 30 * 1000,
@@ -42,7 +42,13 @@ const config = {
             grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
-                channel: 'chrome'
+                channel: 'chrome',
+                headless: false,
+                launchOptions: {
+                    args: [
+                        '--js-flags=--expose-gc'
+                    ]
+                }
             }
         },
         {

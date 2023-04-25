@@ -182,8 +182,22 @@ export default class RealtimeProvider {
             this.flushQueue();
         };
 
+        this.longtask = false;
+
         this.socket.onmessage = (event) => {
             const message = JSON.parse(event.data);
+
+            // const arr = [];
+
+            // const start = performance.now();
+            // let diff = performance.now() - start;
+
+            // while (diff < 100) {
+            //     diff = performance.now() - start;
+            //     const thing = JSON.parse(JSON.stringify(message));
+            //     arr.push(thing.length);
+            //     this.arrResult = arr;
+            // }
 
             if (!this.isSupportedDataType(message.type)) {
                 return;
@@ -252,6 +266,8 @@ export default class RealtimeProvider {
                     subscriptionDetails.callback(message.data);
                 }
             }
+
+            console.log(arr);
         };
 
         this.socket.onerror = (error) => {

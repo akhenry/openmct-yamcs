@@ -9,7 +9,7 @@
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack --config webpack.prod.js",
-    "build:example": "npm install openmct@unstable --no-save",
+    "build:example": "npm install nasa/openmct#master --no-save",
     "start": "npx webpack serve --config ./webpack.dev.js",
     "start:coverage": "npx webpack serve --config ./webpack.coverage.js",
     "prepare": "npm run build:dist",
@@ -29,12 +29,12 @@
     "node": ">=14.19.1"
   },
   "optionalDependencies": {
-    "openmct": "^2.0.5"
+    "openmct": "file:../openmct-clean"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.19.1",
-    "@playwright/test": "1.29.0",
+    "@playwright/test": "^1.29.0",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
     "eslint": "8.29.0",

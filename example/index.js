@@ -86,7 +86,14 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.Notebook());
         openmct.install(openmct.plugins.LADTable());
         openmct.install(openmct.plugins.ClearData(['table', 'telemetry.plot.overlay', 'telemetry.plot.stacked']));
-
         openmct.install(openmct.plugins.FaultManagement());
+        openmct.install(openmct.plugins.PerformanceIndicator());
+
+        // Also install the Clock plugin since the JSON includes one :)
+        openmct.install(openmct.plugins.Clock({ enableClockIndicator: true }));
+        openmct.install(openmct.plugins.StaticRootPlugin({
+            namespace: 'test-namespace',
+            exportUrl: './nonemptynamespace.json'
+        }));
     }
 }());
