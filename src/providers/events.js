@@ -40,7 +40,31 @@ export function createEventsObject(openmct, parentKey, namespace) {
             values: [
                 {
                     key: 'severity',
-                    name: 'Severity'
+                    name: 'Severity',
+                    filters: [{
+                        comparator: 'equals',
+                        possibleValues: [
+                            {
+                                value: true,
+                                label: 'info'
+                            }, {
+                                value: false,
+                                label: 'watch'
+                            }, {
+                                value: false,
+                                label: 'warning'
+                            }, {
+                                value: false,
+                                label: 'distress'
+                            }, {
+                                value: false,
+                                label: 'critical'
+                            }, {
+                                value: false,
+                                label: 'severe'
+                            }
+                        ]
+                    }]
                 },
                 {
                     key: 'utc',
