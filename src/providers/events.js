@@ -40,28 +40,29 @@ export function createEventsObject(openmct, parentKey, namespace) {
             values: [
                 {
                     key: 'severity',
-                    name: 'Severity',
+                    name: 'Minimum Severity Threshold',
                     filters: [{
+                        singleSelectionThreshold: true,
                         comparator: 'equals',
                         possibleValues: [
                             {
-                                value: true,
-                                label: 'info'
+                                value: 'info',
+                                label: 'Info'
                             }, {
-                                value: false,
-                                label: 'watch'
+                                value: 'watch',
+                                label: 'Watch'
                             }, {
-                                value: false,
-                                label: 'warning'
+                                value: 'warning',
+                                label: 'Warning'
                             }, {
-                                value: false,
-                                label: 'distress'
+                                value: 'distress',
+                                label: 'Distress'
                             }, {
-                                value: false,
-                                label: 'critical'
+                                value: 'critical',
+                                label: 'Critical'
                             }, {
-                                value: false,
-                                label: 'severe'
+                                value: 'severe',
+                                label: 'Severe'
                             }
                         ]
                     }]
