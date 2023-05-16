@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES, METADATA_TIME_KEY } from "../const";
+import { OBJECT_TYPES, METADATA_TIME_KEY, SEVERITY_LEVELS } from "../const";
 
 export function createEventsObject(openmct, parentKey, namespace) {
     const location = openmct.objects.makeKeyString({
@@ -40,31 +40,16 @@ export function createEventsObject(openmct, parentKey, namespace) {
             values: [
                 {
                     key: 'severity',
-                    name: 'Minimum Severity Threshold',
+                    name: 'Severity Threshold',
                     filters: [{
                         singleSelectionThreshold: true,
                         comparator: 'equals',
-                        possibleValues: [
-                            {
-                                value: 'info',
-                                label: 'Info'
-                            }, {
-                                value: 'watch',
-                                label: 'Watch'
-                            }, {
-                                value: 'warning',
-                                label: 'Warning'
-                            }, {
-                                value: 'distress',
-                                label: 'Distress'
-                            }, {
-                                value: 'critical',
-                                label: 'Critical'
-                            }, {
-                                value: 'severe',
-                                label: 'Severe'
-                            }
-                        ]
+                        possibleValues: SEVERITY_LEVELS.map((level) => {
+                            return {
+                                label: level,
+                                value: level
+                            };
+                        })
                     }]
                 },
                 {
@@ -105,6 +90,18 @@ export function createEventsObject(openmct, parentKey, namespace) {
     };
 
     return eventsObject;
+}
+
+export function eventShouldBeFiltered(event, options) {
+    const { severity } = event;
+    const incomingEventSeverity = severity?.toLowerCase();
+    const severityLevelToFilter = options?.filters?.severity?.equals?.[0];
+    const severityLevelToFilterIndex = SEVERITY_LEVELS.indexOf(severityLevelToFilter);
+    const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
+    console.debug(`🔮 incoming event has severity ${incomingEventSeverity} with index ${incomingEventSeverityIndex}`);
+    console.debug(`🔮 filter severity is ${severityLevelToFilter} with index ${severityLevelToFilterIndex}`);
+
+    return incomingEventSeverityIndex < severityLevelToFilterIndex;
 }
 
 /**
