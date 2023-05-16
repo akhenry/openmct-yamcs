@@ -98,8 +98,6 @@ export function eventShouldBeFiltered(event, options) {
     const severityLevelToFilter = options?.filters?.severity?.equals?.[0];
     const severityLevelToFilterIndex = SEVERITY_LEVELS.indexOf(severityLevelToFilter);
     const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
-    console.debug(`🔮 incoming event has severity ${incomingEventSeverity} with index ${incomingEventSeverityIndex}`);
-    console.debug(`🔮 filter severity is ${severityLevelToFilter} with index ${severityLevelToFilterIndex}`);
 
     return incomingEventSeverityIndex < severityLevelToFilterIndex;
 }
