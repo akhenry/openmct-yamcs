@@ -146,9 +146,14 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     buildUrl(id, options) {
+        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
+
+        if (options.isSamples) {
+            url += '/samples';
+        }
+
         let start = options.start;
         let end = options.end;
-        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
 
         // handle exclusive start/stop functionality from yamcs
         if (options.order === 'asc') {
@@ -157,16 +162,21 @@ export default class YamcsHistoricalTelemetryProvider {
             start--;
         }
 
-        if (options.isSamples) {
-            url += '/samples';
+        const urlWithQueryParameters = new URL(url);
+        urlWithQueryParameters.searchParams.append('start', new Date(start).toISOString());
+        urlWithQueryParameters.searchParams.append('stop', new Date(end).toISOString());
+        urlWithQueryParameters.searchParams.append(options.sizeType, options.size);
+        urlWithQueryParameters.searchParams.append('order', options.order);
+
+        if (options.filters?.severity?.equals?.length) {
+            // add a single minimum severity threshold filter
+            // see https://docs.yamcs.org/yamcs-http-api/events/list-events/
+            // for more information
+            const severityThresholdFilter = options.filters?.severity?.equals[0];
+            urlWithQueryParameters.searchParams.append('severity', severityThresholdFilter);
         }
 
-        url += `?start=${new Date(start).toISOString()}`;
-        url += `&stop=${new Date(end).toISOString()}`;
-        url += `&${options.sizeType}=${options.size}`;
-        url += `&order=${options.order}`;
-
-        return url;
+        return urlWithQueryParameters.toString();
     }
 
     // cap size at 1000, temporarily to prevent errors
