@@ -25,7 +25,7 @@ Filter Specific Tests
 */
 
 const { test, expect } = require('../opensource/pluginFixtures');
-const { createDomainObjectWithDefaults } = require('../opensource/appActions');
+const { createDomainObjectWithDefaults, selectInspectorTab } = require('../opensource/appActions');
 
 test.describe("Filter tests @yamcs", () => {
     test('Can filter events by severity', async ({ page }) => {
@@ -41,28 +41,28 @@ test.describe("Filter tests @yamcs", () => {
         await eventsTreeItem.dragTo(objectPane);
 
         // ensure global filters work
-        await page.getByText('Filters', { exact: true }).click({ force: true });
+        await selectInspectorTab(page, 'Filters');
         await page.getByRole('listitem').filter({ hasText: 'Global Filtering' }).locator('span').click();
         await page.getByRole('listitem').filter({ hasText: 'Events' }).locator('span').click();
-        await page.getByRole('combobox').nth(0).selectOption('critical');
+        await page.locator('[aria-label="Global Filter"]').selectOption('critical');
         await expect(page.getByText('Filters applied')).toBeVisible();
         await expect(page.getByTitle('Data filters are being applied to this view.').getByText('critical')).toBeVisible();
-        await page.getByRole('combobox').nth(0).selectOption('NONE');
+        await page.locator('[aria-label="Global Filter"]').selectOption('NONE');
         await expect(page.getByText('Filters applied')).toBeHidden();
         await expect(page.getByTitle('Data filters are being applied to this view.')).toBeHidden();
 
         // ensure specific object filters work
         await page.getByRole('switch').click();
-        await page.getByRole('combobox').nth(1).selectOption('info');
+        await page.locator('[aria-label="Specific Filter"]').selectOption('info');
         await expect(page.getByText('Filters applied')).toBeVisible();
         await expect(page.getByTitle('Data filters are being applied to this view.').getByText('info')).toBeVisible();
-        await page.getByRole('combobox').nth(1).selectOption('NONE');
+        await page.locator('[aria-label="Specific Filter"]').selectOption('NONE');
         await expect(page.getByText('Filters applied')).toBeHidden();
         await expect(page.getByTitle('Data filters are being applied to this view.')).toBeHidden();
 
         // ensure specific object filters override global filters
-        await page.getByRole('combobox').nth(1).selectOption('info');
-        await page.getByRole('combobox').nth(0).selectOption('critical');
+        await page.locator('[aria-label="Specific Filter"]').selectOption('info');
+        await page.locator('[aria-label="Global Filter"]').selectOption('critical');
         await expect(page.getByText('Filters applied')).toBeVisible();
         await expect(page.getByTitle('Data filters are being applied to this view.').getByText('info')).toBeVisible();
 
