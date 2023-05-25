@@ -38,6 +38,9 @@ export function createCommandsObject(openmct, parentKey, namespace) {
         location,
         name: 'Commands',
         type: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
+        configuration: {
+            inPlaceUpdates: true
+        },
         telemetry: {
             values: [
                 {
@@ -147,14 +150,15 @@ export function createCommandsObject(openmct, parentKey, namespace) {
  * @returns {Object} telemetryDatum
  */
 export function commandToTelemetryDatum(command) {
-    const { generationTime, commandId, attr, assignments } = command;
+    const { generationTime, commandId, attr, assignments, id } = command;
     const { origin, sequenceNumber, commandName } = commandId;
     let datum = {
         id: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
         generationTime,
         origin,
         sequenceNumber,
-        commandName
+        commandName,
+        messageId: id
     };
     datum = attr ? flattenObjectArray(attr, datum) : datum;
     datum = assignments ? flattenObjectArray(assignments, datum) : datum;
