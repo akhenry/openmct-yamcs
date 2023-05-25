@@ -265,11 +265,11 @@ export default class YamcsHistoricalTelemetryProvider {
             return [];
         }
 
-        let values = [];
+        const values = [];
         results.forEach(result => {
             if (result.n > 0) {
-                let min_value = {
-                    timestamp: result.time,
+                const min_value = {
+                    timestamp: result.minTime,
                     value: result.min,
                     id: id
                 };
@@ -279,8 +279,8 @@ export default class YamcsHistoricalTelemetryProvider {
             }
 
             if (result.n > 1) {
-                let max_value = {
-                    timestamp: result.time,
+                const max_value = {
+                    timestamp: result.maxTime,
                     value: result.max,
                     id: id
                 };
