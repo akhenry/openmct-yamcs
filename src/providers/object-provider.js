@@ -66,7 +66,7 @@ export default class YamcsObjectProvider {
         this.#dictionary = {};
         this.#spaceSystemPromise = null;
         this.#parameterLoadingQueue = [];
-        this.flushparameterLoadingQueue = _.debounce(this.flushparameterLoadingQueue.bind(this));
+        this.flushparameterLoadingQueue = _.debounce(this.flushparameterLoadingQueue.bind(this), BATCH_DEBOUNCE_MS);
         this.#roleStatusTelemetry = roleStatusTelemetry;
         this.#pollQuestionParameter = pollQuestionParameter;
         this.#pollQuestionTelemetry = pollQuestionTelemetry;
