@@ -32,21 +32,21 @@ export default class YamcsCompositionProvider {
     }
 
     appliesTo(domainObject) {
-        return (domainObject?.identifier?.namespace === this.#yamcsNamespace);
+        return (domainObject?.identifier?.namespace === this.#yamcsNamespace) && (domainObject.type === 'folder');
     }
 
     async load(domainObject) {
         if (domainObject.type === 'folder') {
             // we're a space system
-            console.debug(`🍎 Loading space system composition for ${domainObject.identifier.key}`, domainObject);
             await this.#yamcsObjectProvider.loadParametersForSpaceSystem(domainObject);
             const loadedObject = await this.#yamcsObjectProvider.get(domainObject.identifier);
+            console.debug(`🍎 Loading space system composition for ${domainObject.identifier.key}`, loadedObject);
 
             return loadedObject.composition ?? [];
         } else {
             // we're a parameter
-            console.debug(`🍊 Loading parameter composition for ${domainObject.identifier.key}`, domainObject);
             const loadedObject = await this.#yamcsObjectProvider.get(domainObject.identifier);
+            console.debug(`🍊 Loading parameter composition for ${domainObject.identifier.key}`, loadedObject);
 
             return loadedObject.composition ?? [];
         }
