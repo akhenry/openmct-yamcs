@@ -55,6 +55,7 @@ export default class YamcsObjectProvider {
     #roleStatusTelemetry;
     #pollQuestionParameter;
     #pollQuestionTelemetry;
+    #fullyLoadedCompositions;
 
     constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry) {
         this.#openmct = openmct;
@@ -66,6 +67,7 @@ export default class YamcsObjectProvider {
         this.#namespace = NAMESPACE;
         this.#key = 'spacecraft';
         this.#dictionary = {};
+        this.#fullyLoadedCompositions = {};
         this.#spaceSystemPromise = null;
         this.#parameterLoadingQueue = [];
         this.flushparameterLoadingQueue = _.debounce(this.flushparameterLoadingQueue.bind(this), BATCH_DEBOUNCE_MS);
@@ -301,6 +303,10 @@ export default class YamcsObjectProvider {
     }
 
     async loadParametersForSpaceSystem(domainObject) {
+        if (this.#fullyLoadedCompositions[domainObject.identifier.key]) {
+            return;
+        }
+
         console.debug(`🍇 Loading parameters for space system ${domainObject.identifier.key}`);
         const spaceSystemQualifiedName = idToQualifiedName(domainObject.identifier.key);
         this.#listParameterUrl.searchParams.set('system', spaceSystemQualifiedName);
@@ -308,6 +314,7 @@ export default class YamcsObjectProvider {
         childParameters.forEach(parameter => {
             this.#addParameterObject(parameter);
         });
+        this.#fullyLoadedCompositions[domainObject.identifier.key] = true;
     }
 
     #addSpaceSystem(spaceSystem) {

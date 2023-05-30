@@ -40,13 +40,13 @@ export default class YamcsCompositionProvider {
             // we're a space system
             await this.#yamcsObjectProvider.loadParametersForSpaceSystem(domainObject);
             const loadedObject = await this.#yamcsObjectProvider.get(domainObject.identifier);
-            console.debug(`🍎 Loading space system composition for ${domainObject.identifier.key}`, loadedObject);
+            // console.debug(`🍎 Loading space system composition for ${domainObject.identifier.key}`, loadedObject);
 
             return loadedObject.composition ?? [];
         } else {
             // we're a parameter
             const loadedObject = await this.#yamcsObjectProvider.get(domainObject.identifier);
-            console.debug(`🍊 Loading parameter composition for ${domainObject.identifier.key}`, loadedObject);
+            // console.debug(`🍊 Loading parameter composition for ${domainObject.identifier.key}`, loadedObject);
 
             return loadedObject.composition ?? [];
         }
