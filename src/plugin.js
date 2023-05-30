@@ -23,6 +23,7 @@
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
 import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
+import YamcsCompositionProvider from './providers/composition-provider.js';
 import YamcsStalenessProvider from './providers/staleness-provider.js';
 import LimitProvider from './providers/limit-provider';
 import EventLimitProvider from './providers/event-limit-provider';
@@ -39,6 +40,8 @@ import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin";
 
 export default function installYamcsPlugin(configuration) {
+    configuration.yamcsNamespace = configuration.yamcsNamespace ?? 'taxonomy';
+
     return function install(openmct) {
 
         openmct.install(openmct.plugins.ISOTimeFormat());
@@ -125,12 +128,20 @@ export default function installYamcsPlugin(configuration) {
             pollQuestionTelemetry
         );
 
+        const compositionProvider = new YamcsCompositionProvider(
+            openmct,
+            objectProvider,
+            configuration.yamcsNamespace
+        );
+
         openmct.objects.addRoot({
-            namespace: 'taxonomy',
+            namespace: configuration.yamcsNamespace,
             key: 'spacecraft'
         });
 
-        openmct.objects.addProvider('taxonomy', objectProvider);
+        openmct.objects.addProvider(configuration.yamcsNamespace, objectProvider);
+
+        openmct.composition.addProvider(compositionProvider);
 
         openmct.types.addType(OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE, {
             name: 'Aggregate Telemetry Points',

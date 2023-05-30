@@ -45,6 +45,7 @@ export default class YamcsObjectProvider {
     #url;
     #instance;
     #bulkParameterUrl;
+    #listParameterUrl;
     #folderName;
     #namespace;
     #key;
@@ -60,6 +61,7 @@ export default class YamcsObjectProvider {
         this.#url = url;
         this.#instance = instance;
         this.#bulkParameterUrl = new URL(`${this.#url}api/mdb/${this.#instance}/parameters:batchGet`);
+        this.#listParameterUrl = new URL(`${this.#url}api/mdb/${this.#instance}/parameters?details=yes&limit=1000`);
         this.#folderName = folderName;
         this.#namespace = NAMESPACE;
         this.#key = 'spacecraft';
@@ -128,7 +130,7 @@ export default class YamcsObjectProvider {
                 console.debug(`📦 Adding ${parameterName} to batch request`);
 
                 return {
-                    name: parameterName,
+                    name: parameterName
                 };
             });
             const bodyForYamcs = {
@@ -280,7 +282,6 @@ export default class YamcsObjectProvider {
             return a.name.localeCompare(b.name);
         });
         spaceSystems.forEach(spaceSystem => {
-            console.debug(`📦 Building space system`, spaceSystem);
             this.#addSpaceSystem(spaceSystem);
         });
 
@@ -297,6 +298,16 @@ export default class YamcsObjectProvider {
         const parsedJSON = await response.json();
 
         return parsedJSON;
+    }
+
+    async loadParametersForSpaceSystem(domainObject) {
+        console.debug(`🍇 Loading parameters for space system ${domainObject.identifier.key}`);
+        const spaceSystemQualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.#listParameterUrl.searchParams.set('system', spaceSystemQualifiedName);
+        const childParameters = await accumulateResults(this.#listParameterUrl, {}, 'parameters', []);
+        childParameters.forEach(parameter => {
+            this.#addParameterObject(parameter);
+        });
     }
 
     #addSpaceSystem(spaceSystem) {
@@ -340,6 +351,7 @@ export default class YamcsObjectProvider {
 
             /* Add the space system to the root object if it's top-level. */
             if (spaceSystem.qualifiedName.lastIndexOf('/') === 0) {
+                this.#listParameterUrl.searchParams.set('system', spaceSystem.qualifiedName);
                 this.rootObject.composition.push({
                     key: id,
                     namespace: this.#namespace
