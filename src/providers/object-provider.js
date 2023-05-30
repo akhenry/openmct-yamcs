@@ -280,6 +280,7 @@ export default class YamcsObjectProvider {
             return a.name.localeCompare(b.name);
         });
         spaceSystems.forEach(spaceSystem => {
+            console.debug(`📦 Building space system`, spaceSystem);
             this.#addSpaceSystem(spaceSystem);
         });
 
