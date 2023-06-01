@@ -30,7 +30,7 @@ import {
     addLimitInformation
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum } from './events';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -83,8 +83,8 @@ export default class RealtimeProvider {
         return this.supportedDataTypes[type];
     }
 
-    subscribe(domainObject, callback) {
-        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+    subscribe(domainObject, callback, options) {
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, options);
         let id = subscriptionDetails.subscriptionId;
         this.subscriptionsById[id] = subscriptionDetails;
 
@@ -102,7 +102,7 @@ export default class RealtimeProvider {
         };
     }
 
-    buildSubscriptionDetails(domainObject, callback) {
+    buildSubscriptionDetails(domainObject, callback, options) {
         let subscriptionId = this.lastSubscriptionId++;
         let subscriptionDetails = {
             instance: this.instance,
@@ -110,6 +110,7 @@ export default class RealtimeProvider {
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
             updateOnExpiration: true,
+            options,
             callback: callback
         };
 
@@ -175,7 +176,7 @@ export default class RealtimeProvider {
             clearTimeout(this.reconnectTimeout);
 
             this.connected = true;
-            console.log(`🔌 Established websocket connection to ${wsUrl}`);
+            console.debug(`🔌 Established websocket connection to ${wsUrl}`);
 
             this.currentWaitIndex = 0;
             this.resubscribeToAll();
@@ -246,8 +247,12 @@ export default class RealtimeProvider {
                     const datum = commandToTelemetryDatum(message.data);
                     subscriptionDetails.callback(datum);
                 } else if (this.isEventMessage(message)) {
-                    const datum = eventToTelemetryDatum(message.data);
-                    subscriptionDetails.callback(datum);
+                    if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
+                        // ignore event
+                    } else {
+                        const datum = eventToTelemetryDatum(message.data);
+                        subscriptionDetails.callback(datum);
+                    }
                 } else {
                     subscriptionDetails.callback(message.data);
                 }
