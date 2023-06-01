@@ -31,6 +31,10 @@ test.describe("Filter tests @yamcs", () => {
     test('Can filter events by severity', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
+
+        const buildInfo = await page.evaluate(() => window.openmct.buildInfo);
+        test.skip(buildInfo.version.replace('-SNAPSHOT', '') < '2.2.5', 'This test requires Open MCT 2.2.5 or later');
+
         const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
         const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
         await firstMyProjectTriangle.click();
