@@ -22,7 +22,6 @@
 
 import {
     qualifiedNameToId,
-    idToQualifiedName,
     accumulateResults
 } from '../utils.js';
 
@@ -31,53 +30,34 @@ import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';
 import limitConfig from "../limits-config.json";
-import _ from 'lodash';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
 const operatorStatusParameter = new OperatorStatusParameter();
-const BATCH_DEBOUNCE_MS = 100;
 
 export default class YamcsObjectProvider {
-    #openmct;
-    #url;
-    #instance;
-    #bulkParameterUrl;
-    #folderName;
-    #namespace;
-    #key;
-    #dictionary;
-    #spaceSystemPromise;
-    #parameterLoadingQueue;
-    #roleStatusTelemetry;
-    #pollQuestionParameter;
-    #pollQuestionTelemetry;
-
     constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry) {
-        this.#openmct = openmct;
-        this.#url = url;
-        this.#instance = instance;
-        this.#bulkParameterUrl = new URL(`${this.#url}api/mdb/${this.#instance}/parameters:batchGet`);
-        this.#folderName = folderName;
-        this.#namespace = NAMESPACE;
-        this.#key = 'spacecraft';
-        this.#dictionary = {};
-        this.#spaceSystemPromise = null;
-        this.#parameterLoadingQueue = [];
-        this.flushparameterLoadingQueue = _.debounce(this.flushparameterLoadingQueue.bind(this), BATCH_DEBOUNCE_MS);
-        this.#roleStatusTelemetry = roleStatusTelemetry;
-        this.#pollQuestionParameter = pollQuestionParameter;
-        this.#pollQuestionTelemetry = pollQuestionTelemetry;
+        this.openmct = openmct;
+        this.url = url;
+        this.instance = instance;
+        this.folderName = folderName;
+        this.namespace = NAMESPACE;
+        this.key = 'spacecraft';
+        this.dictionary = {};
+        this.dictionaryPromise = null;
+        this.roleStatusTelemetry = roleStatusTelemetry;
+        this.pollQuestionParameter = pollQuestionParameter;
+        this.pollQuestionTelemetry = pollQuestionTelemetry;
 
         this.#initialize();
     }
 
     #initialize() {
         this.#createRootObject();
-        const eventsObject = createEventsObject(this.#openmct, this.#key, this.#namespace);
-        const commandsObject = createCommandsObject(this.#openmct, this.#key, this.#namespace);
+        const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
+        const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
         this.#addObject(commandsObject);
         this.#addObject(eventsObject);
         this.rootObject.composition.push(
@@ -89,10 +69,10 @@ export default class YamcsObjectProvider {
     #createRootObject() {
         this.rootObject = {
             identifier: {
-                key: this.#key,
-                namespace: this.#namespace
+                key: this.key,
+                namespace: this.namespace
             },
-            name: this.#folderName,
+            name: this.folderName,
             type: 'folder',
             location: 'ROOT',
             composition: []
@@ -104,78 +84,12 @@ export default class YamcsObjectProvider {
     async get(identifier) {
         const { key } = identifier;
         const dictionary = await this.#getTelemetryDictionary();
-        if (dictionary[key]) {
-            return dictionary[key];
-        } else {
-            // need to lazy load this
-            console.debug(`❓ Lazy loading ${key} from dictionary`);
 
-            return new Promise((resolve, reject) => {
-                this.#parameterLoadingQueue.push({
-                    key,
-                    resolve,
-                    reject
-                });
-                this.flushparameterLoadingQueue();
-            });
-        }
-    }
-
-    async flushparameterLoadingQueue(abortSignal) {
-        if (this.#parameterLoadingQueue.length >= 1) {
-            const batch = this.#parameterLoadingQueue.map((queued) => {
-                const parameterName = idToQualifiedName(queued.key);
-                console.debug(`📦 Adding ${parameterName} to batch request`);
-
-                return {
-                    name: parameterName,
-                };
-            });
-            const bodyForYamcs = {
-                id: batch
-            };
-            const fetchOptions = {
-                method: 'POST',
-                body: JSON.stringify(bodyForYamcs),
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                signal: abortSignal
-            };
-            console.debug(`📦 Fetching ${batch.length} objects from dictionary`, bodyForYamcs);
-            const bulkGetResponse = await fetch(this.#bulkParameterUrl, fetchOptions);
-            if (!bulkGetResponse.ok) {
-                const error = new Error(`Failed to fetch objects from dictionary: ${bulkGetResponse.statusText}`);
-                error.response = bulkGetResponse;
-                this.#parameterLoadingQueue.forEach((queuedObject) => {
-                    queuedObject.reject(error);
-                });
-
-                return;
-            }
-
-            const parameterResults = await bulkGetResponse.json();
-            parameterResults.response.forEach((parameterResult) => {
-                const foundQueuedParameter = this.#parameterLoadingQueue.find((queuedParameter) => {
-                    const transformedResultName = qualifiedNameToId(parameterResult.parameter.qualifiedName);
-
-                    return queuedParameter.key === transformedResultName;
-                });
-                if (foundQueuedParameter) {
-                    console.debug(`📦 Building parameter`, parameterResult.parameter);
-                    this.#addParameterObject(parameterResult.parameter);
-                    const builtParameter = this.#dictionary[foundQueuedParameter.key];
-                    foundQueuedParameter.resolve(builtParameter);
-                }
-            });
-            console.debug(`📦 Received ${parameterResults.response.length} objects from dictionary`);
-        }
-
-        this.persistenceQueue = [];
+        return dictionary[key];
     }
 
     supportsSearchType(type) {
-        return type === this.#openmct.objects.SEARCH_TYPES.OBJECTS;
+        return type === this.openmct.objects.SEARCH_TYPES.OBJECTS;
     }
 
     async search(query, abortSignal, searchType) {
@@ -190,7 +104,7 @@ export default class YamcsObjectProvider {
     async #convertSingleSearchHitToTelemetry(qualifiedName) {
         const identifier = {
             key: qualifiedNameToId(qualifiedName),
-            namespace: this.#namespace
+            namespace: this.namespace
         };
         const telemetry = await this.get(identifier);
 
@@ -222,7 +136,6 @@ export default class YamcsObjectProvider {
     }
 
     async #searchMdbApi(operation, query, abortSignal) {
-        console.debug(`🕵️‍♀️ Searching MDB API for ${operation} with query ${query}`);
         const key = YAMCS_API_MAP[operation];
         const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, abortSignal);
         const hits = search[key];
@@ -260,19 +173,22 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        if (!this.#spaceSystemPromise) {
-            this.#spaceSystemPromise = this.#loadSpaceSystems(this.#url, this.#instance, this.#folderName)
+        if (!this.dictionaryPromise) {
+            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
                 .finally(() => {
-                    this.#roleStatusTelemetry.dictionaryLoadComplete();
+                    this.roleStatusTelemetry.dictionaryLoadComplete();
                 });
         }
 
-        return this.#spaceSystemPromise;
+        return this.dictionaryPromise;
     }
 
-    async #loadSpaceSystems() {
+    async #loadTelemetryDictionary() {
+        const operation = 'parameters?details=yes&limit=1000';
+        const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
         const url = this.#getMdbUrl('space-systems');
         const spaceSystems = await accumulateResults(url, {}, 'spaceSystems', []);
+        const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
 
         /* Sort the space systems by name, so that the
             children of the root object are in sorted order. */
@@ -283,15 +199,19 @@ export default class YamcsObjectProvider {
             this.#addSpaceSystem(spaceSystem);
         });
 
-        return this.#dictionary;
+        parameters.forEach(parameter => {
+            this.#addParameterObject(parameter);
+        });
+
+        return this.dictionary;
     }
 
     #getMdbUrl(operation, name = '') {
-        return this.#url + 'api/mdb/' + this.#instance + '/' + operation + name;
+        return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
     async #fetchMdbApi(operation, abortSignal) {
-        const mdbURL = `${this.#url}api/mdb/${this.#instance}/${operation}`;
+        const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
         const response = await fetch(mdbURL, { signal: abortSignal });
         const parsedJSON = await response.json();
 
@@ -311,7 +231,7 @@ export default class YamcsObjectProvider {
                     let subId = qualifiedNameToId(sub.qualifiedName);
                     composition.push({
                         key: subId,
-                        namespace: this.#namespace
+                        namespace: this.namespace
                     });
                 });
             }
@@ -319,15 +239,15 @@ export default class YamcsObjectProvider {
             let id = qualifiedNameToId(spaceSystem.qualifiedName);
             const locationId = id.substring(0, id.lastIndexOf('~'));
             const isSubSystem = locationId.includes('~');
-            const key = isSubSystem ? locationId : this.#key;
-            const location = this.#openmct.objects.makeKeyString({
-                namespace: this.#namespace,
+            const key = isSubSystem ? locationId : this.key;
+            const location = this.openmct.objects.makeKeyString({
+                namespace: this.namespace,
                 key: key
             });
             let obj = {
                 identifier: {
                     key: id,
-                    namespace: this.#namespace
+                    namespace: this.namespace
                 },
                 name: spaceSystem.name,
                 type: 'folder',
@@ -341,14 +261,14 @@ export default class YamcsObjectProvider {
             if (spaceSystem.qualifiedName.lastIndexOf('/') === 0) {
                 this.rootObject.composition.push({
                     key: id,
-                    namespace: this.#namespace
+                    namespace: this.namespace
                 });
             }
         }
     }
 
     #addObject(object) {
-        this.#dictionary[object.identifier.key] = object;
+        this.dictionary[object.identifier.key] = object;
     }
 
     /*
@@ -360,7 +280,7 @@ export default class YamcsObjectProvider {
             let qn = parameter.qualifiedName;
             let lastSlashPos = qn.lastIndexOf('/');
             let parentId = qualifiedNameToId(qn.substring(0, lastSlashPos));
-            let parent = this.#dictionary[parentId];
+            let parent = this.dictionary[parentId];
 
             this.#addParameter(parameter, qn, parent, '');
         }
@@ -401,14 +321,14 @@ export default class YamcsObjectProvider {
     #addParameter(parameter, qualifiedName, parent, prefix) {
         const id = qualifiedNameToId(qualifiedName);
         const name = prefix + parameter.name;
-        const location = this.#openmct.objects.makeKeyString({
+        const location = this.openmct.objects.makeKeyString({
             key: parent.identifier.key,
             namespace: parent.identifier.namespace
         });
         const obj = {
             identifier: {
                 key: id,
-                namespace: this.#namespace
+                namespace: this.namespace
             },
             type: this.#getParameterType(parameter),
             name: name,
@@ -457,14 +377,14 @@ export default class YamcsObjectProvider {
                 }
 
                 const possibleStatuses = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
-                possibleStatuses.forEach(state => this.#roleStatusTelemetry.addStatus(state));
-                this.#roleStatusTelemetry.addStatusRole(role);
-                this.#roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
+                possibleStatuses.forEach(state => this.roleStatusTelemetry.addStatus(state));
+                this.roleStatusTelemetry.addStatusRole(role);
+                this.roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
             }
 
-            if (this.#pollQuestionParameter.isPollQuestionParameter(parameter)) {
-                this.#pollQuestionParameter.setPollQuestionParameter(parameter);
-                this.#pollQuestionTelemetry.setTelemetryObject(obj);
+            if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {
+                this.pollQuestionParameter.setPollQuestionParameter(parameter);
+                this.pollQuestionTelemetry.setTelemetryObject(obj);
                 telemetryValue.format = 'string';
             }
 

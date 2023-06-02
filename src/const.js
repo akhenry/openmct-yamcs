@@ -48,8 +48,6 @@ export const STALENESS_STATUS_MAP = {
     'EXPIRED': true
 };
 
-export const SEVERITY_LEVELS = ['info', 'watch', 'warning', 'distress', 'critical', 'severe'];
-
 export const METADATA_TIME_KEY = 'generationTime';
 
 export const UNSUPPORTED_TYPE = 'Unsupported Data Type';

@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES, METADATA_TIME_KEY, SEVERITY_LEVELS } from "../const";
+import { OBJECT_TYPES, METADATA_TIME_KEY } from "../const";
 
 export function createEventsObject(openmct, parentKey, namespace) {
     const location = openmct.objects.makeKeyString({
@@ -40,17 +40,7 @@ export function createEventsObject(openmct, parentKey, namespace) {
             values: [
                 {
                     key: 'severity',
-                    name: 'Severity Threshold',
-                    filters: [{
-                        singleSelectionThreshold: true,
-                        comparator: 'equals',
-                        possibleValues: SEVERITY_LEVELS.map((level) => {
-                            return {
-                                label: level,
-                                value: level
-                            };
-                        })
-                    }]
+                    name: 'Severity'
                 },
                 {
                     key: 'utc',
@@ -90,16 +80,6 @@ export function createEventsObject(openmct, parentKey, namespace) {
     };
 
     return eventsObject;
-}
-
-export function eventShouldBeFiltered(event, options) {
-    const { severity } = event;
-    const incomingEventSeverity = severity?.toLowerCase();
-    const severityLevelToFilter = options?.filters?.severity?.equals?.[0];
-    const severityLevelToFilterIndex = SEVERITY_LEVELS.indexOf(severityLevelToFilter);
-    const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
-
-    return incomingEventSeverityIndex < severityLevelToFilterIndex;
 }
 
 /**

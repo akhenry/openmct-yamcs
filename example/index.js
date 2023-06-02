@@ -55,7 +55,6 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.LocalStorage());
         openmct.install(openmct.plugins.Espresso());
         openmct.install(openmct.plugins.MyItems());
-        openmct.install(openmct.plugins.Filters(['telemetry.plot.overlay', 'table']));
         openmct.install(openmct.plugins.example.Generator());
         openmct.install(openmct.plugins.example.ExampleImagery());
         openmct.install(openmct.plugins.UTCTimeSystem());
