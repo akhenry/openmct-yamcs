@@ -119,7 +119,6 @@ export default class OperatorStatusTelemetry {
 
     }
     dictionaryLoadComplete() {
-        // TODO: this will never be called with the new lazy loaded dictionary
         this.#setReady();
     }
     #buildUrl(id) {
