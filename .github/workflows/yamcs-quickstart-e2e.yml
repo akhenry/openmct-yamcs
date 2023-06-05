@@ -54,7 +54,12 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npm run test:getopensource
+      - name: Get Openmct opensource e2e tests
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          run: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
