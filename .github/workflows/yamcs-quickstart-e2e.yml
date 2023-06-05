@@ -57,9 +57,8 @@ jobs:
       - name: Get Openmct opensource e2e tests
         uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 10
           max_attempts: 3
-          run: npm run test:getopensource
+          command: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
