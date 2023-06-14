@@ -27,7 +27,7 @@ import {
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
-    addLimitInformation
+    addLimitInformation, getLimitFromAlarmRange
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum } from './events';
@@ -38,6 +38,7 @@ export default class RealtimeProvider {
         this.url = url;
         this.instance = instance;
         this.observingStaleness = {};
+        this.observingLimits = {};
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -72,6 +73,29 @@ export default class RealtimeProvider {
 
         return () => {
             delete this.observingStaleness[qualifiedName];
+        };
+    }
+
+    subscribeToLimits(domainObject, callback) {
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+        let id = subscriptionDetails.subscriptionId;
+        this.subscriptionsById[id] = subscriptionDetails;
+
+        if (this.connected) {
+            let message = MESSAGES.SUBSCRIBE['yamcs.mdbchanges'](subscriptionDetails);
+
+            this.sendOrQueueMessage(message);
+        }
+
+        return () => {
+            this.sendUnsubscribeMessage(subscriptionDetails);
+
+            if (this.subscriptionsById[id]) {
+                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                delete this.subscriptionsById[id];
+            }
         };
     }
 
@@ -248,6 +272,14 @@ export default class RealtimeProvider {
                 } else if (this.isEventMessage(message)) {
                     const datum = eventToTelemetryDatum(message.data);
                     subscriptionDetails.callback(datum);
+                } else if (this.isMdbChangesMessage(message)) {
+                    let datum;
+                    if (message.data.parameterOverride.defaultAlarm?.staticAlarmRange) {
+                        datum = getLimitFromAlarmRange(message.data.parameterOverride.defaultAlarm?.staticAlarmRange)
+                    } else {
+                        datum = getLimitFromAlarmRange([])
+                    }
+                    subscriptionDetails.callback(datum);
                 } else {
                     subscriptionDetails.callback(message.data);
                 }
@@ -310,5 +342,9 @@ export default class RealtimeProvider {
 
     isEventMessage(message) {
         return message.type === 'events';
+    }
+
+    isMdbChangesMessage(message) {
+        return message.type === 'mdb-changes';
     }
 }
