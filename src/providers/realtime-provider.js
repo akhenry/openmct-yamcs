@@ -273,9 +273,10 @@ export default class RealtimeProvider {
                     const datum = eventToTelemetryDatum(message.data);
                     subscriptionDetails.callback(datum);
                 } else if (this.isMdbChangesMessage(message)) {
+                    let alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange;
                     let datum;
-                    if (message.data.parameterOverride.defaultAlarm?.staticAlarmRange) {
-                        datum = getLimitFromAlarmRange(message.data.parameterOverride.defaultAlarm?.staticAlarmRange)
+                    if (alarmRange) {
+                        datum = getLimitFromAlarmRange(alarmRange)
                     } else {
                         datum = getLimitFromAlarmRange([])
                     }
