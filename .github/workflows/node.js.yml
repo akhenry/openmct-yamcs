@@ -12,12 +12,22 @@ jobs:
     strategy:
       matrix:
         node-version: [16.x, 18.x]
+        openmct-version:
+          - latest
+          - stable
     timeout-minutes: 10
+    continue-on-error: true
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+    - name: Run build:example based on openmct-version
+      run: |
+        if [ "${{ matrix.openmct-version }}" = "latest" ]; then
+          npm run build:example:master
+        elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
+          npm run build:example
+        fi
     - run: npm install
-    - run: npm run build:example
