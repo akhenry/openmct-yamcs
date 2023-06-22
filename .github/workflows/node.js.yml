@@ -23,6 +23,7 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
+    - run: npm install
     - name: Run build:example based on openmct-version
       run: |
         if [ "${{ matrix.openmct-version }}" = "latest" ]; then
@@ -30,4 +31,3 @@ jobs:
         elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
           npm run build:example
         fi
-    - run: npm install
