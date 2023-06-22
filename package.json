@@ -1,6 +1,6 @@
 {
   "name": "openmct-yamcs",
-  "version": "2.2.5-SNAPSHOT",
+  "version": "2.2.6-SNAPSHOT",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
@@ -11,6 +11,7 @@
     "build:dist": "webpack --config webpack.prod.js",
     "build:example": "npm install openmct@unstable --no-save",
     "build:example:master": "npm install nasa/openmct#master --no-save",
+    "postbuild:example": "node check-optional-dependencies.js",
     "start": "npx webpack serve --config ./webpack.dev.js",
     "start:coverage": "npx webpack serve --config ./webpack.coverage.js",
     "prepare": "npm run build:dist",
@@ -30,7 +31,7 @@
     "node": ">=16.19.1"
   },
   "optionalDependencies": {
-    "openmct": "^2.0.5"
+    "openmct": ">= 2.2.5"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
@@ -42,6 +43,7 @@
     "eslint": "8.38.0",
     "eventemitter3": "4.0.7",
     "file-saver": "2.0.5",
+    "semver": "7.5.2",
     "sinon": "14.0.0",
     "source-map-loader": "4.0.1",
     "uuid": "9.0.0",
