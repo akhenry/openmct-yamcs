@@ -81,11 +81,9 @@ export default class RealtimeProvider {
         const id = subscriptionDetails.subscriptionId;
         this.subscriptionsById[id] = subscriptionDetails;
 
-        if (this.connected) {
-            const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
+        const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
 
-            this.sendOrQueueMessage(message);
-        }
+        this.sendOrQueueMessage(message);
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
@@ -110,9 +108,7 @@ export default class RealtimeProvider {
         let id = subscriptionDetails.subscriptionId;
         this.subscriptionsById[id] = subscriptionDetails;
 
-        if (this.connected) {
-            this.sendSubscribeMessage(subscriptionDetails);
-        }
+        this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
