@@ -1,4 +1,4 @@
-import { OBJECT_TYPES, DATA_TYPES } from '../const';
+import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
@@ -11,7 +11,7 @@ const typeMap = {
     [OBJECT_TYPES.POLL_QUESTION_TYPE]: DATA_TYPES.DATA_TYPE_TELEMETRY,
     [OBJECT_TYPES.ALARMS_TYPE]: DATA_TYPES.DATA_TYPE_ALARMS,
     [OBJECT_TYPES.GLOBAL_STATUS_TYPE]: DATA_TYPES.DATA_TYPE_GLOBAL_STATUS,
-    ['yamcs.mdbchanges']: DATA_TYPES.DATA_TYPE_MDB_CHANGES
+    [MDB_TYPE]: DATA_TYPES.DATA_TYPE_MDB_CHANGES
 };
 
 export const SUBSCRIBE = buildSubscribeMessages();
@@ -87,5 +87,5 @@ function isCommandType(type) {
 }
 
 function isMdbChangesType(type) {
-    return type === 'yamcs.mdbchanges';
+    return type === MDB_TYPE;
 }

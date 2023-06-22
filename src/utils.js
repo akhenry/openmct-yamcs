@@ -253,11 +253,11 @@ function getLimitFromAlarmRange(alarmRange) {
         limits[alarm.level] = {
             low: {
                 color: limitConfig[alarm.level],
-                value: alarm.minInclusive || alarm.minExclusive
+                value: alarm.minInclusive ?? alarm.minExclusive
             },
             high: {
                 color: limitConfig[alarm.level],
-                value: alarm.maxInclusive || alarm.maxExclusive
+                value: alarm.maxInclusive ?? alarm.maxExclusive
             }
         };
     });

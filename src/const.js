@@ -33,6 +33,8 @@ export const OBJECT_TYPES = {
     GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
 };
 
+export const MDB_TYPE = 'yamcs.mdbchanges';
+
 export const DATA_TYPES = {
     DATA_TYPE_COMMANDS: 'commands',
     DATA_TYPE_EVENTS: 'events',
