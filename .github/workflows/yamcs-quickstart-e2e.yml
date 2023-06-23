@@ -46,6 +46,7 @@ jobs:
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
+      - run: npm install
       - name: Run build:example based on openmct-version
         run: |
           if [ "${{ matrix.openmct-version }}" = "latest" ]; then
@@ -53,7 +54,6 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npm install
       - run: npx playwright@1.32.3 install chromium
       - name: Get Open MCT e2e tests
         uses: nick-fields/retry@v2
