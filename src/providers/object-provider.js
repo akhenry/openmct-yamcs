@@ -441,6 +441,8 @@ export default class YamcsObjectProvider {
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};
         } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
+            console.log('adding hints for image', key, metadatum);
+
             metadatum.hints = { image: 1 };
             metadatum.format = 'image';
         }
