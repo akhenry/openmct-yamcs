@@ -130,6 +130,17 @@ export default function installYamcsPlugin(configuration) {
             key: 'spacecraft'
         });
 
+        const formatThumbnail = {
+            format: function (url) {
+                return `${url}?w=100&h=100`;
+            }
+        };
+
+        openmct.telemetry.addFormat({
+            key: 'thumbnail',
+            ...formatThumbnail
+        });
+
         openmct.objects.addProvider('taxonomy', objectProvider);
 
         openmct.types.addType(OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE, {
