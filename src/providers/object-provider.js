@@ -346,6 +346,19 @@ export default class YamcsObjectProvider {
                 }]
             }
         };
+
+        if (this.#isImage(obj)) {
+            obj.telemetry.values.push({
+                name: 'Image Thumbnail',
+                key: 'thumbnail-url',
+                format: 'thumbnail',
+                hints: {
+                    thumbnail: 1
+                },
+                source: 'url'
+            });
+        }
+
         const isAggregate = this.#isAggregate(parameter);
         let aggregateHasMembers = false;
 
@@ -440,9 +453,7 @@ export default class YamcsObjectProvider {
 
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};
-        } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
-            console.log('adding hints for image', key, metadatum);
-
+        } else if (this.#isImage(obj)) {
             metadatum.hints = { image: 1 };
             metadatum.format = 'image';
         }
@@ -451,6 +462,10 @@ export default class YamcsObjectProvider {
 
     #isAggregate(parameter) {
         return parameter?.type?.engType === 'aggregate';
+    }
+
+    #isImage(obj) {
+        return (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE);
     }
 
     #isEnumeration(parameter) {
