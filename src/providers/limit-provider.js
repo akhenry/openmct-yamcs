@@ -1,5 +1,7 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
 
+import {getLimitFromAlarmRange, idToQualifiedName} from "../utils";
+
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
     'WARNING': 'is-limit--yellow',
@@ -34,6 +36,7 @@ export default class LimitProvider {
         this.openmct = openmct;
         this.realtimeTelemetryProvider = realtimeTelemetryProvider;
         this.url = url;
+        this.instance = instance;
     }
 
     getLimitEvaluator(domainObject) {
@@ -96,14 +99,14 @@ export default class LimitProvider {
     }
 
     getLimits(domainObject) {
-        let limits = this.getLimitOverrides(domainObject.identifier.key, this.openmct.objects.makeKeyString(domainObject.identifier));
-        if (Object.keys(limits).length === 0) {
-            limits = domainObject.configuration.limits
-        }
-
         return {
             // eslint-disable-next-line require-await
-            limits: async function () {
+            limits: async () => {
+                let limits = await this.getLimitOverrides(domainObject, this.openmct.objects.makeKeyString(domainObject.identifier));
+                if (Object.keys(limits).length === 0) {
+                    limits = domainObject.configuration.limits
+                }
+
                 return limits;
             }
         };
@@ -114,6 +117,7 @@ export default class LimitProvider {
     }
 
     async requestLimitOverride(domainObject) {
+        const id = domainObject.identifier.key;
         let url = `${this.url}api/mdb-overrides/${this.instance}/realtime`;
         url += '/parameters' + idToQualifiedName(id);
 
@@ -126,7 +130,7 @@ export default class LimitProvider {
     async getLimitOverrides(domainObject) {
         const response = await this.requestLimitOverride(domainObject);
 
-        const alarmRange = response.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+        const alarmRange = response?.defaultAlarm?.staticAlarmRange ?? [];
 
         return getLimitFromAlarmRange(alarmRange);
     }
