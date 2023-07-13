@@ -355,7 +355,7 @@ export default class YamcsObjectProvider {
                 hints: {
                     thumbnail: 1
                 },
-                source: 'url'
+                source: 'value'
             });
         }
 
