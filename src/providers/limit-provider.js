@@ -33,6 +33,7 @@ export default class LimitProvider {
     constructor(openmct, url, instance, realtimeTelemetryProvider) {
         this.openmct = openmct;
         this.realtimeTelemetryProvider = realtimeTelemetryProvider;
+        this.url = url;
     }
 
     getLimitEvaluator(domainObject) {
@@ -75,7 +76,7 @@ export default class LimitProvider {
      */
     getLimitRange(datum, result, valueMetadata) {
         if (!valueMetadata) {
-            return;
+            return undefined;
         }
 
         if (valueMetadata.key === 'value') {
@@ -87,7 +88,7 @@ export default class LimitProvider {
             };
         }
 
-        return;
+        return undefined;
     }
 
     supportsLimits(domainObject) {
@@ -95,7 +96,10 @@ export default class LimitProvider {
     }
 
     getLimits(domainObject) {
-        const limits = domainObject.configuration.limits;
+        let limits = this.getLimitOverrides(domainObject.identifier.key, this.openmct.objects.makeKeyString(domainObject.identifier));
+        if (Object.keys(limits).length === 0) {
+            limits = domainObject.configuration.limits
+        }
 
         return {
             // eslint-disable-next-line require-await
@@ -107,5 +111,23 @@ export default class LimitProvider {
 
     subscribeToLimits(domainObject, callback) {
         return this.realtimeTelemetryProvider.subscribeToLimits(domainObject, callback);
+    }
+
+    async requestLimitOverride(domainObject) {
+        let url = `${this.url}api/mdb-overrides/${this.instance}/realtime`;
+        url += '/parameters' + idToQualifiedName(id);
+
+        const response = await fetch(encodeURI(url));
+        const json = await response.json();
+
+        return json;
+    }
+
+    async getLimitOverrides(domainObject) {
+        const response = await this.requestLimitOverride(domainObject);
+
+        const alarmRange = response.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+
+        return getLimitFromAlarmRange(alarmRange);
     }
 }
