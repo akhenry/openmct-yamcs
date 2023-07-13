@@ -79,10 +79,9 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getPossibleRoles() {
-        // returns only status capable roles
-        const statusRoles = await this.roleStatus.getAllStatusRoles();
+        const user = await this.getCurrentUser();
 
-        return statusRoles;
+        return user.roles;
     }
 
     async hasRole(roleName) {
