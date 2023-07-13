@@ -137,7 +137,7 @@ export default function installYamcsPlugin(configuration) {
         };
 
         openmct.telemetry.addFormat({
-            key: 'thumbnail',
+            key: 'yamcs-thumbnail',
             ...formatThumbnail
         });
 
