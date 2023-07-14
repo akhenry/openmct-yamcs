@@ -132,7 +132,7 @@ export default function installYamcsPlugin(configuration) {
 
         const formatThumbnail = {
             format: function (url) {
-                return url.replace(/\/images\//,'/rescaled-images/').replace(/.png$/, '_thumb.png');
+                return url.replace(/\/images\//,'/rescaled-images/').replace(/.png$/, '_thumb.jpeg');
             }
         };
 
