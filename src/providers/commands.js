@@ -38,9 +38,6 @@ export function createCommandsObject(openmct, parentKey, namespace) {
         location,
         name: 'Commands',
         type: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
-        configuration: {
-            inPlaceUpdates: true
-        },
         telemetry: {
             values: [
                 {
@@ -135,6 +132,11 @@ export function createCommandsObject(openmct, parentKey, namespace) {
                 {
                     key: 'Packet_ID',
                     name: 'Packet ID'
+                },
+                {
+                    key: 'messageId',
+                    name: 'row identifier',
+                    useToUpdateInPlace: true
                 }
             ]
         }
