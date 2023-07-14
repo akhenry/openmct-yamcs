@@ -21,7 +21,7 @@ jobs:
       matrix:
         yamcs-version:
           - default
-          - 5.8.0 #viper
+          - 5.8.3 #viper
           ## disabling until we get confirmation- 5.3.2 #ab
         openmct-version:
           - latest
