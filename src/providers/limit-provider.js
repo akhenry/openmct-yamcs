@@ -100,7 +100,6 @@ export default class LimitProvider {
 
     getLimits(domainObject) {
         return {
-            // eslint-disable-next-line require-await
             limits: async () => {
                 let limits = await this.getLimitOverrides(domainObject, this.openmct.objects.makeKeyString(domainObject.identifier));
                 if (Object.keys(limits).length === 0) {
