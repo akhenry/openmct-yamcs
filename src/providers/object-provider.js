@@ -349,7 +349,7 @@ export default class YamcsObjectProvider {
 
         if (this.#isImage(obj)) {
             obj.telemetry.values.push({
-                name: 'VIPER Image Thumbnail',
+                name: 'Image Thumbnail',
                 key: 'yamcs-thumbnail-url',
                 format: 'yamcs-thumbnail',
                 hints: {
