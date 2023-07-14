@@ -20,6 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const';
+import limitConfig from "./limits-config.json";
 
 function idToQualifiedName(id) {
     return id.replace(/~/g, '/');
@@ -246,6 +247,24 @@ function buildStalenessResponseObject(isStale, timestamp) {
     };
 }
 
+function getLimitFromAlarmRange(alarmRange) {
+    let limits = {};
+    alarmRange.forEach(alarm => {
+        limits[alarm.level] = {
+            low: {
+                color: limitConfig[alarm.level],
+                value: alarm.minInclusive ?? alarm.minExclusive
+            },
+            high: {
+                color: limitConfig[alarm.level],
+                value: alarm.maxInclusive ?? alarm.maxExclusive
+            }
+        };
+    });
+
+    return limits;
+}
+
 function getHistoryYieldRequest(signal) {
 
     function* yieldRequestHistory() {
@@ -322,6 +341,7 @@ function flattenObjectArray(array, baseObj = {}) {
 
 export {
     buildStalenessResponseObject,
+    getLimitFromAlarmRange,
     idToQualifiedName,
     qualifiedNameToId,
     qualifiedNameFromParameterId,
