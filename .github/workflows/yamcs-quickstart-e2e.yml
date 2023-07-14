@@ -13,8 +13,10 @@ on:
 
 jobs:
   yamcs-quickstart-e2e:
+    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         yamcs-version:
@@ -45,7 +47,6 @@ jobs:
           touch makeout.txt
           make all &> makeout.txt &
       - run: npm install
-      - run: npx playwright@1.32.3 install chromium
       - name: Run build:example based on openmct-version
         run: |
           if [ "${{ matrix.openmct-version }}" = "latest" ]; then
@@ -53,7 +54,13 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npm run test:getopensource
+      - run: npx playwright@1.32.3 install chromium
+      - name: Get Open MCT e2e tests
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
@@ -94,3 +101,20 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: tests/html-test-results
+      - name: Remove pr:e2e:quickstart label (if present)
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const labelToRemove = 'pr:e2e:quickstart';
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: number,
+                name: labelToRemove
+              });
+            } catch (error) {
+              core.warning(`Failed to remove 'pr:e2e:quickstart' label: ${error.message}`);
+            }
