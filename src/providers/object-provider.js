@@ -22,14 +22,14 @@
 
 import {
     qualifiedNameToId,
-    accumulateResults
+    accumulateResults,
+    getLimitFromAlarmRange
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';
-import limitConfig from "../limits-config.json";
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -292,27 +292,9 @@ export default class YamcsObjectProvider {
         }));
     }
 
-    #getLimitFromAlarmRange(alarmRange) {
-        let limits = {};
-        alarmRange.forEach(alarm => {
-            limits[alarm.level] = {
-                low: {
-                    color: limitConfig[alarm.level],
-                    value: alarm.minInclusive || alarm.minExclusive
-                },
-                high: {
-                    color: limitConfig[alarm.level],
-                    value: alarm.maxInclusive || alarm.maxExclusive
-                }
-            };
-        });
-
-        return limits;
-    }
-
     #convertToLimits(defaultAlarm) {
         if (defaultAlarm?.staticAlarmRange) {
-            return this.#getLimitFromAlarmRange(defaultAlarm.staticAlarmRange);
+            return getLimitFromAlarmRange(defaultAlarm.staticAlarmRange);
         } else {
             throw new Error(`Passed alarm has invalid object syntax for limit conversion`, defaultAlarm);
         }
@@ -346,6 +328,19 @@ export default class YamcsObjectProvider {
                 }]
             }
         };
+
+        if (this.#isImage(obj)) {
+            obj.telemetry.values.push({
+                name: 'Image Thumbnail',
+                key: 'yamcs-thumbnail-url',
+                format: 'yamcs-thumbnail',
+                hints: {
+                    thumbnail: 1
+                },
+                source: 'value'
+            });
+        }
+
         const isAggregate = this.#isAggregate(parameter);
         let aggregateHasMembers = false;
 
@@ -440,7 +435,7 @@ export default class YamcsObjectProvider {
 
         if (obj.type === OBJECT_TYPES.STRING_OBJECT_TYPE) {
             metadatum.hints = {};
-        } else if (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE) {
+        } else if (this.#isImage(obj)) {
             metadatum.hints = { image: 1 };
             metadatum.format = 'image';
         }
@@ -449,6 +444,10 @@ export default class YamcsObjectProvider {
 
     #isAggregate(parameter) {
         return parameter?.type?.engType === 'aggregate';
+    }
+
+    #isImage(obj) {
+        return (obj.type === OBJECT_TYPES.IMAGE_OBJECT_TYPE);
     }
 
     #isEnumeration(parameter) {

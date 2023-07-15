@@ -21,16 +21,17 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY, STALENESS_STATUS_MAP } from '../const';
+import {OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY, STALENESS_STATUS_MAP, MDB_TYPE} from '../const';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
-    addLimitInformation
+    addLimitInformation,
+    getLimitFromAlarmRange
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum } from './events';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -75,22 +76,14 @@ export default class RealtimeProvider {
         };
     }
 
-    isSupportedObjectType(type) {
-        return this.supportedObjectTypes[type];
-    }
-
-    isSupportedDataType(type) {
-        return this.supportedDataTypes[type];
-    }
-
-    subscribe(domainObject, callback) {
-        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
-        let id = subscriptionDetails.subscriptionId;
+    subscribeToLimits(domainObject, callback) {
+        const subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+        const id = subscriptionDetails.subscriptionId;
         this.subscriptionsById[id] = subscriptionDetails;
 
-        if (this.connected) {
-            this.sendSubscribeMessage(subscriptionDetails);
-        }
+        const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
+
+        this.sendOrQueueMessage(message);
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
@@ -102,7 +95,32 @@ export default class RealtimeProvider {
         };
     }
 
-    buildSubscriptionDetails(domainObject, callback) {
+    isSupportedObjectType(type) {
+        return this.supportedObjectTypes[type];
+    }
+
+    isSupportedDataType(type) {
+        return this.supportedDataTypes[type];
+    }
+
+    subscribe(domainObject, callback, options) {
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, options);
+        let id = subscriptionDetails.subscriptionId;
+        this.subscriptionsById[id] = subscriptionDetails;
+
+        this.sendSubscribeMessage(subscriptionDetails);
+
+        return () => {
+            this.sendUnsubscribeMessage(subscriptionDetails);
+
+            if (this.subscriptionsById[id]) {
+                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                delete this.subscriptionsById[id];
+            }
+        };
+    }
+
+    buildSubscriptionDetails(domainObject, callback, options) {
         let subscriptionId = this.lastSubscriptionId++;
         let subscriptionDetails = {
             instance: this.instance,
@@ -110,6 +128,7 @@ export default class RealtimeProvider {
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
             updateOnExpiration: true,
+            options,
             callback: callback
         };
 
@@ -175,7 +194,7 @@ export default class RealtimeProvider {
             clearTimeout(this.reconnectTimeout);
 
             this.connected = true;
-            console.log(`🔌 Established websocket connection to ${wsUrl}`);
+            console.debug(`🔌 Established websocket connection to ${wsUrl}`);
 
             this.currentWaitIndex = 0;
             this.resubscribeToAll();
@@ -246,8 +265,15 @@ export default class RealtimeProvider {
                     const datum = commandToTelemetryDatum(message.data);
                     subscriptionDetails.callback(datum);
                 } else if (this.isEventMessage(message)) {
-                    const datum = eventToTelemetryDatum(message.data);
-                    subscriptionDetails.callback(datum);
+                    if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
+                        // ignore event
+                    } else {
+                        const datum = eventToTelemetryDatum(message.data);
+                        subscriptionDetails.callback(datum);
+                    }
+                } else if (this.isMdbChangesMessage(message)) {
+                    const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+                    subscriptionDetails.callback(getLimitFromAlarmRange(alarmRange));
                 } else {
                     subscriptionDetails.callback(message.data);
                 }
@@ -310,5 +336,9 @@ export default class RealtimeProvider {
 
     isEventMessage(message) {
         return message.type === 'events';
+    }
+
+    isMdbChangesMessage(message) {
+        return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
     }
 }

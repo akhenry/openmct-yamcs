@@ -80,7 +80,8 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance));
+            configuration.yamcsInstance,
+            realtimeTelemetryProvider));
 
         openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,
@@ -128,6 +129,17 @@ export default function installYamcsPlugin(configuration) {
         openmct.objects.addRoot({
             namespace: 'taxonomy',
             key: 'spacecraft'
+        });
+
+        const formatThumbnail = {
+            format: function (url) {
+                return url.replace(/\/images\//,'/rescaled-images/').replace(/.png$/, '_thumb.jpeg');
+            }
+        };
+
+        openmct.telemetry.addFormat({
+            key: 'yamcs-thumbnail',
+            ...formatThumbnail
         });
 
         openmct.objects.addProvider('taxonomy', objectProvider);
