@@ -101,7 +101,6 @@ test.describe("Quickstart network requests @yamcs", () => {
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
         await new Promise(resolve => setTimeout(resolve, 500));
         filteredRequests = filterNonFetchRequests(networkRequests);
-        console.log(filteredRequests);
         // Should only be fetching telemetry from parameter archive,
         // with no further request for limits should be made.
         // 1. GET for telemetry item from parameter archive
