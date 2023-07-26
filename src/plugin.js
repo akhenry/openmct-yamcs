@@ -208,5 +208,6 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
 
+        openmct.install(openmct.plugins.Filters(['telemetry.plot.overlay', 'table']));
     };
 }
