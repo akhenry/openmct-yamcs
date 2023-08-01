@@ -186,6 +186,7 @@ async function accumulateResults(url, options, property, soFar, totalLimit, toke
 
     const fetchResult = await fetch(newUrl, options);
     const result = await fetchResult.json();
+    console.log(result);
 
     if (property in result) {
         soFar = soFar.concat(result[property]);
