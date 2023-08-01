@@ -137,10 +137,9 @@ export default class YamcsObjectProvider {
 
     async #searchMdbApi(operation, query, abortSignal) {
         const key = YAMCS_API_MAP[operation];
-        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, operation, abortSignal);
-        const hits = search[key];
+        const results = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, operation, abortSignal);
 
-        if (!hits) {
+        if (!results) {
             return [];
         }
 
@@ -150,7 +149,7 @@ export default class YamcsObjectProvider {
 
         // if multiple members match, YAMCS sends us duplicates 🙇‍♂️
         const hitsWithoutDupes = [];
-        hits.forEach((hit) => {
+        results.forEach((hit) => {
             const hitExtant = hitsWithoutDupes.some((existingHit) => {
                 return existingHit.qualifiedName === hit.qualifiedName;
             });
@@ -160,14 +159,14 @@ export default class YamcsObjectProvider {
             }
         });
 
-        const results = await Promise.all(
+        const filteredResults = await Promise.all(
             hitsWithoutDupes.map(async hit => {
                 const telemetryResults = await this.#convertSearchHitToTelemetries(query, hit);
 
                 return telemetryResults;
             })
         );
-        const flattenedResults = results.flat();
+        const flattenedResults = filteredResults.flat();
 
         return flattenedResults;
     }
