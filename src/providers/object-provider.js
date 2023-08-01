@@ -212,7 +212,6 @@ export default class YamcsObjectProvider {
     async #fetchMdbApi(operation, property, abortSignal) {
         const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
         const response = await accumulateResults(mdbURL, { signal: abortSignal }, property, []);
-        console.log(response);
 
         return response;
     }
