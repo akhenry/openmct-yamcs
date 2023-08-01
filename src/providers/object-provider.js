@@ -137,7 +137,7 @@ export default class YamcsObjectProvider {
 
     async #searchMdbApi(operation, query, abortSignal) {
         const key = YAMCS_API_MAP[operation];
-        const results = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, operation, abortSignal);
+        const results = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, key, abortSignal);
 
         if (!results) {
             return [];
