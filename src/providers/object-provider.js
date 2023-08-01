@@ -137,7 +137,7 @@ export default class YamcsObjectProvider {
 
     async #searchMdbApi(operation, query, abortSignal) {
         const key = YAMCS_API_MAP[operation];
-        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, abortSignal);
+        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, operation, abortSignal);
         const hits = search[key];
 
         if (!hits) {
@@ -210,9 +210,9 @@ export default class YamcsObjectProvider {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
-    async #fetchMdbApi(operation, abortSignal) {
+    async #fetchMdbApi(operation, property, abortSignal) {
         const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
-        const response = await accumulateResults(mdbURL, { signal: abortSignal });
+        const response = await accumulateResults(mdbURL, { signal: abortSignal }, property, []);
 
         return response;
     }
