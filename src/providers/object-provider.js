@@ -137,10 +137,9 @@ export default class YamcsObjectProvider {
 
     async #searchMdbApi(operation, query, abortSignal) {
         const key = YAMCS_API_MAP[operation];
-        const search = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, abortSignal);
-        const hits = search[key];
+        const results = await this.#fetchMdbApi(`${operation}?q=${query}&searchMembers=true&details=false`, key, abortSignal);
 
-        if (!hits) {
+        if (!results) {
             return [];
         }
 
@@ -150,7 +149,7 @@ export default class YamcsObjectProvider {
 
         // if multiple members match, YAMCS sends us duplicates 🙇‍♂️
         const hitsWithoutDupes = [];
-        hits.forEach((hit) => {
+        results.forEach((hit) => {
             const hitExtant = hitsWithoutDupes.some((existingHit) => {
                 return existingHit.qualifiedName === hit.qualifiedName;
             });
@@ -160,14 +159,14 @@ export default class YamcsObjectProvider {
             }
         });
 
-        const results = await Promise.all(
+        const filteredResults = await Promise.all(
             hitsWithoutDupes.map(async hit => {
                 const telemetryResults = await this.#convertSearchHitToTelemetries(query, hit);
 
                 return telemetryResults;
             })
         );
-        const flattenedResults = results.flat();
+        const flattenedResults = filteredResults.flat();
 
         return flattenedResults;
     }
@@ -210,12 +209,11 @@ export default class YamcsObjectProvider {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
     }
 
-    async #fetchMdbApi(operation, abortSignal) {
+    async #fetchMdbApi(operation, property, abortSignal) {
         const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
-        const response = await fetch(mdbURL, { signal: abortSignal });
-        const parsedJSON = await response.json();
+        const response = await accumulateResults(mdbURL, { signal: abortSignal }, property, []);
 
-        return parsedJSON;
+        return response;
     }
 
     #addSpaceSystem(spaceSystem) {
