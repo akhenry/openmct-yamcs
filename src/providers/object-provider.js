@@ -213,9 +213,8 @@ export default class YamcsObjectProvider {
     async #fetchMdbApi(operation, abortSignal) {
         const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
         const response = await accumulateResults(mdbURL, { signal: abortSignal });
-        const parsedJSON = await response.json();
 
-        return parsedJSON;
+        return response;
     }
 
     #addSpaceSystem(spaceSystem) {
