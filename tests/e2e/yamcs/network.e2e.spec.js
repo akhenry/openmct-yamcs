@@ -25,6 +25,7 @@ Network Specific Tests
 */
 
 const { test, expect } = require('../opensource/pluginFixtures');
+const { setFixedTimeMode } = require('../opensource/appActions');
 
 test.describe("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS
@@ -74,8 +75,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         expect(filteredRequests.length).toBe(3);
 
         // Change to fixed time
-        await page.locator('button:has-text("Local Clock")').click();
-        await page.locator('text="Fixed Timespan"').click();
+        await setFixedTimeMode(page);
 
         await page.waitForLoadState('networkidle');
         networkRequests = [];
