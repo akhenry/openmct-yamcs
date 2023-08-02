@@ -272,8 +272,11 @@ export default class RealtimeProvider {
                         subscriptionDetails.callback(datum);
                     }
                 } else if (this.isMdbChangesMessage(message)) {
-                    const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
-                    subscriptionDetails.callback(getLimitFromAlarmRange(alarmRange));
+                    const parameterName = message.data.parameterOverride.parameter;
+                    if (subscriptionDetails.name === parameterName) {
+                        const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+                        subscriptionDetails.callback(getLimitFromAlarmRange(alarmRange));
+                    }
                 } else {
                     subscriptionDetails.callback(message.data);
                 }
