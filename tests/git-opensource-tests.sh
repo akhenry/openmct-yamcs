@@ -1,11 +1,14 @@
 #!/bin/sh
 #
-# This script can clone/checkout a single folder from git repository 
-# - Might be used for checking out micro-services from monolithic git repository
+# This script is designed copy the necessary e2e framework and test scripts from the Open MCT
+# repository.
 #
-# - You can even do checkout into home directory, for example
-#   git-sparse-clone.sh git@github.com:readdle/fluix-web.git /home/login login
+# Usage:
+# ./git-opensource-tests.sh [branch-name]
 #
+# If no branch name is provided, the script defaults to the 'master' branch.
+
+set -e # Exit immediately if a command exits with a nonzero exit value
 
 SCRIPT_PATH=${0%/*} # Get the relative path to the script dir from the cwd
 if [ "$0" != "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "" ]; then 
@@ -14,28 +17,21 @@ fi
 
 rm -rf e2e/opensource
 
-# This will cause the shell to exit immediately if a simple command exits with a nonzero exit value.
-set -e
-
 REPO_URL=https://github.com/nasa/openmct.git
+REPO_BRANCH=${1:-master} # Use the first argument as the branch, or default to 'master'
 REPO_PATH=e2e
 LOCAL_REPO_ROOT="e2e/opensource"
+E2E_PATH="opensource/e2e"
 
-git clone --no-checkout --depth 1 $REPO_URL "$LOCAL_REPO_ROOT"
+# Cloning the specified or default branch from the repository
+git clone --no-checkout --depth 1 --branch $REPO_BRANCH $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
 git config core.sparsecheckout true
 echo "/$REPO_PATH/**" > .git/info/sparse-checkout
 git read-tree -m -u HEAD
 
-# moving back to /tests/ dir
-cd ..
+# Move all required files and folders
+mv ../$E2E_PATH/*Fixtures.js ../$E2E_PATH/appActions.js ../$E2E_PATH/* ../$E2E_PATH/.eslintrc.js ../opensource
 
-# Move fixtures and appActions
-mv opensource/e2e/*Fixtures.js ./opensource
-mv opensource/e2e/appActions.js ./opensource
-# Move subfolders
-mv opensource/e2e/*/ ./opensource
-# Move eslint config
-mv opensource/e2e/.eslintrc.js ./opensource
 # Cleanup
-rm -rf opensource/e2e
+rm -rf ../$E2E_PATH
