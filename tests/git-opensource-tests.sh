@@ -21,9 +21,8 @@ REPO_URL=https://github.com/nasa/openmct.git
 REPO_BRANCH=${1:-master} # Use the first argument as the branch, or default to 'master'
 REPO_PATH=e2e
 LOCAL_REPO_ROOT="e2e/opensource"
-E2E_PATH="opensource/e2e"
+E2E_PATH="e2e/opensource/e2e"
 
-# Cloning the specified or default branch from the repository
 git clone --no-checkout --depth 1 --branch $REPO_BRANCH $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
 git config core.sparsecheckout true
@@ -31,7 +30,7 @@ echo "/$REPO_PATH/**" > .git/info/sparse-checkout
 git read-tree -m -u HEAD
 
 # Move all required files and folders
-mv ../$E2E_PATH/*Fixtures.js ../$E2E_PATH/appActions.js ../$E2E_PATH/* ../$E2E_PATH/.eslintrc.js ../opensource
+mv $E2E_PATH/*Fixtures.js $E2E_PATH/appActions.js $E2E_PATH/* $E2E_PATH/.eslintrc.js ../opensource
 
 # Cleanup
-rm -rf ../$E2E_PATH
+rm -rf $E2E_PATH
