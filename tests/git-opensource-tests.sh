@@ -19,6 +19,10 @@ REPO_URL=https://github.com/nasa/openmct.git
 REPO_BRANCH=${1:-master} # Use the first argument as the branch, or default to 'master'
 REPO_PATH=e2e
 LOCAL_REPO_ROOT="$REPO_DIR/e2e/opensource"
+TARGET_DIR="$REPO_DIR/opensource"
+
+# Create target directory if it doesn't exist
+mkdir -p "$TARGET_DIR"
 
 git clone --no-checkout --depth 1 --branch $REPO_BRANCH $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
@@ -31,8 +35,7 @@ echo "Listing contents of $LOCAL_REPO_ROOT:"
 ls -l
 
 # Move all required files and folders
-mv "$LOCAL_REPO_ROOT/e2e"/*Fixtures.js "$LOCAL_REPO_ROOT/e2e/appActions.js" "$LOCAL_REPO_ROOT/e2e"/* "$LOCAL_REPO_ROOT/e2e/.eslintrc.js" "$REPO_DIR/opensource"
+mv "$LOCAL_REPO_ROOT/e2e"/*Fixtures.js "$LOCAL_REPO_ROOT/e2e/appActions.js" "$LOCAL_REPO_ROOT/e2e"/* "$LOCAL_REPO_ROOT/e2e/.eslintrc.js" "$TARGET_DIR"
 
 # Cleanup
 rm -rf "$LOCAL_REPO_ROOT/e2e"
-
