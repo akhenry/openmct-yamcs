@@ -29,8 +29,13 @@ git config core.sparsecheckout true
 echo "/$REPO_PATH/**" > .git/info/sparse-checkout
 git read-tree -m -u HEAD
 
+# Debugging information
+echo "Listing contents of $E2E_PATH:"
+ls -l $E2E_PATH
+
 # Move all required files and folders
 mv $E2E_PATH/*Fixtures.js $E2E_PATH/appActions.js $E2E_PATH/* $E2E_PATH/.eslintrc.js ../opensource
 
 # Cleanup
 rm -rf $E2E_PATH
+
