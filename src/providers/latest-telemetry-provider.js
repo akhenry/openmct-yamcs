@@ -31,6 +31,7 @@ const BATCH_DEBOUNCE_MS = 100;
 export default class LatestTelemetryProvider {
     #bulkPromise;
     #batchIds;
+    #batchAbortSignals;
     #openmct;
 
     constructor({url, instance, processor = 'realtime', openmct}) {
@@ -38,11 +39,13 @@ export default class LatestTelemetryProvider {
         this.instance = instance;
         this.processor = processor;
         this.#batchIds = [];
+        this.#batchAbortSignals = [];
         this.#openmct = openmct;
     }
-    async requestLatest(domainObject) {
+    async requestLatest(domainObject, options) {
         const yamcsId = idToQualifiedName(domainObject.identifier.key);
         this.#batchIds.push(yamcsId);
+        this.#batchAbortSignals.push(options.signal);
 
         if (this.#bulkPromise === undefined) {
             this.#bulkPromise = this.#deferBatchedGet();
@@ -68,8 +71,10 @@ export default class LatestTelemetryProvider {
 
             return openMctStyleDatum;
         } catch (error) {
-            console.error(error);
-            this.#openmct.notifications.error(`Unable to fetch latest telemetry for ${domainObject.name}`);
+            if (error.name !== 'AbortError') {
+                console.error(error);
+                this.#openmct.notifications.error(`Unable to fetch latest telemetry for ${domainObject.name}`);
+            }
 
             return undefined;
         }
@@ -79,14 +84,19 @@ export default class LatestTelemetryProvider {
         // requests triggered in this iteration of the event loop
 
         await this.#waitForDebounce();
+
         let batchIds = [...new Set(this.#batchIds)];
+
+        // the number of signals could and probably will be different from deduped
+        // batchIds that's ok, we want to err on the side of caution
+        let signal = this.#getMultiAbortSignal(this.#batchAbortSignals);
 
         this.#clearBatch();
 
-        return this.#bulkGet(batchIds);
+        return this.#bulkGet(batchIds, signal);
 
     }
-    async #bulkGet(batchIds) {
+    async #bulkGet(batchIds, signal) {
         const yamcsIds = batchIds.map((yamcsId) => {
             return {
                 name: yamcsId
@@ -100,7 +110,8 @@ export default class LatestTelemetryProvider {
 
         const response = await fetch(this.#buildUrl(), {
             method: 'POST',
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(requestBody),
+            signal
         });
 
         const json = await response.json();
@@ -118,6 +129,7 @@ export default class LatestTelemetryProvider {
 
     #clearBatch() {
         this.#batchIds = [];
+        this.#batchAbortSignals = [];
         this.#bulkPromise = undefined;
     }
 
@@ -131,7 +143,21 @@ export default class LatestTelemetryProvider {
             }, BATCH_DEBOUNCE_MS);
         });
     }
+    #getMultiAbortSignal(signals) {
+        const controller = new AbortController();
+        let abortedCount = 0;
 
+        signals.forEach(signal => {
+            signal.addEventListener('abort', () => {
+                abortedCount++;
+                if (abortedCount === signals.length) {
+                    controller.abort();
+                }
+            });
+        });
+
+        return controller.signal;
+    }
     #buildUrl() {
         let url = `${this.url}api/processors/${this.instance}/${this.processor}/parameters:batchGet`;
 

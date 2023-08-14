@@ -98,12 +98,12 @@ export default class LimitProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
-    getLimits(domainObject) {
+    getLimits(domainObject, options = {}) {
         return {
             limits: async () => {
-                let limits = await this.getLimitOverrides(domainObject, this.openmct.objects.makeKeyString(domainObject.identifier));
+                let limits = await this.getLimitOverrides(domainObject, options);
                 if (Object.keys(limits).length === 0) {
-                    limits = domainObject.configuration.limits
+                    limits = domainObject.configuration.limits;
                 }
 
                 return limits;
@@ -115,19 +115,32 @@ export default class LimitProvider {
         return this.realtimeTelemetryProvider.subscribeToLimits(domainObject, callback);
     }
 
-    async requestLimitOverride(domainObject) {
+    async requestLimitOverride(domainObject, options) {
+        if (options.signal) {
+            console.log('request limits', domainObject.name, options.signal);
+            options.signal.addEventListener('abort', () => {
+                console.log('aborted');
+            });
+        }
         const id = domainObject.identifier.key;
+        let json;
         let url = `${this.url}api/mdb-overrides/${this.instance}/realtime`;
         url += '/parameters' + idToQualifiedName(id);
 
-        const response = await fetch(encodeURI(url));
-        const json = await response.json();
+        try {
+            const response = await fetch(encodeURI(url), options);
+            json = await response.json();
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                throw error;
+            }
+        }
 
         return json;
     }
 
-    async getLimitOverrides(domainObject) {
-        const response = await this.requestLimitOverride(domainObject);
+    async getLimitOverrides(domainObject, options) {
+        const response = await this.requestLimitOverride(domainObject, options);
 
         const alarmRange = response?.defaultAlarm?.staticAlarmRange ?? [];
 
