@@ -57,7 +57,9 @@ export default class YamcsHistoricalTelemetryProvider {
     async request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
-        if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
+        const useLatestRealtimeTelemetry = (options.strategy === 'latest') && options.timeContext?.isRealTime();
+        const useLatestTelemetryForLimitOne = (options.size === 1 && options.sizeType === 'limit');
+        if (useLatestTelemetryForLimitOne || useLatestRealtimeTelemetry) {
             // Latest requested in realtime, use latest telemetry provider instead
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
