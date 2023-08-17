@@ -39,6 +39,8 @@ export default class RealtimeProvider {
         this.url = url;
         this.instance = instance;
         this.observingStaleness = {};
+        this.observingLimitChanges = {};
+        this.mdbSubscriptionId = undefined;
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -77,20 +79,35 @@ export default class RealtimeProvider {
     }
 
     subscribeToLimits(domainObject, callback) {
-        const subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
-        const id = subscriptionDetails.subscriptionId;
-        this.subscriptionsById[id] = subscriptionDetails;
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.observingLimitChanges[qualifiedName] = {
+            callback
+        };
+        //Only subscribe once when the first observer shows up. The following observers will use this subscription
+        if (Object.keys(this.observingLimitChanges).length === 1) {
+            const subscriptionDetails = this.buildMDBChangesSubscriptionDetails();
+            this.mdbSubscriptionId = subscriptionDetails.subscriptionId;
+            this.subscriptionsById[this.mdbSubscriptionId] = subscriptionDetails;
 
-        const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
+            const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
 
-        this.sendOrQueueMessage(message);
+            this.sendOrQueueMessage(message);
+        }
 
         return () => {
-            this.sendUnsubscribeMessage(subscriptionDetails);
+            delete this.observingLimitChanges[qualifiedName];
 
-            if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
-                delete this.subscriptionsById[id];
+            //if this is the last observer, then unsubscribe
+            if (Object.keys(this.observingLimitChanges).length === 0) {
+                const subscriptionDetails = this.subscriptionsById[this.mdbSubscriptionId];
+
+                if (subscriptionDetails) {
+                    this.sendUnsubscribeMessage(subscriptionDetails);
+
+                    this.subscriptionsByCall.delete(subscriptionDetails.call);
+                    delete this.subscriptionsById[this.mdbSubscriptionId];
+                    this.mdbSubscriptionId = undefined;
+                }
             }
         };
     }
@@ -130,6 +147,17 @@ export default class RealtimeProvider {
             updateOnExpiration: true,
             options,
             callback: callback
+        };
+
+        return subscriptionDetails;
+    }
+
+    buildMDBChangesSubscriptionDetails() {
+        let subscriptionId = this.lastSubscriptionId++;
+        let subscriptionDetails = {
+            instance: this.instance,
+            subscriptionId: subscriptionId,
+            updateOnExpiration: true,
         };
 
         return subscriptionDetails;
@@ -273,9 +301,9 @@ export default class RealtimeProvider {
                     }
                 } else if (this.isMdbChangesMessage(message)) {
                     const parameterName = message.data.parameterOverride.parameter;
-                    if (subscriptionDetails.name === parameterName) {
+                    if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
-                        subscriptionDetails.callback(getLimitFromAlarmRange(alarmRange));
+                        this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
                     }
                 } else {
                     subscriptionDetails.callback(message.data);
