@@ -89,28 +89,15 @@ export default class RealtimeProvider {
     }
 
     subscribeToLimits(domainObject, callback) {
+        // The object-provider creates an mdb changes subscription on dictionary load and unsubscribes it when open MCT is closed
+        // so we only need to maintain a list of subscriber callbacks and don't need to create another mdb changes subscription here
         const qualifiedName = idToQualifiedName(domainObject.identifier.key);
         this.observingLimitChanges[qualifiedName] = {
             callback
         };
-        //Only subscribe once when the first observer shows up. The following observers will use this subscription
-        if (Object.keys(this.observingLimitChanges).length === 1) {
-            if (this.mdbChangesUnsubscribe) {
-                this.mdbChangesUnsubscribe();
-            }
-            this.mdbChangesUnsubscribe = this.subscribeToMDBChanges();
-        }
 
         return () => {
             delete this.observingLimitChanges[qualifiedName];
-
-            //if this is the last observer, then unsubscribe
-            if (Object.keys(this.observingLimitChanges).length === 0) {
-                if (this.mdbChangesUnsubscribe) {
-                    this.mdbChangesUnsubscribe();
-                    this.mdbChangesUnsubscribe = undefined;
-                }
-            }
         };
     }
 
@@ -314,7 +301,8 @@ export default class RealtimeProvider {
                     if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
                         this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
-                    } else if (subscriptionDetails.callback) {
+                    }
+                    if (subscriptionDetails.callback) {
                         subscriptionDetails.callback(message.data);
                     }
                 } else {
