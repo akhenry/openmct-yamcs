@@ -21,7 +21,15 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import {OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY, STALENESS_STATUS_MAP, MDB_TYPE} from '../const';
+import {
+    OBJECT_TYPES,
+    DATA_TYPES,
+    AGGREGATE_TYPE,
+    METADATA_TIME_KEY,
+    STALENESS_STATUS_MAP,
+    MDB_TYPE,
+    MDB_OBJECT
+} from '../const';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
@@ -35,12 +43,14 @@ import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
-    constructor(url, instance) {
+    constructor(url, instance, processor = 'realtime') {
         this.url = url;
         this.instance = instance;
+        this.processor = processor;
         this.observingStaleness = {};
+        this.MDB_OBJECT = MDB_OBJECT;
+        this.mdbChangesUnsubscribe = undefined;
         this.observingLimitChanges = {};
-        this.mdbSubscriptionId = undefined;
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -85,13 +95,10 @@ export default class RealtimeProvider {
         };
         //Only subscribe once when the first observer shows up. The following observers will use this subscription
         if (Object.keys(this.observingLimitChanges).length === 1) {
-            const subscriptionDetails = this.buildMDBChangesSubscriptionDetails();
-            this.mdbSubscriptionId = subscriptionDetails.subscriptionId;
-            this.subscriptionsById[this.mdbSubscriptionId] = subscriptionDetails;
-
-            const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
-
-            this.sendOrQueueMessage(message);
+            if (this.mdbChangesUnsubscribe) {
+                this.mdbChangesUnsubscribe();
+            }
+            this.mdbChangesUnsubscribe = this.subscribeToMDBChanges();
         }
 
         return () => {
@@ -99,15 +106,28 @@ export default class RealtimeProvider {
 
             //if this is the last observer, then unsubscribe
             if (Object.keys(this.observingLimitChanges).length === 0) {
-                const subscriptionDetails = this.subscriptionsById[this.mdbSubscriptionId];
-
-                if (subscriptionDetails) {
-                    this.sendUnsubscribeMessage(subscriptionDetails);
-
-                    this.subscriptionsByCall.delete(subscriptionDetails.call);
-                    delete this.subscriptionsById[this.mdbSubscriptionId];
-                    this.mdbSubscriptionId = undefined;
+                if (this.mdbChangesUnsubscribe) {
+                    this.mdbChangesUnsubscribe();
+                    this.mdbChangesUnsubscribe = undefined;
                 }
+            }
+        };
+    }
+
+    subscribeToMDBChanges(callback) {
+        const subscriptionDetails = this.buildSubscriptionDetails(this.MDB_OBJECT, callback);
+        this.subscriptionsById[subscriptionDetails.subscriptionId] = subscriptionDetails;
+
+        this.sendSubscribeMessage(subscriptionDetails);
+
+        return () => {
+            const id = subscriptionDetails.subscriptionId;
+
+            if (subscriptionDetails) {
+                this.sendUnsubscribeMessage(subscriptionDetails);
+
+                this.subscriptionsByCall.delete(subscriptionDetails.call);
+                delete this.subscriptionsById[id];
             }
         };
     }
@@ -141,6 +161,7 @@ export default class RealtimeProvider {
         let subscriptionId = this.lastSubscriptionId++;
         let subscriptionDetails = {
             instance: this.instance,
+            processor: this.processor,
             subscriptionId: subscriptionId,
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
@@ -152,20 +173,9 @@ export default class RealtimeProvider {
         return subscriptionDetails;
     }
 
-    buildMDBChangesSubscriptionDetails() {
-        let subscriptionId = this.lastSubscriptionId++;
-        let subscriptionDetails = {
-            instance: this.instance,
-            subscriptionId: subscriptionId,
-            updateOnExpiration: true,
-        };
-
-        return subscriptionDetails;
-    }
-
     sendSubscribeMessage(subscriptionDetails) {
-        let domainObject = subscriptionDetails.domainObject;
-        let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+        const domainObject = subscriptionDetails.domainObject;
+        const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
 
         this.sendOrQueueMessage(message);
     }
@@ -304,6 +314,8 @@ export default class RealtimeProvider {
                     if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
                         this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
+                    } else if (subscriptionDetails.callback) {
+                        subscriptionDetails.callback(message.data);
                     }
                 } else {
                     subscriptionDetails.callback(message.data);
