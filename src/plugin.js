@@ -46,6 +46,7 @@ export default function installYamcsPlugin(configuration) {
         const latestTelemetryProvider = new LatestTelemetryProvider({
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance,
+            processor: configuration.yamcsProcessor,
             openmct
         });
 
@@ -58,7 +59,8 @@ export default function installYamcsPlugin(configuration) {
 
         const realtimeTelemetryProvider = new RealtimeProvider(
             configuration.yamcsWebsocketEndpoint,
-            configuration.yamcsInstance
+            configuration.yamcsInstance,
+            configuration.yamcsProcessor
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
@@ -123,7 +125,9 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsFolder,
             roleStatusTelemetry,
             pollQuestionParameter,
-            pollQuestionTelemetry
+            pollQuestionTelemetry,
+            configuration.yamcsProcessor,
+            realtimeTelemetryProvider
         );
 
         openmct.objects.addRoot({
