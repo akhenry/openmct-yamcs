@@ -73,6 +73,13 @@ export default class YamcsHistoricalTelemetryProvider {
             && options.strategy === 'minmax'
             && !hasEnumValue;
 
+        if (!options.isSamples) {
+            // override the totalRequestSize and sizeType set in standardizeOptions since we're not minMaxing VIPEROMCT-397
+            // the sizeType is used in the url creation below
+            options.totalRequestSize = MAX_REQUEST_SIZE;
+            options.sizeType = 'limit';
+        }
+
         const url = this.buildUrl(id, options);
         const requestArguments = [id, url, options];
 
@@ -80,10 +87,6 @@ export default class YamcsHistoricalTelemetryProvider {
             const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
 
             return minMaxHistory;
-        } else {
-            // override the totalRequestSize and sizeType set in standardizeOptions since we're not minMaxing VIPEROMCT-397
-            options.totalRequestSize = MAX_REQUEST_SIZE;
-            options.sizeType = 'limit';
         }
 
         const history = await this.getHistory(...requestArguments);
