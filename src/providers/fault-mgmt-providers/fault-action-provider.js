@@ -1,9 +1,10 @@
 import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } from './fault-mgmt-constants';
 
 export default class FaultActionProvider {
-    constructor(url, instance) {
+    constructor(url, instance, processor = 'realtime') {
         this.url = url;
         this.instance = instance;
+        this.processor = processor;
     }
 
     acknowledgeFault(fault, { comment = '' } = {}) {
@@ -46,7 +47,7 @@ export default class FaultActionProvider {
     }
 
     _getUrl(fault) {
-        let url = `${this.url}api/processors/${this.instance}/realtime/${FAULT_MANAGEMENT_ALARMS}`;
+        let url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MANAGEMENT_ALARMS}`;
         url += `${fault.namespace}/${fault.name}`;
         url += `/${fault.seqNum}`;
 
