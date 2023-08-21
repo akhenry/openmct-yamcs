@@ -126,8 +126,8 @@ export default function installYamcsPlugin(configuration) {
             roleStatusTelemetry,
             pollQuestionParameter,
             pollQuestionTelemetry,
-            configuration.yamcsProcessor,
-            realtimeTelemetryProvider
+            realtimeTelemetryProvider,
+            configuration.yamcsProcessor
         );
 
         openmct.objects.addRoot({
@@ -137,7 +137,7 @@ export default function installYamcsPlugin(configuration) {
 
         const formatThumbnail = {
             format: function (url) {
-                return url.replace(/\/images\//,'/rescaled-images/').replace(/.png$/, '_thumb.jpeg');
+                return url.replace(/\/images\//, '/rescaled-images/').replace(/.png$/, '_thumb.jpeg');
             }
         };
 

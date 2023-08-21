@@ -24,7 +24,7 @@ import {
     qualifiedNameToId,
     accumulateResults,
     getLimitFromAlarmRange,
-    getLimitOverrides, idToQualifiedName
+    getLimitOverrides
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const';
@@ -39,7 +39,7 @@ const YAMCS_API_MAP = {
 const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, processor = 'realtime', realtimeTelemetryProvider) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime') {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -372,7 +372,6 @@ export default class YamcsObjectProvider {
         const isAggregate = this.#isAggregate(parameter);
         let aggregateHasMembers = false;
 
-        //TODO: Move to it's own function
         if (this.limitOverrides[qualifiedName] !== undefined) {
             obj.configuration.limits = this.limitOverrides[qualifiedName];
         } else if (parameter.type.defaultAlarm) {

@@ -27,7 +27,6 @@ import {
     AGGREGATE_TYPE,
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
-    MDB_TYPE,
     MDB_OBJECT
 } from '../const';
 import {
@@ -49,7 +48,6 @@ export default class RealtimeProvider {
         this.processor = processor;
         this.observingStaleness = {};
         this.MDB_OBJECT = MDB_OBJECT;
-        this.mdbChangesUnsubscribe = undefined;
         this.observingLimitChanges = {};
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
@@ -302,6 +300,7 @@ export default class RealtimeProvider {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
                         this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
                     }
+
                     if (subscriptionDetails.callback) {
                         subscriptionDetails.callback(message.data);
                     }
