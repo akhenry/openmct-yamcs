@@ -31,34 +31,35 @@ function buildSubscribeMessages() {
     for (const [objectType, dataType] of Object.entries(typeMap)) {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
+            const {subscriptionId, instance, processor = "realtime", name } = subscriptionDetails;
             let message;
 
             if (isEventType(objectType)) {
                 message = `{
                     "type": "${dataType}",
-                    "id": "${subscriptionDetails.subscriptionId}",
+                    "id": "${subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}"
+                        "instance": "${instance}"
                     }
                 }`;
             } else if (isAlarmType(objectType) || isCommandType(objectType) || isMdbChangesType(objectType)) {
                 message = `{
                     "type": "${dataType}",
-                    "id": "${subscriptionDetails.subscriptionId}",
+                    "id": "${subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime"
+                        "instance": "${instance}",
+                        "processor": "${processor}"
                     }
                 }`;
             } else {
                 message = `{
                     "type": "${dataType}",
-                    "id": "${subscriptionDetails.subscriptionId}",
+                    "id": "${subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime",
+                        "instance": "${instance}",
+                        "processor": "${processor}",
                         "id": [{
-                            "name": "${subscriptionDetails.name}"
+                            "name": "${name}"
                         }],
                         "sendFromCache": true,
                         "updateOnExpiration": true

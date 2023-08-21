@@ -199,6 +199,29 @@ async function accumulateResults(url, options, property, soFar, totalLimit, toke
         result.continuationToken);
 }
 
+async function requestLimitOverrides(url) {
+    const response = await fetch(encodeURI(url));
+    const json = await response.json();
+
+    return json?.overrides ?? [];
+}
+
+async function getLimitOverrides(url) {
+    let limitOverrides = {};
+    const overrides = await requestLimitOverrides(url);
+
+    overrides.forEach((override) => {
+        const parameterOverride = override.parameterOverride;
+        const parameter = parameterOverride.parameter;
+        const alarmRange = parameterOverride?.defaultAlarm?.staticAlarmRange ?? [];
+
+        limitOverrides[parameter] = getLimitFromAlarmRange(alarmRange);
+
+    });
+
+    return limitOverrides;
+}
+
 async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
 
     if (aborted(signal)) {
@@ -349,5 +372,6 @@ export {
     getValue,
     accumulateResults,
     addLimitInformation,
-    yieldResults
+    yieldResults,
+    getLimitOverrides
 };
