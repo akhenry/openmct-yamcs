@@ -58,3 +58,5 @@ export const METADATA_TIME_KEY = 'generationTime';
 export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 export const AGGREGATE_TYPE = 'AGGREGATE';
 export const NAMESPACE = 'taxonomy';
+
+export const MAX_REQUEST_SIZE = 1000000;

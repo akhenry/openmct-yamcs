@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
+import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY, MAX_REQUEST_SIZE } from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -58,7 +58,7 @@ export default class YamcsHistoricalTelemetryProvider {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
         if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
-            // Latest requested in realtime, use latest telemetry provider instead
+            // Latest requested in realtime, use the latest telemetry provider instead
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
@@ -80,6 +80,9 @@ export default class YamcsHistoricalTelemetryProvider {
             const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
 
             return minMaxHistory;
+        } else {
+            // override the totalRequestSize set in standardizeOptions since we're not minMaxing VIPEROMCT-397
+            options.totalRequestSize = MAX_REQUEST_SIZE;
         }
 
         const history = await this.getHistory(...requestArguments);
@@ -125,7 +128,7 @@ export default class YamcsHistoricalTelemetryProvider {
         options.sizeType = 'limit';
         options.order = 'asc';
         options.isSamples = false;
-        options.totalRequestSize = options.size || 1000000;
+        options.totalRequestSize = options.size || MAX_REQUEST_SIZE;
 
         options.size = this.getAppropriateSize(options.size);
 
