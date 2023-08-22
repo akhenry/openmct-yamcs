@@ -70,8 +70,11 @@ export default class YamcsHistoricalTelemetryProvider {
 
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax'
-            && !hasEnumValue;
+            && options.strategy === 'minmax';
+
+        if (hasEnumValue) {
+            options.useRawValue = true;
+        }
 
         const url = this.buildUrl(id, options);
         const requestArguments = [id, url, options];
@@ -167,6 +170,9 @@ export default class YamcsHistoricalTelemetryProvider {
         urlWithQueryParameters.searchParams.append('stop', new Date(end).toISOString());
         urlWithQueryParameters.searchParams.append(options.sizeType, options.size);
         urlWithQueryParameters.searchParams.append('order', options.order);
+        if (options.useRawValue === true) {
+            urlWithQueryParameters.searchParams.append('useRawValue', true);
+        }
 
         if (options.filters?.severity?.equals?.length) {
             // add a single minimum severity threshold filter
