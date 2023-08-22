@@ -1,7 +1,5 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
 
-import {getLimitFromAlarmRange, idToQualifiedName} from "../utils";
-
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
     'WARNING': 'is-limit--yellow',
@@ -98,14 +96,11 @@ export default class LimitProvider {
         return domainObject.type.startsWith('yamcs.');
     }
 
-    getLimits(domainObject, options = {}) {
-        return {
-            limits: async () => {
-                let limits = await this.getLimitOverrides(domainObject, options);
-                if (Object.keys(limits).length === 0) {
-                    limits = domainObject.configuration.limits;
-                }
+    getLimits(domainObject) {
+        const limits = domainObject.configuration.limits;
 
+        return {
+            limits: () => {
                 return limits;
             }
         };
@@ -113,37 +108,5 @@ export default class LimitProvider {
 
     subscribeToLimits(domainObject, callback) {
         return this.realtimeTelemetryProvider.subscribeToLimits(domainObject, callback);
-    }
-
-    async requestLimitOverride(domainObject, options) {
-        if (options.signal) {
-            console.log('request limits', domainObject.name, options.signal);
-            options.signal.addEventListener('abort', () => {
-                console.log('aborted');
-            });
-        }
-        const id = domainObject.identifier.key;
-        let json;
-        let url = `${this.url}api/mdb-overrides/${this.instance}/realtime`;
-        url += '/parameters' + idToQualifiedName(id);
-
-        try {
-            const response = await fetch(encodeURI(url), options);
-            json = await response.json();
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                throw error;
-            }
-        }
-
-        return json;
-    }
-
-    async getLimitOverrides(domainObject, options) {
-        const response = await this.requestLimitOverride(domainObject, options);
-
-        const alarmRange = response?.defaultAlarm?.staticAlarmRange ?? [];
-
-        return getLimitFromAlarmRange(alarmRange);
     }
 }

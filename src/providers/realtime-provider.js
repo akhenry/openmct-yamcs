@@ -21,7 +21,14 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import {OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY, STALENESS_STATUS_MAP, MDB_TYPE} from '../const';
+import {
+    OBJECT_TYPES,
+    DATA_TYPES,
+    AGGREGATE_TYPE,
+    METADATA_TIME_KEY,
+    STALENESS_STATUS_MAP,
+    MDB_OBJECT
+} from '../const';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
@@ -35,10 +42,13 @@ import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
-    constructor(url, instance) {
+    constructor(url, instance, processor = 'realtime') {
         this.url = url;
         this.instance = instance;
+        this.processor = processor;
         this.observingStaleness = {};
+        this.MDB_OBJECT = MDB_OBJECT;
+        this.observingLimitChanges = {};
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -77,19 +87,31 @@ export default class RealtimeProvider {
     }
 
     subscribeToLimits(domainObject, callback) {
-        const subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
-        const id = subscriptionDetails.subscriptionId;
-        this.subscriptionsById[id] = subscriptionDetails;
-
-        const message = MESSAGES.SUBSCRIBE[MDB_TYPE](subscriptionDetails);
-
-        this.sendOrQueueMessage(message);
+        // The object-provider creates an mdb changes subscription on dictionary load and unsubscribes it when open MCT is closed
+        // so we only need to maintain a list of subscriber callbacks and don't need to create another mdb changes subscription here
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.observingLimitChanges[qualifiedName] = {
+            callback
+        };
 
         return () => {
-            this.sendUnsubscribeMessage(subscriptionDetails);
+            delete this.observingLimitChanges[qualifiedName];
+        };
+    }
 
-            if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+    subscribeToMDBChanges(callback) {
+        const subscriptionDetails = this.buildSubscriptionDetails(this.MDB_OBJECT, callback);
+        this.subscriptionsById[subscriptionDetails.subscriptionId] = subscriptionDetails;
+
+        this.sendSubscribeMessage(subscriptionDetails);
+
+        return () => {
+            const id = subscriptionDetails.subscriptionId;
+
+            if (subscriptionDetails) {
+                this.sendUnsubscribeMessage(subscriptionDetails);
+
+                this.subscriptionsByCall.delete(subscriptionDetails.call);
                 delete this.subscriptionsById[id];
             }
         };
@@ -124,6 +146,7 @@ export default class RealtimeProvider {
         let subscriptionId = this.lastSubscriptionId++;
         let subscriptionDetails = {
             instance: this.instance,
+            processor: this.processor,
             subscriptionId: subscriptionId,
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
@@ -136,8 +159,8 @@ export default class RealtimeProvider {
     }
 
     sendSubscribeMessage(subscriptionDetails) {
-        let domainObject = subscriptionDetails.domainObject;
-        let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+        const domainObject = subscriptionDetails.domainObject;
+        const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
 
         this.sendOrQueueMessage(message);
     }
@@ -272,8 +295,15 @@ export default class RealtimeProvider {
                         subscriptionDetails.callback(datum);
                     }
                 } else if (this.isMdbChangesMessage(message)) {
-                    const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
-                    subscriptionDetails.callback(getLimitFromAlarmRange(alarmRange));
+                    const parameterName = message.data.parameterOverride.parameter;
+                    if (this.observingLimitChanges[parameterName] !== undefined) {
+                        const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+                        this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
+                    }
+
+                    if (subscriptionDetails.callback) {
+                        subscriptionDetails.callback(message.data);
+                    }
                 } else {
                     subscriptionDetails.callback(message.data);
                 }

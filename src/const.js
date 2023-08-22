@@ -32,7 +32,6 @@ export const OBJECT_TYPES = {
     ALARMS_TYPE: 'yamcs.alarms',
     GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
 };
-
 export const MDB_TYPE = 'yamcs.mdbchanges';
 
 export const DATA_TYPES = {
@@ -58,3 +57,11 @@ export const METADATA_TIME_KEY = 'generationTime';
 export const UNSUPPORTED_TYPE = 'Unsupported Data Type';
 export const AGGREGATE_TYPE = 'AGGREGATE';
 export const NAMESPACE = 'taxonomy';
+
+export const MDB_OBJECT = Object.freeze({
+    identifier: {
+        namespace: NAMESPACE,
+        key: MDB_TYPE
+    },
+    type: MDB_TYPE
+});

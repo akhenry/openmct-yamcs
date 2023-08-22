@@ -1,6 +1,6 @@
 {
   "name": "openmct-yamcs",
-  "version": "3.0.0-SNAPSHOT",
+  "version": "3.1.0-next",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
@@ -37,7 +37,7 @@
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.19.1",
     "@deploysentinel/playwright": "0.3.4",
-    "@playwright/test": "1.32.3",
+    "@playwright/test": "1.36.2",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
     "eslint": "8.38.0",
