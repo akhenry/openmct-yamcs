@@ -23,7 +23,8 @@
 import {
     qualifiedNameToId,
     accumulateResults,
-    getLimitFromAlarmRange
+    getLimitFromAlarmRange,
+    getLimitOverrides
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const';
@@ -38,14 +39,18 @@ const YAMCS_API_MAP = {
 const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime') {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
+        this.processor = processor;
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
+        this.mdbChangesUnsubscribe = undefined;
         this.folderName = folderName;
         this.namespace = NAMESPACE;
         this.key = 'spacecraft';
         this.dictionary = {};
+        this.limitOverrides = {};
         this.dictionaryPromise = null;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
@@ -64,6 +69,8 @@ export default class YamcsObjectProvider {
             eventsObject.identifier,
             commandsObject.identifier
         );
+
+        this.openmct.on('destroy', this.#unsubscribeFromAll);
     }
 
     #createRootObject() {
@@ -198,6 +205,13 @@ export default class YamcsObjectProvider {
             this.#addSpaceSystem(spaceSystem);
         });
 
+        //get any limit overrides and subscribe for subsequent changes
+        let requestUrl = `${this.url}api/mdb-overrides/${this.instance}/${this.processor}`;
+        this.limitOverrides = await getLimitOverrides(requestUrl);
+        if (this.mdbChangesUnsubscribe === undefined) {
+            this.mdbChangesUnsubscribe = this.realtimeTelemetryProvider.subscribeToMDBChanges(this.#updateParameterLimits.bind(this));
+        }
+
         parameters.forEach(parameter => {
             this.#addParameterObject(parameter);
         });
@@ -290,6 +304,22 @@ export default class YamcsObjectProvider {
         }));
     }
 
+    async #updateParameterLimits(message) {
+        const parameterOverride = message.parameterOverride;
+        const parameterName = parameterOverride.parameter;
+        const identifier = {
+            key: qualifiedNameToId(parameterName),
+            namespace: this.namespace
+        };
+
+        const parameter = await this.get(identifier);
+        if (parameter !== undefined) {
+            const alarmRange = parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+            parameter.configuration.limits = this.#convertToLimits({
+                staticAlarmRange: alarmRange
+            });
+        }
+    }
     #convertToLimits(defaultAlarm) {
         if (defaultAlarm?.staticAlarmRange) {
             return getLimitFromAlarmRange(defaultAlarm.staticAlarmRange);
@@ -342,7 +372,9 @@ export default class YamcsObjectProvider {
         const isAggregate = this.#isAggregate(parameter);
         let aggregateHasMembers = false;
 
-        if (parameter.type.defaultAlarm) {
+        if (this.limitOverrides[qualifiedName] !== undefined) {
+            obj.configuration.limits = this.limitOverrides[qualifiedName];
+        } else if (parameter.type.defaultAlarm) {
             obj.configuration.limits = this.#convertToLimits(parameter.type.defaultAlarm);
         }
 
@@ -536,5 +568,12 @@ export default class YamcsObjectProvider {
 
     #getUnit(parameter) {
         return parameter.type.unitSet?.map(unit => unit.unit).join(',');
+    }
+
+    #unsubscribeFromAll() {
+        if (this.mdbChangesUnsubscribe) {
+            this.mdbChangesUnsubscribe();
+            this.mdbChangesUnsubscribe = undefined;
+        }
     }
 }

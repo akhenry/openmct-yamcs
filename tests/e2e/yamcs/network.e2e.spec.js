@@ -71,8 +71,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Should only be fetching:
         // 1. telemetry from parameter archive
         // 2. POST: batchGet for staleness
-        // 3. GET for telemetry item mdb overrides
-        expect(filteredRequests.length).toBe(3);
+        expect(filteredRequests.length).toBe(2);
 
         // Change to fixed time
         await setFixedTimeMode(page);
@@ -105,8 +104,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         // with no further request for limits should be made.
         // 1. GET for telemetry item from parameter archive
         // 2. POST: batchGet for staleness
-        // 3. GET for telemetry item mdb overrides
-        expect(filteredRequests.length).toBe(3);
+        expect(filteredRequests.length).toBe(2);
 
         networkRequests = [];
         await page.reload();
