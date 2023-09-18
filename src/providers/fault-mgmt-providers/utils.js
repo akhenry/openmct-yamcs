@@ -21,6 +21,8 @@
  *****************************************************************************/
 
 function faultModelConvertor(faultData, type) {
+    console.log({faultData, type});
+
     return {
         type: type || faultData?.type,
         fault: {
