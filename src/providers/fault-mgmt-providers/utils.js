@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { getValue } from '../utils.js';
+import { getValue } from '../../utils.js';
 
 function faultModelConvertor(faultData, type) {
 
