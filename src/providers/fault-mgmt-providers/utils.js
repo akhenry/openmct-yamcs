@@ -20,13 +20,15 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+import { getValue } from '../utils.js';
+
 function faultModelConvertor(faultData, type) {
 
     console.log('current', faultData?.parameterDetail?.currentValue);
     console.log('trigger', faultData?.parameterDetail?.triggerValue);
 
-    const currentValue = faultData?.parameterDetail?.currentValue?.engValue?.doubleValue || faultData?.parameterDetail?.currentValue?.engValue?.floatValue;
-    const triggerValue = faultData?.parameterDetail?.triggerValue?.engValue?.doubleValue || faultData?.parameterDetail?.triggerValue?.currentValue?.engValue?.floatValue;
+    const currentValue = getValue(faultData?.parameterDetail?.currentValue);
+    const triggerValue = getValue(faultData?.parameterDetail?.triggerValue);
     console.log({currentValue, triggerValue});
 
     return {
@@ -34,7 +36,7 @@ function faultModelConvertor(faultData, type) {
         fault: {
             acknowledged: Boolean(faultData?.acknowledged),
             currentValueInfo: {
-                value: currentValue,
+                value: getValue(faultData?.parameterDetail?.currentValue),
                 rangeCondition: faultData?.parameterDetail?.currentValue?.rangeCondition,
                 monitoringResult: faultData?.parameterDetail?.currentValue?.monitoringResult
             },
@@ -47,7 +49,7 @@ function faultModelConvertor(faultData, type) {
             shortDescription: faultData?.parameterDetail?.parameter?.shortDescription,
             triggerTime: faultData?.triggerTime,
             triggerValueInfo: {
-                value: triggerValue,
+                value: getValue(faultData?.parameterDetail?.triggerValue),
                 rangeCondition: faultData?.parameterDetail?.triggerValue?.rangeCondition,
                 monitoringResult: faultData?.parameterDetail?.triggerValue?.monitoringResult
             }
