@@ -24,12 +24,10 @@ import { getValue } from '../../utils.js';
 
 function faultModelConvertor(faultData, type) {
 
-    console.log('current', faultData?.parameterDetail?.currentValue);
-    console.log('trigger', faultData?.parameterDetail?.triggerValue);
-
-    const currentValue = faultData?.parameterDetail?.currentValue && getValue(faultData.parameterDetail.currentValue);
-    const triggerValue = faultData?.parameterDetail?.triggerValue && getValue(faultData?.parameterDetail?.triggerValue);
-    console.log({currentValue, triggerValue});
+    const currentValue = faultData?.parameterDetail?.currentValue
+        && getValue(faultData.parameterDetail.currentValue);
+    const triggerValue = faultData?.parameterDetail?.triggerValue
+        && getValue(faultData.parameterDetail.triggerValue);
 
     return {
         type: type || faultData?.type,
