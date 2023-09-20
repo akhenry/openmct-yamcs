@@ -27,8 +27,8 @@ function faultModelConvertor(faultData, type) {
     console.log('current', faultData?.parameterDetail?.currentValue);
     console.log('trigger', faultData?.parameterDetail?.triggerValue);
 
-    const currentValue = getValue(faultData?.parameterDetail?.currentValue);
-    const triggerValue = getValue(faultData?.parameterDetail?.triggerValue);
+    const currentValue = faultData?.parameterDetail?.currentValue && getValue(faultData.parameterDetail.currentValue);
+    const triggerValue = faultData?.parameterDetail?.triggerValue && getValue(faultData?.parameterDetail?.triggerValue);
     console.log({currentValue, triggerValue});
 
     return {
@@ -36,7 +36,7 @@ function faultModelConvertor(faultData, type) {
         fault: {
             acknowledged: Boolean(faultData?.acknowledged),
             currentValueInfo: {
-                value: getValue(faultData?.parameterDetail?.currentValue),
+                value: currentValue,
                 rangeCondition: faultData?.parameterDetail?.currentValue?.rangeCondition,
                 monitoringResult: faultData?.parameterDetail?.currentValue?.monitoringResult
             },
@@ -49,7 +49,7 @@ function faultModelConvertor(faultData, type) {
             shortDescription: faultData?.parameterDetail?.parameter?.shortDescription,
             triggerTime: faultData?.triggerTime,
             triggerValueInfo: {
-                value: getValue(faultData?.parameterDetail?.triggerValue),
+                value: triggerValue,
                 rangeCondition: faultData?.parameterDetail?.triggerValue?.rangeCondition,
                 monitoringResult: faultData?.parameterDetail?.triggerValue?.monitoringResult
             }
