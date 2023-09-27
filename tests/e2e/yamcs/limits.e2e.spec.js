@@ -25,7 +25,7 @@ MDB Limits Specific Tests
 */
 
 const { test, expect } = require('../opensource/pluginFixtures');
-const { createDomainObjectWithDefaults, selectInspectorTab, waitForPlotsToRender } = require('../opensource/appActions');
+const { createDomainObjectWithDefaults, waitForPlotsToRender } = require('../opensource/appActions');
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
     test('Can show mdb limits when changed', async ({ page }) => {
@@ -69,7 +69,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.click('button[title="Edit"]');
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
-        await selectInspectorTab(page, 'Config');
+        await page.getByRole('tab', { name: 'Config' }).click();
         await page
             .getByRole('list', { name: 'Plot Series Properties' })
             .locator('span')
@@ -154,7 +154,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.click('button[title="Edit"]');
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
-        await selectInspectorTab(page, 'Config');
+        await page.getByRole('tab', { name: 'Config' }).click();
         await page
             .getByRole('list', { name: 'Plot Series Properties' })
             .locator('span')

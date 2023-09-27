@@ -25,7 +25,7 @@ Filter Specific Tests
 */
 
 const { test, expect } = require('../opensource/pluginFixtures');
-const { createDomainObjectWithDefaults, selectInspectorTab } = require('../opensource/appActions');
+const { createDomainObjectWithDefaults } = require('../opensource/appActions');
 
 test.describe("Filter tests @yamcs", () => {
     test('Can filter events by severity', async ({ page }) => {
@@ -41,7 +41,7 @@ test.describe("Filter tests @yamcs", () => {
         await eventsTreeItem.dragTo(objectPane);
 
         // ensure global filters work
-        await selectInspectorTab(page, 'Filters');
+        await page.getByRole('tab', { name: 'Filters' }).click();
         await page.getByRole('listitem').filter({ hasText: 'Global Filtering' }).locator('span').click();
         await page.getByRole('listitem').filter({ hasText: 'Events' }).locator('span').click();
         await page.locator('[aria-label="Global Filter"]').selectOption('critical');
