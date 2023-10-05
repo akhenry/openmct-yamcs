@@ -295,7 +295,10 @@ export default class RealtimeProvider {
                         const datum = eventToTelemetryDatum(message.data);
                         subscriptionDetails.callback(datum);
                     }
-                } else if (this.isMdbChangesForParameterMessage(message)) {
+                } else if (this.isMdbChanges(message)) {
+                    if (!this.isParameterType(message)) {
+                        return;
+                    }
                     const parameterName = message.data.parameterOverride.parameter;
                     if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
@@ -369,7 +372,11 @@ export default class RealtimeProvider {
         return message.type === 'events';
     }
 
-    isMdbChangesForParameterMessage(message) {
-        return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES && message.data?.type === MDB_CHANGES_PARAMTER_TYPE;
+    isMdbChanges(message) {
+        return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
+    }
+
+    isParameterType(message) {
+        return message.data?.type === MDB_CHANGES_PARAMTER_TYPE;
     }
 }
