@@ -1,41 +1,41 @@
 #!/bin/sh
 #
-# This script can clone/checkout a single folder from git repository 
-# - Might be used for checking out micro-services from monolithic git repository
+# This script is designed copy the necessary e2e framework and test scripts from the Open MCT
+# repository.
 #
-# - You can even do checkout into home directory, for example
-#   git-sparse-clone.sh git@github.com:readdle/fluix-web.git /home/login login
+# Usage:
+# ./tests/git-opensource-tests.sh [branch-name]
 #
+# If no branch name is provided, the script defaults to the 'master' branch.
 
-SCRIPT_PATH=${0%/*} # Get the relative path to the script dir from the cwd
-if [ "$0" != "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "" ]; then 
-    cd "$SCRIPT_PATH"
-fi
+set -e # Exit immediately if a command exits with a nonzero exit value
 
-rm -rf e2e/opensource
+SCRIPT_DIR="$(dirname "$0")" # Get the directory of the script
+REPO_DIR="$SCRIPT_DIR/.."   # Get the root directory of the repository
 
-# This will cause the shell to exit immediately if a simple command exits with a nonzero exit value.
-set -e
+rm -rf "$REPO_DIR/e2e/opensource"
 
 REPO_URL=https://github.com/nasa/openmct.git
+REPO_BRANCH=${1:-master} # Use the first argument as the branch, or default to 'master'
 REPO_PATH=e2e
-LOCAL_REPO_ROOT="e2e/opensource"
+LOCAL_REPO_ROOT="$REPO_DIR/e2e/opensource"
+TARGET_DIR="$REPO_DIR/opensource"
 
-git clone --no-checkout --depth 1 $REPO_URL "$LOCAL_REPO_ROOT"
+# Create target directory if it doesn't exist
+mkdir -p "$TARGET_DIR"
+
+git clone --no-checkout --depth 1 --branch $REPO_BRANCH $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
 git config core.sparsecheckout true
 echo "/$REPO_PATH/**" > .git/info/sparse-checkout
 git read-tree -m -u HEAD
 
-# moving back to /tests/ dir
-cd ..
+# Debugging information
+echo "Listing contents of $LOCAL_REPO_ROOT:"
+ls -l
 
-# Move fixtures and appActions
-mv opensource/e2e/*Fixtures.js ./opensource
-mv opensource/e2e/appActions.js ./opensource
-# Move subfolders
-mv opensource/e2e/*/ ./opensource
-# Move eslint config
-mv opensource/e2e/.eslintrc.js ./opensource
+# Move all required files and folders
+mv "$LOCAL_REPO_ROOT/e2e"/*Fixtures.js "$LOCAL_REPO_ROOT/e2e/appActions.js" "$LOCAL_REPO_ROOT/e2e"/* "$LOCAL_REPO_ROOT/e2e/.eslintrc.js" "$TARGET_DIR"
+
 # Cleanup
-rm -rf opensource/e2e
+rm -rf "$LOCAL_REPO_ROOT/e2e"
