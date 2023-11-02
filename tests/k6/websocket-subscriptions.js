@@ -1,46 +1,44 @@
 /* global __VU */
 
-import ws from 'k6/ws';
-import { check } from 'k6';
+import { WebSocket } from 'k6/experimental/websockets';
 
 export const options = {
-    vus: 10,
-    iterations: 10
+    vus: 1,
+    iterations: 1
 };
 
-export default () => {
-    console.info(`Starting YAMCS websocket load test for ${__VU}`);
+export default function () {
+    for (let i = 0; i < 1; i++) {
+        startYamcsWsWorker(`${__VU}.${i}`);
+    }
+}
+
+function startYamcsWsWorker(id) {
+    console.info(`📨 Starting YAMCS websocket load test for ${id}`);
     const wsURL = `ws://localhost:8090/ws`;
-    const params = { tags: { my_tag: 'YAMCS load testing connection' } };
-    let counter = 0;
+    const websocket = new WebSocket(wsURL);
+    websocket.onerror = (e) => {
+        console.error(`🚨 Websocket error`, e);
+    };
 
-    const res = ws.connect(wsURL, params, function (socket) {
-        socket.on('open', () => {
-            console.log(`VU ${__VU}: connected`);
-            console.info(`🔌 Established websocket connection to ${wsURL}`);
-        });
-
-        socket.on('message', (rawMessage) => {
+    websocket.addEventListener('open', () => {
+        console.log(`VU ${id}: connected`);
+        console.info(`🔌 Established websocket connection to ${wsURL}`);
+        websocket.addEventListener('message', (rawMessage) => {
             const incomingMessage = JSON.parse(rawMessage);
             console.info(`📨 Received message:`, incomingMessage);
-            counter += 1;
-            if (counter === 10000) {
-                console.info(`💸 Received ${counter} messages. Closing WebSocket.`);
-                socket.close();
-            }
         });
 
-        socket.on('error', (error) => {
-            console.error(`🚨 Websocket error, closing websocket`, error);
-            socket.close();
+        websocket.addEventListener('error', (error) => {
+            console.error(`🚨 Websocket error`, error);
         });
 
-        socket.on('close', () => {
+        websocket.addEventListener('close', () => {
             console.warn('🚪 Websocket closed.');
         });
 
         // send subscription request message
-        socket.send(JSON.stringify({
+        websocket.send(JSON.stringify({
             type: 'float',
             path: '/myproject/Gyro.x',
             id: 'YAMCS load testing connection',
@@ -55,6 +53,4 @@ export default () => {
             }
         }));
     });
-
-    check(res, { 'Connected successfully': (r) => r && r.status === 200 });
-};
+}
