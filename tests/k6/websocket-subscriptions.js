@@ -4,50 +4,52 @@ import { WebSocket } from 'k6/experimental/websockets';
 
 export const options = {
     vus: 1,
-    iterations: 1
+    iterations: 1,
+    workers: 4
 };
 
-export default function () {
-    for (let i = 0; i < 1; i++) {
-        startYamcsWsWorker(`${__VU}.${i}`);
+export default () => {
+    for (let i = 0; i < options.workers; i++) {
+        startYamcsWsWorker(`${__VU}`);
     }
-}
+};
 
 function startYamcsWsWorker(id) {
-    console.info(`📨 Starting YAMCS websocket load test for ${id}`);
-    const wsURL = `ws://localhost:8090/ws`;
+    // make array of x,y,z
+    const parameterTypes = ['x', 'y', 'z'];
+    // pick one at random
+    const randomParameter = parameterTypes[Math.floor(Math.random() * parameterTypes.length)];
+    const parameterName = `/myproject/Gyro.${randomParameter}`;
+    const wsURL = `ws://0.0.0.0:8090/api/websocket`;
+    console.info(`📨 Starting YAMCS websocket load test for ${id} to ${wsURL} subscribing to ${parameterName}`);
     const websocket = new WebSocket(wsURL);
     websocket.onerror = (e) => {
         console.error(`🚨 Websocket error`, e);
     };
 
     websocket.addEventListener('open', () => {
-        console.log(`VU ${id}: connected`);
+        console.log(`Client id ${id}: connected`);
         console.info(`🔌 Established websocket connection to ${wsURL}`);
         websocket.addEventListener('message', (rawMessage) => {
-            const incomingMessage = JSON.parse(rawMessage);
-            console.info(`📨 Received message:`, incomingMessage);
+            console.info(`📨 Client ${id} received YAMCS message for ${parameterName}`);
         });
 
         websocket.addEventListener('error', (error) => {
-            console.error(`🚨 Websocket error`, error);
+            console.error(`🚨 Client ${id} got websocket error`, error);
         });
 
         websocket.addEventListener('close', () => {
-            console.warn('🚪 Websocket closed.');
+            console.warn(`🚪 Client ${id} websocket closed.`);
         });
 
         // send subscription request message
         websocket.send(JSON.stringify({
-            type: 'float',
-            path: '/myproject/Gyro.x',
-            id: 'YAMCS load testing connection',
+            type: 'parameters',
+            id,
             options: {
-                instance: 'YAMCS load testing connection',
+                instance: 'myproject',
                 processor: 'realtime',
-                id: [{
-                    name: 'YAMCS load testing connection'
-                }],
+                id: [{name: parameterName}],
                 sendFromCache: true,
                 updateOnExpiration: true
             }
