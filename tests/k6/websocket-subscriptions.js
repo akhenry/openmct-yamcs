@@ -1,15 +1,46 @@
 /* global __VU */
 
 import { WebSocket } from 'k6/experimental/websockets';
+import { setTimeout } from 'k6/experimental/timers';
 
+const maxClients = 100;
+const workersPerClient = 4;
+const testingDuration = '3000';
 export const options = {
-    vus: 1,
-    iterations: 1,
-    workers: 4
+    vus: maxClients,
+    scenarios: {
+        contacts: {
+            executor: 'ramping-vus',
+            startVUs: 0,
+            stages: [
+                {
+                    duration: '10s',
+                    target: maxClients - 20
+                },
+                {
+                    duration: '10s',
+                    target: maxClients - 20
+                },
+                {
+                    duration: '10s',
+                    target: maxClients - 20
+                },
+                {
+                    duration: '10s',
+                    target: maxClients - 20
+                },
+                {
+                    duration: '10s',
+                    target: maxClients
+                }
+            ],
+            gracefulRampDown: '0s'
+        }
+    }
 };
 
 export default () => {
-    for (let i = 0; i < options.workers; i++) {
+    for (let i = 0; i < workersPerClient; i++) {
         startYamcsWsWorker(`${__VU}`);
     }
 };
@@ -31,7 +62,7 @@ function startYamcsWsWorker(id) {
         console.log(`Client id ${id}: connected`);
         console.info(`🔌 Established websocket connection to ${wsURL}`);
         websocket.addEventListener('message', (rawMessage) => {
-            console.info(`📨 Client ${id} received YAMCS message for ${parameterName}`);
+            console.info(`📨 Client ${id} received YAMCS message for ${parameterName} at time ${new Date().toISOString()}`);
         });
 
         websocket.addEventListener('error', (error) => {
@@ -54,5 +85,10 @@ function startYamcsWsWorker(id) {
                 updateOnExpiration: true
             }
         }));
+
+        setTimeout(() => {
+            console.log(`✅ Client ${id} finished bothering YAMCS`);
+            websocket.close();
+        }, testingDuration);
     });
 }
