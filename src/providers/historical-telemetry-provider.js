@@ -66,12 +66,11 @@ export default class YamcsHistoricalTelemetryProvider {
         // otherwise we're in fixed time mode or historical
 
         const id = domainObject.identifier.key;
-        const hasEnumValue = this.hasEnumValue(domainObject);
+        options.useRawValue = this.hasEnumValue(domainObject);
 
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax'
-            && !hasEnumValue;
+            && options.strategy === 'minmax';
 
         const url = this.buildUrl(id, options);
         const requestArguments = [id, url, options];
@@ -167,6 +166,10 @@ export default class YamcsHistoricalTelemetryProvider {
         urlWithQueryParameters.searchParams.append('stop', new Date(end).toISOString());
         urlWithQueryParameters.searchParams.append(options.sizeType, options.size);
         urlWithQueryParameters.searchParams.append('order', options.order);
+
+        if (options.useRawValue) {
+            urlWithQueryParameters.searchParams.append('useRawValue', "true");
+        }
 
         if (options.filters?.severity?.equals?.length) {
             // add a single minimum severity threshold filter

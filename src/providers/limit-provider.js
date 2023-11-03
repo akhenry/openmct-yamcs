@@ -1,7 +1,5 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
 
-import {getLimitFromAlarmRange, idToQualifiedName} from "../utils";
-
 const MONITORING_RESULT_CSS = {
     'WATCH': 'is-limit--yellow',
     'WARNING': 'is-limit--yellow',
@@ -99,38 +97,14 @@ export default class LimitProvider {
     }
 
     getLimits(domainObject) {
-        return {
-            limits: async () => {
-                let limits = await this.getLimitOverrides(domainObject, this.openmct.objects.makeKeyString(domainObject.identifier));
-                if (Object.keys(limits).length === 0) {
-                    limits = domainObject.configuration.limits
-                }
+        const limits = domainObject.configuration.limits;
 
-                return limits;
-            }
+        return {
+            limits: async () => limits
         };
     }
 
     subscribeToLimits(domainObject, callback) {
         return this.realtimeTelemetryProvider.subscribeToLimits(domainObject, callback);
-    }
-
-    async requestLimitOverride(domainObject) {
-        const id = domainObject.identifier.key;
-        let url = `${this.url}api/mdb-overrides/${this.instance}/realtime`;
-        url += '/parameters' + idToQualifiedName(id);
-
-        const response = await fetch(encodeURI(url));
-        const json = await response.json();
-
-        return json;
-    }
-
-    async getLimitOverrides(domainObject) {
-        const response = await this.requestLimitOverride(domainObject);
-
-        const alarmRange = response?.defaultAlarm?.staticAlarmRange ?? [];
-
-        return getLimitFromAlarmRange(alarmRange);
     }
 }
