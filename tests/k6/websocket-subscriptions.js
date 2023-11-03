@@ -3,11 +3,11 @@
 import { WebSocket } from 'k6/experimental/websockets';
 import { sleep } from 'k6';
 
-const maxClients = 30;
-const workersPerClient = 200;
+const maxClients = 40;
+const workersPerClient = 5;
 const testingDuration = '1h';
-const yamcsURL = `ws://192.168.22.3:8090/api/websocket`;
-const digestionTimeInMs = 2000;
+const yamcsURL = `ws://localhost:8090/api/websocket`;
+const digestionTimeInMs = 500;
 export const options = {
     vus: maxClients,
     scenarios: {
