@@ -1,11 +1,13 @@
 /* global __VU */
 
 import { WebSocket } from 'k6/experimental/websockets';
-import { setTimeout } from 'k6/experimental/timers';
+import { sleep } from 'k6';
 
-const maxClients = 100;
-const workersPerClient = 4;
-const testingDuration = '3000';
+const maxClients = 30;
+const workersPerClient = 200;
+const testingDuration = '1h';
+const yamcsURL = `ws://localhost:8090/api/websocket`;
+const digestionTimeInMs = 2000;
 export const options = {
     vus: maxClients,
     scenarios: {
@@ -14,23 +16,23 @@ export const options = {
             startVUs: 0,
             stages: [
                 {
-                    duration: '10s',
+                    duration: '30s',
                     target: maxClients - 20
                 },
                 {
-                    duration: '10s',
+                    duration: '30s',
                     target: maxClients - 20
                 },
                 {
-                    duration: '10s',
+                    duration: '30s',
                     target: maxClients - 20
                 },
                 {
-                    duration: '10s',
+                    duration: '30s',
                     target: maxClients - 20
                 },
                 {
-                    duration: '10s',
+                    duration: testingDuration,
                     target: maxClients
                 }
             ],
@@ -51,18 +53,20 @@ function startYamcsWsWorker(id) {
     // pick one at random
     const randomParameter = parameterTypes[Math.floor(Math.random() * parameterTypes.length)];
     const parameterName = `/myproject/Gyro.${randomParameter}`;
-    const wsURL = `ws://0.0.0.0:8090/api/websocket`;
-    console.info(`📨 Starting YAMCS websocket load test for ${id} to ${wsURL} subscribing to ${parameterName}`);
-    const websocket = new WebSocket(wsURL);
+    console.info(`📨 Starting YAMCS websocket load test for ${id} to ${yamcsURL} subscribing to ${parameterName}`);
+    const websocket = new WebSocket(yamcsURL);
     websocket.onerror = (e) => {
         console.error(`🚨 Websocket error`, e);
     };
 
     websocket.addEventListener('open', () => {
         console.log(`Client id ${id}: connected`);
-        console.info(`🔌 Established websocket connection to ${wsURL}`);
+        console.info(`🔌 Established websocket connection to ${yamcsURL}`);
         websocket.addEventListener('message', (rawMessage) => {
-            console.info(`📨 Client ${id} received YAMCS message for ${parameterName} at time ${new Date().toISOString()}`);
+            console.info(`📫 Client ${id} received YAMCS message for ${parameterName} at time ${new Date().toISOString()}, swallowing in ${digestionTimeInMs}ms`);
+            // block function while we digest the message
+            sleep(digestionTimeInMs / 1000);
+            console.info(`📭 Client ${id} finished digesting message for ${parameterName} at time ${new Date().toISOString()}`);
         });
 
         websocket.addEventListener('error', (error) => {
@@ -85,10 +89,5 @@ function startYamcsWsWorker(id) {
                 updateOnExpiration: true
             }
         }));
-
-        setTimeout(() => {
-            console.log(`✅ Client ${id} finished bothering YAMCS`);
-            websocket.close();
-        }, testingDuration);
     });
 }
