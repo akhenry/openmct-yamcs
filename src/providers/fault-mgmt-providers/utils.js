@@ -20,13 +20,21 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+import { getValue } from '../../utils.js';
+
 function faultModelConvertor(faultData, type) {
+
+    const currentValue = faultData?.parameterDetail?.currentValue
+        && getValue(faultData.parameterDetail.currentValue);
+    const triggerValue = faultData?.parameterDetail?.triggerValue
+        && getValue(faultData.parameterDetail.triggerValue);
+
     return {
         type: type || faultData?.type,
         fault: {
             acknowledged: Boolean(faultData?.acknowledged),
             currentValueInfo: {
-                value: faultData?.parameterDetail?.currentValue?.engValue?.doubleValue,
+                value: currentValue,
                 rangeCondition: faultData?.parameterDetail?.currentValue?.rangeCondition,
                 monitoringResult: faultData?.parameterDetail?.currentValue?.monitoringResult
             },
@@ -39,7 +47,7 @@ function faultModelConvertor(faultData, type) {
             shortDescription: faultData?.parameterDetail?.parameter?.shortDescription,
             triggerTime: faultData?.triggerTime,
             triggerValueInfo: {
-                value: faultData?.parameterDetail?.triggerValue?.engValue?.doubleValue,
+                value: triggerValue,
                 rangeCondition: faultData?.parameterDetail?.triggerValue?.rangeCondition,
                 monitoringResult: faultData?.parameterDetail?.triggerValue?.monitoringResult
             }
