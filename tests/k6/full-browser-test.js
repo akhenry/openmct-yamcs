@@ -6,7 +6,9 @@ import { Counter } from 'k6/metrics';
 
 const maxClients = 30;
 const dwellTimeInMs = 500000;
-const browserURL = 'http://localhost:8040/#/browse/mine/ae93d303-e2c1-4514-9dbf-e4822787b058?tc.mode=local&tc.startDelta=1800000&tc.endDelta=0&tc.timeSystem=utc&view=layout.view';
+const baseURL = 'http://localhost:8040';
+const domainObject = 'ae93d303-e2c1-4514-9dbf-e4822787b058';
+const browserURL = `${baseURL}/#/browse/mine/${domainObject}`;
 
 export const options = {
     scenarios: {
