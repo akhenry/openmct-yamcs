@@ -254,7 +254,7 @@ export default class RealtimeProvider {
 
                     values.forEach(parameter => {
                         let datum = {
-                            id: qualifiedNameToId(subscriptionDetails.name),
+                            // id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);

@@ -56,9 +56,9 @@ export default class LatestTelemetryProvider {
 
             if (result !== undefined) {
                 if (result.acquisitionStatus !== undefined) {
-                    const id = qualifiedNameFromParameterId(result.id);
+                    // const id = qualifiedNameFromParameterId(result.id);
                     openMctStyleDatum = {
-                        id: qualifiedNameToId(id),
+                        // id: qualifiedNameToId(id),
                         acquisitionStatus: result.acquisitionStatus,
                         timestamp: result.generationTime,
                         value: getValue(result)

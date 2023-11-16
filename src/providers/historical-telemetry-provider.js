@@ -240,9 +240,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let data = [];
         results.forEach(result => {
-            const qualifiedName = qualifiedNameFromParameterId(result.id);
+            // const qualifiedName = qualifiedNameFromParameterId(result.id);
             let datum = {
-                id: qualifiedNameToId(qualifiedName),
+                // id: qualifiedNameToId(qualifiedName),
                 timestamp: result[METADATA_TIME_KEY]
             };
             let value = getValue(result);
@@ -274,7 +274,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 const min_value = {
                     timestamp: result.minTime,
                     value: result.min,
-                    id: id
+                    // id: id
                 };
 
                 addLimitInformation(result, min_value);
@@ -285,7 +285,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 const max_value = {
                     timestamp: result.maxTime,
                     value: result.max,
-                    id: id
+                    // id: id
                 };
 
                 addLimitInformation(result, max_value);
