@@ -1,19 +1,26 @@
-/* global __VU */
+/* global __VU __ENV */
 
 import { WebSocket } from 'k6/experimental/websockets';
 import { sleep } from 'k6';
+import { b64encode } from 'k6/encoding';
 
-const maxClients = 200;
-const workersPerClient = 50;
+const maxClients = 60;
+const workersPerClient = 30;
 const testingDuration = '1h';
-const yamcsURL = `ws://192.168.22.3:8090/api/websocket`;
+const yamcsURL = `ws://localhost:8040/yamcs/api/websocket`;
 const digestionTimeInMs = 500;
+
+// Get the username and password from environment variables
+const openmctUsername = __ENV.OPENMCT_USERNAME;
+const openmctPassword = __ENV.OPENMCT_PASSWORD;
+const basicAuthHeader = createBasicAuthHeader(openmctUsername, openmctPassword);
+
 export const options = {
     vus: maxClients,
     scenarios: {
         contacts: {
             executor: 'ramping-vus',
-            startVUs: 0,
+            startVUs: 1,
             stages: [
                 {
                     duration: '30s',
@@ -41,6 +48,12 @@ export const options = {
     }
 };
 
+function createBasicAuthHeader(username, password) {
+    const base64Credentials = b64encode(`${username}:${password}`);
+
+    return `Basic ${base64Credentials}`;
+}
+
 function startYamcsWsWorker(id) {
     // make array of x,y,z
     const parameterTypes = ['x', 'y', 'z'];
@@ -48,7 +61,7 @@ function startYamcsWsWorker(id) {
     const randomParameter = parameterTypes[Math.floor(Math.random() * parameterTypes.length)];
     const parameterName = `/myproject/Gyro.${randomParameter}`;
     console.info(`📨 Starting YAMCS websocket load test for ${id} to ${yamcsURL} subscribing to ${parameterName}`);
-    const websocket = new WebSocket(yamcsURL);
+    const websocket = new WebSocket(yamcsURL, { headers: { Authorization: basicAuthHeader } });
     websocket.onerror = (e) => {
         console.error(`🚨 Websocket error`, e);
     };
