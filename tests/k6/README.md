@@ -10,7 +10,6 @@ To run the K6 load testing tools, you'll need to:
 ```sh
 export OPENMCT_USERNAME=testuser;
 export OPENMCT_PASSWORD=NasaIsCool!
-const password = __ENV.OPENMCT_PASSWORD;
 k6 run websocket-subscriptions.js
 k6 run full-browser-test.js
 ```
