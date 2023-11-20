@@ -21,15 +21,9 @@ export default function installRealtimeWorker() {
         #currentWaitIndex = 0;
         #messageCallbacks = [];
         #wsUrl;
-        #messageCount = 0;
 
         constructor() {
             super();
-
-            setInterval(() => {
-                console.log('processed', this.#messageCount, ' messages');
-                this.#messageCount = 0;
-            }, 1000);
         }
 
         connect(url) {
@@ -93,7 +87,6 @@ export default function installRealtimeWorker() {
         }
 
         #message(event) {
-            this.#messageCount++;
             this.#messageCallbacks.forEach((callback) => callback(event.data));
         }
         disconnect() {
@@ -154,6 +147,12 @@ export default function installRealtimeWorker() {
         #telemetryCacheTable = undefined;
         #subscriptions = [];
         #socket;
+
+        constructor() {
+            super();
+
+            this.parameterCount = 0;
+        }
 
         connect({url}) {
             if (this.isConnected()) {
@@ -260,6 +259,7 @@ export default function installRealtimeWorker() {
 
             switch (type) {
             case "parameters": {
+                this.parameterCount++;
                 const callNumber = message.substring(36, message.indexOf(",", 37));
                 this.cacheTelemetry(callNumber, message);
 
@@ -298,6 +298,7 @@ export default function installRealtimeWorker() {
         nextBatch() {
             const batch = this.#telemetryCacheTable;
             this.#telemetryCacheTable = undefined;
+            this.parameterCount = 0;
 
             return batch;
         }
@@ -368,14 +369,22 @@ export default function installRealtimeWorker() {
         });
     });
 
+    let startTime = performance.now();
     setInterval(() => {
+        const parameterCount = subscriptionManager.parameterCount;
         const batch = subscriptionManager.nextBatch();
+        subscriptionManager.parameterCount = 0;
+        const endTime = performance.now();
+        const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
         if (batch !== undefined) {
             self.postMessage({
                 type: "latestValues",
-                data: batch
+                data: batch,
+                parametersReceivedPerSecond: Math.floor(parametersPerSecond)
             });
         }
+
+        startTime = performance.now();
 
     }, 1000);
 

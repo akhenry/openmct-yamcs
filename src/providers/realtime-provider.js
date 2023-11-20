@@ -50,6 +50,11 @@ export default class RealtimeProvider {
         this.supportedDataTypes = {};
         this.connected = false;
         this.requests = [];
+        this.statistics = {
+            parametersProcessedPerSecond: 0,
+            parametersReceivedPerSecond: 0,
+            subscriptionCount: 0
+        };
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
@@ -93,6 +98,7 @@ export default class RealtimeProvider {
     }
 
     subscribe(domainObject, callback, options) {
+        this.statistics.subscriptionCount++;
         //TODO: FIX THIS PROPERLY. OUR API SHOULD NOT BE EXPOSING VUE INTERNALS
         const identifier = Object.assign({}, domainObject.identifier);
         this.realtimeWorker.postMessage({
@@ -105,6 +111,7 @@ export default class RealtimeProvider {
         this.#subscriptions[domainObject.identifier.key] = this.#buildSubscriptionDetails(domainObject, callback, options);
 
         return () => {
+            this.statistics.subscriptionCount--;
             this.realtimeWorker.postMessage({
                 action: "unsubscribe",
                 identifier: domainObject.identifier,
@@ -120,10 +127,14 @@ export default class RealtimeProvider {
             url: this.url
         });
 
+        let startTime = performance.now();
+
         this.realtimeWorker.addEventListener('message', (event) => {
             const message = event.data;
+            let parameterCount = 0;
             if (message.type === "latestValues") {
                 const data = message.data;
+                this.statistics.parametersReceivedPerSecond = message.parametersReceivedPerSecond;
                 for (const [key, value] of Object.entries(data)) {
                     const keystring = this.#callNumberToKeystringMapping[key];
                     const subscriptionDetails = this.#subscriptions[keystring];
@@ -134,7 +145,14 @@ export default class RealtimeProvider {
                     }
 
                     subscriptionDetails.callback(allData);
+                    parameterCount += value.length;
                 }
+
+                const endTime = performance.now();
+                const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
+                this.statistics.parametersProcessedPerSecond = Math.floor(parametersPerSecond);
+                startTime = endTime;
+
             } else if (message.type === "callNumberKeystringMapping") {
                 this.#callNumberToKeystringMapping[message.callNumber] = message.keystring;
             }

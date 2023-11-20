@@ -8,7 +8,8 @@ const config = {
     "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user/",
     "yamcsInstance": "myproject",
     "yamcsProcessor": "realtime",
-    "yamcsFolder": "myproject"
+    "yamcsFolder": "myproject",
+    showPerformanceStatistics: true
 };
 const STATUS_STYLES = {
     "NO_STATUS": {

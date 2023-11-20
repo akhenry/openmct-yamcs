@@ -37,6 +37,7 @@ import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin";
+import YamcsPerformanceIndicatorPlugin from "./indicators/performance/plugin";
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -213,5 +214,9 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsInstance));
 
         openmct.install(openmct.plugins.Filters(['telemetry.plot.overlay', 'table']));
+
+        if (configuration.showPerformanceStatistics === true) {
+            openmct.install(YamcsPerformanceIndicatorPlugin(realtimeTelemetryProvider));
+        }
     };
 }
