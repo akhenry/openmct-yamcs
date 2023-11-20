@@ -27,7 +27,7 @@ MDB Limits Specific Tests
 const { test, expect } = require('../opensource/pluginFixtures');
 const { createDomainObjectWithDefaults, waitForPlotsToRender } = require('../opensource/appActions');
 
-test.describe.only("Mdb runtime limits tests @yamcs", () => {
+test.describe("Mdb runtime limits tests @yamcs", () => {
 
     test.beforeEach(async ({page}) => {
         // Go to baseURL
