@@ -27,11 +27,22 @@ MDB Limits Specific Tests
 const { test, expect } = require('../opensource/pluginFixtures');
 const { createDomainObjectWithDefaults, waitForPlotsToRender } = require('../opensource/appActions');
 
-test.describe("Mdb runtime limits tests @yamcs", () => {
-    test('Can show mdb limits when changed', async ({ page }) => {
+test.describe.only("Mdb runtime limits tests @yamcs", () => {
+
+    test.beforeEach(async ({page}) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
+        // Reset the limits for the Detector_Temp parameter using the yamcs API
+        const runTimeLimitResetResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+            data: {}
+        });
+        await expect(runTimeLimitResetResponse).toBeOK();
+
+        await assertLimitsAreCleared(page);
+    });
+
+    test('Can show mdb limits when changed', async ({ page }) => {
         // Create an Overlay Plot
         const overlayPlot = await createDomainObjectWithDefaults(page, {
             type: 'Overlay Plot'
@@ -108,15 +119,6 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
     });
 
     test('Can show changed mdb limits when you navigate away from the view and back', async ({ page }) => {
-        // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
-
-        // Reset the limits for the Detector_Temp parameter using the yamcs API
-        const runTimeLimitResetResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
-            data: {}
-        });
-        await expect(runTimeLimitResetResponse).toBeOK();
-
         // Create an Overlay Plot
         const overlayPlot = await createDomainObjectWithDefaults(page, {
             type: 'Overlay Plot'
@@ -197,6 +199,92 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         // Ensure that the changed limits are now displayed without a reload
         await assertLimitLinesExistAndAreVisible(page);
     });
+
+    test('No new requests for data are made when limits are redrawn due to window resizing', async({ page }) => {
+        // Create an Overlay Plot
+        const overlayPlot = await createDomainObjectWithDefaults(page, {
+            type: 'Overlay Plot'
+        });
+
+        //Expand the myproject folder (/myproject)
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
+        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
+        await firstMyProjectTriangle.click();
+
+        //Expand the myproject under the previous folder (/myproject/myproject)
+        const viperRoverTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
+        const viperRoverProjectTriangle = viperRoverTreeItem.nth(1).locator('span.c-disclosure-triangle');
+        await viperRoverProjectTriangle.click();
+
+        //Find the Detector_Temp parameter (/myproject/myproject/Detector_Temp)
+        const detectorTreeItem = page.getByRole('treeitem', { name: /Detector_Temp/ });
+
+        // Enter edit mode for the overlay plot
+        await page.click('button[title="Edit"]');
+
+        //Drag and drop the Detector_Temp telemetry endpoint into this overlay plot
+        const objectPane = page.locator('.c-object-view');
+        await detectorTreeItem.dragTo(objectPane);
+
+        // Save (exit edit mode)
+        await page.locator('button[title="Save"]').click();
+        await page.locator('li[title="Save and Finish Editing"]').click();
+
+        // Assert that no limit lines are shown by default
+        await page.waitForSelector('.js-limit-area', { state: 'attached' });
+        expect(await page.locator('.c-plot-limit-line').count()).toBe(0);
+
+        // Enter edit mode
+        await page.click('button[title="Edit"]');
+
+        // Expand the "Detector_Temp" plot series options and enable limit lines
+        await page.getByRole('tab', { name: 'Config' }).click();
+        await page
+            .getByRole('list', { name: 'Plot Series Properties' })
+            .locator('span')
+            .first()
+            .click();
+        await page
+            .getByRole('list', { name: 'Plot Series Properties' })
+            .locator('[title="Display limit lines"]~div input')
+            .check();
+
+        // Save (exit edit mode)
+        await page.locator('button[title="Save"]').click();
+        await page.locator('li[title="Save and Finish Editing"]').click();
+
+        // Change the limits for the Detector_Temp parameter using the yamcs API)
+        const runTimeLimitChangeResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+            data: {
+                action: 'SET_DEFAULT_ALARMS',
+                defaultAlarm: {
+                    minViolations: 1,
+                    staticAlarmRange: [
+                        {
+                            level: 'WATCH',
+                            minInclusive: -0.8,
+                            maxInclusive: 0.5
+                        }
+                    ]
+                }
+            }
+        });
+
+        await expect(runTimeLimitChangeResponse).toBeOK();
+
+        // Ensure that the changed limits are now displayed without a reload
+        await assertLimitLinesExistAndAreVisible(page);
+
+        // Resize the chart container by showing the snapshot pane.
+        await page.getByRole('button', { name: 'Show' }).click();
+
+        // No request was made to get historical data
+        const resizeAndRedrawLimitsRequests = [];
+        page.on('request', (req) => {
+            resizeAndRedrawLimitsRequests.push(req);
+        });
+        expect(resizeAndRedrawLimitsRequests.length).toEqual(0);
+    });
 });
 
 /**
@@ -214,4 +302,14 @@ async function assertLimitLinesExistAndAreVisible(page) {
     for (let i = 0; i < limitLineCount; i++) {
         await expect(page.locator('.c-plot-limit-line').nth(i)).toBeVisible();
     }
+}
+
+/**
+ * Asserts that limits are cleared
+ * @param {import('@playwright/test').Page} page
+ */
+async function assertLimitsAreCleared(page) {
+    const runTimeLimitChangeResponse = await page.request.get('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp');
+    await expect(runTimeLimitChangeResponse).toBeOK();
+    await expect(await runTimeLimitChangeResponse.json()).toEqual({});
 }
