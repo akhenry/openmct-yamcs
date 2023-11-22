@@ -309,6 +309,8 @@ export default function installRealtimeWorker() {
     }
 
     const subscriptionManager = new BatchingTelemetrySubscriptionManager();
+    let throttleRateHz = 1;
+    let interval = 1000 / throttleRateHz;
 
     self.addEventListener('message', (event) => {
         const { data } = event;
@@ -330,6 +332,11 @@ export default function installRealtimeWorker() {
                 instance: data.instance,
                 processor: data.processor
             });
+            break;
+
+        case "throttle":
+            throttleRateHz = data.throttleRateHz;
+            interval = 1000 / throttleRateHz;
             break;
 
         case "connect": {
@@ -370,7 +377,9 @@ export default function installRealtimeWorker() {
     });
 
     let startTime = performance.now();
-    setInterval(() => {
+    setTimeout(sendBatch, interval);
+
+    function sendBatch() {
         const parameterCount = subscriptionManager.parameterCount;
         const batch = subscriptionManager.nextBatch();
         subscriptionManager.parameterCount = 0;
@@ -385,8 +394,8 @@ export default function installRealtimeWorker() {
         }
 
         startTime = performance.now();
-
-    }, 1000);
+        setTimeout(sendBatch, interval);
+    }
 
     console.log("Worker installed successfully!");
 
