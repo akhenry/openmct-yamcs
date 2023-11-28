@@ -310,6 +310,10 @@ export default function installRealtimeWorker() {
         isConnected() {
             return this.#isConnected;
         }
+
+        get longestQueueLength() {
+            return this.#longestQueueLength;
+        }
     }
 
     const subscriptionManager = new BatchingTelemetrySubscriptionManager();
@@ -385,15 +389,16 @@ export default function installRealtimeWorker() {
 
     function sendBatch() {
         const parameterCount = subscriptionManager.parameterCount;
+        const longestQueueLength = subscriptionManager.longestQueueLength;
         const batch = subscriptionManager.nextBatch();
-        subscriptionManager.parameterCount = 0;
         const endTime = performance.now();
         const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
         if (batch !== undefined) {
             self.postMessage({
                 type: "latestValues",
                 data: batch,
-                parametersReceivedPerSecond: Math.floor(parametersPerSecond)
+                parametersReceivedPerSecond: Math.floor(parametersPerSecond),
+                longestQueueLength: longestQueueLength
             });
         }
 
