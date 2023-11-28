@@ -53,7 +53,8 @@ export default class RealtimeProvider {
         this.statistics = {
             parametersProcessedPerSecond: 0,
             parametersReceivedPerSecond: 0,
-            subscriptionCount: 0
+            subscriptionCount: 0,
+            longestQueueLength: 0
         };
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
@@ -135,6 +136,7 @@ export default class RealtimeProvider {
             if (message.type === "latestValues") {
                 const data = message.data;
                 this.statistics.parametersReceivedPerSecond = message.parametersReceivedPerSecond;
+                this.statistics.longestQueueLength = message.longestQueueLength;
                 for (const [key, value] of Object.entries(data)) {
                     const keystring = this.#callNumberToKeystringMapping[key];
                     const subscriptionDetails = this.#subscriptions[keystring];
