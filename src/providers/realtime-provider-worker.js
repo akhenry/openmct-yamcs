@@ -147,6 +147,7 @@ export default function installRealtimeWorker() {
         #telemetryCacheTable = undefined;
         #subscriptions = [];
         #socket;
+        #longestQueueLength = 0;
 
         constructor() {
             super();
@@ -290,8 +291,10 @@ export default function installRealtimeWorker() {
 
             if (this.#telemetryCacheTable[callNumber] === undefined) {
                 this.#telemetryCacheTable[callNumber] = [telemetryMessage];
+                this.#longestQueueLength = 1;
             } else {
                 this.#telemetryCacheTable[callNumber].push(telemetryMessage);
+                this.#longestQueueLength = Math.max(this.#longestQueueLength, this.#telemetryCacheTable[callNumber].length);
             }
         }
 
@@ -299,6 +302,7 @@ export default function installRealtimeWorker() {
             const batch = this.#telemetryCacheTable;
             this.#telemetryCacheTable = undefined;
             this.parameterCount = 0;
+            this.#longestQueueLength = 0;
 
             return batch;
         }
