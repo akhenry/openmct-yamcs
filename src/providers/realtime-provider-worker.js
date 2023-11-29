@@ -291,11 +291,10 @@ export default function installRealtimeWorker() {
 
             if (this.#telemetryCacheTable[callNumber] === undefined) {
                 this.#telemetryCacheTable[callNumber] = [telemetryMessage];
-                this.#longestQueueLength = 1;
             } else {
                 this.#telemetryCacheTable[callNumber].push(telemetryMessage);
-                this.#longestQueueLength = Math.max(this.#longestQueueLength, this.#telemetryCacheTable[callNumber].length);
             }
+            this.#longestQueueLength = Math.max(this.#longestQueueLength, this.#telemetryCacheTable[callNumber].length);
         }
 
         nextBatch() {
