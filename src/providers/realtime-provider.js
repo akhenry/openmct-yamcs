@@ -221,6 +221,7 @@ export default class RealtimeProvider {
     updateSubscribers() {
         for (const [key, value] of Object.entries(this.telemetryCache)) {
             const subscriptionDetails = this.subscriptionsByCall[key];
+
             let allData = [];
 
             for (let i = 0; i < value.length; i++) {
@@ -228,7 +229,9 @@ export default class RealtimeProvider {
                 allData = allData.concat(newData);
             }
 
-            subscriptionDetails.callback(allData);
+            if (allData.length > 0) {
+                subscriptionDetails.callback(allData);
+            }
         }
 
         this.telemetryCache = {};
