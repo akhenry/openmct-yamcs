@@ -39,6 +39,7 @@ import {
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
+import throttle from '../throttle';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -55,11 +56,13 @@ export default class RealtimeProvider {
         this.requests = [];
         this.currentWaitIndex = 0;
         this.lastSubscriptionId = 1;
-        this.subscriptionsByCall = new Map();
+        this.subscriptionsByCall = {};
         this.subscriptionsById = {};
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
+
+        this.updateSubscribersThrottled = throttle(this.updateSubscribers.bind(this), 1000);
     }
 
     addSupportedObjectTypes(types) {
@@ -111,7 +114,7 @@ export default class RealtimeProvider {
             if (subscriptionDetails) {
                 this.sendUnsubscribeMessage(subscriptionDetails);
 
-                this.subscriptionsByCall.delete(subscriptionDetails.call);
+                delete this.subscriptionsByCall[subscriptionDetails.call];
                 delete this.subscriptionsById[id];
             }
         };
@@ -136,7 +139,7 @@ export default class RealtimeProvider {
             this.sendUnsubscribeMessage(subscriptionDetails);
 
             if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                delete this.subscriptionsByCall[this.subscriptionsById[id].call];
                 delete this.subscriptionsById[id];
             }
         };
@@ -172,7 +175,7 @@ export default class RealtimeProvider {
     }
 
     reconnect() {
-        this.subscriptionsByCall.clear();
+        this.subscriptionsByCall = {};
 
         if (this.reconnectTimeout) {
             return;
@@ -203,6 +206,69 @@ export default class RealtimeProvider {
         }
     }
 
+    cacheTelemetry(callNumber, messageString) {
+        if (!this.telemetryCache) {
+            this.telemetryCache = {};
+        }
+
+        if (this.telemetryCache[callNumber] instanceof Array) {
+            this.telemetryCache[callNumber].push(messageString);
+        } else {
+            this.telemetryCache[callNumber] = [messageString];
+        }
+    }
+
+    updateSubscribers() {
+        for (const [key, value] of Object.entries(this.telemetryCache)) {
+            const subscriptionDetails = this.subscriptionsByCall[key];
+            let allData = [];
+
+            for (let i = 0; i < value.length; i++) {
+                const newData = this.parseMessage(JSON.parse(value[i]), subscriptionDetails);
+                allData = allData.concat(newData);
+            }
+
+            subscriptionDetails.callback(allData);
+        }
+
+        this.telemetryCache = {};
+    }
+
+    parseMessage(message, subscriptionDetails) {
+        const parsedData = [];
+
+        // possibly cancelled
+        if (!subscriptionDetails) {
+            return;
+        }
+
+        //TODO: Add staleness back in. Add limits back in.
+        if (this.isTelemetryMessage(message)) {
+            let values = message.data.values || [];
+            let parentName = subscriptionDetails.domainObject.name;
+
+            values.forEach(parameter => {
+                let datum = {
+                    timestamp: parameter[METADATA_TIME_KEY]
+                };
+                let value = getValue(parameter, parentName);
+
+                if (parameter.engValue.type !== AGGREGATE_TYPE) {
+                    datum.value = value;
+                } else {
+                    datum = {
+                        ...datum,
+                        ...value
+                    };
+                }
+
+                parsedData.push(datum);
+            });
+        }
+
+        return parsedData;
+    }
+
     connect() {
         if (this.connected) {
             return;
@@ -225,88 +291,27 @@ export default class RealtimeProvider {
         };
 
         this.socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            const messageString = event.data;
+            const type = messageString.substring(13, messageString.indexOf("\"", 13));
 
-            if (!this.isSupportedDataType(message.type)) {
+            if (!this.isSupportedDataType(type)) {
                 return;
             }
 
-            const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
+            const isReply = type === DATA_TYPES.DATA_TYPE_REPLY;
             let subscriptionDetails;
 
             if (isReply) {
+                const message = JSON.parse(event.data);
                 const id = message.data.replyTo;
                 const call = message.call;
                 subscriptionDetails = this.subscriptionsById[id];
-                subscriptionDetails.call = call;
-                this.subscriptionsByCall.set(call, subscriptionDetails);
+                subscriptionDetails.call = String(call);
+                this.subscriptionsByCall[call] = subscriptionDetails;
             } else {
-                subscriptionDetails = this.subscriptionsByCall.get(message.call);
-
-                // possibly cancelled
-                if (!subscriptionDetails) {
-                    return;
-                }
-
-                if (this.isTelemetryMessage(message)) {
-                    let values = message.data.values || [];
-                    let parentName = subscriptionDetails.domainObject.name;
-
-                    values.forEach(parameter => {
-                        let datum = {
-                            id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter[METADATA_TIME_KEY]
-                        };
-                        let value = getValue(parameter, parentName);
-
-                        if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
-                            const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
-
-                            if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
-                                const stalenesResponseObject = buildStalenessResponseObject(
-                                    status,
-                                    parameter[METADATA_TIME_KEY]
-                                );
-                                this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
-                                this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
-                            }
-                        }
-
-                        if (parameter.engValue.type !== AGGREGATE_TYPE) {
-                            datum.value = value;
-                        } else {
-                            datum = {
-                                ...datum,
-                                ...value
-                            };
-                        }
-
-                        addLimitInformation(parameter, datum);
-                        subscriptionDetails.callback(datum);
-                    });
-                } else if (this.isCommandMessage(message)) {
-                    const datum = commandToTelemetryDatum(message.data);
-                    subscriptionDetails.callback(datum);
-                } else if (this.isEventMessage(message)) {
-                    if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
-                        // ignore event
-                    } else {
-                        const datum = eventToTelemetryDatum(message.data);
-                        subscriptionDetails.callback(datum);
-                    }
-                } else if (this.isMdbChangesMessage(message)) {
-                    const parameterName = message.data.parameterOverride.parameter;
-                    if (this.observingLimitChanges[parameterName] !== undefined) {
-                        const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
-                        this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
-                    }
-
-                    if (subscriptionDetails.callback) {
-                        subscriptionDetails.callback(message.data);
-                    }
-                } else {
-                    subscriptionDetails.callback(message.data);
-                }
+                const callNumber = messageString.substring(36, messageString.indexOf(",", 37));
+                this.cacheTelemetry(callNumber, messageString);
+                this.updateSubscribersThrottled();
             }
         };
 
