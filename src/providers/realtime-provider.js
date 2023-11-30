@@ -211,7 +211,8 @@ export default class RealtimeProvider {
         let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
-        this.socket = new WebSocket(wsUrl);
+        this.socket = new WebSocket(wsUrl, 'protobuf');
+        this.socket.binaryType = 'arraybuffer';
 
         this.socket.onopen = () => {
             clearTimeout(this.reconnectTimeout);

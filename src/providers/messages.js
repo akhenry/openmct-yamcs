@@ -1,4 +1,5 @@
 import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
+import { yamcs } from 'yamcs-protobufjs-static';
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
@@ -17,12 +18,9 @@ const typeMap = {
 export const SUBSCRIBE = buildSubscribeMessages();
 // eslint-disable-next-line func-style
 export const UNSUBSCRIBE = (subscriptionDetails) => {
-    return `{
-        "type": "cancel",
-        "options": {
-            "call": "${subscriptionDetails.call}"
-        }
-    }`;
+    return {
+        call: `${subscriptionDetails.call}`
+    };
 };
 
 function buildSubscribeMessages() {
@@ -31,40 +29,42 @@ function buildSubscribeMessages() {
     for (const [objectType, dataType] of Object.entries(typeMap)) {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
-            const {subscriptionId, instance, processor = "realtime", name } = subscriptionDetails;
+            const { instance, processor = "realtime", name } = subscriptionDetails;
             let message;
 
             if (isEventType(objectType)) {
-                message = `{
-                    "type": "${dataType}",
-                    "id": "${subscriptionId}",
-                    "options": {
-                        "instance": "${instance}"
-                    }
-                }`;
-            } else if (isAlarmType(objectType) || isCommandType(objectType) || isMdbChangesType(objectType)) {
-                message = `{
-                    "type": "${dataType}",
-                    "id": "${subscriptionId}",
-                    "options": {
-                        "instance": "${instance}",
-                        "processor": "${processor}"
-                    }
-                }`;
+                message = new yamcs.protobuf.events.SubscribeEventsRequest({
+                    instance: `${instance}`
+                });
+            } else if (isAlarmType(objectType)) {
+                message = new yamcs.protobuf.alarms.SubscribeAlarmsRequest({
+                    instance: `${instance}`,
+                    processor: `${processor}`
+                });
+            } else if (isCommandType(objectType)) {
+                message = new yamcs.protobuf.commanding.SubscribeCommandsRequest({
+                    instance: `${instance}`,
+                    processor: `${processor}`,
+                    ignorePastCommands: true
+                });
+
+            } else if (isMdbChangesType(objectType)) {
+                message = new yamcs.protobuf.processing.SubscribeMdbChangesRequest({
+                    instance: `${instance}`,
+                    processor: `${processor}`
+                });
+
             } else {
-                message = `{
-                    "type": "${dataType}",
-                    "id": "${subscriptionId}",
-                    "options": {
-                        "instance": "${instance}",
-                        "processor": "${processor}",
-                        "id": [{
-                            "name": "${name}"
-                        }],
-                        "sendFromCache": true,
-                        "updateOnExpiration": true
-                    }
-                }`;
+                message = new yamcs.protobuf.processing.SubscribeParametersRequest({
+                    type: `${dataType}`,
+                    instance: `${instance}`,
+                    processor: `${processor}`,
+                    id: [{
+                        name: `${name}`
+                    }],
+                    sendFromCache: true,
+                    updateOnExpiration: true
+                });
             }
 
             return message;
