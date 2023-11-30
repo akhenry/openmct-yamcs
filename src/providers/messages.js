@@ -30,32 +30,36 @@ function buildSubscribeMessages() {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
             const { instance, processor = "realtime", name } = subscriptionDetails;
+            let arrayBuffer;
             let message;
 
             if (isEventType(objectType)) {
-                message = new yamcs.protobuf.events.SubscribeEventsRequest({
+                message = {
                     instance: `${instance}`
-                });
+                };
+                arrayBuffer = yamcs.protobuf.events.SubscribeEventsRequest.encode(message).finish();
             } else if (isAlarmType(objectType)) {
-                message = new yamcs.protobuf.alarms.SubscribeAlarmsRequest({
+                message = {
                     instance: `${instance}`,
                     processor: `${processor}`
-                });
+                };
+                arrayBuffer = yamcs.protobuf.alarms.SubscribeAlarmsRequest.encode(message).finish();
             } else if (isCommandType(objectType)) {
-                message = new yamcs.protobuf.commanding.SubscribeCommandsRequest({
+                message = {
                     instance: `${instance}`,
                     processor: `${processor}`,
                     ignorePastCommands: true
-                });
+                };
+                arrayBuffer = yamcs.protobuf.commanding.SubscribeCommandsRequest.encode(message).finish();
 
             } else if (isMdbChangesType(objectType)) {
-                message = new yamcs.protobuf.processing.SubscribeMdbChangesRequest({
+                message = {
                     instance: `${instance}`,
                     processor: `${processor}`
-                });
-
+                };
+                arrayBuffer = yamcs.protobuf.processing.SubscribeMdbChangesRequest.encode(message).finish();
             } else {
-                message = new yamcs.protobuf.processing.SubscribeParametersRequest({
+                message = {
                     type: `${dataType}`,
                     instance: `${instance}`,
                     processor: `${processor}`,
@@ -64,10 +68,11 @@ function buildSubscribeMessages() {
                     }],
                     sendFromCache: true,
                     updateOnExpiration: true
-                });
+                };
+                arrayBuffer = yamcs.protobuf.processing.SubscribeParametersRequest.encode(message).finish();
             }
 
-            return message;
+            return arrayBuffer;
         };
     }
 

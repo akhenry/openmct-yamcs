@@ -353,8 +353,10 @@ export default class RealtimeProvider {
         }
     }
 
-    sendMessage(message) {
-        this.socket.send(message);
+    sendMessage(arrayBuffer) {
+        this.socket.send(
+            arrayBuffer
+        );
     }
 
     isTelemetryMessage(message) {
