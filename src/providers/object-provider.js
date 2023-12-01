@@ -202,7 +202,7 @@ export default class YamcsObjectProvider {
             this.dictionaryPromise = new Promise((resolve, reject) => {
                 this.dictionaryResolve = resolve;
                 this.dictionaryReject = reject;
-                this.myWorker.port.postMessage({ action: "requestDictionary" });
+                this.objectWorker.port.postMessage({ action: "requestDictionary" });
             }).finally(() => {
                 this.roleStatusTelemetry.dictionaryLoadComplete();
             });
@@ -245,7 +245,7 @@ export default class YamcsObjectProvider {
         this.dictionary = await this.#loadTelemetryDictionary();
 
         // Send the loaded dictionary to the Object Worker
-        this.myWorker.port.postMessage({ action: "updateDictionary", data: this.dictionary });
+        this.objectWorker.port.postMessage({ action: "updateDictionary", data: this.dictionary });
 
         if (this.dictionaryResolve) {
             this.dictionaryResolve(this.dictionary);
@@ -262,7 +262,7 @@ export default class YamcsObjectProvider {
 
     #waitForDictionary() {
         const checkInterval = setInterval(() => {
-            this.myWorker.port.postMessage({ action: "requestDictionary" });
+            this.objectWorker.port.postMessage({ action: "requestDictionary" });
 
             if (this.dictionary) {
                 clearInterval(checkInterval);
