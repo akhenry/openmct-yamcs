@@ -1,6 +1,11 @@
 import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
 import { yamcs } from 'yamcs-protobufjs-static';
 
+const { SubscribeEventsRequest } = yamcs.protobuf.events;
+const { SubscribeAlarmsRequest } = yamcs.protobuf.alarms;
+const { SubscribeCommandsRequest } = yamcs.protobuf.commanding;
+const { SubscribeParametersRequest, SubscribeMdbChangesRequest } = yamcs.protobuf.processing;
+
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
     [OBJECT_TYPES.EVENTS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_EVENTS,
@@ -30,34 +35,60 @@ function buildSubscribeMessages() {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
             const { instance, processor = "realtime", name } = subscriptionDetails;
+            let payload;
             let arrayBuffer;
             let message;
+            let err;
 
             if (isEventType(objectType)) {
                 message = {
                     instance: `${instance}`
                 };
-                arrayBuffer = yamcs.protobuf.events.SubscribeEventsRequest.encode(message).finish();
+                err = SubscribeEventsRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeEventsRequest.create(message);
+                arrayBuffer = SubscribeEventsRequest.encode(payload).finish();
             } else if (isAlarmType(objectType)) {
                 message = {
                     instance: `${instance}`,
                     processor: `${processor}`
                 };
-                arrayBuffer = yamcs.protobuf.alarms.SubscribeAlarmsRequest.encode(message).finish();
+                err = SubscribeAlarmsRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeAlarmsRequest.create(message);
+                arrayBuffer = SubscribeAlarmsRequest.encode(payload).finish();
             } else if (isCommandType(objectType)) {
                 message = {
                     instance: `${instance}`,
                     processor: `${processor}`,
                     ignorePastCommands: true
                 };
-                arrayBuffer = yamcs.protobuf.commanding.SubscribeCommandsRequest.encode(message).finish();
+                err = SubscribeCommandsRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeCommandsRequest.create(message);
+                arrayBuffer = SubscribeCommandsRequest.encode(payload).finish();
 
             } else if (isMdbChangesType(objectType)) {
                 message = {
                     instance: `${instance}`,
                     processor: `${processor}`
                 };
-                arrayBuffer = yamcs.protobuf.processing.SubscribeMdbChangesRequest.encode(message).finish();
+                err = SubscribeMdbChangesRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeMdbChangesRequest.create(message);
+                arrayBuffer = SubscribeMdbChangesRequest.encode(payload).finish();
             } else {
                 message = {
                     type: `${dataType}`,
@@ -69,7 +100,13 @@ function buildSubscribeMessages() {
                     sendFromCache: true,
                     updateOnExpiration: true
                 };
-                arrayBuffer = yamcs.protobuf.processing.SubscribeParametersRequest.encode(message).finish();
+                err = SubscribeParametersRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeParametersRequest.create(message);
+                arrayBuffer = SubscribeParametersRequest.encode(payload).finish();
             }
 
             return arrayBuffer;
