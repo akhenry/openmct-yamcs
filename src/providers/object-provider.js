@@ -55,7 +55,6 @@ export default class YamcsObjectProvider {
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
-        console.log(__OPENMCT_YAMCS_ROOT_RELATIVE__);
         // eslint-disable-next-line no-undef
         this.objectWorker = new SharedWorker(`${__OPENMCT_YAMCS_ROOT_RELATIVE__}object-worker.js`, 'YAMCS Object Worker');
 
