@@ -28,6 +28,9 @@ const WEBPACK_COMMON_CONFIG = {
     performance: {
         hints: false
     },
+    entry: {
+        objectWorker: './src/providers/objectWorker.js',
+    },
     resolve: {
         alias: {
             saveAs: "file-saver/src/FileSaver.js",

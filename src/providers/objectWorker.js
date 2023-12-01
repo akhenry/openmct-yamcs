@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2023, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,22 +20,38 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const path = require('path');
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common');
+(function () {
+    let dictionary = null;
+    let isDictionaryLoading = false;
 
-const projectRootDir = path.resolve(__dirname, '..');
-// eslint-disable-next-line no-undef
-module.exports = merge(common, {
-    context: projectRootDir,
-    mode: 'production',
-    entry: {
-        'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
-    },
-    plugins: [
-        new webpack.DefinePlugin({
-            __OPENMCT_YAMCS_ROOT_RELATIVE__: '""'
-        })
-    ],
-    devtool: 'source-map'
-});
+    self.onconnect = (e) => {
+        const port = e.ports[0];
+
+        port.onmessage = (event) => {
+            const { action, data } = event.data;
+
+            if (action === 'requestDictionary') {
+                if (dictionary) {
+                    port.postMessage({
+                        action: 'dictionaryData',
+                        dictionary
+                    });
+                } else if (isDictionaryLoading) {
+                    port.postMessage({
+                        action: 'dictionaryLoading'
+                    });
+                } else {
+                    isDictionaryLoading = true;
+                    port.postMessage({
+                        action: 'dictionaryNotLoaded'
+                    });
+                }
+            } else if (action === 'updateDictionary') {
+                dictionary = data;
+                isDictionaryLoading = false;
+            }
+        };
+
+        port.start();
+    };
+}());
