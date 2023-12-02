@@ -40,7 +40,7 @@ const WEBPACK_COMMON_CONFIG = {
         rules: [
             {
                 Wtest: /\.Worker\.js$/,
-                use: { type: 'javascript/auto', loader: 'worker-loader' }
+                use: ['worker-loader']
             },
             {
                 test: /\.js$/,
