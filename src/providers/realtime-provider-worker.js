@@ -148,6 +148,8 @@ export default function installRealtimeWorker() {
         #subscriptions = [];
         #socket;
         #longestQueueLength = 0;
+        #batchFirstReceivedTime = undefined;
+        #batchLastReceivedTime = undefined;
 
         constructor() {
             super();
@@ -241,6 +243,15 @@ export default function installRealtimeWorker() {
             }`;
         }
 
+        #buildUnsubscribeMessage({callNumber}) {
+            return `{
+                "type": "cancel",
+                "options": {
+                    "call": "${callNumber}"
+                }
+            }`;
+        }
+
         #sendMessage(message) {
             this.#socket.enqueueMessage(message);
         }
@@ -249,10 +260,11 @@ export default function installRealtimeWorker() {
             return id.replace(/~/g, '/');
         }
 
-        unsubscribe(identifier) {
-            if (!this.isConnected()) {
-                throw new Error('Not connected');
-            }
+        unsubscribe({callNumber}) {
+            const unsubscribeMessage = this.#buildUnsubscribeMessage({
+                callNumber
+            });
+            this.#sendMessage(unsubscribeMessage);
         }
 
         routeToMessageHandler(message) {
@@ -261,6 +273,8 @@ export default function installRealtimeWorker() {
             switch (type) {
             case "parameters": {
                 this.parameterCount++;
+                this.#batchLastReceivedTime = Date.now();
+                this.#batchFirstReceivedTime = this.#batchFirstReceivedTime || this.#batchLastReceivedTime;
                 const callNumber = message.substring(36, message.indexOf(",", 37));
                 this.cacheTelemetry(callNumber, message);
 
@@ -302,6 +316,8 @@ export default function installRealtimeWorker() {
             this.#telemetryCacheTable = undefined;
             this.parameterCount = 0;
             this.#longestQueueLength = 0;
+            this.#batchFirstReceivedTime = undefined;
+            this.#batchLastReceivedTime = undefined;
 
             return batch;
         }
@@ -312,6 +328,14 @@ export default function installRealtimeWorker() {
 
         get longestQueueLength() {
             return this.#longestQueueLength;
+        }
+
+        get batchFirstReceivedTime() {
+            return this.#batchFirstReceivedTime;
+        }
+
+        get batchLastReceivedTime() {
+            return this.#batchLastReceivedTime;
         }
     }
 
@@ -335,9 +359,7 @@ export default function installRealtimeWorker() {
 
         case "unsubscribe":
             subscriptionManager.unsubscribe({
-                identifier: data.identifier,
-                instance: data.instance,
-                processor: data.processor
+                callNumber: data.callNumber
             });
             break;
 
@@ -389,6 +411,8 @@ export default function installRealtimeWorker() {
     function sendBatch() {
         const parameterCount = subscriptionManager.parameterCount;
         const longestQueueLength = subscriptionManager.longestQueueLength;
+        const batchFirstReceivedTime = subscriptionManager.batchFirstReceivedTime;
+        const batchLastReceivedTime = subscriptionManager.batchLastReceivedTime;
         const batch = subscriptionManager.nextBatch();
         const endTime = performance.now();
         const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
@@ -397,7 +421,22 @@ export default function installRealtimeWorker() {
                 type: "latestValues",
                 data: batch,
                 parametersReceivedPerSecond: Math.floor(parametersPerSecond),
-                longestQueueLength: longestQueueLength
+                parametersReceived: parameterCount,
+                longestQueueLength: longestQueueLength,
+                batchFirstReceivedTime,
+                batchLastReceivedTime,
+                serializationTime: Date.now()
+            });
+        } else {
+            self.postMessage({
+                type: "latestValues",
+                data: {},
+                parametersReceivedPerSecond: 0,
+                parametersReceived: 0,
+                longestQueueLength: 0,
+                batchFirstReceivedTime,
+                batchLastReceivedTime,
+                serializationTime: Date.now()
             });
         }
 

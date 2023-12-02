@@ -2,10 +2,10 @@
 import installYamcsPlugin from '../src/plugin.js';
 
 const config = {
-    "yamcsDictionaryEndpoint": "http://localhost:9000/yamcs-proxy/",
-    "yamcsHistoricalEndpoint": "http://localhost:9000/yamcs-proxy/",
-    "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
-    "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user/",
+    "yamcsDictionaryEndpoint": "http://localhost:8090/",
+    "yamcsHistoricalEndpoint": "http://localhost:8090/",
+    "yamcsWebsocketEndpoint": "ws://localhost:8090/api/websocket",
+    "yamcsUserEndpoint": "http://localhost:8090/api/user/",
     "yamcsInstance": "myproject",
     "yamcsProcessor": "realtime",
     "yamcsFolder": "myproject",

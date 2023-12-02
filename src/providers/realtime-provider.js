@@ -82,12 +82,15 @@ export default class RealtimeProvider {
     }
 
     subscribeToStaleness(domainObject, callback) {
+        return () => {};
     }
 
     subscribeToLimits(domainObject, callback) {
+        return () => {};
     }
 
     subscribeToMDBChanges(callback) {
+        return () => {};
     }
 
     isSupportedObjectType(type) {
@@ -108,16 +111,17 @@ export default class RealtimeProvider {
             instance: this.instance,
             processor: this.processor
         });
-
-        this.#subscriptions[domainObject.identifier.key] = this.#buildSubscriptionDetails(domainObject, callback, options);
+        const subscriptionDetails = this.#buildSubscriptionDetails(domainObject, callback, options);
+        this.#subscriptions[domainObject.identifier.key] = subscriptionDetails;
 
         return () => {
+            // Edge case here where we unsubscribe before a call number has been assigned. How did we handle this in the old codebase?
+            const callNumber = subscriptionDetails.callNumber;
+
             this.statistics.subscriptionCount--;
             this.realtimeWorker.postMessage({
                 action: "unsubscribe",
-                identifier: domainObject.identifier,
-                instance: this.instance,
-                processor: this.processor
+                callNumber
             });
         };
     }
@@ -131,6 +135,7 @@ export default class RealtimeProvider {
         let startTime = performance.now();
 
         this.realtimeWorker.addEventListener('message', (event) => {
+            const servicedTime = Date.now();
             const message = event.data;
             let parameterCount = 0;
             if (message.type === "latestValues") {
@@ -153,10 +158,12 @@ export default class RealtimeProvider {
                 const endTime = performance.now();
                 const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
                 this.statistics.parametersProcessedPerSecond = Math.floor(parametersPerSecond);
+                console.log(`${message.parametersReceived} parameters received. ∆serialized-serviced: ${servicedTime - message.serializationTime}ms ∆first received-serviced: ${servicedTime - message.batchFirstReceivedTime}ms displayed in ${Date.now() - servicedTime}ms`);
                 startTime = endTime;
 
             } else if (message.type === "callNumberKeystringMapping") {
                 this.#callNumberToKeystringMapping[message.callNumber] = message.keystring;
+                this.#subscriptions[message.keystring].callNumber = message.callNumber;
             }
         });
 
