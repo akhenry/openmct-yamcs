@@ -39,10 +39,14 @@ const WEBPACK_COMMON_CONFIG = {
     module: {
         rules: [
             {
+                Wtest: /\.Worker\.js$/,
+                use: { type: 'javascript/auto', loader: 'worker-loader' }
+            },
+            {
                 test: /\.js$/,
                 enforce: "pre",
                 use: ["source-map-loader"]
-            }
+            },
         ]
     },
     output: {
