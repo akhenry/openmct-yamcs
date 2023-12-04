@@ -90,13 +90,12 @@ function buildSubscribeMessages() {
                 payload = SubscribeMdbChangesRequest.create(message);
                 arrayBuffer = SubscribeMdbChangesRequest.encode(payload).finish();
             } else {
+                const id = [yamcs.protobuf.NamedObjectId.create({ name: `${name}`})];
                 message = {
                     type: `${dataType}`,
                     instance: `${instance}`,
                     processor: `${processor}`,
-                    id: [{
-                        name: `${name}`
-                    }],
+                    id,
                     sendFromCache: true,
                     updateOnExpiration: true
                 };
