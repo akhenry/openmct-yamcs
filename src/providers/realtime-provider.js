@@ -133,8 +133,20 @@ export default class RealtimeProvider {
         });
 
         let startTime = performance.now();
+        let performanceStatisticsWindow;
+        let tableElements;
 
         this.realtimeWorker.addEventListener('message', (event) => {
+            if (!performanceStatisticsWindow) {
+                performanceStatisticsWindow = document.getElementById("performance-statistics");
+                tableElements = {
+                    processed: performanceStatisticsWindow.querySelector("td[data-performanceId='processed']"),
+                    subscriptions: performanceStatisticsWindow.querySelector("td[data-performanceId='subscriptions']"),
+                    longestQueue: performanceStatisticsWindow.querySelector("td[data-performanceId='longest-queue']"),
+                    serializedServiced: performanceStatisticsWindow.querySelector("td[data-performanceId='serialized-serviced']")
+                };
+            }
+
             const servicedTime = Date.now();
             const message = event.data;
             let parameterCount = 0;
@@ -158,7 +170,7 @@ export default class RealtimeProvider {
                 const endTime = performance.now();
                 const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
                 this.statistics.parametersProcessedPerSecond = Math.floor(parametersPerSecond);
-                console.log(`${message.parametersReceived} parameters received. ∆serialized-serviced: ${servicedTime - message.serializationTime}ms ∆first received-serviced: ${servicedTime - message.batchFirstReceivedTime}ms displayed in ${Date.now() - servicedTime}ms`);
+                tableElements.serializedServiced.innerText = servicedTime - message.serializationTime;
                 startTime = endTime;
 
             } else if (message.type === "callNumberKeystringMapping") {
