@@ -5,7 +5,10 @@ export default function installYamcsPlugin(realtimeProvider) {
             processed: performanceStatisticsWindow.querySelector("td[data-performanceId='processed']"),
             subscriptions: performanceStatisticsWindow.querySelector("td[data-performanceId='subscriptions']"),
             longestQueue: performanceStatisticsWindow.querySelector("td[data-performanceId='longest-queue']"),
-            serializedServiced: performanceStatisticsWindow.querySelector("td[data-performanceId='serialized-serviced']")
+            serializedServiced: performanceStatisticsWindow.querySelector("td[data-performanceId='serialized-serviced']"),
+            webglCanvases: performanceStatisticsWindow.querySelector("td[data-performanceId='webgl-canvases']"),
+            draw2dCanvases: performanceStatisticsWindow.querySelector("td[data-performanceId='draw2d-canvases']"),
+            fps: performanceStatisticsWindow.querySelector("td[data-performanceId='fps']")
         };
         // const indicator = openmct.indicators.simpleIndicator();
         // indicator.text('~');
@@ -17,20 +20,44 @@ export default function installYamcsPlugin(realtimeProvider) {
 
         setTimeout(updateStatistics, 1000);
 
+        startMeasuringFPS();
+
         function updateStatistics() {
             const parametersProcessedPerSecond = (realtimeProvider.statistics.parametersProcessedPerSecond).toString();
             // const parametersReceivedPerSecond = (realtimeProvider.statistics.parametersReceivedPerSecond).toString().padStart(4, '0');
             const subscriptionCount = (realtimeProvider.statistics.subscriptionCount).toString();
             const longestQueueLength = (realtimeProvider.statistics.longestQueueLength).toString();
+            const canvases = countCanvases();
 
             tableElements.processed.innerText = parametersProcessedPerSecond;
             tableElements.subscriptions.innerText = subscriptionCount;
             tableElements.longestQueue.innerText = longestQueueLength;
+            tableElements.webglCanvases.innerText = canvases.webgl;
+            tableElements.draw2dCanvases.innerText = canvases.draw2d;
 
             //performanceStatisticsWindow.innerText = `Processed: ${parametersProcessedPerSecond} \r\n Subscriptions: ${subscriptionCount}\r\n Longest Queue: ${longestQueueLength}`;
             //indicator.text(`Processed: ${parametersProcessedPerSecond} Subscriptions: ${subscriptionCount} Longest Queue: ${longestQueueLength}`);
 
             setTimeout(updateStatistics, 1000);
+        }
+
+        function countCanvases() {
+            const allCanvases = document.querySelectorAll("canvas");
+            let webglCount = 0;
+            let c2dCount = 0;
+
+            allCanvases.forEach((canvas) => {
+                if (canvas.getContext('2d') !== null) {
+                    c2dCount++;
+                } else if (canvas.getContext('webgl') !== null) {
+                    webglCount++;
+                }
+            });
+
+            return {
+                webgl: webglCount,
+                draw2d: c2dCount
+            };
         }
 
         function createPerformanceStatisticsNode() {
@@ -86,7 +113,7 @@ export default function installYamcsPlugin(realtimeProvider) {
             const table =
                 `<table style="border: 0px; border-collapse: collapse; border-image-width:0">
                     <tr>
-                        <td>Messages/s</td>
+                        <td>Values/s</td>
                         <td data-performanceId="processed"></td>
                     </tr>
                     <tr>
@@ -101,6 +128,18 @@ export default function installYamcsPlugin(realtimeProvider) {
                         <td>∆ Serialized-Serviced (ms)</td>
                         <td data-performanceId="serialized-serviced"></td>
                     </tr>
+                    <tr>
+                        <td>WebGL Canvases</td>
+                        <td data-performanceId="webgl-canvases"></td>
+                    </tr>
+                    <tr>
+                        <td>Draw2D Canvases</td>
+                        <td data-performanceId="draw2d-canvases"></td>
+                    </tr>
+                    <tr>
+                        <td>FPS</td>
+                        <td data-performanceId="fps"></td>
+                    </tr>
                 </table>`;
             performanceStatisticsNode.innerHTML = table;
 
@@ -110,6 +149,33 @@ export default function installYamcsPlugin(realtimeProvider) {
         function installPerformanceWindow() {
             console.log('Performance window installed');
             document.body.appendChild(performanceStatisticsWindow);
+        }
+
+        function startMeasuringFPS() {
+            let frames = 0;
+            let lastCalculated = performance.now();
+            let rafHandle = requestAnimationFrame(incrementFrames);
+
+            openmct.on('destroy', () => {
+                cancelAnimationFrame(rafHandle);
+            });
+
+            function incrementFrames() {
+                let now = performance.now();
+                if (now - lastCalculated < 1000) {
+                    frames++;
+                } else {
+                    updateFPS(frames);
+                    lastCalculated = now;
+                    frames = 1;
+                }
+
+                rafHandle = requestAnimationFrame(incrementFrames);
+            }
+
+            function updateFPS(fps) {
+                tableElements.fps.innerText = fps;
+            }
         }
     };
 }
