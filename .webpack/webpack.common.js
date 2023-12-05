@@ -39,10 +39,6 @@ const WEBPACK_COMMON_CONFIG = {
     module: {
         rules: [
             {
-                test: /\.Worker\.js$/,
-                use: { loader: 'worker-loader' }
-            },
-            {
                 test: /\.js$/,
                 enforce: "pre",
                 use: ["source-map-loader"]

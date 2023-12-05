@@ -20,6 +20,43 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+const workerScript = `
+  let dictionary = null;
+  let isDictionaryLoading = false;
+
+  onconnect = (e) => {
+    const port = e.ports[0];
+
+    port.onmessage = (event) => {
+      const { action, data } = event.data;
+
+      if (action === 'requestDictionary') {
+        if (dictionary) {
+          port.postMessage({
+            action: 'dictionaryData',
+            dictionary
+          });
+        } else if (isDictionaryLoading) {
+          port.postMessage({
+            action: 'dictionaryLoading'
+          });
+        } else {
+          isDictionaryLoading = true;
+          port.postMessage({
+            action: 'dictionaryNotLoaded'
+          });
+        }
+      } else if (action === 'updateDictionary') {
+        dictionary = data;
+        isDictionaryLoading = false;
+      }
+    };
+  };
+`;
+
+const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
+const ObjectWorker = new SharedWorker(URL.createObjectURL(workerBlob));
+
 import {
     qualifiedNameToId,
     accumulateResults,
@@ -27,7 +64,7 @@ import {
     getLimitOverrides
 } from '../utils.js';
 
-import ObjectWorker from 'worker-loader!./objectWorker.js';
+// import ObjectWorker from 'worker-loader!./objectWorker.js';
 import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
