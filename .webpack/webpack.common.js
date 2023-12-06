@@ -22,7 +22,7 @@
 
 const path = require('path');
 const projectRootDir = path.resolve(__dirname, '..');
-
+console.log('wtf mate... wtf', path.resolve(projectRootDir, 'src/providers/objectWorker.js'));
 // eslint-disable no-undef
 const WEBPACK_COMMON_CONFIG = {
     performance: {
