@@ -29,7 +29,7 @@ const WEBPACK_COMMON_CONFIG = {
         hints: false
     },
     entry: {
-        objectWorker: './src/providers/objectWorker.js',
+        objectWorker: path.resolve(projectRootDir, '/src/providers/objectWorker.js'),
     },
     resolve: {
         alias: {

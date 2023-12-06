@@ -36,7 +36,7 @@ module.exports = merge(common, {
     },
     plugins: [
         new webpack.DefinePlugin({
-            __OPENMCT_YAMCS_ROOT_RELATIVE__: `"${projectRootDir}/dist/"`
+            __OPENMCT_YAMCS_ROOT_RELATIVE__: `"dist/"`
         })
     ],
     devServer: {
