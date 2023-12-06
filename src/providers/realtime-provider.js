@@ -139,12 +139,14 @@ export default class RealtimeProvider {
         this.realtimeWorker.addEventListener('message', (event) => {
             if (!performanceStatisticsWindow) {
                 performanceStatisticsWindow = document.getElementById("performance-statistics");
-                tableElements = {
-                    processed: performanceStatisticsWindow.querySelector("td[data-performanceId='processed']"),
-                    subscriptions: performanceStatisticsWindow.querySelector("td[data-performanceId='subscriptions']"),
-                    longestQueue: performanceStatisticsWindow.querySelector("td[data-performanceId='longest-queue']"),
-                    serializedServiced: performanceStatisticsWindow.querySelector("td[data-performanceId='serialized-serviced']")
-                };
+                if (performanceStatisticsWindow !== null) {
+                    tableElements = {
+                        processed: performanceStatisticsWindow.querySelector("td[data-performanceId='processed']"),
+                        subscriptions: performanceStatisticsWindow.querySelector("td[data-performanceId='subscriptions']"),
+                        longestQueue: performanceStatisticsWindow.querySelector("td[data-performanceId='longest-queue']"),
+                        serializedServiced: performanceStatisticsWindow.querySelector("td[data-performanceId='serialized-serviced']")
+                    };
+                }
             }
 
             const servicedTime = Date.now();
@@ -170,7 +172,10 @@ export default class RealtimeProvider {
                 const endTime = performance.now();
                 const parametersPerSecond = parameterCount / ((endTime - startTime) / 1000);
                 this.statistics.parametersProcessedPerSecond = Math.floor(parametersPerSecond);
-                tableElements.serializedServiced.innerText = servicedTime - message.serializationTime;
+                if (performanceStatisticsWindow !== null) {
+                    tableElements.serializedServiced.innerText = servicedTime - message.serializationTime;
+                }
+
                 startTime = endTime;
 
             } else if (message.type === "callNumberKeystringMapping") {
