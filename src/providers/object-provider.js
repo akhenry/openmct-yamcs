@@ -20,43 +20,6 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const workerScript = `
-  let dictionary = null;
-  let isDictionaryLoading = false;
-
-  onconnect = (e) => {
-    const port = e.ports[0];
-
-    port.onmessage = (event) => {
-      const { action, data } = event.data;
-
-      if (action === 'requestDictionary') {
-        if (dictionary) {
-          port.postMessage({
-            action: 'dictionaryData',
-            dictionary
-          });
-        } else if (isDictionaryLoading) {
-          port.postMessage({
-            action: 'dictionaryLoading'
-          });
-        } else {
-          isDictionaryLoading = true;
-          port.postMessage({
-            action: 'dictionaryNotLoaded'
-          });
-        }
-      } else if (action === 'updateDictionary') {
-        dictionary = data;
-        isDictionaryLoading = false;
-      }
-    };
-  };
-`;
-
-const workerBlob = new Blob([workerScript], { type: 'application/javascript' });
-const ObjectWorker = new SharedWorker(URL.createObjectURL(workerBlob));
-
 import {
     qualifiedNameToId,
     accumulateResults,
@@ -92,7 +55,11 @@ export default class YamcsObjectProvider {
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
-        this.objectWorker = ObjectWorker;
+
+        // eslint-disable-next-line no-undef
+        const sharedWorkerURL = `${__OPENMCT_YAMCS_ROOT_RELATIVE__}src/providers/objectWorker.js`;
+        console.log(sharedWorkerURL, `${this.openmct.getAssetPath()}${__OPENMCT_YAMCS_ROOT_RELATIVE__}src/providers/objectWorker.js`);
+        this.objectWorker = new SharedWorker(sharedWorkerURL, 'Object Worker');
 
         this.#initialize();
     }
