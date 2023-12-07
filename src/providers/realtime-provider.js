@@ -39,7 +39,9 @@ import {
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
-
+import { Buffer } from 'buffer/';
+const { ServerMessage, Reply } = require('../../protos/yamcs/api/websocket_pb.js');
+const { SubscribeParametersData } = require('../../protos/yamcs/protobuf/processing/processing_pb.js');
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
     constructor(url, instance, processor = 'realtime') {
@@ -226,7 +228,7 @@ export default class RealtimeProvider {
         };
 
         this.socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            let message = ServerMessage.deserializeBinary(new Uint8Array(event.data)).toObject();
 
             if (!this.isSupportedDataType(message.type)) {
                 return;
@@ -236,6 +238,7 @@ export default class RealtimeProvider {
             let subscriptionDetails;
 
             if (isReply) {
+                message.data = Reply.deserializeBinary(Buffer.from(message.data.value, 'base64')).toObject();
                 const id = message.data.replyTo;
                 const call = message.call;
                 subscriptionDetails = this.subscriptionsById[id];
@@ -250,7 +253,7 @@ export default class RealtimeProvider {
                 }
 
                 if (this.isTelemetryMessage(message)) {
-                    let values = message.data.values || [];
+                    let values = SubscribeParametersData.deserializeBinary(Buffer.from(message.data.value, 'base64')).toObject().valuesList || [];
                     let parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {

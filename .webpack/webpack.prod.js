@@ -32,5 +32,5 @@ module.exports = merge(common, {
     entry: {
         'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
     },
-    devtool: 'source-map'
+    devtool: 'eval-source-map'
 });

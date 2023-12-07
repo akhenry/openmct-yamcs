@@ -1,10 +1,14 @@
 import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
-import { yamcs } from 'yamcs-protobufjs-static';
 
-const { SubscribeEventsRequest } = yamcs.protobuf.events;
-const { SubscribeAlarmsRequest } = yamcs.protobuf.alarms;
-const { SubscribeCommandsRequest } = yamcs.protobuf.commanding;
-const { SubscribeParametersRequest, SubscribeMdbChangesRequest } = yamcs.protobuf.processing;
+const { Any } = require('google-protobuf/google/protobuf/any_pb.js');
+const { SubscribeEventsRequest } = require('../../protos/yamcs/protobuf/events/events_service_pb.js');
+const { SubscribeAlarmsRequest } = require('../../protos/yamcs/protobuf/alarms/alarms_service_pb.js');
+const { SubscribeCommandsRequest } = require('../../protos/yamcs/protobuf/commanding/commands_service_pb.js');
+const { SubscribeParametersRequest } = require('../../protos/yamcs/protobuf/processing/processing_pb.js');
+const { SubscribeMdbChangesRequest } = require('../../protos/yamcs/protobuf/processing/mdb_override_service_pb.js');
+const { NamedObjectId } = require('../../protos/yamcs/protobuf/yamcs_pb.js');
+const { ClientMessage } = require('../../protos/yamcs/api/websocket_pb');
+console.log('ClientMessage', ClientMessage);
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
@@ -34,79 +38,72 @@ function buildSubscribeMessages() {
     for (const [objectType, dataType] of Object.entries(typeMap)) {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
-            const { instance, processor = "realtime", name } = subscriptionDetails;
+            const { subscriptionId, instance, processor = "realtime", name } = subscriptionDetails;
             let payload;
             let arrayBuffer;
             let message;
-            let err;
+            let payloadAny = new Any();
 
             if (isEventType(objectType)) {
                 message = {
-                    instance: `${instance}`
+                    instance
                 };
-                err = SubscribeEventsRequest.verify(message);
-                if (err) {
-                    throw Error(err);
-                }
 
-                payload = SubscribeEventsRequest.create(message);
-                arrayBuffer = SubscribeEventsRequest.encode(payload).finish();
+                payload = new SubscribeEventsRequest();
+                payload.setInstance(instance);
+                payloadAny.pack(payload.serializeBinary(), 'yamcs.protobuf.events.SubscribeEventsRequest');
             } else if (isAlarmType(objectType)) {
                 message = {
-                    instance: `${instance}`,
-                    processor: `${processor}`
+                    instance,
+                    processor
                 };
-                err = SubscribeAlarmsRequest.verify(message);
-                if (err) {
-                    throw Error(err);
-                }
 
-                payload = SubscribeAlarmsRequest.create(message);
-                arrayBuffer = SubscribeAlarmsRequest.encode(payload).finish();
+                payload = new SubscribeAlarmsRequest();
+                payload.setInstance(instance);
+                payload.setProcessor(processor);
+                payloadAny.pack(payload.serializeBinary(), 'yamcs.protobuf.alarms.SubscribeAlarmsRequest');
             } else if (isCommandType(objectType)) {
                 message = {
-                    instance: `${instance}`,
-                    processor: `${processor}`,
+                    instance,
+                    processor,
                     ignorePastCommands: true
                 };
-                err = SubscribeCommandsRequest.verify(message);
-                if (err) {
-                    throw Error(err);
-                }
 
-                payload = SubscribeCommandsRequest.create(message);
-                arrayBuffer = SubscribeCommandsRequest.encode(payload).finish();
+                payload = new SubscribeCommandsRequest();
+                payload.setInstance(instance);
+                payload.setProcessor(processor);
+                payload.setIgnorepastcommands(true);
+                payloadAny.pack(payload.serializeBinary(), 'yamcs.protobuf.commanding.SubscribeCommandsRequest');
 
             } else if (isMdbChangesType(objectType)) {
                 message = {
-                    instance: `${instance}`,
-                    processor: `${processor}`
+                    instance,
+                    processor
                 };
-                err = SubscribeMdbChangesRequest.verify(message);
-                if (err) {
-                    throw Error(err);
-                }
 
-                payload = SubscribeMdbChangesRequest.create(message);
-                arrayBuffer = SubscribeMdbChangesRequest.encode(payload).finish();
+                payload = new SubscribeMdbChangesRequest();
+                payload.setInstance(instance);
+                payload.setProcessor(processor);
+                payloadAny.pack(payload.serializeBinary(), 'yamcs.protobuf.processing.SubscribeMdbChangesRequest');
             } else {
-                const id = [yamcs.protobuf.NamedObjectId.create({ name: `${name}`})];
-                message = {
-                    type: `${dataType}`,
-                    instance: `${instance}`,
-                    processor: `${processor}`,
-                    id,
-                    sendFromCache: true,
-                    updateOnExpiration: true
-                };
-                err = SubscribeParametersRequest.verify(message);
-                if (err) {
-                    throw Error(err);
-                }
+                const id = [new NamedObjectId()];
+                id[0].setName(name);
 
-                payload = SubscribeParametersRequest.create(message);
-                arrayBuffer = SubscribeParametersRequest.encode(payload).finish();
+                payload = new SubscribeParametersRequest();
+                payload.setInstance(instance);
+                payload.setProcessor(processor);
+                payload.setIdList(id);
+                payload.setSendfromcache(true);
+                payload.setUpdateonexpiration(true);
+                payloadAny.pack(payload.serializeBinary(), 'yamcs.protobuf.processing.SubscribeParametersRequest');
             }
+
+            const clientMessage = new ClientMessage();
+            clientMessage.setType(dataType);
+            clientMessage.setId(subscriptionId);
+            clientMessage.setOptions(payloadAny);
+
+            arrayBuffer = clientMessage.serializeBinary();
 
             return arrayBuffer;
         };

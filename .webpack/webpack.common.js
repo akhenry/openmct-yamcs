@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 const path = require('path');
+const ProvidePlugin = require('webpack').ProvidePlugin;
 const projectRootDir = path.resolve(__dirname, '..');
 
 // eslint-disable no-undef
@@ -31,6 +32,9 @@ const WEBPACK_COMMON_CONFIG = {
     resolve: {
         alias: {
             saveAs: "file-saver/src/FileSaver.js",
+        },
+        fallback: {
+            buffer: require.resolve("buffer/"),
         }
     },
     module: {
@@ -42,6 +46,11 @@ const WEBPACK_COMMON_CONFIG = {
             }
         ]
     },
+    plugins: [
+        new ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+    ],
     output: {
         globalObject: "this",
         filename: '[name].js',
