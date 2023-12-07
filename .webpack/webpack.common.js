@@ -37,7 +37,10 @@ const WEBPACK_COMMON_CONFIG = {
         rules: [
             {
                 test: /\.worker\.js$/,
-                use: { loader: 'worker-loader' },
+                loader: 'worker-loader',
+                options: {
+                    worker: "SharedWorker",
+                },
             },
             {
                 test: /\.js$/,
