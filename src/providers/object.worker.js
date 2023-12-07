@@ -20,38 +20,36 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-(function () {
-    let dictionary = null;
-    let isDictionaryLoading = false;
+let dictionary = null;
+let isDictionaryLoading = false;
 
-    self.onconnect = (e) => {
-        const port = e.ports[0];
+self.onconnect = (e) => {
+    const port = e.ports[0];
 
-        port.onmessage = (event) => {
-            const { action, data } = event.data;
+    port.onmessage = (event) => {
+        const { action, data } = event.data;
 
-            if (action === 'requestDictionary') {
-                if (dictionary) {
-                    port.postMessage({
-                        action: 'dictionaryData',
-                        dictionary
-                    });
-                } else if (isDictionaryLoading) {
-                    port.postMessage({
-                        action: 'dictionaryLoading'
-                    });
-                } else {
-                    isDictionaryLoading = true;
-                    port.postMessage({
-                        action: 'dictionaryNotLoaded'
-                    });
-                }
-            } else if (action === 'updateDictionary') {
-                dictionary = data;
-                isDictionaryLoading = false;
+        if (action === 'requestDictionary') {
+            if (dictionary) {
+                port.postMessage({
+                    action: 'dictionaryData',
+                    dictionary
+                });
+            } else if (isDictionaryLoading) {
+                port.postMessage({
+                    action: 'dictionaryLoading'
+                });
+            } else {
+                isDictionaryLoading = true;
+                port.postMessage({
+                    action: 'dictionaryNotLoaded'
+                });
             }
-        };
-
-        port.start();
+        } else if (action === 'updateDictionary') {
+            dictionary = data;
+            isDictionaryLoading = false;
+        }
     };
-}());
+
+    port.start();
+};

@@ -27,6 +27,7 @@ import {
     getLimitOverrides
 } from '../utils.js';
 
+import ObjectWorker from 'worker-loader!./object.worker.js';
 import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
@@ -55,11 +56,7 @@ export default class YamcsObjectProvider {
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
-
-        // eslint-disable-next-line no-undef
-        const sharedWorkerURL = `${__OPENMCT_YAMCS_ROOT_RELATIVE__}src/providers/objectWorker.js`;
-        console.log(sharedWorkerURL, `${this.openmct.getAssetPath()}${__OPENMCT_YAMCS_ROOT_RELATIVE__}src/providers/objectWorker.js`);
-        this.objectWorker = new SharedWorker(sharedWorkerURL, 'Object Worker');
+        this.objectWorker = new ObjectWorker();
 
         this.#initialize();
     }

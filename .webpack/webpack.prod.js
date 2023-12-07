@@ -31,7 +31,6 @@ module.exports = merge(common, {
     context: projectRootDir,
     mode: 'production',
     entry: {
-        ...common.entry,
         'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
     },
     plugins: [

@@ -22,14 +22,11 @@
 
 const path = require('path');
 const projectRootDir = path.resolve(__dirname, '..');
-console.log('wtf mate... wtf', path.resolve(projectRootDir, 'src/providers/objectWorker.js'));
+
 // eslint-disable no-undef
 const WEBPACK_COMMON_CONFIG = {
     performance: {
         hints: false
-    },
-    entry: {
-        objectWorker: path.resolve(projectRootDir, 'src/providers/objectWorker.js'),
     },
     resolve: {
         alias: {
@@ -38,6 +35,10 @@ const WEBPACK_COMMON_CONFIG = {
     },
     module: {
         rules: [
+            {
+                test: /\.worker\.js$/,
+                use: { loader: 'worker-loader' },
+            },
             {
                 test: /\.js$/,
                 enforce: "pre",
