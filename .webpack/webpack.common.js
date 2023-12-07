@@ -39,7 +39,8 @@ const WEBPACK_COMMON_CONFIG = {
                 test: /\.worker\.js$/,
                 loader: 'worker-loader',
                 options: {
-                    worker: "SharedWorker",
+                    filename: '[name].js'
+                    worker: 'SharedWorker',
                 },
             },
             {
