@@ -27,7 +27,7 @@ import {
     getLimitOverrides
 } from '../utils.js';
 
-import ObjectWorker from './object.worker.js';
+import ObjectWorker from 'worker-loader!./object.worker.js';
 import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
