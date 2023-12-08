@@ -249,6 +249,7 @@ export default class YamcsObjectProvider {
     async #loadAndStoreDictionary() {
         console.log('load and store dictionary');
         this.dictionary = await this.#loadTelemetryDictionary();
+        this.dictionaryLoadComplete = true;
 
         // Send the loaded dictionary to the Object Worker
         this.objectWorker.port.postMessage({
@@ -266,6 +267,10 @@ export default class YamcsObjectProvider {
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
         this.dictionaryLoadComplete = true;
+
+        if (this.dictionaryResolve) {
+            this.dictionaryResolve(this.dictionary);
+        }
     }
 
     #waitForDictionary() {
