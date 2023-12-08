@@ -199,7 +199,7 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        if (Object.keys(this.dictionary).length !== 0) {
+        if (this.dictonaryDoneLoading) {
             return Promise.resolve(this.dictionary);
         }
 
@@ -265,9 +265,7 @@ export default class YamcsObjectProvider {
         console.log('complete dictionary loading');
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
-        if (this.dictionaryResolve) {
-            this.dictionaryResolve(this.dictionary);
-        }
+        this.dictionaryLoadComplete = true;
     }
 
     #waitForDictionary() {
