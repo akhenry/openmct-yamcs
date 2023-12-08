@@ -199,6 +199,10 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
+        if (this.dictionary) {
+            return Promise.resolve(this.dictionary);
+        }
+
         if (!this.dictionaryPromise) {
             this.dictionaryPromise = new Promise((resolve, reject) => {
                 this.dictionaryResolve = resolve;
