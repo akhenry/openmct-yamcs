@@ -247,7 +247,10 @@ export default class YamcsObjectProvider {
         this.dictionary = await this.#loadTelemetryDictionary();
 
         // Send the loaded dictionary to the Object Worker
-        this.objectWorker.port.postMessage({ action: "updateDictionary", data: this.dictionary });
+        this.objectWorker.port.postMessage({
+            action: "updateDictionary",
+            data: this.dictionary
+        });
 
         if (this.dictionaryResolve) {
             this.dictionaryResolve(this.dictionary);
@@ -270,6 +273,7 @@ export default class YamcsObjectProvider {
             this.objectWorker.port.postMessage({ action: "requestDictionary" });
 
             if (this.dictionary) {
+                console.log('got the dictionary', this.dictionary);
                 clearInterval(checkInterval);
                 this.#completeDictionaryLoading();
             }
