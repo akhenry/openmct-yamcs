@@ -243,6 +243,7 @@ export default class YamcsObjectProvider {
     }
 
     async #loadAndStoreDictionary() {
+        console.log('load and store dictionary');
         this.dictionary = await this.#loadTelemetryDictionary();
 
         // Send the loaded dictionary to the Object Worker
@@ -254,6 +255,7 @@ export default class YamcsObjectProvider {
     }
 
     #completeDictionaryLoading() {
+        console.log('complete dictionary loading');
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
         if (this.dictionaryResolve) {
@@ -262,7 +264,9 @@ export default class YamcsObjectProvider {
     }
 
     #waitForDictionary() {
+        console.log('wait for dictionary');
         const checkInterval = setInterval(() => {
+            console.log('interval func');
             this.objectWorker.port.postMessage({ action: "requestDictionary" });
 
             if (this.dictionary) {

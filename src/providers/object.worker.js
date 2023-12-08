@@ -28,7 +28,7 @@ self.onconnect = (e) => {
 
     port.onmessage = (event) => {
         const { action, data } = event.data;
-
+        console.log('worker message', action, data);
         if (action === 'requestDictionary') {
             if (dictionary) {
                 port.postMessage({
