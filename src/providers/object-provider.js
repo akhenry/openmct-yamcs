@@ -199,7 +199,7 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        if (this.dictionary) {
+        if (Object.keys(this.dictionary).length !== 0) {
             return Promise.resolve(this.dictionary);
         }
 
