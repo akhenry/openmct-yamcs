@@ -21,7 +21,6 @@
  *****************************************************************************/
 
 const path = require('path');
-const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common');
 
@@ -33,10 +32,5 @@ module.exports = merge(common, {
     entry: {
         'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
     },
-    plugins: [
-        new webpack.DefinePlugin({
-            __OPENMCT_YAMCS_ROOT_RELATIVE__: `""`
-        })
-    ],
     devtool: 'source-map'
 });
