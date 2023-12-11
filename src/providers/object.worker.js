@@ -30,10 +30,13 @@ self.onconnect = (e) => {
 
     port.onmessage = (event) => {
         const { action, data } = event.data;
-        console.log('worker message', action, data);
+
         if (action === 'requestDictionary') {
             if (dictionary) {
-                postDictionary();
+                port.postMessage({
+                    action: 'dictionaryData',
+                    dictionary
+                });
             } else if (isDictionaryLoading) {
                 port.postMessage({
                     action: 'dictionaryLoading'
@@ -47,27 +50,15 @@ self.onconnect = (e) => {
         } else if (action === 'updateDictionary') {
             dictionary = data;
             isDictionaryLoading = false;
-            postDictionaryToAll();
+
+            ports.forEach(p => {
+                p.postMessage({
+                    action: 'dictionaryData',
+                    dictionary
+                });
+            });
         }
     };
 
-    function postDictionary() {
-        console.log('worker posting dictionary data')
-        port.postMessage({
-            action: 'dictionaryData',
-            dictionary
-        });
-    }
-
     port.start();
 };
-
-function postDictionaryToAll() {
-    console.log('worker posting dictionary data to all ports');
-    ports.forEach(port => {
-        port.postMessage({
-            action: 'dictionaryData',
-            dictionary
-        });
-    });
-}

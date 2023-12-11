@@ -80,7 +80,7 @@ export default class YamcsObjectProvider {
         this.objectWorker.port.onmessage = (e) => {
             const { action, dictionary } = e.data;
             console.log('message from worker', action, dictionary);
-            if (action === 'dictionaryData') {
+            if (action === 'dictionaryData' && !this.dictionary) {
                 this.dictionary = dictionary;
                 this.#completeDictionaryLoading();
             } else if (action === 'dictionaryNotLoaded') {
@@ -199,9 +199,9 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        if (this.dictionaryLoaded) {
-            return Promise.resolve(this.dictionary);
-        }
+        // if (this.dictionaryLoaded) {
+        //     return Promise.resolve(this.dictionary);
+        // }
 
         if (!this.dictionaryPromise) {
             this.dictionaryPromise = new Promise((resolve, reject) => {
@@ -257,29 +257,13 @@ export default class YamcsObjectProvider {
     }
 
     #completeDictionaryLoading() {
-        this.dictionaryLoaded = true;
+        // this.dictionaryLoaded = true;
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
         if (this.dictionaryResolve) {
             this.dictionaryResolve(this.dictionary);
         }
     }
-
-    // #waitForDictionary() {
-    //     console.log('wait for dictionary');
-    //     const checkInterval = setInterval(() => {
-    //         console.log('interval func');
-    //         this.objectWorker.port.postMessage({
-    //             action: 'requestDictionary'
-    //         });
-
-    //         if (this.dictionary) {
-    //             console.log('got the dictionary', this.dictionary);
-    //             clearInterval(checkInterval);
-    //             this.#completeDictionaryLoading();
-    //         }
-    //     }, 500);
-    // }
 
     #getMdbUrl(operation, name = '') {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;
