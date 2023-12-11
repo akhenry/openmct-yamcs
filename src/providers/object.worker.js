@@ -47,7 +47,7 @@ self.onconnect = (e) => {
         } else if (action === 'updateDictionary') {
             dictionary = data;
             isDictionaryLoading = false;
-            postDictionary();
+            postDictionaryToAll();
         }
     };
 
