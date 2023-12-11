@@ -22,9 +22,11 @@
 
 let dictionary = null;
 let isDictionaryLoading = false;
+let ports = [];
 
 self.onconnect = (e) => {
     const port = e.ports[0];
+    ports.push(port);
 
     port.onmessage = (event) => {
         const { action, data } = event.data;
@@ -59,3 +61,13 @@ self.onconnect = (e) => {
 
     port.start();
 };
+
+function postDictionaryToAll() {
+    console.log('worker posting dictionary data to all ports');
+    ports.forEach(port => {
+        port.postMessage({
+            action: 'dictionaryData',
+            dictionary
+        });
+    });
+}
