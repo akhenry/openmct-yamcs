@@ -199,9 +199,9 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        // if (this.dictionaryLoaded) {
-        //     return Promise.resolve(this.dictionary);
-        // }
+        if (this.dictionaryLoaded) {
+            return Promise.resolve(this.dictionary);
+        }
 
         if (!this.dictionaryPromise) {
             this.dictionaryPromise = new Promise((resolve, reject) => {
@@ -257,7 +257,7 @@ export default class YamcsObjectProvider {
     }
 
     #completeDictionaryLoading() {
-        // this.dictionaryLoaded = true;
+        this.dictionaryLoaded = true;
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
         if (this.dictionaryResolve) {
