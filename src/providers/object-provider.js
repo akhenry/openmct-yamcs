@@ -81,12 +81,14 @@ export default class YamcsObjectProvider {
             const { action, dictionary } = e.data;
 
             if (action === 'dictionaryData') {
+                console.log('dictionary data!')
                 this.dictionary = dictionary;
                 this.#completeDictionaryLoading();
             } else if (action === 'dictionaryNotLoaded') {
+                console.log('NO dictionary data!')
                 this.#loadAndStoreDictionary();
             } else if (action === 'dictionaryLoading') {
-                // wait to act on 'dictionaryData' message
+                console.log('LOADING dictionary data!')
             }
         };
 
