@@ -80,13 +80,13 @@ export default class YamcsObjectProvider {
         this.objectWorker.port.onmessage = (e) => {
             const { action, dictionary } = e.data;
 
-            if (action === "dictionaryData") {
+            if (action === 'dictionaryData') {
                 this.dictionary = dictionary;
                 this.#completeDictionaryLoading();
-            } else if (action === "dictionaryNotLoaded") {
+            } else if (action === 'dictionaryNotLoaded') {
                 this.#loadAndStoreDictionary();
-            } else if (action === "dictionaryLoading") {
-                this.#waitForDictionary();
+            } else if (action === 'dictionaryLoading') {
+                // wait to act on 'dictionaryData' message
             }
         };
 
@@ -199,17 +199,17 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        if (this.dictionaryLoadComplete) {
+        if (this.dictionaryLoaded) {
             return Promise.resolve(this.dictionary);
         }
 
         if (!this.dictionaryPromise) {
             this.dictionaryPromise = new Promise((resolve, reject) => {
                 this.dictionaryResolve = resolve;
-                this.dictionaryReject = reject;
-                this.objectWorker.port.postMessage({ action: "requestDictionary" });
-            }).finally(() => {
-                this.roleStatusTelemetry.dictionaryLoadComplete();
+
+                this.objectWorker.port.postMessage({
+                    action: 'requestDictionary'
+                });
             });
         }
 
@@ -247,45 +247,39 @@ export default class YamcsObjectProvider {
     }
 
     async #loadAndStoreDictionary() {
-        console.log('load and store dictionary');
         this.dictionary = await this.#loadTelemetryDictionary();
-        this.dictionaryLoadComplete = true;
 
         // Send the loaded dictionary to the Object Worker
         this.objectWorker.port.postMessage({
-            action: "updateDictionary",
+            action: 'updateDictionary',
             data: this.dictionary
         });
-
-        if (this.dictionaryResolve) {
-            this.dictionaryResolve(this.dictionary);
-        }
     }
 
     #completeDictionaryLoading() {
-        console.log('complete dictionary loading');
+        this.dictionaryLoaded = true;
         this.roleStatusTelemetry.dictionaryLoadComplete();
-
-        this.dictionaryLoadComplete = true;
 
         if (this.dictionaryResolve) {
             this.dictionaryResolve(this.dictionary);
         }
     }
 
-    #waitForDictionary() {
-        console.log('wait for dictionary');
-        const checkInterval = setInterval(() => {
-            console.log('interval func');
-            this.objectWorker.port.postMessage({ action: "requestDictionary" });
+    // #waitForDictionary() {
+    //     console.log('wait for dictionary');
+    //     const checkInterval = setInterval(() => {
+    //         console.log('interval func');
+    //         this.objectWorker.port.postMessage({
+    //             action: 'requestDictionary'
+    //         });
 
-            if (this.dictionary) {
-                console.log('got the dictionary', this.dictionary);
-                clearInterval(checkInterval);
-                this.#completeDictionaryLoading();
-            }
-        }, 500);
-    }
+    //         if (this.dictionary) {
+    //             console.log('got the dictionary', this.dictionary);
+    //             clearInterval(checkInterval);
+    //             this.#completeDictionaryLoading();
+    //         }
+    //     }, 500);
+    // }
 
     #getMdbUrl(operation, name = '') {
         return this.url + 'api/mdb/' + this.instance + '/' + operation + name;

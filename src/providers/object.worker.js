@@ -31,10 +31,7 @@ self.onconnect = (e) => {
         console.log('worker message', action, data);
         if (action === 'requestDictionary') {
             if (dictionary) {
-                port.postMessage({
-                    action: 'dictionaryData',
-                    dictionary
-                });
+                postDictionary();
             } else if (isDictionaryLoading) {
                 port.postMessage({
                     action: 'dictionaryLoading'
@@ -48,8 +45,16 @@ self.onconnect = (e) => {
         } else if (action === 'updateDictionary') {
             dictionary = data;
             isDictionaryLoading = false;
+            postDictionary();
         }
     };
+
+    function postDictionary() {
+        port.postMessage({
+            action: 'dictionaryData',
+            dictionary
+        });
+    }
 
     port.start();
 };
