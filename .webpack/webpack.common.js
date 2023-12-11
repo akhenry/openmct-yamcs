@@ -36,10 +36,18 @@ const WEBPACK_COMMON_CONFIG = {
     module: {
         rules: [
             {
+                test: /\.worker\.js$/,
+                loader: 'worker-loader',
+                options: {
+                    filename: '[name].js',
+                    worker: 'SharedWorker',
+                },
+            },
+            {
                 test: /\.js$/,
                 enforce: "pre",
                 use: ["source-map-loader"]
-            }
+            },
         ]
     },
     output: {

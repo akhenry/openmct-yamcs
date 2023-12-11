@@ -27,6 +27,7 @@ import {
     getLimitOverrides
 } from '../utils.js';
 
+import ObjectWorker from './object.worker.js';
 import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
@@ -55,11 +56,13 @@ export default class YamcsObjectProvider {
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
+        this.objectWorker = new ObjectWorker();
 
         this.#initialize();
     }
 
     #initialize() {
+        this.#startWorker();
         this.#createRootObject();
         const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
         const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
@@ -71,6 +74,23 @@ export default class YamcsObjectProvider {
         );
 
         this.openmct.on('destroy', this.#unsubscribeFromAll);
+    }
+
+    #startWorker() {
+        this.objectWorker.port.onmessage = (e) => {
+            const { action, dictionary } = e.data;
+
+            if (action === 'dictionaryData') {
+                this.dictionary = dictionary;
+                this.#completeDictionaryLoading();
+            } else if (action === 'dictionaryNotLoaded') {
+                this.#loadAndStoreDictionary();
+            } else if (action === 'dictionaryLoading') {
+                // wait for it
+            }
+        };
+
+        this.objectWorker.port.start();
     }
 
     #createRootObject() {
@@ -180,10 +200,13 @@ export default class YamcsObjectProvider {
 
     #getTelemetryDictionary() {
         if (!this.dictionaryPromise) {
-            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
-                .finally(() => {
-                    this.roleStatusTelemetry.dictionaryLoadComplete();
+            this.dictionaryPromise = new Promise((resolve, reject) => {
+                this.dictionaryResolve = resolve;
+
+                this.objectWorker.port.postMessage({
+                    action: 'requestDictionary'
                 });
+            });
         }
 
         return this.dictionaryPromise;
@@ -217,6 +240,24 @@ export default class YamcsObjectProvider {
         });
 
         return this.dictionary;
+    }
+
+    async #loadAndStoreDictionary() {
+        this.dictionary = await this.#loadTelemetryDictionary();
+
+        // Send the loaded dictionary to the Object Worker
+        this.objectWorker.port.postMessage({
+            action: 'updateDictionary',
+            data: this.dictionary
+        });
+    }
+
+    #completeDictionaryLoading() {
+        this.roleStatusTelemetry.dictionaryLoadComplete();
+
+        if (this.dictionaryResolve) {
+            this.dictionaryResolve(this.dictionary);
+        }
     }
 
     #getMdbUrl(operation, name = '') {
