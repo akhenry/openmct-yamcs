@@ -50,6 +50,7 @@ self.onconnect = (e) => {
     };
 
     function postDictionary() {
+        console.log('worker posting dictionary data')
         port.postMessage({
             action: 'dictionaryData',
             dictionary

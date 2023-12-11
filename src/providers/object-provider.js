@@ -79,16 +79,14 @@ export default class YamcsObjectProvider {
     #startWorker() {
         this.objectWorker.port.onmessage = (e) => {
             const { action, dictionary } = e.data;
-
+            console.log('message from worker', action, dictionary);
             if (action === 'dictionaryData') {
-                console.log('dictionary data!')
                 this.dictionary = dictionary;
                 this.#completeDictionaryLoading();
             } else if (action === 'dictionaryNotLoaded') {
-                console.log('NO dictionary data!')
                 this.#loadAndStoreDictionary();
             } else if (action === 'dictionaryLoading') {
-                console.log('LOADING dictionary data!')
+                // wait for it
             }
         };
 
