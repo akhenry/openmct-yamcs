@@ -80,7 +80,7 @@ export default class YamcsObjectProvider {
         this.objectWorker.port.onmessage = (e) => {
             const { action, dictionary } = e.data;
             console.log('message from worker', action, dictionary);
-            if (action === 'dictionaryData' && !this.dictionary) {
+            if (action === 'dictionaryData') {
                 this.dictionary = dictionary;
                 this.#completeDictionaryLoading();
             } else if (action === 'dictionaryNotLoaded') {
@@ -199,10 +199,6 @@ export default class YamcsObjectProvider {
     }
 
     #getTelemetryDictionary() {
-        if (this.dictionaryLoaded) {
-            return Promise.resolve(this.dictionary);
-        }
-
         if (!this.dictionaryPromise) {
             this.dictionaryPromise = new Promise((resolve, reject) => {
                 this.dictionaryResolve = resolve;
@@ -257,7 +253,6 @@ export default class YamcsObjectProvider {
     }
 
     #completeDictionaryLoading() {
-        this.dictionaryLoaded = true;
         this.roleStatusTelemetry.dictionaryLoadComplete();
 
         if (this.dictionaryResolve) {
