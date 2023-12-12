@@ -51,6 +51,7 @@
     "webpack": "5.88.2",
     "webpack-cli": "5.0.1",
     "webpack-dev-server": "4.11.1",
-    "webpack-merge": "5.8.0"
+    "webpack-merge": "5.8.0",
+    "yamcs-protobufjs-static": "^5.8.8-alpha-0"
   }
 }

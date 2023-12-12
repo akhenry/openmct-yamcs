@@ -1,4 +1,12 @@
-import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
+import { OBJECT_TYPES, DATA_TYPES, MDB_TYPE } from '../const';
+import { google, yamcs } from 'yamcs-protobufjs-static';
+
+const { SubscribeEventsRequest } = yamcs.protobuf.events;
+const { SubscribeAlarmsRequest } = yamcs.protobuf.alarms;
+const { SubscribeCommandsRequest } = yamcs.protobuf.commanding;
+const { SubscribeParametersRequest, SubscribeMdbChangesRequest } = yamcs.protobuf.processing;
+const { ClientMessage, CancelOptions } = yamcs.api;
+const { Any } = google.protobuf;
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
@@ -17,12 +25,21 @@ const typeMap = {
 export const SUBSCRIBE = buildSubscribeMessages();
 // eslint-disable-next-line func-style
 export const UNSUBSCRIBE = (subscriptionDetails) => {
-    return `{
-        "type": "cancel",
-        "options": {
-            "call": "${subscriptionDetails.call}"
-        }
-    }`;
+    const { call } = subscriptionDetails;
+    const payload = CancelOptions.create({
+        call
+    });
+    const arrayBuffer = CancelOptions.encode(payload).finish();
+    const any = Any.create({
+        type_url: CancelOptions.getTypeUrl(),
+        value: arrayBuffer
+    });
+    const clientMessage = ClientMessage.create({
+        type: 'cancel',
+        options: any
+    });
+
+    return ClientMessage.encode(clientMessage).finish();
 };
 
 function buildSubscribeMessages() {
@@ -31,43 +48,107 @@ function buildSubscribeMessages() {
     for (const [objectType, dataType] of Object.entries(typeMap)) {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
-            const {subscriptionId, instance, processor = "realtime", name } = subscriptionDetails;
+            const { subscriptionId, instance, processor = "realtime", name } = subscriptionDetails;
+            let payload;
+            let arrayBuffer;
             let message;
+            let err;
 
             if (isEventType(objectType)) {
-                message = `{
-                    "type": "${dataType}",
-                    "id": "${subscriptionId}",
-                    "options": {
-                        "instance": "${instance}"
-                    }
-                }`;
-            } else if (isAlarmType(objectType) || isCommandType(objectType) || isMdbChangesType(objectType)) {
-                message = `{
-                    "type": "${dataType}",
-                    "id": "${subscriptionId}",
-                    "options": {
-                        "instance": "${instance}",
-                        "processor": "${processor}"
-                    }
-                }`;
+                message = {
+                    instance
+                };
+                err = SubscribeEventsRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeEventsRequest.create(message);
+                arrayBuffer = SubscribeEventsRequest.encode(payload).finish();
+                payload = Any.create({
+                    type_url: SubscribeEventsRequest.getTypeUrl(),
+                    value: arrayBuffer
+                });
+            } else if (isAlarmType(objectType)) {
+                message = {
+                    instance,
+                    processor
+                };
+                err = SubscribeAlarmsRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeAlarmsRequest.create(message);
+                arrayBuffer = SubscribeAlarmsRequest.encode(payload).finish();
+                payload = Any.create({
+                    type_url: SubscribeAlarmsRequest.getTypeUrl(),
+                    value: arrayBuffer
+                });
+            } else if (isCommandType(objectType)) {
+                message = {
+                    instance,
+                    processor,
+                    ignorePastCommands: true
+                };
+                err = SubscribeCommandsRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeCommandsRequest.create(message);
+                arrayBuffer = SubscribeCommandsRequest.encode(payload).finish();
+
+                payload = Any.create({
+                    type_url: SubscribeCommandsRequest.getTypeUrl(),
+                    value: arrayBuffer
+                });
+            } else if (isMdbChangesType(objectType)) {
+                message = {
+                    instance,
+                    processor
+                };
+                err = SubscribeMdbChangesRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeMdbChangesRequest.create(message);
+                arrayBuffer = SubscribeMdbChangesRequest.encode(payload).finish();
+                payload = Any.create({
+                    type_url: SubscribeMdbChangesRequest.getTypeUrl(),
+                    value: arrayBuffer
+                });
             } else {
-                message = `{
-                    "type": "${dataType}",
-                    "id": "${subscriptionId}",
-                    "options": {
-                        "instance": "${instance}",
-                        "processor": "${processor}",
-                        "id": [{
-                            "name": "${name}"
-                        }],
-                        "sendFromCache": true,
-                        "updateOnExpiration": true
-                    }
-                }`;
+                const id = [yamcs.protobuf.NamedObjectId.create({ name: `${name}`})];
+                message = {
+                    type: dataType,
+                    instance,
+                    processor,
+                    id,
+                    sendFromCache: true,
+                    updateOnExpiration: true
+                };
+                err = SubscribeParametersRequest.verify(message);
+                if (err) {
+                    throw Error(err);
+                }
+
+                payload = SubscribeParametersRequest.create(message);
+                arrayBuffer = SubscribeParametersRequest.encode(payload).finish();
+                payload = Any.create({
+                    type_url: SubscribeParametersRequest.getTypeUrl(),
+                    value: arrayBuffer
+                });
             }
 
-            return message;
+            const clientMessage = ClientMessage.create({
+                type: dataType,
+                id: subscriptionId,
+                options: payload
+            });
+
+            return ClientMessage.encode(clientMessage).finish();
         };
     }
 

@@ -39,6 +39,9 @@ import {
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
+import { yamcs } from 'yamcs-protobufjs-static';
+const { ServerMessage, Reply } = yamcs.api;
+const { SubscribeParametersData } = yamcs.protobuf.processing;
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -202,6 +205,13 @@ export default class RealtimeProvider {
             this.requests.push(request);
         }
     }
+    /**
+     * @param {import('yamcs-protobufjs-static').google.protobuf.Timestamp} timestamp the protobuf timestamp object
+     * @returns {number} milliseconds since epoch
+     */
+    timestampObjectToMilliseconds(timestamp) {
+        return Math.floor((timestamp.seconds * 1000) + (timestamp.nanos / 1000000));
+    }
 
     connect() {
         if (this.connected) {
@@ -211,7 +221,8 @@ export default class RealtimeProvider {
         let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
-        this.socket = new WebSocket(wsUrl);
+        this.socket = new WebSocket(wsUrl, 'protobuf');
+        this.socket.binaryType = 'arraybuffer';
 
         this.socket.onopen = () => {
             clearTimeout(this.reconnectTimeout);
@@ -225,7 +236,7 @@ export default class RealtimeProvider {
         };
 
         this.socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            const message = ServerMessage.decode(new Uint8Array(event.data));
 
             if (!this.isSupportedDataType(message.type)) {
                 return;
@@ -235,7 +246,8 @@ export default class RealtimeProvider {
             let subscriptionDetails;
 
             if (isReply) {
-                const id = message.data.replyTo;
+                const reply = Reply.decode(message.data.value);
+                const id = reply.replyTo;
                 const call = message.call;
                 subscriptionDetails = this.subscriptionsById[id];
                 subscriptionDetails.call = call;
@@ -249,13 +261,13 @@ export default class RealtimeProvider {
                 }
 
                 if (this.isTelemetryMessage(message)) {
-                    let values = message.data.values || [];
-                    let parentName = subscriptionDetails.domainObject.name;
+                    const values = SubscribeParametersData.decode(new Uint8Array(message.data.value))?.toJSON()?.values || [];
+                    const parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {
                         let datum = {
                             id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter[METADATA_TIME_KEY]
+                            timestamp: this.timestampObjectToMilliseconds(parameter[METADATA_TIME_KEY])
                         };
                         let value = getValue(parameter, parentName);
 
@@ -352,8 +364,10 @@ export default class RealtimeProvider {
         }
     }
 
-    sendMessage(message) {
-        this.socket.send(message);
+    sendMessage(arrayBuffer) {
+        this.socket.send(
+            arrayBuffer
+        );
     }
 
     isTelemetryMessage(message) {
