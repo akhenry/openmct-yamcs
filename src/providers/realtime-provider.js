@@ -21,21 +21,34 @@
  *****************************************************************************/
 
 import * as MESSAGES from './messages';
-import { OBJECT_TYPES, DATA_TYPES, AGGREGATE_TYPE, METADATA_TIME_KEY } from '../const';
 import {
+    OBJECT_TYPES,
+    DATA_TYPES,
+    AGGREGATE_TYPE,
+    METADATA_TIME_KEY,
+    STALENESS_STATUS_MAP,
+    MDB_OBJECT
+} from '../const';
+import {
+    buildStalenessResponseObject,
     idToQualifiedName,
     qualifiedNameToId,
     getValue,
-    addLimitInformation
+    addLimitInformation,
+    getLimitFromAlarmRange
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum } from './events';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
-    constructor(url, instance) {
+    constructor(url, instance, processor = 'realtime') {
         this.url = url;
         this.instance = instance;
+        this.processor = processor;
+        this.observingStaleness = {};
+        this.MDB_OBJECT = MDB_OBJECT;
+        this.observingLimitChanges = {};
         this.supportedObjectTypes = {};
         this.supportedDataTypes = {};
         this.connected = false;
@@ -61,6 +74,49 @@ export default class RealtimeProvider {
         return this.isSupportedObjectType(domainObject.type);
     }
 
+    subscribeToStaleness(domainObject, callback) {
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.observingStaleness[qualifiedName] = {
+            response: buildStalenessResponseObject(undefined, 0),
+            callback
+        };
+
+        return () => {
+            delete this.observingStaleness[qualifiedName];
+        };
+    }
+
+    subscribeToLimits(domainObject, callback) {
+        // The object-provider creates an mdb changes subscription on dictionary load and unsubscribes it when open MCT is closed
+        // so we only need to maintain a list of subscriber callbacks and don't need to create another mdb changes subscription here
+        const qualifiedName = idToQualifiedName(domainObject.identifier.key);
+        this.observingLimitChanges[qualifiedName] = {
+            callback
+        };
+
+        return () => {
+            delete this.observingLimitChanges[qualifiedName];
+        };
+    }
+
+    subscribeToMDBChanges(callback) {
+        const subscriptionDetails = this.buildSubscriptionDetails(this.MDB_OBJECT, callback);
+        this.subscriptionsById[subscriptionDetails.subscriptionId] = subscriptionDetails;
+
+        this.sendSubscribeMessage(subscriptionDetails);
+
+        return () => {
+            const id = subscriptionDetails.subscriptionId;
+
+            if (subscriptionDetails) {
+                this.sendUnsubscribeMessage(subscriptionDetails);
+
+                this.subscriptionsByCall.delete(subscriptionDetails.call);
+                delete this.subscriptionsById[id];
+            }
+        };
+    }
+
     isSupportedObjectType(type) {
         return this.supportedObjectTypes[type];
     }
@@ -69,15 +125,12 @@ export default class RealtimeProvider {
         return this.supportedDataTypes[type];
     }
 
-    subscribe(domainObject, callback) {
-        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback);
+    subscribe(domainObject, callback, options) {
+        let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, options);
         let id = subscriptionDetails.subscriptionId;
-
         this.subscriptionsById[id] = subscriptionDetails;
 
-        if (this.connected) {
-            this.sendSubscribeMessage(subscriptionDetails);
-        }
+        this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
             this.sendUnsubscribeMessage(subscriptionDetails);
@@ -89,21 +142,25 @@ export default class RealtimeProvider {
         };
     }
 
-    buildSubscriptionDetails(domainObject, callback) {
+    buildSubscriptionDetails(domainObject, callback, options) {
         let subscriptionId = this.lastSubscriptionId++;
-
-        return {
+        let subscriptionDetails = {
             instance: this.instance,
+            processor: this.processor,
             subscriptionId: subscriptionId,
             name: idToQualifiedName(domainObject.identifier.key),
             domainObject,
+            updateOnExpiration: true,
+            options,
             callback: callback
         };
+
+        return subscriptionDetails;
     }
 
     sendSubscribeMessage(subscriptionDetails) {
-        let domainObject = subscriptionDetails.domainObject;
-        let message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+        const domainObject = subscriptionDetails.domainObject;
+        const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
 
         this.sendOrQueueMessage(message);
     }
@@ -160,7 +217,7 @@ export default class RealtimeProvider {
             clearTimeout(this.reconnectTimeout);
 
             this.connected = true;
-            console.log(`🔌 Established websocket connection to ${wsUrl}`);
+            console.debug(`🔌 Established websocket connection to ${wsUrl}`);
 
             this.currentWaitIndex = 0;
             this.resubscribeToAll();
@@ -202,6 +259,19 @@ export default class RealtimeProvider {
                         };
                         let value = getValue(parameter, parentName);
 
+                        if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
+                            const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
+
+                            if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
+                                const stalenesResponseObject = buildStalenessResponseObject(
+                                    status,
+                                    parameter[METADATA_TIME_KEY]
+                                );
+                                this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
+                                this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
+                            }
+                        }
+
                         if (parameter.engValue.type !== AGGREGATE_TYPE) {
                             datum.value = value;
                         } else {
@@ -218,8 +288,22 @@ export default class RealtimeProvider {
                     const datum = commandToTelemetryDatum(message.data);
                     subscriptionDetails.callback(datum);
                 } else if (this.isEventMessage(message)) {
-                    const datum = eventToTelemetryDatum(message.data);
-                    subscriptionDetails.callback(datum);
+                    if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
+                        // ignore event
+                    } else {
+                        const datum = eventToTelemetryDatum(message.data);
+                        subscriptionDetails.callback(datum);
+                    }
+                } else if (this.isMdbChangesMessage(message)) {
+                    const parameterName = message.data.parameterOverride.parameter;
+                    if (this.observingLimitChanges[parameterName] !== undefined) {
+                        const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+                        this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
+                    }
+
+                    if (subscriptionDetails.callback) {
+                        subscriptionDetails.callback(message.data);
+                    }
                 } else {
                     subscriptionDetails.callback(message.data);
                 }
@@ -282,5 +366,9 @@ export default class RealtimeProvider {
 
     isEventMessage(message) {
         return message.type === 'events';
+    }
+
+    isMdbChangesMessage(message) {
+        return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
     }
 }

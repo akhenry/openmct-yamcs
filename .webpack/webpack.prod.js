@@ -20,14 +20,17 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
+const path = require('path');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common');
 
+const projectRootDir = path.resolve(__dirname, '..');
 // eslint-disable-next-line no-undef
 module.exports = merge(common, {
+    context: projectRootDir,
     mode: 'production',
     entry: {
-        'openmct-yamcs': './src/plugin.js'
+        'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
     },
     devtool: 'source-map'
 });

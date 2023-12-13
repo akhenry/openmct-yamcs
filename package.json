@@ -1,17 +1,19 @@
 {
   "name": "openmct-yamcs",
-  "version": "2.1.6-SNAPSHOT",
+  "version": "3.3.0-next",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
   "scripts": {
-    "clean": "rm -rf ./dist ./node_modules ./package-lock.json",
+    "clean": "rm -rf ./dist ./node_modules ./package-lock.json ./coverage ./test-results ./tests/html-test-results ./tests/e2e/test-results ./.nyc_output ./tests/e2e/opensource",
     "test": "npm run test:getopensource && npm run test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
-    "build:dist": "webpack --config webpack.prod.js",
+    "build:dist": "webpack --config ./.webpack/webpack.prod.js",
     "build:example": "npm install openmct@unstable --no-save",
-    "start": "npx webpack serve --config ./webpack.dev.js",
-    "start:coverage": "npx webpack serve --config ./webpack.coverage.js",
+    "build:example:master": "npm install nasa/openmct#master --no-save",
+    "postbuild:example": "node check-optional-dependencies.js",
+    "start": "npx webpack serve --config ./.webpack/webpack.dev.js",
+    "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.js",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
     "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
@@ -26,24 +28,27 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=14.19.1"
+    "node": ">=16.19.1"
   },
   "optionalDependencies": {
-    "openmct": "^2.0.5"
+    "openmct": ">= 2.2.5"
   },
   "devDependencies": {
-    "@babel/core": "7.20.5",
+    "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.19.1",
-    "@playwright/test": "1.29.0",
+    "@deploysentinel/playwright": "0.3.4",
+    "@playwright/test": "1.39.0",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
-    "eslint": "8.29.0",
+    "eslint": "8.38.0",
     "eventemitter3": "4.0.7",
+    "file-saver": "2.0.5",
+    "semver": "7.5.2",
     "sinon": "14.0.0",
-    "source-map-loader": "^4.0.1",
+    "source-map-loader": "4.0.1",
     "uuid": "9.0.0",
-    "wait-on": "6.0.1",
-    "webpack": "5.75.0",
+    "wait-on": "7.0.1",
+    "webpack": "5.88.2",
     "webpack-cli": "5.0.1",
     "webpack-dev-server": "4.11.1",
     "webpack-merge": "5.8.0"

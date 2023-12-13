@@ -23,23 +23,25 @@
 const path = require('path');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common');
+const projectRootDir = path.resolve(__dirname, '..');
 
 // eslint-disable-next-line no-undef
 module.exports = merge(common, {
+    context: projectRootDir,
     mode: 'development',
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': './example/index.js'
+        'openmct-yamcs-example': path.resolve(projectRootDir, 'example/index.js')
     },
     devServer: {
         compress: true,
         port: 9000,
         static: [{
             // eslint-disable-next-line no-undef
-            directory: path.join(__dirname, 'example')
+            directory: path.join(projectRootDir, 'example')
         }, {
             // eslint-disable-next-line no-undef
-            directory: path.join(__dirname, '/node_modules/openmct/dist'),
+            directory: path.join(projectRootDir, '/node_modules/openmct/dist'),
             publicPath: '/node_modules/openmct/dist'
         }],
         proxy: {

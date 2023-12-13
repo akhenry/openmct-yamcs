@@ -20,6 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const';
+import limitConfig from "./limits-config.json";
 
 function idToQualifiedName(id) {
     return id.replace(/~/g, '/');
@@ -107,7 +108,7 @@ function getValue(item, name) {
             valueResults.push(VALUE_EXTRACT_MAP[arrayValue.type](arrayValue));
         }
 
-        return JSON.stringify(valueResults);
+        return valueResults;
     }
 
     if (value.type === AGGREGATE_TYPE) {
@@ -198,6 +199,29 @@ async function accumulateResults(url, options, property, soFar, totalLimit, toke
         result.continuationToken);
 }
 
+async function requestLimitOverrides(url) {
+    const response = await fetch(encodeURI(url));
+    const json = await response.json();
+
+    return json?.overrides ?? [];
+}
+
+async function getLimitOverrides(url) {
+    let limitOverrides = {};
+    const overrides = await requestLimitOverrides(url);
+
+    overrides.forEach((override) => {
+        const parameterOverride = override.parameterOverride;
+        const parameter = parameterOverride.parameter;
+        const alarmRange = parameterOverride?.defaultAlarm?.staticAlarmRange ?? [];
+
+        limitOverrides[parameter] = getLimitFromAlarmRange(alarmRange);
+
+    });
+
+    return limitOverrides;
+}
+
 async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
 
     if (aborted(signal)) {
@@ -237,6 +261,31 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
 
     return [];
 
+}
+
+function buildStalenessResponseObject(isStale, timestamp) {
+    return {
+        isStale,
+        timestamp
+    };
+}
+
+function getLimitFromAlarmRange(alarmRange) {
+    let limits = {};
+    alarmRange.forEach(alarm => {
+        limits[alarm.level] = {
+            low: {
+                color: limitConfig[alarm.level],
+                value: alarm.minInclusive ?? alarm.minExclusive
+            },
+            high: {
+                color: limitConfig[alarm.level],
+                value: alarm.maxInclusive ?? alarm.maxExclusive
+            }
+        };
+    });
+
+    return limits;
 }
 
 function getHistoryYieldRequest(signal) {
@@ -314,6 +363,8 @@ function flattenObjectArray(array, baseObj = {}) {
 }
 
 export {
+    buildStalenessResponseObject,
+    getLimitFromAlarmRange,
     idToQualifiedName,
     qualifiedNameToId,
     qualifiedNameFromParameterId,
@@ -321,5 +372,6 @@ export {
     getValue,
     accumulateResults,
     addLimitInformation,
-    yieldResults
+    yieldResults,
+    getLimitOverrides
 };

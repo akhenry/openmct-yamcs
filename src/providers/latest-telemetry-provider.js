@@ -26,6 +26,8 @@ import {
     qualifiedNameToId
 } from '../utils.js';
 
+const BATCH_DEBOUNCE_MS = 100;
+
 export default class LatestTelemetryProvider {
     #bulkPromise;
     #batchIds;
@@ -57,6 +59,7 @@ export default class LatestTelemetryProvider {
                     const id = qualifiedNameFromParameterId(result.id);
                     openMctStyleDatum = {
                         id: qualifiedNameToId(id),
+                        acquisitionStatus: result.acquisitionStatus,
                         timestamp: result.generationTime,
                         value: getValue(result)
                     };
@@ -75,7 +78,7 @@ export default class LatestTelemetryProvider {
         // We until the next event loop cycle to "collect" all of the get
         // requests triggered in this iteration of the event loop
 
-        await this.#waitOneEventCycle();
+        await this.#waitForDebounce();
         let batchIds = [...new Set(this.#batchIds)];
 
         this.#clearBatch();
@@ -118,9 +121,14 @@ export default class LatestTelemetryProvider {
         this.#bulkPromise = undefined;
     }
 
-    #waitOneEventCycle() {
+    #waitForDebounce() {
+        let timeoutID;
+        clearTimeout(timeoutID);
+
         return new Promise((resolve) => {
-            setTimeout(resolve);
+            timeoutID = setTimeout(() => {
+                resolve();
+            }, BATCH_DEBOUNCE_MS);
         });
     }
 

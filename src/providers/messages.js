@@ -1,4 +1,4 @@
-import { OBJECT_TYPES, DATA_TYPES } from '../const';
+import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
@@ -10,7 +10,8 @@ const typeMap = {
     [OBJECT_TYPES.OPERATOR_STATUS_TYPE]: DATA_TYPES.DATA_TYPE_TELEMETRY,
     [OBJECT_TYPES.POLL_QUESTION_TYPE]: DATA_TYPES.DATA_TYPE_TELEMETRY,
     [OBJECT_TYPES.ALARMS_TYPE]: DATA_TYPES.DATA_TYPE_ALARMS,
-    [OBJECT_TYPES.GLOBAL_STATUS_TYPE]: DATA_TYPES.DATA_TYPE_GLOBAL_STATUS
+    [OBJECT_TYPES.GLOBAL_STATUS_TYPE]: DATA_TYPES.DATA_TYPE_GLOBAL_STATUS,
+    [MDB_TYPE]: DATA_TYPES.DATA_TYPE_MDB_CHANGES
 };
 
 export const SUBSCRIBE = buildSubscribeMessages();
@@ -30,36 +31,38 @@ function buildSubscribeMessages() {
     for (const [objectType, dataType] of Object.entries(typeMap)) {
 
         subscriptionMessages[objectType] = (subscriptionDetails) => {
+            const {subscriptionId, instance, processor = "realtime", name } = subscriptionDetails;
             let message;
 
             if (isEventType(objectType)) {
                 message = `{
                     "type": "${dataType}",
-                    "id": "${subscriptionDetails.subscriptionId}",
+                    "id": "${subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}"
+                        "instance": "${instance}"
                     }
                 }`;
-            } else if (isAlarmType(objectType) || isCommandType(objectType)) {
+            } else if (isAlarmType(objectType) || isCommandType(objectType) || isMdbChangesType(objectType)) {
                 message = `{
                     "type": "${dataType}",
-                    "id": "${subscriptionDetails.subscriptionId}",
+                    "id": "${subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime"
+                        "instance": "${instance}",
+                        "processor": "${processor}"
                     }
                 }`;
             } else {
                 message = `{
                     "type": "${dataType}",
-                    "id": "${subscriptionDetails.subscriptionId}",
+                    "id": "${subscriptionId}",
                     "options": {
-                        "instance": "${subscriptionDetails.instance}",
-                        "processor": "realtime",
+                        "instance": "${instance}",
+                        "processor": "${processor}",
                         "id": [{
-                            "name": "${subscriptionDetails.name}"
+                            "name": "${name}"
                         }],
-                        "sendFromCache": true
+                        "sendFromCache": true,
+                        "updateOnExpiration": true
                     }
                 }`;
             }
@@ -82,4 +85,8 @@ function isAlarmType(type) {
 
 function isCommandType(type) {
     return type === OBJECT_TYPES.COMMANDS_OBJECT_TYPE;
+}
+
+function isMdbChangesType(type) {
+    return type === MDB_TYPE;
 }

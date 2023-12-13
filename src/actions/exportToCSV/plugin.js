@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2023, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -19,32 +19,10 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+import ExportToCSVAction from './ExportToCSVAction';
 
-const path = require('path');
-
-// eslint-disable no-undef
-const WEBPACK_COMMON_CONFIG = {
-    performance: {
-        hints: false
-    },
-    module: {
-        rules: [
-            {
-                test: /\.js$/,
-                enforce: "pre",
-                use: ["source-map-loader"]
-            }
-        ]
-    },
-    output: {
-        globalObject: "this",
-        filename: '[name].js',
-        // eslint-disable-next-line no-undef
-        path: path.resolve(__dirname, 'dist'),
-        libraryTarget: 'umd',
-        library: 'openmctYamcs'
-    }
-};
-
-// eslint-disable-next-line no-undef
-module.exports = WEBPACK_COMMON_CONFIG;
+export default function (url, instance) {
+    return function (openmct) {
+        openmct.actions.register(new ExportToCSVAction(openmct, url, instance));
+    };
+}

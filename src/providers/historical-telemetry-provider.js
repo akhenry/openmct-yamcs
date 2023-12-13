@@ -33,10 +33,11 @@ import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum } from './events';
 
 export default class YamcsHistoricalTelemetryProvider {
-    constructor(openmct, url, instance) {
+    constructor(openmct, url, instance, latestTelemetryProvider) {
         this.url = url;
         this.instance = instance;
         this.openmct = openmct;
+        this.latestTelemetryProvider = latestTelemetryProvider;
         this.supportedTypes = {};
 
         this.addSupportedTypes();
@@ -53,31 +54,36 @@ export default class YamcsHistoricalTelemetryProvider {
         return this.supportedTypes[domainObject.type];
     }
 
-    request(domainObject, options) {
+    async request(domainObject, options) {
         options = { ...options };
         this.standardizeOptions(options, domainObject);
         if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
-            // Latest requested in realtime, use cached websocket data
-            return [];
+            // Latest requested in realtime, use latest telemetry provider instead
+            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+            return [mctDatum];
         }
         // otherwise we're in fixed time mode or historical
 
         const id = domainObject.identifier.key;
-        const hasEnumValue = this.hasEnumValue(domainObject);
+        options.useRawValue = this.hasEnumValue(domainObject);
 
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
-            && options.strategy === 'minmax'
-            && !hasEnumValue;
+            && options.strategy === 'minmax';
 
         const url = this.buildUrl(id, options);
         const requestArguments = [id, url, options];
 
         if (options.isSamples) {
-            return this.getMinMaxHistory(...requestArguments);
+            const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
+
+            return minMaxHistory;
         }
 
-        return this.getHistory(...requestArguments);
+        const history = await this.getHistory(...requestArguments);
+
+        return history;
     }
 
     hasEnumValue(domainObject) {
@@ -139,9 +145,14 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     buildUrl(id, options) {
+        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
+
+        if (options.isSamples) {
+            url += '/samples';
+        }
+
         let start = options.start;
         let end = options.end;
-        let url = `${this.url}api/archive/${this.instance}/${this.getLinkParamsSpecificToId(id)}`;
 
         // handle exclusive start/stop functionality from yamcs
         if (options.order === 'asc') {
@@ -150,16 +161,25 @@ export default class YamcsHistoricalTelemetryProvider {
             start--;
         }
 
-        if (options.isSamples) {
-            url += '/samples';
+        const urlWithQueryParameters = new URL(url);
+        urlWithQueryParameters.searchParams.append('start', new Date(start).toISOString());
+        urlWithQueryParameters.searchParams.append('stop', new Date(end).toISOString());
+        urlWithQueryParameters.searchParams.append(options.sizeType, options.size);
+        urlWithQueryParameters.searchParams.append('order', options.order);
+
+        if (options.useRawValue) {
+            urlWithQueryParameters.searchParams.append('useRawValue', "true");
         }
 
-        url += `?start=${new Date(start).toISOString()}`;
-        url += `&stop=${new Date(end).toISOString()}`;
-        url += `&${options.sizeType}=${options.size}`;
-        url += `&order=${options.order}`;
+        if (options.filters?.severity?.equals?.length) {
+            // add a single minimum severity threshold filter
+            // see https://docs.yamcs.org/yamcs-http-api/events/list-events/
+            // for more information
+            const severityThresholdFilter = options.filters?.severity?.equals[0];
+            urlWithQueryParameters.searchParams.append('severity', severityThresholdFilter);
+        }
 
-        return url;
+        return urlWithQueryParameters.toString();
     }
 
     // cap size at 1000, temporarily to prevent errors
@@ -248,11 +268,11 @@ export default class YamcsHistoricalTelemetryProvider {
             return [];
         }
 
-        let values = [];
+        const values = [];
         results.forEach(result => {
             if (result.n > 0) {
-                let min_value = {
-                    timestamp: result.time,
+                const min_value = {
+                    timestamp: result.minTime,
                     value: result.min,
                     id: id
                 };
@@ -262,8 +282,8 @@ export default class YamcsHistoricalTelemetryProvider {
             }
 
             if (result.n > 1) {
-                let max_value = {
-                    timestamp: result.time,
+                const max_value = {
+                    timestamp: result.maxTime,
                     value: result.max,
                     id: id
                 };

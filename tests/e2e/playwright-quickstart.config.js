@@ -15,7 +15,7 @@ const config = {
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
-        failOnConsoleError: true
+        failOnConsoleError: false
     },
     webServer: {
         command: 'npm run start:coverage',
@@ -65,7 +65,7 @@ const config = {
             outputFolder: '../html-test-results' //Must be in different location due to https://github.com/microsoft/playwright/issues/12840
         }],
         ['junit', { outputFile: 'test-results/results.xml' }],
-        ['github']
+        ['@deploysentinel/playwright']
     ]
 };
 

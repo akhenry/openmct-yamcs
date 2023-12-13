@@ -5,35 +5,79 @@ on:
     types:
       - labeled
       - opened
+  schedule:
+    - cron: "0 0 * * 1-5"
+  push:
+    branches:
+      - master
 
 jobs:
   yamcs-quickstart-e2e:
-    timeout-minutes: 8
+    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        yamcs-version:
+          - default
+          - 5.8.3 #viper
+          ## disabling until we get confirmation- 5.3.2 #ab
+        openmct-version:
+          - latest
+          - stable
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: "16"
+          node-version: "18"
       - uses: actions/checkout@v3
         with:
           repository: yamcs/quickstart
           ref: master
           path: 'quickstart'
+      - name: replace yamcsVersion with matrix param
+        if: matrix.yamcs-version != 'default'
+        run: |
+          cd quickstart
+          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           cd quickstart/docker
           touch makeout.txt
           make all &> makeout.txt &
       - run: npm install
-      - run: npx playwright@1.29.0 install chromium
-      - run: npm run build:example
-      - run: npm run test:getopensource
+      - name: Run build:example based on openmct-version
+        run: |
+          if [ "${{ matrix.openmct-version }}" = "latest" ]; then
+            npm run build:example:master
+          elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
+            npm run build:example
+          fi
+      - run: npx playwright@1.39.0 install chromium
+      - name: Get Open MCT e2e tests
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
-          npm run wait-for-yamcs      
-      - run: npm run test:e2e:quickstart
+          npm run wait-for-yamcs
+      - name: Check Yamcs installed version
+        run: |
+          response=$(curl -s -w "%{http_code}" -o yamcs_version.json http://localhost:8090/api/)
+          if [ "$response" -eq 200 ]; then
+            cat yamcs_version.json | jq '.yamcsVersion'
+          else
+            echo "Error: Unable to fetch Yamcs version. HTTP status code: $response"
+            exit 1
+          fi
+      - name: Run Quickstart tests and publish to deploysentinel
+        env:
+          DEPLOYSENTINEL_API_KEY: ${{ secrets.DEPLOYSENTINEL_API_KEY }} 
+        run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
         run: docker logs yamcs > yamcs-docker-log.txt 2>&1
@@ -57,3 +101,20 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: tests/html-test-results
+      - name: Remove pr:e2e:quickstart label (if present)
+        if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const labelToRemove = 'pr:e2e:quickstart';
+            try {
+              await github.rest.issues.removeLabel({
+                owner,
+                repo,
+                issue_number: number,
+                name: labelToRemove
+              });
+            } catch (error) {
+              core.warning(`Failed to remove 'pr:e2e:quickstart' label: ${error.message}`);
+            }

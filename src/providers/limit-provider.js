@@ -30,8 +30,11 @@ const RANGE_CONDITION_CSS = {
  * @property {number} high a higher limit violation
  */
 export default class LimitProvider {
-    constructor(openmct) {
+    constructor(openmct, url, instance, realtimeTelemetryProvider) {
         this.openmct = openmct;
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
+        this.url = url;
+        this.instance = instance;
     }
 
     getLimitEvaluator(domainObject) {
@@ -74,7 +77,7 @@ export default class LimitProvider {
      */
     getLimitRange(datum, result, valueMetadata) {
         if (!valueMetadata) {
-            return;
+            return undefined;
         }
 
         if (valueMetadata.key === 'value') {
@@ -86,7 +89,7 @@ export default class LimitProvider {
             };
         }
 
-        return;
+        return undefined;
     }
 
     supportsLimits(domainObject) {
@@ -97,10 +100,11 @@ export default class LimitProvider {
         const limits = domainObject.configuration.limits;
 
         return {
-            // eslint-disable-next-line require-await
-            limits: async function () {
-                return limits;
-            }
+            limits: async () => limits
         };
+    }
+
+    subscribeToLimits(domainObject, callback) {
+        return this.realtimeTelemetryProvider.subscribeToLimits(domainObject, callback);
     }
 }

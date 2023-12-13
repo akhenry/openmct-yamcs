@@ -23,7 +23,9 @@
 import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-provider.js';
 import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
+import YamcsStalenessProvider from './providers/staleness-provider.js';
 import LimitProvider from './providers/limit-provider';
+import EventLimitProvider from './providers/event-limit-provider';
 import UserProvider from './providers/user/user-provider';
 
 import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
@@ -34,6 +36,7 @@ import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
+import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin";
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
@@ -43,18 +46,21 @@ export default function installYamcsPlugin(configuration) {
         const latestTelemetryProvider = new LatestTelemetryProvider({
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance,
+            processor: configuration.yamcsProcessor,
             openmct
         });
 
         const historicalTelemetryProvider = new YamcsHistoricalTelemetryProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance);
+            configuration.yamcsInstance,
+            latestTelemetryProvider);
         openmct.telemetry.addProvider(historicalTelemetryProvider);
 
         const realtimeTelemetryProvider = new RealtimeProvider(
             configuration.yamcsWebsocketEndpoint,
-            configuration.yamcsInstance
+            configuration.yamcsInstance,
+            configuration.yamcsProcessor
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
@@ -66,7 +72,20 @@ export default function installYamcsPlugin(configuration) {
             realtimeTelemetryProvider
         }));
 
+        const stalenessProvider = new YamcsStalenessProvider(
+            openmct,
+            realtimeTelemetryProvider,
+            latestTelemetryProvider
+        );
+        openmct.telemetry.addProvider(stalenessProvider);
+
         openmct.telemetry.addProvider(new LimitProvider(
+            openmct,
+            configuration.yamcsHistoricalEndpoint,
+            configuration.yamcsInstance,
+            realtimeTelemetryProvider));
+
+        openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
@@ -106,12 +125,25 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsFolder,
             roleStatusTelemetry,
             pollQuestionParameter,
-            pollQuestionTelemetry
+            pollQuestionTelemetry,
+            realtimeTelemetryProvider,
+            configuration.yamcsProcessor
         );
 
         openmct.objects.addRoot({
             namespace: 'taxonomy',
             key: 'spacecraft'
+        });
+
+        const formatThumbnail = {
+            format: function (url) {
+                return url.replace(/\/images\//, '/rescaled-images/').replace(/.png$/, '_thumb.jpeg');
+            }
+        };
+
+        openmct.telemetry.addFormat({
+            key: 'yamcs-thumbnail',
+            ...formatThumbnail
         });
 
         openmct.objects.addProvider('taxonomy', objectProvider);
@@ -175,5 +207,11 @@ export default function installYamcsPlugin(configuration) {
             description: 'Global Status',
             cssClass: 'icon-bell'
         });
+
+        openmct.install(ExportToCSVActionPlugin(
+            configuration.yamcsHistoricalEndpoint,
+            configuration.yamcsInstance));
+
+        openmct.install(openmct.plugins.Filters(['telemetry.plot.overlay', 'table']));
     };
 }

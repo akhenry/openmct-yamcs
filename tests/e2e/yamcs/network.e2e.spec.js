@@ -25,58 +25,103 @@ Network Specific Tests
 */
 
 const { test, expect } = require('../opensource/pluginFixtures');
+const { setFixedTimeMode } = require('../opensource/appActions');
 
 test.describe("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS
     let networkRequests = [];
+    let filteredRequests = [];
 
     test('Validate network traffic to YAMCS', async ({ page }) => {
         page.on('request', (request) => networkRequests.push(request));
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
-        await expandTreePaneItemByName(page, 'myproject');
-        await expandTreePaneItemByName(page, 'myproject');
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
+        await expect(myProjectTreeItem).toBeVisible();
+        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
+        await firstMyProjectTriangle.click();
+        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
+        await secondMyProjectTriangle.click();
 
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Network requests should be zero in real-time mode (using websocket cache)
-        expect(filterNonFetchRequests(networkRequests).length).toBe(0);
+        networkRequests = [];
+        await page.locator('text=CCSDS_Packet_Sequence').first().click();
+        await page.waitForLoadState('networkidle');
 
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        filteredRequests = filterNonFetchRequests(networkRequests);
+
+        // Network requests for the composite telemetry with multiple items should be:
+        // 1.  batched request for latest telemetry using the bulk API
+        expect(filteredRequests.length).toBe(1);
+
+        await page.waitForLoadState('networkidle');
         networkRequests = [];
         await page.locator('text=CCSDS_Packet_Length').click();
         await page.waitForLoadState('networkidle');
-        // Should only be fetching telemetry from parameter archive,
-        // no second request (for limits) should be made
-        expect(filterNonFetchRequests(networkRequests).length).toBe(1);
+
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        filteredRequests = filterNonFetchRequests(networkRequests);
+
+        // Should only be fetching:
+        // 1. telemetry from parameter archive
+        // 2. POST: batchGet for staleness
+        expect(filteredRequests.length).toBe(2);
 
         // Change to fixed time
-        await page.locator('button:has-text("Local Clock")').click();
-        await page.locator('text="Fixed Timespan"').click();
+        await setFixedTimeMode(page);
 
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Sequence').click();
         await page.waitForLoadState('networkidle');
-        // Should fetch from parameter archive, so two requests, one for each item in the aggregate
-        expect(filterNonFetchRequests(networkRequests).length).toBe(2);
+        networkRequests = [];
+        await page.locator('text=CCSDS_Packet_Sequence').first().click();
+        await page.waitForLoadState('networkidle');
 
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Length').click();
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        filteredRequests = filterNonFetchRequests(networkRequests);
+
+        // Should fetch from parameter archive, so:
+        // 1. GET for first telemetry item from parameter archive
+        // 2. GET for second telemetry item from parameter archive
+        // 3. POST: batchGet for staleness
+        expect(filteredRequests.length).toBe(3);
+
         await page.waitForLoadState('networkidle');
+        networkRequests = [];
+        await page.locator('text=CCSDS_Packet_Length').first().click();
+        await page.waitForLoadState('networkidle');
+
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+        filteredRequests = filterNonFetchRequests(networkRequests);
         // Should only be fetching telemetry from parameter archive,
-        // no second request (for limits) should be made
-        expect(filterNonFetchRequests(networkRequests).length).toBe(1);
+        // with no further request for limits should be made.
+        // 1. GET for telemetry item from parameter archive
+        // 2. POST: batchGet for staleness
+        expect(filteredRequests.length).toBe(2);
 
         networkRequests = [];
         await page.reload();
         await page.waitForLoadState('networkidle');
+
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Should be fetching:
         // 1. user api
         // 2. space systems
         // 3. parameter dictionary
         // 4. specific parameter telemetry for CCSDS_Packet_Length
-        expect(filterNonFetchRequests(networkRequests).length).toBe(4);
+        // 5. POST: batchGet for staleness
+        // 6. GET for telemetry item mdb overrides
+        filteredRequests = filterNonFetchRequests(networkRequests);
+        expect(filteredRequests.length).toBe(6);
 
     });
 
@@ -88,14 +133,3 @@ test.describe("Quickstart network requests @yamcs", () => {
         });
     }
 });
-
-/**
- * @param {import('@playwright/test').Page} page
- * @param {string} name
- */
-async function expandTreePaneItemByName(page, name) {
-    const treePane = page.locator('#tree-pane');
-    const treeItem = treePane.locator(`role=treeitem[expanded=false][name=/${name}/]`);
-    const expandTriangle = treeItem.locator('.c-disclosure-triangle');
-    await expandTriangle.click();
-}

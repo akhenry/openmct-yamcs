@@ -7,6 +7,7 @@ const config = {
     "yamcsWebsocketEndpoint": "ws://localhost:9000/yamcs-proxy-ws/",
     "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user/",
     "yamcsInstance": "myproject",
+    "yamcsProcessor": "realtime",
     "yamcsFolder": "myproject"
 };
 const STATUS_STYLES = {
@@ -73,7 +74,9 @@ const openmct = window.openmct;
     openmct.install(installYamcsPlugin(config));
     openmct.install(openmct.plugins.OperatorStatus({statusStyles: STATUS_STYLES}));
 
-    openmct.start();
+    document.addEventListener('DOMContentLoaded', function () {
+        openmct.start();
+    });
 
     function installDefaultPlugins() {
         openmct.install(openmct.plugins.LocalStorage());
