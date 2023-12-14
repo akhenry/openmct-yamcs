@@ -83,22 +83,22 @@ jobs:
         run: docker logs yamcs > yamcs-docker-log.txt 2>&1
       - name: archive docker logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: yamcs-docker-log.txt
       - name: Archive makeout.txt
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: /quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: test-results
       - name: Archive html test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: tests/html-test-results
       - name: Remove pr:e2e:quickstart label (if present)
