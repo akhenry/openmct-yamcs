@@ -7,6 +7,7 @@ package-lock.json
 # e2e test artifacts
 tests/e2e/opensource/
 tests/html-test-results/
+tests/e2e/test-data/
 test-results
 .nyc_output/
 
