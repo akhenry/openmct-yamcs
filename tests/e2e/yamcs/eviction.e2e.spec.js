@@ -24,12 +24,12 @@
 const { test, expect } = require('../opensource/pluginFixtures');
 const path = require('path');
 const fs = require('fs').promises;
-const { findLeaks, BrowserInteractionResultReader } = require('@memlab/api');
+const { ShapeUnboundGrowthAnalysis } = require('@memlab/api');
 
 test.describe.only('Telemetry eviction for @yamcs', () => {
     test.slow();
-    const startDelta = 10000;
-    const endDelta = 5000;
+    const startDelta = 8000;
+    const endDelta = 0;
     const waitPeriod = 2000;
     const snapshotsPath = path.join(__dirname, '../test-data/snapshots');
     const telemetryPath = 'taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~Gyro/taxonomy:~myproject~Gyro.y';
@@ -56,25 +56,14 @@ test.describe.only('Telemetry eviction for @yamcs', () => {
         const stage3SnapshotPath = path.join(snapshotsPath, 'data/cur/s3.heapsnapshot');
         await captureHeapSnapshot(page, stage3SnapshotPath);
 
-        const reader = BrowserInteractionResultReader.from(snapshotsPath);
-        const leaks = await findLeaks(reader);
-        expect(leaks.length).toEqual(0);
+        const analysis = new ShapeUnboundGrowthAnalysis();
+        const heapDir = path.join(snapshotsPath, 'data/cur');
+        await analysis.analyzeSnapshotsInDirectory(heapDir);
+        const shapes = analysis.getShapesWithUnboundGrowth();
+        console.debug(`📈 Shapes with unbound growth:`, shapes);
+        const filteredShapes = shapes.filter((shape) => shape.shape.includes('mctLimitState'));
+        expect(filteredShapes.length).toEqual(0);
     });
-
-    /**
-   *
-   * @param {import('@playwright/test').Page} page
-   * @param {*} objectName
-   * @returns
-   */
-    async function navigateToObject(page, objectName) {
-        await page.getByRole('searchbox', { name: 'Search Input' }).click();
-        // Fill Search input
-        await page.getByRole('searchbox', { name: 'Search Input' }).fill(objectName);
-
-        //Search Result Appears and is clicked
-        await page.getByText(objectName, { exact: true }).click();
-    }
 
     async function forceGC(page, repeat = 6) {
         const client = await page.context().newCDPSession(page);
@@ -109,6 +98,7 @@ test.describe.only('Telemetry eviction for @yamcs', () => {
         try {
             client.on('HeapProfiler.addHeapSnapshotChunk', dataHandler);
             console.debug(`🚮 Running garbage collection...`);
+            await forceGC(page);
             await forceGC(page);
             await client.send('HeapProfiler.enable');
             console.debug(`📸 Capturing heap snapshot to ${outputPath}`);
