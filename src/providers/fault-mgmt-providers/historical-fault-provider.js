@@ -15,7 +15,9 @@ export default class HistoricalFaultProvider {
     async request() {
         let url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MANAGEMENT_ALARMS}`;
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            priority: 'low'
+        });
         const faultsData = await res.json();
 
         return faultsData.alarms?.map(this.faultModelConverter);
