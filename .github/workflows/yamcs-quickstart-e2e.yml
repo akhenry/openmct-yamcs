@@ -28,7 +28,7 @@ jobs:
           - stable
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18"
       - uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npx playwright@1.36.2 install chromium
+      - run: npx playwright@1.39.0 install chromium
       - name: Get Open MCT e2e tests
         uses: nick-fields/retry@v2
         with:
