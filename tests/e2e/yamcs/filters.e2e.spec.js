@@ -24,8 +24,8 @@
 Filter Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures';
-import { createDomainObjectWithDefaults } from '../opensource/appActions';
+import { test, expect } from '../opensource/pluginFixtures.js';
+import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
 
 test.describe("Filter tests @yamcs", () => {
     test('Can filter events by severity', async ({ page }) => {

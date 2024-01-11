@@ -26,7 +26,6 @@ import common from './webpack.common.js';
 import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
-// eslint-disable-next-line no-undef
 export default merge(common, {
     context: projectRootDir,
     mode: 'development',
