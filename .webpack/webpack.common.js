@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const path = require('path');
+import path from 'node:path';
 const projectRootDir = path.resolve(__dirname, '..');
 
 // eslint-disable no-undef
@@ -51,6 +51,5 @@ const WEBPACK_COMMON_CONFIG = {
         library: 'openmctYamcs'
     }
 };
+export default WEBPACK_COMMON_CONFIG;
 
-// eslint-disable-next-line no-undef
-module.exports = WEBPACK_COMMON_CONFIG;
