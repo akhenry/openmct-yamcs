@@ -19,8 +19,8 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES } from "../../const";
-import {idToQualifiedName} from "../../utils";
+import { OBJECT_TYPES } from "../../const.js";
+import {idToQualifiedName} from "../../utils.js";
 import {saveAs} from 'saveAs';
 
 const SUPPORTED_TYPES = [OBJECT_TYPES.TELEMETRY_OBJECT_TYPE, OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE];

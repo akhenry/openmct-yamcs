@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as MESSAGES from './messages';
+import * as MESSAGES from './messages.js';
 import {
     OBJECT_TYPES,
     DATA_TYPES,
@@ -29,7 +29,7 @@ import {
     STALENESS_STATUS_MAP,
     MDB_OBJECT,
     MDB_CHANGES_PARAMTER_TYPE
-} from '../const';
+} from '../const.js';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
@@ -38,8 +38,8 @@ import {
     addLimitInformation,
     getLimitFromAlarmRange
 } from '../utils.js';
-import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
+import { commandToTelemetryDatum } from './commands.js';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {

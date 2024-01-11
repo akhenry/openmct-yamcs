@@ -24,19 +24,19 @@ import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-p
 import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import YamcsStalenessProvider from './providers/staleness-provider.js';
-import LimitProvider from './providers/limit-provider';
-import EventLimitProvider from './providers/event-limit-provider';
-import UserProvider from './providers/user/user-provider';
+import LimitProvider from './providers/limit-provider.js';
+import EventLimitProvider from './providers/event-limit-provider.js';
+import UserProvider from './providers/user/user-provider.js';
 
-import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
-import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
+import { faultModelConvertor } from './providers/fault-mgmt-providers/utils.js';
+import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider.js';
 
-import { OBJECT_TYPES } from './const';
+import { OBJECT_TYPES } from './const.js';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
-import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin";
+import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin.js";
 
 export default function installYamcsPlugin(configuration) {
     return function install(openmct) {
