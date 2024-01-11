@@ -36,6 +36,6 @@ mv opensource/e2e/appActions.js ./opensource
 # Move subfolders
 mv opensource/e2e/*/ ./opensource
 # Move eslint config
-mv opensource/e2e/..eslintrc.cjs ./opensource
+mv opensource/e2e/.eslintrc.cjs ./opensource
 # Cleanup
 rm -rf opensource/e2e
