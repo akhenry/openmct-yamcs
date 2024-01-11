@@ -24,7 +24,7 @@
 Search Specific Tests
 */
 
-const { test, expect } = require('../opensource/pluginFixtures');
+import { test, expect } from '../opensource/pluginFixtures';
 
 test.describe("Quickstart search tests @yamcs", () => {
     test('Validate aggregate in search result', async ({ page }) => {
