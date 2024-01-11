@@ -23,8 +23,9 @@
 import path from 'path';
 import { merge } from 'webpack-merge';
 import common from './webpack.common.js';
-const projectRootDir = path.resolve(__dirname, '..');
+import { fileURLToPath } from 'node:url';
 
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 // eslint-disable-next-line no-undef
 export default merge(common, {
     context: projectRootDir,

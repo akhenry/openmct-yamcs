@@ -21,7 +21,9 @@
  *****************************************************************************/
 
 import path from 'node:path';
-const projectRootDir = path.resolve(__dirname, '..');
+import { fileURLToPath } from 'node:url';
+
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 // eslint-disable no-undef
 const WEBPACK_COMMON_CONFIG = {
