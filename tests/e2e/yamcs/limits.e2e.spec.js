@@ -58,8 +58,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await detectorTreeItem.dragTo(objectPane);
 
         // Save (exit edit mode)
-        await page.locator('button[title="Save"]').click();
-        await page.locator('li[title="Save and Finish Editing"]').click();
+        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
         await page.waitForSelector('.js-limit-area', { state: 'attached' });
@@ -81,8 +81,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
             .check();
 
         // Save (exit edit mode)
-        await page.locator('button[title="Save"]').click();
-        await page.locator('li[title="Save and Finish Editing"]').click();
+        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Change the limits for the Detector_Temp parameter using the yamcs API)
         const runTimeLimitChangeResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
@@ -143,8 +143,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await detectorTreeItem.dragTo(objectPane);
 
         // Save (exit edit mode)
-        await page.locator('button[title="Save"]').click();
-        await page.locator('li[title="Save and Finish Editing"]').click();
+        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
         await page.waitForSelector('.js-limit-area', { state: 'attached' });
@@ -166,8 +166,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
             .check();
 
         // Save (exit edit mode)
-        await page.locator('button[title="Save"]').click();
-        await page.locator('li[title="Save and Finish Editing"]').click();
+        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         //navigate away from the overlay plot
         await page.goto("./", { waitUntil: "networkidle" });
