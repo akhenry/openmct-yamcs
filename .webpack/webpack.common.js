@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
-const WEBPACK_COMMON_CONFIG = {
+const commonConfig = {
     performance: {
         hints: false
     },
@@ -34,6 +34,9 @@ const WEBPACK_COMMON_CONFIG = {
         alias: {
             saveAs: "file-saver/src/FileSaver.js",
         }
+    },
+    entry: {
+        'openmct-yamcs': './src/plugin.js'
     },
     module: {
         rules: [
@@ -53,5 +56,5 @@ const WEBPACK_COMMON_CONFIG = {
         library: 'openmctYamcs'
     }
 };
-export default WEBPACK_COMMON_CONFIG;
+export default commonConfig;
 
