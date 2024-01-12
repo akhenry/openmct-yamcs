@@ -1,5 +1,5 @@
-import { FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants';
-import { DATA_TYPES, NAMESPACE, OBJECT_TYPES } from '../../const';
+import { FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants.js';
+import { DATA_TYPES, NAMESPACE, OBJECT_TYPES } from '../../const.js';
 
 export default class RealtimeFaultProvider {
     constructor(faultModelConverter, instance, realtimeTelemetryProvider) {

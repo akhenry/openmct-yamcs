@@ -20,15 +20,16 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as MESSAGES from './messages';
+import * as MESSAGES from './messages.js';
 import {
     OBJECT_TYPES,
     DATA_TYPES,
     AGGREGATE_TYPE,
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
-    MDB_OBJECT
-} from '../const';
+    MDB_OBJECT,
+    MDB_CHANGES_PARAMTER_TYPE
+} from '../const.js';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
@@ -37,8 +38,8 @@ import {
     addLimitInformation,
     getLimitFromAlarmRange
 } from '../utils.js';
-import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
+import { commandToTelemetryDatum } from './commands.js';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
 
 const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
@@ -294,7 +295,10 @@ export default class RealtimeProvider {
                         const datum = eventToTelemetryDatum(message.data);
                         subscriptionDetails.callback(datum);
                     }
-                } else if (this.isMdbChangesMessage(message)) {
+                } else if (this.isMdbChanges(message)) {
+                    if (!this.isParameterType(message)) {
+                        return;
+                    }
                     const parameterName = message.data.parameterOverride.parameter;
                     if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
@@ -368,7 +372,11 @@ export default class RealtimeProvider {
         return message.type === 'events';
     }
 
-    isMdbChangesMessage(message) {
+    isMdbChanges(message) {
         return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
+    }
+
+    isParameterType(message) {
+        return message.data?.type === MDB_CHANGES_PARAMTER_TYPE;
     }
 }

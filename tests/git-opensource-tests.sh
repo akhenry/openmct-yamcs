@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This script can clone/checkout a single folder from git repository 
+# This script can clone/checkout a single folder from git repository
 # - Might be used for checking out micro-services from monolithic git repository
 #
 # - You can even do checkout into home directory, for example
@@ -8,7 +8,7 @@
 #
 
 SCRIPT_PATH=${0%/*} # Get the relative path to the script dir from the cwd
-if [ "$0" != "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "" ]; then 
+if [ "$0" != "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "" ]; then
     cd "$SCRIPT_PATH"
 fi
 

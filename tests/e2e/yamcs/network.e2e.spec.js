@@ -24,8 +24,8 @@
 Network Specific Tests
 */
 
-const { test, expect } = require('../opensource/pluginFixtures');
-const { setFixedTimeMode } = require('../opensource/appActions');
+import { test, expect } from '../opensource/pluginFixtures';
+import { setFixedTimeMode } from '../opensource/appActions';
 
 test.describe("Quickstart network requests @yamcs", () => {
     // Collect all request events, specifically for YAMCS

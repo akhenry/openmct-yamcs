@@ -33,7 +33,7 @@ comfortable running this test during a live mission?" Avoid creating or deleting
 Make no assumptions about the order that elements appear in the DOM.
 */
 
-const { test, expect } = require('../opensource/baseFixtures');
+import { test, expect } from '../opensource/baseFixtures';
 
 test.describe("Quickstart smoke tests @yamcs", () => {
     test('Verify that the create button appears and that the Folder Domain Object is available for selection', async ({ page }) => {

@@ -1,6 +1,6 @@
-import HistoricalFaultProvider from './historical-fault-provider';
-import RealtimeFaultProvider from './realtime-fault-provider';
-import FaultActionProvider from './fault-action-provider';
+import HistoricalFaultProvider from './historical-fault-provider.js';
+import RealtimeFaultProvider from './realtime-fault-provider.js';
+import FaultActionProvider from './fault-action-provider.js';
 
 export default class YamcsFaultProvider {
     constructor({ faultModelConvertor, historicalEndpoint, yamcsInstance, yamcsProcessor, realtimeTelemetryProvider } = {}) {

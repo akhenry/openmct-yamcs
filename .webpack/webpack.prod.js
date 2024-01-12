@@ -20,13 +20,14 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const path = require('path');
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common');
+import path from 'path';
+import { merge } from 'webpack-merge';
+import common from './webpack.common.js';
+import { fileURLToPath } from 'node:url';
 
-const projectRootDir = path.resolve(__dirname, '..');
-// eslint-disable-next-line no-undef
-module.exports = merge(common, {
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
+
+export default merge(common, {
     context: projectRootDir,
     mode: 'production',
     entry: {
