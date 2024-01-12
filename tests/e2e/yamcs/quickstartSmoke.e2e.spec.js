@@ -41,7 +41,7 @@ test.describe("Quickstart smoke tests @yamcs", () => {
         await page.goto('./', { waitUntil: 'networkidle' });
 
         //Click the Create button
-        await page.click('button:has-text("Create")');
+        await page.getByRole('button', { name: 'Create' }).click();
 
         // Verify that Create Folder appears in the dropdown
         await expect(page.locator(':nth-match(:text("Folder"), 2)')).toBeEnabled();
