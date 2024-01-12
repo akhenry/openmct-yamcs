@@ -14,12 +14,14 @@
     "build:example:master": "npm install nasa/openmct#master --no-save",
     "postbuild:example": "node check-optional-dependencies.js",
     "start": "npx webpack serve --config ./.webpack/webpack.dev.js",
+    "start:prod": "npx webpack serve --config ./.webpack/webpack.prod.js",
     "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.js",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
     "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "test:perf:memory": "npx playwright test --config=./tests/e2e/playwright-performance-prod.config.js --project=chrome-memory",
     "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
   "keywords": [
