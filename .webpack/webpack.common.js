@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
-// eslint-disable no-undef
+/** @type {import('webpack').Configuration} */
 const WEBPACK_COMMON_CONFIG = {
     performance: {
         hints: false
@@ -47,8 +47,8 @@ const WEBPACK_COMMON_CONFIG = {
     output: {
         globalObject: "this",
         filename: '[name].js',
-        // eslint-disable-next-line no-undef
         path: path.resolve(projectRootDir, 'dist'),
+        libraryExport: 'default',
         libraryTarget: 'umd',
         library: 'openmctYamcs'
     }
