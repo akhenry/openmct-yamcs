@@ -51,9 +51,11 @@ const commonConfig = {
         globalObject: "this",
         filename: '[name].js',
         path: path.resolve(projectRootDir, 'dist'),
-        libraryExport: 'default',
+        library: {
+            type: 'module'
+        },
         libraryTarget: 'umd',
-        library: 'openmctYamcs'
+        libraryExport: 'default'
     }
 };
 export default commonConfig;
