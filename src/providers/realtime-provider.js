@@ -28,7 +28,7 @@ import {
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
     MDB_OBJECT
-} from '../const';
+} from '../const.js';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,

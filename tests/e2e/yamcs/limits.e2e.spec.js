@@ -24,8 +24,8 @@
 MDB Limits Specific Tests
 */
 
-const { test, expect } = require('../opensource/pluginFixtures');
-const { createDomainObjectWithDefaults, waitForPlotsToRender } = require('../opensource/appActions');
+import { test, expect } from '../opensource/pluginFixtures.js';
+import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensource/appActions.js';
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
     test('Can show mdb limits when changed', async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         const detectorTreeItem = page.getByRole('treeitem', { name: /Detector_Temp/ });
 
         // Enter edit mode for the overlay plot
-        await page.click('button[title="Edit"]');
+        await page.getByLabel('Edit Object');
 
         //Drag and drop the Detector_Temp telemetry endpoint into this overlay plot
         const objectPane = page.locator('.c-object-view');
@@ -66,7 +66,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         expect(await page.locator('.c-plot-limit-line').count()).toBe(0);
 
         // Enter edit mode
-        await page.click('button[title="Edit"]');
+        await page.getByLabel('Edit Object');
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
         await page.getByRole('tab', { name: 'Config' }).click();
@@ -136,7 +136,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         const detectorTreeItem = page.getByRole('treeitem', { name: /Detector_Temp/ });
 
         // Enter edit mode for the overlay plot
-        await page.click('button[title="Edit"]');
+        await page.getByLabel('Edit Object');
 
         //Drag and drop the Detector_Temp telemetry endpoint into this overlay plot
         const objectPane = page.locator('.c-object-view');
@@ -151,7 +151,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         expect(await page.locator('.c-plot-limit-line').count()).toBe(0);
 
         // Enter edit mode
-        await page.click('button[title="Edit"]');
+        await page.getByLabel('Edit Object');
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
         await page.getByRole('tab', { name: 'Config' }).click();
