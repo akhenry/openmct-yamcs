@@ -37,10 +37,8 @@ export default merge(common, {
         compress: true,
         port: 9000,
         static: [{
-            // eslint-disable-next-line no-undef
             directory: path.join(projectRootDir, 'example')
         }, {
-            // eslint-disable-next-line no-undef
             directory: path.join(projectRootDir, '/node_modules/openmct/dist'),
             publicPath: '/node_modules/openmct/dist'
         }],
