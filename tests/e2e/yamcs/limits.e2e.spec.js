@@ -24,8 +24,8 @@
 MDB Limits Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures';
-import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensource/appActions';
+const { test, expect } = require('../opensource/pluginFixtures');
+const { createDomainObjectWithDefaults, waitForPlotsToRender } = require('../opensource/appActions');
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
     test('Can show mdb limits when changed', async ({ page }) => {

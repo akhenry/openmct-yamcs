@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY } from '../const.js';
+import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY } from '../const';
 import {
     idToQualifiedName,
     getValue,
@@ -29,8 +29,8 @@ import {
     qualifiedNameFromParameterId,
     qualifiedNameToId
 } from '../utils.js';
-import { commandToTelemetryDatum } from './commands.js';
-import { eventToTelemetryDatum } from './events.js';
+import { commandToTelemetryDatum } from './commands';
+import { eventToTelemetryDatum } from './events';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance, latestTelemetryProvider) {

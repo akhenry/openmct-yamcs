@@ -1,4 +1,4 @@
-import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants.js';
+import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants';
 
 export default class HistoricalFaultProvider {
     constructor(faultModelConverter, url, instance, processor = 'realtime') {

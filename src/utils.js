@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const.js';
+import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const';
 import limitConfig from "./limits-config.json";
 
 function idToQualifiedName(id) {

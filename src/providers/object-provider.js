@@ -27,7 +27,7 @@ import {
     getLimitOverrides
 } from '../utils.js';
 
-import { OBJECT_TYPES, NAMESPACE } from '../const.js';
+import { OBJECT_TYPES, NAMESPACE } from '../const';
 import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';

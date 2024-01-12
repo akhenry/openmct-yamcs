@@ -20,8 +20,8 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, METADATA_TIME_KEY } from "../const.js";
-import { flattenObjectArray } from "../utils.js";
+import { OBJECT_TYPES, METADATA_TIME_KEY } from "../const";
+import { flattenObjectArray } from "../utils";
 
 export function createCommandsObject(openmct, parentKey, namespace) {
     const location = openmct.objects.makeKeyString({

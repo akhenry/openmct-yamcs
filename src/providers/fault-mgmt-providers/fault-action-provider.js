@@ -1,4 +1,4 @@
-import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } from './fault-mgmt-constants.js';
+import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } from './fault-mgmt-constants';
 
 export default class FaultActionProvider {
     constructor(url, instance, processor = 'realtime') {

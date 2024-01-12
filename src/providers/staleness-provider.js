@@ -20,8 +20,8 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const.js';
-import { buildStalenessResponseObject } from '../utils.js';
+import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const';
+import { buildStalenessResponseObject } from '../utils';
 
 export default class YamcsStalenessProvider {
     constructor(openmct, realtimeTelemetryProvider, latestTelemetryProvider) {

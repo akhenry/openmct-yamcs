@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import createYamcsUser from './createYamcsUser.js';
+import createYamcsUser from './createYamcsUser';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
