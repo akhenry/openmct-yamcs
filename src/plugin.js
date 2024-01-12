@@ -22,6 +22,6 @@
 
 import { YamcsPluginInstaller } from "./openmct-yamcs.js";
 
-const pluginInstaller = new YamcsPluginInstaller();
+const installYamcsPlugin = new YamcsPluginInstaller();
 
-export default pluginInstaller;
+export default installYamcsPlugin;
