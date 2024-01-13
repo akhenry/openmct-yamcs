@@ -22,25 +22,25 @@
 
 import path from 'path';
 import { merge } from 'webpack-merge';
-import common from './webpack.common.js';
+import commonConfig from './webpack.common.js';
 import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
-export default merge(common, {
+
+/** @type {import('webpack').Configuration} */
+const devConfig = {
     context: projectRootDir,
     mode: 'development',
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': path.resolve(projectRootDir, 'example/index.js')
+        'openmct-yamcs-example': './example/index.js'
     },
     devServer: {
         compress: true,
         port: 9000,
         static: [{
-            // eslint-disable-next-line no-undef
             directory: path.join(projectRootDir, 'example')
         }, {
-            // eslint-disable-next-line no-undef
             directory: path.join(projectRootDir, '/node_modules/openmct/dist'),
             publicPath: '/node_modules/openmct/dist'
         }],
@@ -60,4 +60,5 @@ export default merge(common, {
             }
         }
     }
-});
+}
+export default merge(commonConfig, devConfig);

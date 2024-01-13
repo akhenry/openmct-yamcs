@@ -20,18 +20,16 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import path from 'path';
 import { merge } from 'webpack-merge';
 import common from './webpack.common.js';
 import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
-export default merge(common, {
+/** @type {import('webpack').Configuration} */
+const prodConfig = {
     context: projectRootDir,
     mode: 'production',
-    entry: {
-        'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
-    },
     devtool: 'source-map'
-});
+}
+export default merge(common, prodConfig);
