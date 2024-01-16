@@ -40,9 +40,9 @@ import {
 import { commandToTelemetryDatum } from './commands';
 import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
-const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
 export default class RealtimeProvider {
-    constructor(url, instance, processor = 'realtime') {
+    #socketWorker = null;
+    constructor(openmct, url, instance, processor = 'realtime') {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
@@ -57,9 +57,28 @@ export default class RealtimeProvider {
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
+        this.#socketWorker = new openmct.telemetry.BatchingWebSocketProvider(openmct);
+        this.#setBatchingStrategy();
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
+    }
+
+    #setBatchingStrategy() {
+        this.#socketWorker.setBatchingStrategy({
+            shouldBatchMessage: (message) => {
+                const type = message.substring(13, message.indexOf("\"", 13));
+
+                return type === 'parameters';
+            },
+            getBatchIdFromMessage: (message) => {
+                const callNumber = message.substring(36, message.indexOf(",", 37));
+
+                return callNumber;
+            }
+        });
+        this.#socketWorker.setRate(1000);
+        this.#socketWorker.setMaxBatchSize(10);
     }
 
     addSupportedObjectTypes(types) {
@@ -111,7 +130,7 @@ export default class RealtimeProvider {
             if (subscriptionDetails) {
                 this.sendUnsubscribeMessage(subscriptionDetails);
 
-                this.subscriptionsByCall.delete(subscriptionDetails.call);
+                this.subscriptionsByCall.delete(subscriptionDetails.call.toString());
                 delete this.subscriptionsById[id];
             }
         };
@@ -136,7 +155,7 @@ export default class RealtimeProvider {
             this.sendUnsubscribeMessage(subscriptionDetails);
 
             if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                this.subscriptionsByCall.delete(this.subscriptionsById[id].call.toString());
                 delete this.subscriptionsById[id];
             }
         };
@@ -162,45 +181,13 @@ export default class RealtimeProvider {
         const domainObject = subscriptionDetails.domainObject;
         const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
 
-        this.sendOrQueueMessage(message);
+        this.sendMessage(message);
     }
 
     sendUnsubscribeMessage(subscriptionDetails) {
         let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
 
-        this.sendOrQueueMessage(message);
-    }
-
-    reconnect() {
-        this.subscriptionsByCall.clear();
-
-        if (this.reconnectTimeout) {
-            return;
-        }
-
-        this.reconnectTimeout = setTimeout(() => {
-            this.connect();
-            delete this.reconnectTimeout;
-        }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
-
-        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
-            this.currentWaitIndex++;
-        }
-    }
-
-    sendOrQueueMessage(request) {
-        if (this.connected) {
-            try {
-                this.sendMessage(request);
-            } catch (error) {
-                this.connected = false;
-                this.requests.push(request);
-                console.error("🚨 Error while attempting to send to websocket, closing websocket", error);
-                this.socket.close();
-            }
-        } else {
-            this.requests.push(request);
-        }
+        this.sendMessage(message);
     }
 
     connect() {
@@ -211,54 +198,40 @@ export default class RealtimeProvider {
         let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
-        this.socket = new WebSocket(wsUrl);
 
-        this.socket.onopen = () => {
-            clearTimeout(this.reconnectTimeout);
+        this.#socketWorker.connect(wsUrl);
 
-            this.connected = true;
-            console.debug(`🔌 Established websocket connection to ${wsUrl}`);
-
-            this.currentWaitIndex = 0;
+        this.#socketWorker.addEventListener('error', () => {
             this.resubscribeToAll();
-            this.flushQueue();
-        };
+        });
 
-        this.socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-
-            if (!this.isSupportedDataType(message.type)) {
-                return;
-            }
-
-            const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
+        this.#socketWorker.addEventListener('batch', (batchEvent) => {
+            const batch = batchEvent.detail;
             let subscriptionDetails;
+            let rawMessages;
+            let telemetryData;
 
-            if (isReply) {
-                const id = message.data.replyTo;
-                const call = message.call;
-                subscriptionDetails = this.subscriptionsById[id];
-                subscriptionDetails.call = call;
-                this.subscriptionsByCall.set(call, subscriptionDetails);
-            } else {
-                subscriptionDetails = this.subscriptionsByCall.get(message.call);
-
+            Object.keys(batch).forEach((call) => {
+                telemetryData = [];
+                subscriptionDetails = this.subscriptionsByCall.get(call);
                 // possibly cancelled
                 if (!subscriptionDetails) {
                     return;
                 }
 
-                if (this.isTelemetryMessage(message)) {
+                rawMessages = batch[call];
+                rawMessages.forEach((rawMessage) => {
+                    let message = JSON.parse(rawMessage);
                     let values = message.data.values || [];
                     let parentName = subscriptionDetails.domainObject.name;
 
                     values.forEach(parameter => {
                         let datum = {
-                            id: qualifiedNameToId(subscriptionDetails.name),
                             timestamp: parameter[METADATA_TIME_KEY]
                         };
                         let value = getValue(parameter, parentName);
 
+                        // TODO: optimize this. Only care if the last value is stale.
                         if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
                             const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
 
@@ -282,9 +255,41 @@ export default class RealtimeProvider {
                         }
 
                         addLimitInformation(parameter, datum);
-                        subscriptionDetails.callback(datum);
+                        telemetryData.push(datum);
                     });
-                } else if (this.isCommandMessage(message)) {
+                });
+
+                subscriptionDetails.callback(telemetryData);
+            });
+
+            //Ready for a new batch.
+        });
+
+        this.#socketWorker.addEventListener('message', (messageEvent) => {
+            const message = JSON.parse(messageEvent.detail);
+            if (!this.isSupportedDataType(message.type)) {
+                return;
+            }
+
+            const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
+            const call = message.call;
+            let subscriptionDetails;
+
+            if (isReply) {
+                const id = message.data.replyTo;
+                subscriptionDetails = this.subscriptionsById[id];
+                subscriptionDetails.call = call;
+                // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
+                this.subscriptionsByCall.set(call.toString(), subscriptionDetails);
+            } else {
+                subscriptionDetails = this.subscriptionsByCall.get(message.call.toString());
+
+                // possibly cancelled
+                if (!subscriptionDetails) {
+                    return;
+                }
+
+                if (this.isCommandMessage(message)) {
                     const datum = commandToTelemetryDatum(message.data);
                     subscriptionDetails.callback(datum);
                 } else if (this.isEventMessage(message)) {
@@ -308,20 +313,7 @@ export default class RealtimeProvider {
                     subscriptionDetails.callback(message.data);
                 }
             }
-        };
-
-        this.socket.onerror = (error) => {
-            console.error(`🚨 Websocket error, closing websocket`, error);
-            this.socket.close();
-        };
-
-        this.socket.onclose = () => {
-            console.warn('🚪 Websocket closed. Attempting to reconnect...');
-            this.connected = false;
-            this.socket = null;
-
-            this.reconnect();
-        };
+        });
     }
 
     resubscribeToAll() {
@@ -330,30 +322,8 @@ export default class RealtimeProvider {
         });
     }
 
-    flushQueue() {
-        let shouldCloseWebsocket = false;
-        this.requests = this.requests.filter((request) => {
-            try {
-                this.sendMessage(request);
-            } catch (error) {
-                this.connected = false;
-                console.error('🚨 Error while attempting to send to websocket, closing websocket', error);
-
-                shouldCloseWebsocket = true;
-
-                return true;
-            }
-
-            return false;
-        });
-
-        if (shouldCloseWebsocket) {
-            this.socket.close();
-        }
-    }
-
     sendMessage(message) {
-        this.socket.send(message);
+        this.#socketWorker.sendMessage(message);
     }
 
     isTelemetryMessage(message) {
