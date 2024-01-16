@@ -36,7 +36,7 @@ const commonConfig = {
         }
     },
     entry: {
-        'openmct-yamcs': './src/plugin.js'
+        'openmct-yamcs': './src/openmct-yamcs.js'
     },
     module: {
         rules: [
@@ -51,9 +51,6 @@ const commonConfig = {
         globalObject: "this",
         filename: '[name].js',
         path: path.resolve(projectRootDir, 'dist'),
-        library: {
-            type: 'module'
-        },
         libraryTarget: 'umd',
         libraryExport: 'default'
     }
