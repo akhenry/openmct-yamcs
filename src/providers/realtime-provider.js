@@ -259,7 +259,10 @@ export default class RealtimeProvider {
                     });
                 });
 
-                subscriptionDetails.callback(telemetryData);
+                if (telemetryData.length > 0) {
+                    subscriptionDetails.callback(telemetryData);
+                }
+
             });
 
             //Ready for a new batch.
