@@ -36,7 +36,7 @@ import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
-import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin.js";
+import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
 export default function install(configuration) {
     return (openmct) => {
