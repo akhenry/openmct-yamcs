@@ -21,7 +21,7 @@
  *****************************************************************************/
 import { OBJECT_TYPES } from "../../const.js";
 import {idToQualifiedName} from "../../utils.js";
-import {saveAs} from 'saveAs';
+import { saveAs } from 'file-saver';
 
 const SUPPORTED_TYPES = [OBJECT_TYPES.TELEMETRY_OBJECT_TYPE, OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE];
 

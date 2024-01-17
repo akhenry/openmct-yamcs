@@ -30,11 +30,6 @@ const commonConfig = {
     performance: {
         hints: false
     },
-    resolve: {
-        alias: {
-            saveAs: "file-saver/src/FileSaver.js",
-        }
-    },
     entry: {
         'openmct-yamcs': './src/openmct-yamcs.js'
     },
@@ -45,10 +40,10 @@ const commonConfig = {
                 enforce: "pre",
                 use: ["source-map-loader"]
             }
-        ]
+        ],
     },
     output: {
-        globalObject: "this",
+        globalObject: 'this',
         filename: '[name].js',
         path: path.resolve(projectRootDir, 'dist'),
         library: {
@@ -58,5 +53,6 @@ const commonConfig = {
         libraryExport: 'default'
     }
 };
+
 export default commonConfig;
 
