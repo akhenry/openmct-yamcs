@@ -37,6 +37,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
+        //I'm not sure what this block does yet
         const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
         await expect(myProjectTreeItem).toBeVisible();
         const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
@@ -45,33 +46,25 @@ test.describe("Quickstart network requests @yamcs", () => {
         await secondMyProjectTriangle.click();
 
         await page.waitForLoadState('networkidle');
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Sequence').first().click();
-        await page.waitForLoadState('networkidle');
-
-        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        filteredRequests = filterNonFetchRequests(networkRequests);
 
         // Network requests for the composite telemetry with multiple items should be:
         // 1.  batched request for latest telemetry using the bulk API
-        expect(filteredRequests.length).toBe(1);
+        const action = () => page.getByRole('treeitem', { name: 'Expand CCSDS_Packet_Sequence' }).click();
+        const urlPattern = ['processors/myproject/realtime/parameters:batchGet'];
+        const requestCounts = await reqAssert(action, page, urlPattern, false);
 
-        await page.waitForLoadState('networkidle');
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Length').click();
-        await page.waitForLoadState('networkidle');
+        // Assert that the specific URL pattern had one matching request
+        expect(requestCounts[0]).toBe(1);
 
-        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const action2 = () => page.getByText('CCSDS_Packet_Length').click();
+        const urlPattern2 = [
+          // 2. POST: batchGet for staleness
+          'api/processors/myproject/realtime/parameters:batchGet',
+          // 1. telemetry from parameter archive
+          'api/archive/myproject/parameters/myproject/CCSDS_Packet_Length'];
+        const requestCounts2 = await reqAssert(action2, page, urlPattern2, false);
 
-        filteredRequests = filterNonFetchRequests(networkRequests);
-
-        // Should only be fetching:
-        // 1. telemetry from parameter archive
-        // 2. POST: batchGet for staleness
-        expect(filteredRequests.length).toBe(2);
+        expect(requestCounts2[0]).toBe(2);
 
         // Change to fixed time
         await setFixedTimeMode(page);
@@ -133,3 +126,39 @@ test.describe("Quickstart network requests @yamcs", () => {
         });
     }
 });
+
+/**
+ * Performs an action and tracks fetch requests based on provided URL patterns.
+ * 
+ * @param {() => Promise<void>} action - The action to perform as a function returning a Promise.
+ * @param {object} page - The Playwright page object.
+ * @param {string[]} urlPatterns - An array of strings representing URL patterns to match.
+ * @returns {Promise<number[]>} A promise that resolves to an array with the counts of matched fetch requests for each pattern.
+ */
+async function reqAssert(action, page, urlPatterns) {
+    let requestCounts = new Array(urlPatterns.length).fill(0);
+
+    // Set up request interception for each pattern
+    page.on('request', request => {
+        if (request.resourceType() === 'fetch') {
+            urlPatterns.forEach((pattern, index) => {
+                if (request.url().includes(pattern)) {
+                    requestCounts[index]++;
+                }
+            });
+        }
+    });
+
+    // Perform the action and wait for a request that matches any of the patterns
+    await Promise.all([
+      ...urlPatterns.map(pattern => page.waitForRequest(req => req.url().includes(pattern) && req.resourceType() === 'fetch'), { timeout: 5000 }),
+      action()
+    ]);
+
+    // Remove event listener to avoid memory leaks
+    page.removeListener('request', () => {});
+
+    await page.waitForLoadState('networkidle');
+
+    return requestCounts;
+}
