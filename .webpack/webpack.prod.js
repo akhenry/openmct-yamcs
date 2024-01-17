@@ -22,13 +22,9 @@
 
 import { merge } from 'webpack-merge';
 import common from './webpack.common.js';
-import { fileURLToPath } from 'node:url';
-
-const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const prodConfig = {
-    context: projectRootDir,
     mode: 'production',
     devtool: 'source-map'
 }
