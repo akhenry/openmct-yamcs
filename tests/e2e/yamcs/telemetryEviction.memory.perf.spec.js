@@ -122,6 +122,19 @@ test.describe.only('Telemetry Eviction', () => {
             window.openmct.telemetry.request = newTelemetryRequest;
         });
 
+        // handle subscribe telemetry
+        await page.evaluate(() => {
+            const oldTelemetrySubscribe = window.openmct.telemetry.subscribe.bind(window.openmct.telemetry);
+            function newTelemetrySubscribe(domainObject, callback, options) {
+                console.debug('🧸 Telemetry subscribe called', domainObject, callback, options);
+                const unsubscribeCallback = oldTelemetrySubscribe(domainObject, callback, options);
+
+                return unsubscribeCallback;
+            }
+
+            window.openmct.telemetry.subscribe = newTelemetrySubscribe;
+        });
+
         //Search Result Appears and is clicked
         await page.getByText(objectName, { exact: true }).click();
 
