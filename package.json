@@ -23,6 +23,7 @@
     "build:example:master": "npm install nasa/openmct --no-save",
     "postbuild:example": "node check-optional-dependencies.mjs",
     "start": "npx webpack serve --config ./.webpack/webpack.dev.mjs",
+    "start:prod": "npx webpack serve --config ./.webpack/webpack.prod.test.mjs",
     "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.mjs",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
@@ -30,6 +31,7 @@
     "test:e2e:smoke": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "test:perf:memory": "npm test --workspace tests/e2e/opensource -- --config=../playwright-performance-prod.config.js --project=chrome-memory",
     "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
     "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },

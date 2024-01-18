@@ -19,18 +19,15 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { merge } from "webpack-merge";
-import commonConfig from "./webpack.common.mjs";
 
-// Replicate __dirname functionality for ES modules
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { merge } from 'webpack-merge';
+import prod from './webpack.prod.js';
+
 
 /** @type {import('webpack').Configuration} */
-const devConfig = {
-    mode: 'development',
-    devtool: 'eval-source-map',
+const prodTestConfig = {
     entry: {
         'openmct-yamcs-example': './example/index.js'
     },
 }
-export default merge(commonConfig, devConfig);
+export default merge(prod, prodTestConfig);

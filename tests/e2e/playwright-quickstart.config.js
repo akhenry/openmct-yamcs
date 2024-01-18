@@ -3,9 +3,10 @@
 
 /** @type {import('@playwright/test').PlaywrightTestConfig<{ failOnConsoleError: boolean, myItemsFolderName: string }>} */
 const config = {
-    retries: 1,
+    retries: 0,
     testDir: '.',
     testMatch: /.*\.e2e\.spec\.(mjs|js)$/,
+    testIgnore: '**/*.perf.spec.js',
     timeout: 30 * 1000,
     use: {
         headless: false,
@@ -31,7 +32,7 @@ const config = {
             grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
-                headless: true,
+                headless: false,
                 trace: 'on-first-retry',
                 video: 'off',
                 screenshot: 'only-on-failure'
