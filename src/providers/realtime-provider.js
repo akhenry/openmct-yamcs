@@ -32,7 +32,6 @@ import {
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
-    qualifiedNameToId,
     getValue,
     addLimitInformation,
     getLimitFromAlarmRange
@@ -42,6 +41,8 @@ import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
 
 export default class RealtimeProvider {
     #socketWorker = null;
+    #openmct;
+
     constructor(openmct, url, instance, processor = 'realtime') {
         this.url = url;
         this.instance = instance;
@@ -58,12 +59,29 @@ export default class RealtimeProvider {
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
         this.#socketWorker = new openmct.telemetry.BatchingWebSocketProvider(openmct);
+        this.#openmct = openmct;
         this.#setBatchingStrategy();
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
+        const setCallFromClockIfNecessary = this.#setCallFromClockIfNecessary.bind(this);
+
+        openmct.time.on('clock', setCallFromClockIfNecessary);
+
+        openmct.once('destroy', () => {
+            openmct.time.off('clock', setCallFromClockIfNecessary);
+        });
     }
 
+    #setCallFromClockIfNecessary(clock) {
+        if (clock === undefined) {
+            this.unsetCall();
+        }
+
+        if (clock.key === 'remote-clock') {
+            this.#setCallFromClock(clock);
+        }
+    }
     #setBatchingStrategy() {
         this.#socketWorker.setBatchingStrategy({
             shouldBatchMessage: (message) => {
@@ -88,7 +106,6 @@ export default class RealtimeProvider {
     addSupportedDataTypes(dataTypes) {
         dataTypes.forEach(dataType => this.supportedDataTypes[dataType] = dataType);
     }
-
     supportsSubscribe(domainObject) {
         return this.isSupportedObjectType(domainObject.type);
     }
@@ -190,6 +207,71 @@ export default class RealtimeProvider {
         this.sendMessage(message);
     }
 
+    #setCallFromClock(clock) {
+        const correspondingSubscription = Object.values(this.subscriptionsById).find(subscription => {
+            return subscription.domainObject.identifier.key === clock.identifier.key;
+        });
+
+        if (correspondingSubscription !== undefined) {
+            this.remoteClockCallNumber = correspondingSubscription.call.toString();
+        } else {
+            delete this.remoteClockCallNumber;
+        }
+    }
+
+    #processBatchQueue(batchQueue, call) {
+        let subscriptionDetails = this.subscriptionsByCall.get(call);
+        let telemetryData = [];
+
+        // possibly cancelled
+        if (!subscriptionDetails) {
+            return;
+        }
+
+        batchQueue.forEach((rawMessage) => {
+            const message = JSON.parse(rawMessage);
+            const values = message.data.values || [];
+            const parentName = subscriptionDetails.domainObject.name;
+
+            values.forEach(parameter => {
+                let datum = {
+                    timestamp: parameter[METADATA_TIME_KEY]
+                };
+                const value = getValue(parameter, parentName);
+
+                // TODO: optimize this. I think we only care if the last value is stale.
+                if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
+                    const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
+
+                    if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
+                        const stalenesResponseObject = buildStalenessResponseObject(
+                            status,
+                            parameter[METADATA_TIME_KEY]
+                        );
+                        this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
+                        this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
+                    }
+                }
+
+                if (parameter.engValue.type !== AGGREGATE_TYPE) {
+                    datum.value = value;
+                } else {
+                    datum = {
+                        ...datum,
+                        ...value
+                    };
+                }
+
+                addLimitInformation(parameter, datum);
+                telemetryData.push(datum);
+            });
+        });
+
+        if (telemetryData.length > 0) {
+            subscriptionDetails.callback(telemetryData);
+        }
+    }
+
     connect() {
         if (this.connected) {
             return;
@@ -207,65 +289,22 @@ export default class RealtimeProvider {
 
         this.#socketWorker.addEventListener('batch', (batchEvent) => {
             const batch = batchEvent.detail;
-            let subscriptionDetails;
-            let rawMessages;
-            let telemetryData;
+
+            let remoteClockValue;
+            // If remote clock active, process its value before any telemetry values to ensure the bounds are always up to date.
+            if (this.remoteClockCallNumber !== undefined) {
+                remoteClockValue = batch[this.remoteClockCallNumber];
+                if (remoteClockValue !== undefined) {
+                    this.#processBatchQueue(batch[this.remoteClockCallNumber], this.remoteClockCallNumber);
+
+                    // Delete so we don't process it twice.
+                    delete batch[this.remoteClockCallNumber];
+                }
+            }
 
             Object.keys(batch).forEach((call) => {
-                telemetryData = [];
-                subscriptionDetails = this.subscriptionsByCall.get(call);
-                // possibly cancelled
-                if (!subscriptionDetails) {
-                    return;
-                }
-
-                rawMessages = batch[call];
-                rawMessages.forEach((rawMessage) => {
-                    let message = JSON.parse(rawMessage);
-                    let values = message.data.values || [];
-                    let parentName = subscriptionDetails.domainObject.name;
-
-                    values.forEach(parameter => {
-                        let datum = {
-                            timestamp: parameter[METADATA_TIME_KEY]
-                        };
-                        let value = getValue(parameter, parentName);
-
-                        // TODO: optimize this. Only care if the last value is stale.
-                        if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
-                            const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
-
-                            if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
-                                const stalenesResponseObject = buildStalenessResponseObject(
-                                    status,
-                                    parameter[METADATA_TIME_KEY]
-                                );
-                                this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
-                                this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
-                            }
-                        }
-
-                        if (parameter.engValue.type !== AGGREGATE_TYPE) {
-                            datum.value = value;
-                        } else {
-                            datum = {
-                                ...datum,
-                                ...value
-                            };
-                        }
-
-                        addLimitInformation(parameter, datum);
-                        telemetryData.push(datum);
-                    });
-                });
-
-                if (telemetryData.length > 0) {
-                    subscriptionDetails.callback(telemetryData);
-                }
-
+                this.#processBatchQueue(batch[call], call);
             });
-
-            //Ready for a new batch.
         });
 
         this.#socketWorker.addEventListener('message', (messageEvent) => {
@@ -284,6 +323,9 @@ export default class RealtimeProvider {
                 subscriptionDetails.call = call;
                 // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
                 this.subscriptionsByCall.set(call.toString(), subscriptionDetails);
+                if (subscriptionDetails.domainObject.identifier.key === this.#openmct.time.getClock()?.identifier.key) {
+                    this.remoteClockCallNumber = call.toString();
+                }
             } else {
                 subscriptionDetails = this.subscriptionsByCall.get(message.call.toString());
 
