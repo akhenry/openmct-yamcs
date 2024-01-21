@@ -58,7 +58,7 @@ export default class RealtimeProvider {
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
-        this.#socketWorker = new openmct.telemetry.BatchingWebSocketProvider(openmct);
+        this.#socketWorker = new openmct.telemetry.BatchingWebSocket(openmct);
         this.#openmct = openmct;
         this.#setBatchingStrategy();
 
@@ -96,7 +96,7 @@ export default class RealtimeProvider {
             }
         });
         this.#socketWorker.setRate(1000);
-        this.#socketWorker.setMaxBatchSize(10);
+        this.#socketWorker.setMaxBatchSize(15);
     }
 
     addSupportedObjectTypes(types) {
@@ -323,7 +323,11 @@ export default class RealtimeProvider {
                 subscriptionDetails.call = call;
                 // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
                 this.subscriptionsByCall.set(call.toString(), subscriptionDetails);
-                if (subscriptionDetails.domainObject.identifier.key === this.#openmct.time.getClock()?.identifier.key) {
+
+                const remoteClockIdentifier = this.#openmct.time.getClock()?.identifier;
+                const isRemoteClockActive = remoteClockIdentifier !== undefined;
+
+                if (isRemoteClockActive && subscriptionDetails.domainObject.identifier.key === remoteClockIdentifier.key) {
                     this.remoteClockCallNumber = call.toString();
                 }
             } else {
