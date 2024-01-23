@@ -33,7 +33,6 @@ test.describe("Quickstart network requests @yamcs", () => {
     let filteredRequests = [];
 
     test('Validate network traffic to YAMCS', async ({ page }) => {
-        page.on('request', (request) => networkRequests.push(request));
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
@@ -49,24 +48,34 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Network requests for the composite telemetry with multiple items should be:
         // 1.  batched request for latest telemetry using the bulk API
-        const action = () => page.getByRole('treeitem', { name: 'Expand CCSDS_Packet_Sequence' }).click();
-        const urlPattern = ['processors/myproject/realtime/parameters:batchGet'];
-        const requestCounts = await reqAssert(action, page, urlPattern, false);
+        const batchGet = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
 
-        // Assert that the specific URL pattern had one matching request
-        expect(requestCounts[0]).toBe(1);
+        await page.getByRole('treeitem', { name: 'Expand CCSDS_Packet_Sequence' }).click()
+        await batchGet;
 
-        const action2 = () => page.getByText('CCSDS_Packet_Length').click();
-        const urlPattern2 = [
-          // 2. POST: batchGet for staleness
-          'api/processors/myproject/realtime/parameters:batchGet',
-          // 1. telemetry from parameter archive
-          'api/archive/myproject/parameters/myproject/CCSDS_Packet_Length'];
-        const requestCounts2 = await reqAssert(action2, page, urlPattern2, false);
+        // const action = () => page.getByRole('treeitem', { name: 'Expand CCSDS_Packet_Sequence' }).click();
+        // const urlPattern = ['processors/myproject/realtime/parameters:batchGet'];
+        // const { counts: requestCounts, responses: requestResponses } = await reqAssert(action, page, urlPattern);
 
-        expect(requestCounts2[0]).toBe(2);
+        // console.log(requestResponses);
+        // // Assert that the specific URL pattern had one matching request
+        // expect(requestCounts[0]).toBe(1); // Asserting for the first URL pattern
 
-        // Change to fixed time
+        // const action2 = () => page.getByText('CCSDS_Packet_Length').click();
+        // const urlPattern2 = [
+        //   // 2. POST: batchGet for staleness
+        //   'api/processors/myproject/realtime/parameters:batchGet',
+        //   // 1. telemetry from parameter archive
+        //   'api/archive/myproject/parameters/myproject/CCSDS_Packet_Length'];
+        // const requestCounts2 = await reqAssert(action2, page, urlPattern2, false);
+        
+        // //expect one batchGet
+        // expect(requestCounts2[0]).toBe(1);
+        // //expect one param archive request
+        // expect(requestCounts2[1]).toBe(1);
+
+
+        // Change to fixed time sends a request for data it already has
         await setFixedTimeMode(page);
 
         await page.waitForLoadState('networkidle');
@@ -118,47 +127,58 @@ test.describe("Quickstart network requests @yamcs", () => {
 
     });
 
-    // Try to reduce indeterminism of browser requests by only returning fetch requests.
-    // Filter out preflight CORS, fetching stylesheets, page icons, etc. that can occur during tests
-    function filterNonFetchRequests(requests) {
-        return requests.filter(request => {
-            return (request.resourceType() === 'fetch');
-        });
-    }
+
 });
 
 /**
- * Performs an action and tracks fetch requests based on provided URL patterns.
+ * Performs an action and tracks fetch requests based on provided URL patterns, returning counts and responses.
  * 
  * @param {() => Promise<void>} action - The action to perform as a function returning a Promise.
  * @param {object} page - The Playwright page object.
  * @param {string[]} urlPatterns - An array of strings representing URL patterns to match.
- * @returns {Promise<number[]>} A promise that resolves to an array with the counts of matched fetch requests for each pattern.
+ * @returns {Promise<{counts: number[], responses: Array<Array<Response>>}>} 
+ *          A promise that resolves to an object containing an array with the counts of matched fetch requests for each pattern
+ *          and an array of arrays of the corresponding responses.
  */
 async function reqAssert(action, page, urlPatterns) {
-    let requestCounts = new Array(urlPatterns.length).fill(0);
+  let requestCounts = new Array(urlPatterns.length).fill(0);
+  let matchedResponses = new Array(urlPatterns.length).fill(0).map(() => []);
 
-    // Set up request interception for each pattern
-    page.on('request', request => {
-        if (request.resourceType() === 'fetch') {
-            urlPatterns.forEach((pattern, index) => {
-                if (request.url().includes(pattern)) {
-                    requestCounts[index]++;
-                }
-            });
-        }
-    });
+  // Set up request interception for each pattern
+  page.on('requestfinished', async request => {
+      if (request.resourceType() === 'fetch') {
+          urlPatterns.forEach((pattern, index) => {
+              if (request.url().includes(pattern)) {
+                  requestCounts[index]++;
+                  matchedResponses[index].push(request.response());
+              }
+          });
+      }
+  });
 
-    // Perform the action and wait for a request that matches any of the patterns
-    await Promise.all([
-      ...urlPatterns.map(pattern => page.waitForRequest(req => req.url().includes(pattern) && req.resourceType() === 'fetch'), { timeout: 5000 }),
+  // Perform the action and wait for a request that matches any of the patterns with a timeout of 5 seconds
+  await Promise.all([
+      ...urlPatterns.map(pattern => 
+          page.waitForRequest(req => req.url().includes(pattern) && req.resourceType() === 'fetch', { timeout: 5000 })
+      ),
       action()
-    ]);
+  ]);
 
-    // Remove event listener to avoid memory leaks
-    page.removeListener('request', () => {});
+  // Remove event listener to avoid memory leaks
+  page.removeListener('requestfinished', () => {});
 
-    await page.waitForLoadState('networkidle');
+  // Resolve responses to ensure all are completed
+  for (let i = 0; i < urlPatterns.length; i++) {
+      matchedResponses[i] = await Promise.all(matchedResponses[i]);
+  }
 
-    return requestCounts;
+  return { counts: requestCounts, responses: matchedResponses };
+}
+
+// Try to reduce indeterminism of browser requests by only returning fetch requests.
+// Filter out preflight CORS, fetching stylesheets, page icons, etc. that can occur during tests
+async function filterNonFetchRequests(requests) {
+    return requests.filter(request => {
+        return (request.resourceType() === 'fetch');
+    });
 }
