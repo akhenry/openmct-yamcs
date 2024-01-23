@@ -23,13 +23,9 @@
 import path from 'path';
 import { merge } from 'webpack-merge';
 import commonConfig from './webpack.common.js';
-import { fileURLToPath } from 'node:url';
-
-const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const devConfig = {
-    context: projectRootDir,
     mode: 'development',
     devtool: 'eval-source-map',
     entry: {
@@ -39,10 +35,10 @@ const devConfig = {
         compress: true,
         port: 9000,
         static: [{
-            directory: path.join(projectRootDir, 'example')
+            directory: './example', 
         }, {
-            directory: path.join(projectRootDir, '/node_modules/openmct/dist'),
-            publicPath: '/node_modules/openmct/dist'
+            directory: './node_modules/openmct/dist',
+            publicPath: './node_modules/openmct/dist'
         }],
         proxy: {
             "/yamcs-proxy/*": {

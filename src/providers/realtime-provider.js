@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as MESSAGES from './messages.js';
+import { SUBSCRIBE, UNSUBSCRIBE } from './messages.js';
 import {
     OBJECT_TYPES,
     DATA_TYPES,
@@ -160,13 +160,13 @@ export default class RealtimeProvider {
 
     sendSubscribeMessage(subscriptionDetails) {
         const domainObject = subscriptionDetails.domainObject;
-        const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+        const message = SUBSCRIBE[domainObject.type](subscriptionDetails);
 
         this.sendOrQueueMessage(message);
     }
 
     sendUnsubscribeMessage(subscriptionDetails) {
-        let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
+        let message = UNSUBSCRIBE(subscriptionDetails);
 
         this.sendOrQueueMessage(message);
     }

@@ -27,6 +27,7 @@ const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const commonConfig = {
+    context: projectRootDir,
     performance: {
         hints: false
     },
@@ -43,14 +44,14 @@ const commonConfig = {
         ],
     },
     output: {
-        globalObject: 'this',
+        globalObject: "this",
         filename: '[name].js',
         path: path.resolve(projectRootDir, 'dist'),
         library: {
-            name: 'openmct-yamcs',
-            type: 'umd'
-        },
-        libraryExport: 'default'
+            type: 'umd',
+            export: 'default',
+            name: 'openmctYamcs'
+        }
     }
 };
 
