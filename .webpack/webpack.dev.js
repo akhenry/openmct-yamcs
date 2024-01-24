@@ -19,10 +19,13 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { merge } from 'webpack-merge';
 import commonConfig from './webpack.common.js';
+
+// Replicate __dirname functionality for ES modules
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const devConfig = {
@@ -35,10 +38,10 @@ const devConfig = {
         compress: true,
         port: 9000,
         static: [{
-            directory: './example', 
+            directory: path.join(__dirname, '../example'),
         }, {
-            directory: './node_modules/openmct/dist',
-            publicPath: './node_modules/openmct/dist'
+            directory: path.join(__dirname, '../node_modules/openmct/dist'),
+            publicPath: '/dist',
         }],
         proxy: {
             "/yamcs-proxy/*": {
@@ -55,6 +58,12 @@ const devConfig = {
                 pathRewrite: { '^/yamcs-proxy-ws/': '' }
             }
         }
+    },
+    resolve: {
+        alias: {
+            openmct: path.resolve(__dirname, '../node_modules/openmct/dist/openmct.js')
+        }
     }
-}
+};
+
 export default merge(commonConfig, devConfig);

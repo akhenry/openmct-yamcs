@@ -41,7 +41,7 @@ const openmct = window.openmct;
 
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
-openmct.setAssetPath('/node_modules/openmct/dist');
+openmct.setAssetPath('/dist');
 
 installDefaultPlugins();
 openmct.install(installYamcsPlugin(config));
