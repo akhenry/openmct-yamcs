@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser.js';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry}) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry, missionStatus}) {
         super();
 
         this.openmct = openmct;
@@ -32,6 +32,7 @@ export default class UserProvider extends EventEmitter {
         this.user = undefined;
         this.loggedIn = false;
         this.roleStatus = roleStatus;
+        this.missionStatus = missionStatus;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
         this.unsubscribeStatus = {};
@@ -92,6 +93,17 @@ export default class UserProvider extends EventEmitter {
         });
     }
 
+    async canSetMissionStatus() {
+        const user = await this.getCurrentUser();
+        const writeParameters = user.getWriteParameters();
+
+        const areParametersStatus = await Promise.all(
+            writeParameters.map(parameterName => this.missionStatusParameter.isMissionStatusParameterName(parameterName))
+        );
+
+        return areParametersStatus.some(isParameterStatus => isParameterStatus);
+    }
+
     async canSetPollQuestion() {
         const user = await this.getCurrentUser();
         const writeParameters = user.getWriteParameters();
@@ -138,6 +150,12 @@ export default class UserProvider extends EventEmitter {
 
     async setStatusForRole(role, status) {
         const success = await this.roleStatus.setStatusForRole(role, status);
+
+        return success;
+    }
+
+    async setMissionStatusForRole(missionRole, status) {
+        const success = await this.missionStatus.setStatusForRole(missionRole, status);
 
         return success;
     }

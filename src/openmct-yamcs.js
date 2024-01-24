@@ -33,6 +33,7 @@ import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-pro
 
 import { OBJECT_TYPES } from './const.js';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
+import MissionStatusTelemetry from './providers/mission-status/mission-status-telemetry.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
@@ -95,6 +96,11 @@ export default function install(
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
 
+        const missionStatusTelemetry = new MissionStatusTelemetry(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance,
+            styleConfig: configuration.statusStyles
+        });
         const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance,
@@ -113,6 +119,7 @@ export default function install(
                 openmct, {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus: roleStatusTelemetry,
+                    missionStatus: missionStatusTelemetry,
                     latestTelemetryProvider,
                     realtimeTelemetryProvider,
                     pollQuestionParameter,
