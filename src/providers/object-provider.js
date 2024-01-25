@@ -182,7 +182,7 @@ export default class YamcsObjectProvider {
 
     #getTelemetryDictionary() {
         if (!this.dictionaryPromise) {
-            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
+            this.dictionaryPromise = this.#loadTelemetryDictionary()
                 .finally(() => {
                     this.roleStatusTelemetry.dictionaryLoadComplete();
                 });
