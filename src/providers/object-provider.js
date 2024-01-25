@@ -40,7 +40,7 @@ const YAMCS_API_MAP = {
 const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, missionStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -55,6 +55,7 @@ export default class YamcsObjectProvider {
         this.dictionaryPromise = null;
         this.getDictionaryRequestOptions = getDictionaryRequestOptions;
         this.roleStatusTelemetry = roleStatusTelemetry;
+        this.missionStatusTelemetry = missionStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
 
@@ -185,6 +186,7 @@ export default class YamcsObjectProvider {
             this.dictionaryPromise = this.#loadTelemetryDictionary()
                 .finally(() => {
                     this.roleStatusTelemetry.dictionaryLoadComplete();
+                    this.missionStatusTelemetry.dictionaryLoadComplete();
                 });
         }
 
@@ -413,15 +415,15 @@ export default class YamcsObjectProvider {
             }
 
             if (isMissionStatusParameter(parameter)) {
-                const missionRole = getMissionRoleFromParameter(parameter);
-                if (!missionRole) {
-                    throw new Error(`Mission Role Status Parameter "${parameter.qualifiedName}" does not specify a mission role`);
+                const role = getMissionRoleFromParameter(parameter);
+                if (!role) {
+                    throw new Error(`Mission Status Parameter "${parameter.qualifiedName}" does not specify a role`);
                 }
 
                 const possibleStatuses = getPossibleMissionStatusesFromParameter(parameter);
                 possibleStatuses.forEach(status => this.missionStatusTelemetry.addStatus(status));
-                this.missionStatusTelemetry.addStatusRole(missionRole);
-                this.missionStatusTelemetry.setTelemetryObjectForRole(missionRole, obj);
+                this.missionStatusTelemetry.addMissionStatusRole(role);
+                this.missionStatusTelemetry.setTelemetryObjectForMissionStatusRole(role, obj);
             }
 
             if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {

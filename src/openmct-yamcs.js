@@ -136,6 +136,7 @@ export default function install(
             configuration.yamcsInstance,
             configuration.yamcsFolder,
             roleStatusTelemetry,
+            missionStatusTelemetry,
             pollQuestionParameter,
             pollQuestionTelemetry,
             realtimeTelemetryProvider,

@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 const MISSION_STATUS_TYPE = 'yamcs.missionStatus';
-const MISSION_ROLE_NAMESPACE = 'OpenMCT:missionRole';
+const MISSION_ROLE_NAMESPACE = 'OpenMCT:role';
 
 export function isMissionStatusParameter(parameter) {
     const aliases = parameter.alias;
