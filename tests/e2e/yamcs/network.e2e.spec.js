@@ -32,18 +32,18 @@ import { setFixedTimeMode } from '../opensource/appActions.js';
  */
 test.describe("Quickstart network requests @yamcs", () => {
     // Keeping track of network requests during the tests.
-    let networkRequests = [];
-    let filteredRequests = [];
+    let allNetworkRequests = [];
+    let fetchRequests = [];
 
     // These variables hold the promises for specific network requests we expect to occur.
     let parameterArchiveGet, batchGetStaleness, allParams, userGet, mdbOverride, mdbGet;
 
     test('Validate network traffic to YAMCS', async ({ page }) => {
-        // Listening for all network requests and pushing them into networkRequests array.
-        page.on('request', request => networkRequests.push(request));
+        // Listening for all network requests and pushing them into allNetworkRequests array.
+        page.on('request', request => allNetworkRequests.push(request));
 
         // Setting up promises to wait for specific network responses.
-        networkRequests = [];
+        allNetworkRequests = [];
         mdbGet = page.waitForResponse('**/api/mdb/myproject/space-systems');
         allParams = page.waitForResponse('**/api/mdb/myproject/parameters?details=yes&limit=1000');
         userGet = page.waitForResponse('**/api/user/');
@@ -52,8 +52,8 @@ test.describe("Quickstart network requests @yamcs", () => {
         // Testing the initial page load and verifying the presence of specific elements.
         await page.goto("./", { waitUntil: "networkidle" });
         await Promise.all([mdbGet, allParams, userGet, mdbOverride]);
-        filteredRequests = filterNonFetchRequests(networkRequests);
-        expect(filteredRequests.length).toBe(4);
+        fetchRequests = filterNonFetchRequests(allNetworkRequests);
+        expect(fetchRequests.length).toBe(4);
 
         // I'm not sure what is going on here
         const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
@@ -63,16 +63,16 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // More UI interactions and network request verifications.
         await page.waitForLoadState('networkidle');
-        networkRequests = [];
+        allNetworkRequests = [];
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
         await page.getByRole('treeitem', { name: 'Expand CCSDS_Packet_Sequence' }).click();
         await batchGetStaleness;
 
         await page.waitForLoadState('networkidle');
-        expect(networkRequests.length).toBe(1);
+        expect(allNetworkRequests.length).toBe(1);
 
         // Further UI interactions and network requests verification.
-        networkRequests = [];
+        allNetworkRequests = [];
         parameterArchiveGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Length/samples**');
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
         await page.getByRole('treeitem', { name: 'CCSDS_Packet_Length' }).click();
@@ -80,18 +80,18 @@ test.describe("Quickstart network requests @yamcs", () => {
         await Promise.all([parameterArchiveGet, batchGetStaleness]);
 
         await page.waitForLoadState('networkidle');
-        expect(networkRequests.length).toBe(2);
+        expect(allNetworkRequests.length).toBe(2);
 
         // Simulating the change to fixed time mode and validating network requests.
-        networkRequests = [];
+        allNetworkRequests = [];
         parameterArchiveGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Length/samples**');
         await setFixedTimeMode(page);
         await page.waitForLoadState('networkidle');
         await parameterArchiveGet;
-        expect(networkRequests.length).toBe(1);
+        expect(allNetworkRequests.length).toBe(1);
 
         // Clicking on a different telemetry item to generate new requests.
-        networkRequests = [];
+        allNetworkRequests = [];
         let groupFlagsGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Sequence.GroupFlags**');
         let countGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Sequence.Count**');
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
@@ -101,10 +101,10 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         await Promise.all([groupFlagsGet, countGet, batchGetStaleness]);
 
-        expect(networkRequests.length).toBe(3);
+        expect(allNetworkRequests.length).toBe(3);
 
         // Clicking on the telemetry item in Fixed Time mode to generate two requests.
-        networkRequests = [];
+        allNetworkRequests = [];
         parameterArchiveGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Length/samples**');
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
         await page.getByRole('treeitem', { name: 'CCSDS_Packet_Length' }).click();
@@ -113,10 +113,10 @@ test.describe("Quickstart network requests @yamcs", () => {
         await Promise.all([parameterArchiveGet, batchGetStaleness]);
 
         // Waiting for debounced requests in YAMCS Latest Telemetry Provider to finish.
-        expect(networkRequests.length).toBe(2);
+        expect(allNetworkRequests.length).toBe(2);
 
         // Simulating a page refresh to generate a sequence of network requests.
-        networkRequests = [];
+        allNetworkRequests = [];
         userGet = page.waitForResponse('**/api/user/');
         allParams = page.waitForResponse('**/api/mdb/myproject/parameters?details=yes&limit=1000');
         mdbOverride = page.waitForResponse('**/api/mdb-overrides/myproject/realtime');
@@ -128,11 +128,11 @@ test.describe("Quickstart network requests @yamcs", () => {
         await Promise.all([allParams, userGet, mdbOverride, parameterArchiveGet, batchGetStaleness, mdbOverride]);
 
         // Waiting for debounced requests in YAMCS Latest Telemetry Provider to finish.
-        filteredRequests = filterNonFetchRequests(networkRequests);
-        expect(filteredRequests.length).toBe(6);
+        fetchRequests = filterNonFetchRequests(allNetworkRequests);
+        expect(fetchRequests.length).toBe(6);
 
         // Removing the 'request' event listener to prevent potential memory leaks.
-        page.removeListener('request', request => networkRequests.push(request));
+        page.removeListener('request', request => allNetworkRequests.push(request));
     });
 
     /**
