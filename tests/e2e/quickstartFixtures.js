@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /*****************************************************************************
  * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
@@ -43,8 +42,10 @@ export { expect, request, test };
 /**
  * Filters out non-fetch requests from the given array of network requests.
  * This includes preflight CORS, fetching stylesheets, page icons, etc.
- * Requires that a page requests object be instantiated.
+ * Requires that a page requests instantiated like so
+ * ```js
  * page.on('request', request => allNetworkRequests.push(request));
+ * ```
  * @param {Array} requests - Array of network requests to filter.
  * @returns {Array} Filtered network requests.
  */

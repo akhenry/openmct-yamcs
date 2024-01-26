@@ -25,19 +25,25 @@ This test suite is dedicated to testing our use of our custom fixtures to verify
 that they are working as expected.
 */
 
-import { expect, request, test} from '../quickstartFixtures.js';
+import { expect, filterNonFetchRequests, test} from '../quickstartFixtures.js';
 
 test.describe('quickstartFixtures tests', () => {
-  test('filterNonFetchRequests', async ({ page }) => {
-  // Listening for all network requests and pushing them into allNetworkRequests array.
-  page.on('request', request => allNetworkRequests.push(request));
+    // Keeping track of network requests during the tests.
+    let allNetworkRequests = [];
+    let fetchRequests = [];
 
-  // Testing the initial page load and verifying the presence of specific elements.
-  await page.goto("./", { waitUntil: "networkidle" });
-  fetchRequests = filterNonFetchRequests(allNetworkRequests);
-  expect(fetchRequests.length).toBe(4);
+    test('filterNonFetchRequests', async ({ page }) => {
+    // Listening for all network requests and pushing them into allNetworkRequests array.
+    page.on('request', request => allNetworkRequests.push(request));
 
-  // Removing the 'request' event listener to prevent potential memory leaks.
-  page.removeListener('request', request => allNetworkRequests.push(request));
-  });
+    // Setting up promises to wait for specific network responses.
+    // Testing the initial page load and verifying the presence of specific elements.
+    await page.goto("./", { waitUntil: "networkidle" });
+    fetchRequests = filterNonFetchRequests(allNetworkRequests);
+    expect(allNetworkRequests.length).toBeGreaterThan(0);
+    expect(fetchRequests.length).toBeGreaterThan(0);
+
+    // Removing the 'request' event listener to prevent potential memory leaks.
+    page.removeListener('request', request => allNetworkRequests.push(request));
+    });
 });

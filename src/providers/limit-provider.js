@@ -100,6 +100,7 @@ export default class LimitProvider {
         const limits = domainObject.configuration.limits;
 
         return {
+            // eslint-disable-next-line require-await
             limits: async () => limits
         };
     }
