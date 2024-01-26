@@ -41,7 +41,7 @@ import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 export default function install(
     configuration,
     dictionaryRequestCacheStrategyPromise
-){
+) {
     return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
 
