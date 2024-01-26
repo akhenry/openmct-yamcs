@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as MESSAGES from './messages';
+import { SUBSCRIBE, UNSUBSCRIBE } from './messages.js';
 import {
     OBJECT_TYPES,
     DATA_TYPES,
@@ -28,7 +28,7 @@ import {
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
     MDB_OBJECT
-} from '../const';
+} from '../const.js';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
@@ -36,8 +36,8 @@ import {
     addLimitInformation,
     getLimitFromAlarmRange
 } from '../utils.js';
-import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
+import { commandToTelemetryDatum } from './commands.js';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
 
 export default class RealtimeProvider {
     #socketWorker = null;
@@ -196,13 +196,13 @@ export default class RealtimeProvider {
 
     sendSubscribeMessage(subscriptionDetails) {
         const domainObject = subscriptionDetails.domainObject;
-        const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+        const message = SUBSCRIBE[domainObject.type](subscriptionDetails);
 
         this.sendMessage(message);
     }
 
     sendUnsubscribeMessage(subscriptionDetails) {
-        let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
+        let message = UNSUBSCRIBE(subscriptionDetails);
 
         this.sendMessage(message);
     }

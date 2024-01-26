@@ -1,4 +1,4 @@
-import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const';
+import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const.js';
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,

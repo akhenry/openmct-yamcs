@@ -19,30 +19,29 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { merge } from 'webpack-merge';
+import commonConfig from './webpack.common.js';
 
-const path = require('path');
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common');
-const projectRootDir = path.resolve(__dirname, '..');
+// Replicate __dirname functionality for ES modules
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// eslint-disable-next-line no-undef
-module.exports = merge(common, {
-    context: projectRootDir,
+/** @type {import('webpack').Configuration} */
+const devConfig = {
     mode: 'development',
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': path.resolve(projectRootDir, 'example/index.js')
+        'openmct-yamcs-example': './example/index.js'
     },
     devServer: {
         compress: true,
         port: 9000,
         static: [{
-            // eslint-disable-next-line no-undef
-            directory: path.join(projectRootDir, 'example')
+            directory: path.join(__dirname, '../example'),
         }, {
-            // eslint-disable-next-line no-undef
-            directory: path.join(projectRootDir, '/node_modules/openmct/dist'),
-            publicPath: '/node_modules/openmct/dist'
+            directory: path.join(__dirname, '../node_modules/openmct/dist'),
+            publicPath: '/dist',
         }],
         proxy: {
             "/yamcs-proxy/*": {
@@ -59,5 +58,12 @@ module.exports = merge(common, {
                 pathRewrite: { '^/yamcs-proxy-ws/': '' }
             }
         }
+    },
+    resolve: {
+        alias: {
+            openmct: path.resolve(__dirname, '../node_modules/openmct/dist/openmct.js')
+        }
     }
-});
+};
+
+export default merge(commonConfig, devConfig);
