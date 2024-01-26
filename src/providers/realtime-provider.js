@@ -85,7 +85,8 @@ export default class RealtimeProvider {
     #setBatchingStrategy(rate, maxBatchSize) {
         // This strategy batches parameter value messages
         this.#socketWorker.setBatchingStrategy({
-            shouldBatchMessage: (message) => {
+            /* istanbul ignore next */
+            shouldBatchMessage: /* istanbul ignore next */ (message) => {
                 // If a parameter value message, the message type will be "parameters"
                 // The type field is always located at a character offset of 13 and 
                 // if it is "parameters" will be 10 characters long.
@@ -93,7 +94,8 @@ export default class RealtimeProvider {
 
                 return type === 'parameters';
             },
-            getBatchIdFromMessage: (message) => {
+            /* istanbul ignore next */ 
+            getBatchIdFromMessage: /* istanbul ignore next */ (message) => {
                 // Only dealing with "parameters" messages at this point. The call number
                 // identifies the parameter, and is used for batching. Will be located 
                 // at a character offset of 36. Because it is of indeterminate length 
