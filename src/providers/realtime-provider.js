@@ -248,7 +248,6 @@ export default class RealtimeProvider {
                 };
                 const value = getValue(parameter, parentName);
 
-                // TODO: optimize this. I think we only care if the last value is stale.
                 if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
                     const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
 
