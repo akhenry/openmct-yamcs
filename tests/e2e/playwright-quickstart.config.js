@@ -21,7 +21,7 @@ const config = {
         command: 'npm run start:coverage',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
-        reuseExistingServer: false
+        reuseExistingServer: true
     },
     workers: 1,
     projects: [
