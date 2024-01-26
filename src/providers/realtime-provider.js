@@ -43,7 +43,7 @@ export default class RealtimeProvider {
     #socketWorker = null;
     #openmct;
 
-    constructor(openmct, url, instance, processor = 'realtime') {
+    constructor(openmct, url, instance, processor = 'realtime', rate = 1000, maxBatchSize = 15) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
@@ -60,7 +60,7 @@ export default class RealtimeProvider {
         this.subscriptionsById = {};
         this.#socketWorker = new openmct.telemetry.BatchingWebSocket(openmct);
         this.#openmct = openmct;
-        this.#setBatchingStrategy();
+        this.#setBatchingStrategy(rate, maxBatchSize);
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
@@ -82,21 +82,30 @@ export default class RealtimeProvider {
             this.#setCallFromClock(clock);
         }
     }
-    #setBatchingStrategy() {
+    #setBatchingStrategy(rate, maxBatchSize) {
+        // This strategy batches parameter value messages
         this.#socketWorker.setBatchingStrategy({
             shouldBatchMessage: (message) => {
-                const type = message.substring(13, message.indexOf("\"", 13));
+                // If a parameter value message, the message type will be "parameters"
+                // The type field is always located at a character offset of 13 and 
+                // if it is "parameters" will be 10 characters long.
+                const type = message.substring(13, 23);
 
                 return type === 'parameters';
             },
             getBatchIdFromMessage: (message) => {
+                // Only dealing with "parameters" messages at this point. The call number
+                // identifies the parameter, and is used for batching. Will be located 
+                // at a character offset of 36. Because it is of indeterminate length 
+                // (we don't know the number) we have to do a sequential search forward 
+                // from the 37th character for a terminating ",".
                 const callNumber = message.substring(36, message.indexOf(",", 37));
 
                 return callNumber;
             }
         });
-        this.#socketWorker.setRate(1000);
-        this.#socketWorker.setMaxBatchSize(15);
+        this.#socketWorker.setRate(rate);
+        this.#socketWorker.setMaxBatchSize(maxBatchSize);
     }
 
     addSupportedObjectTypes(types) {
