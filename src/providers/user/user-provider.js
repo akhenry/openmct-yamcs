@@ -22,7 +22,7 @@
 
 import createYamcsUser from './createYamcsUser.js';
 import { EventEmitter } from 'eventemitter3';
-import { isMissionStatusParameter } from '../mission-status/mission-status-parameter.js';}
+import { isMissionStatusParameter } from '../mission-status/mission-status-parameter.js';
 
 export default class UserProvider extends EventEmitter {
     constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry, missionStatus}) {
