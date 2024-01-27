@@ -210,6 +210,12 @@ export default function install(
             cssClass: 'icon-telemetry'
         });
 
+        openmct.types.addType(OBJECT_TYPES.MISSION_STATUS_TYPE, {
+            name: 'Mission Status',
+            description: 'Mission status',
+            cssClass: 'icon-telemetry'
+        });
+
         openmct.types.addType(OBJECT_TYPES.ALARMS_TYPE, {
             name: 'Alarms',
             description: 'Alarms',
