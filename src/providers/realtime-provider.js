@@ -88,18 +88,18 @@ export default class RealtimeProvider {
             /* istanbul ignore next */
             shouldBatchMessage: /* istanbul ignore next */ (message) => {
                 // If a parameter value message, the message type will be "parameters"
-                // The type field is always located at a character offset of 13 and 
+                // The type field is always located at a character offset of 13 and
                 // if it is "parameters" will be 10 characters long.
                 const type = message.substring(13, 23);
 
                 return type === 'parameters';
             },
-            /* istanbul ignore next */ 
+            /* istanbul ignore next */
             getBatchIdFromMessage: /* istanbul ignore next */ (message) => {
                 // Only dealing with "parameters" messages at this point. The call number
-                // identifies the parameter, and is used for batching. Will be located 
-                // at a character offset of 36. Because it is of indeterminate length 
-                // (we don't know the number) we have to do a sequential search forward 
+                // identifies the parameter, and is used for batching. Will be located
+                // at a character offset of 36. Because it is of indeterminate length
+                // (we don't know the number) we have to do a sequential search forward
                 // from the 37th character for a terminating ",".
                 const callNumber = message.substring(36, message.indexOf(",", 37));
 
