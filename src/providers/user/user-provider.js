@@ -37,6 +37,7 @@ export default class UserProvider extends EventEmitter {
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
         this.unsubscribeStatus = {};
+        this.unsubscribeMissionStatus = {};
 
         this.latestTelemetryProvider = latestTelemetryProvider;
         this.realtimeTelemetryProvider = realtimeTelemetryProvider;
@@ -134,6 +135,27 @@ export default class UserProvider extends EventEmitter {
         return success;
     }
 
+    async getMissionStatusForRole(role) {
+        const missionStatusTelemetryObject = await this.missionStatus.getTelemetryObjectForRole(role);
+        if (this.unsubscribeMissionStatus[role] === undefined) {
+            this.unsubscribeMissionStatus[role] = this.realtimeTelemetryProvider.subscribe(missionStatusTelemetryObject, (datum) => {
+                this.emit('statusChange', {
+                    role,
+                    status: this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, datum)
+                });
+            });
+        }
+
+        const status = await this.latestTelemetryProvider.requestLatest(missionStatusTelemetryObject);
+        if (status !== undefined) {
+            return this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, status);
+        } else {
+            const defaultStatus = await this.missionStatus.getDefaultStatusForRole(role);
+
+            return defaultStatus;
+        }
+    }
+
     async getStatusForRole(role) {
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
         if (this.unsubscribeStatus[role] === undefined) {
@@ -163,6 +185,12 @@ export default class UserProvider extends EventEmitter {
 
     async setStatusForRole(role, status) {
         const success = await this.roleStatus.setStatusForRole(role, status);
+
+        return success;
+    }
+
+    async setMissionStatusForRole(role, status) {
+        const success = await this.missionStatus.setStatusForRole(role, status);
 
         return success;
     }
@@ -225,4 +253,3 @@ export default class UserProvider extends EventEmitter {
     }
 
 }
-

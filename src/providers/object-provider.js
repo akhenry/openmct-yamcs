@@ -423,7 +423,7 @@ export default class YamcsObjectProvider {
                 const possibleStatuses = getPossibleMissionStatusesFromParameter(parameter);
                 possibleStatuses.forEach(status => this.missionStatusTelemetry.addStatus(status));
                 this.missionStatusTelemetry.addMissionStatusRole(role);
-                this.missionStatusTelemetry.setTelemetryObjectForMissionStatusRole(role, obj);
+                this.missionStatusTelemetry.setTelemetryObjectForRole(role, obj);
             }
 
             if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {

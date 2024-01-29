@@ -45,7 +45,7 @@ export default class MissionStatusTelemetry {
         this.#openmct = openmct;
     }
     async setMissionStatusForRole(role, status) {
-        const telemetryObject = await this.getTelemetryObjectForMissionStatusRole(role);
+        const telemetryObject = await this.getTelemetryObjectForRole(role);
         const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
         let success = false;
 
@@ -73,15 +73,20 @@ export default class MissionStatusTelemetry {
 
         return Object.values(this.#missionStatusMap).map(status => this.toMissionStatusFromMdbEntry(status));
     }
+    async getDefaultStatusForRole() {
+        const possibleStatuses = await this.getPossibleMissionStatuses();
+
+        return possibleStatuses[0];
+    }
     addStatus(status) {
         this.#missionStatusMap[status.value] = status;
     }
-    async getTelemetryObjectForMissionStatusRole(role) {
+    async getTelemetryObjectForRole(role) {
         await this.#readyPromise;
 
         return this.#missionRoleToTelemetryObjectMap[role];
     }
-    setTelemetryObjectForMissionStatusRole(role, telemetryObject) {
+    setTelemetryObjectForRole(role, telemetryObject) {
         this.#missionRoleToTelemetryObjectMap[role] = telemetryObject;
     }
     addMissionStatusRole(role) {
