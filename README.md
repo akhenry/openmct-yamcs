@@ -91,6 +91,24 @@ openmct.install(installYamcsPlugin({
 | yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 | yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 
+## dictionaryRequestCacheStrategyPromise
+installYamcsPlugin also accepts an optional promise argument `dictionaryRequestCacheStrategyPromise`. This strategy is passed to the request for loading the YAMCS dictionary, or the `#loadTelemetryDictionary` function in `object-provider.js`. An example of how to make use of this is below.
+```
+let cacheStrategy;
+const cacheStrategyPromise = new Promise(resolve => cacheStrategy)
+
+openmct.install(installYamcsPlugin(
+  configuration,
+  cacheStrategryPromise
+))
+
+if (DICTIONARY_VERSION_IS_NEW) { // some check to determine dictionary version
+  cacheStrategy({cache: 'reload'})
+} else {
+  cacheStrategy({})
+}
+```
+
 ## Special XTCE features
 
 If you are using an XTCE configuration in Yamcs, there are two special
