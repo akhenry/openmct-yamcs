@@ -36,6 +36,6 @@ export function getMissionRoleFromParameter(parameter) {
     return aliases.find(alias => alias.namespace === MISSION_ROLE_NAMESPACE)?.name;
 }
 
-export function getPossibleMissionStatusesFromParameter(parameter) {
+export function getPossibleMissionRoleStatusesFromParameter(parameter) {
     return parameter.type.enumValue;
 }
