@@ -38,7 +38,10 @@ import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
-export default function install(configuration) {
+export default function install(
+    configuration,
+    dictionaryRequestCacheStrategyPromise
+) {
     return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
 
@@ -129,7 +132,8 @@ export default function install(configuration) {
             pollQuestionParameter,
             pollQuestionTelemetry,
             realtimeTelemetryProvider,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            dictionaryRequestCacheStrategyPromise
         );
 
         openmct.objects.addRoot({
