@@ -28,16 +28,15 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
-import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';
+import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
 import { getMissionRoleFromParameter, getPossibleMissionRoleStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
-const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
     constructor(openmct, url, instance, folderName, roleStatusTelemetry, missionStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
@@ -402,13 +401,13 @@ export default class YamcsObjectProvider {
                 telemetryValue.unit = unitSuffix;
             }
 
-            if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
-                const role = operatorStatusParameter.getRoleFromParameter(parameter);
+            if (isOperatorStatusParameter(parameter)) {
+                const role = getRoleFromParameter(parameter);
                 if (!role) {
                     throw new Error(`Operator Status Parameter "${parameter.qualifiedName}" does not specify a role`);
                 }
 
-                const possibleStatuses = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
+                const possibleStatuses = getPossibleStatusesFromParameter(parameter);
                 possibleStatuses.forEach(state => this.roleStatusTelemetry.addStatus(state));
                 this.roleStatusTelemetry.addStatusRole(role);
                 this.roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
