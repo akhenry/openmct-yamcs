@@ -100,6 +100,7 @@ export default function install(
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance
         });
+
         const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
             instance: configuration.yamcsInstance,
