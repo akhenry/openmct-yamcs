@@ -40,7 +40,7 @@ import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
 export default function install(
     configuration,
-    dictionaryRequestCacheStrategyPromise
+    getDictionaryRequestOptions
 ) {
     return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
@@ -133,7 +133,7 @@ export default function install(
             pollQuestionTelemetry,
             realtimeTelemetryProvider,
             configuration.yamcsProcessor,
-            dictionaryRequestCacheStrategyPromise
+            getDictionaryRequestOptions
         );
 
         openmct.objects.addRoot({
