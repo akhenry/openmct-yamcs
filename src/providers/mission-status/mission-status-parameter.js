@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 const MISSION_STATUS_TYPE = 'yamcs.missionStatus';
-const MISSION_ROLE_NAMESPACE = 'OpenMCT:role';
+const MISSION_ACTION_NAMESPACE = 'OpenMCT:action';
 
 export function isMissionStatusParameter(parameter) {
     const aliases = parameter.alias;
@@ -30,12 +30,12 @@ export function isMissionStatusParameter(parameter) {
         && aliases.some(alias => alias.name === MISSION_STATUS_TYPE);
 }
 
-export function getMissionRoleFromParameter(parameter) {
+export function getMissionActionFromParameter(parameter) {
     const aliases = parameter.alias;
 
-    return aliases.find(alias => alias.namespace === MISSION_ROLE_NAMESPACE)?.name;
+    return aliases.find(alias => alias.namespace === MISSION_ACTION_NAMESPACE)?.name;
 }
 
-export function getPossibleMissionRoleStatusesFromParameter(parameter) {
+export function getPossibleMissionActionStatusesFromParameter(parameter) {
     return parameter.type.enumValue;
 }

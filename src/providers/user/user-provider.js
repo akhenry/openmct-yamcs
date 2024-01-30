@@ -106,13 +106,13 @@ export default class UserProvider extends EventEmitter {
         return areParametersStatus.some(isParameterStatus => isParameterStatus);
     }
 
-    async getPossibleMissionRoles() {
-        const possibleRoles = await this.missionStatus.getAllMissionRoles();
+    async getPossibleMissionActions() {
+        const possibleRoles = await this.missionStatus.getAllMissionActions();
 
         return possibleRoles;
     }
 
-    async getPossibleMissionRoleStatuses() {
+    async getPossibleMissionActionStatuses() {
         const statuses = await this.missionStatus.getPossibleMissionStatuses();
 
         return statuses;
@@ -135,12 +135,12 @@ export default class UserProvider extends EventEmitter {
         return success;
     }
 
-    async getStatusForMissionRole(role) {
-        const missionStatusTelemetryObject = await this.missionStatus.getTelemetryObjectForRole(role);
-        if (this.unsubscribeMissionStatus[role] === undefined) {
-            this.unsubscribeMissionStatus[role] = this.realtimeTelemetryProvider.subscribe(missionStatusTelemetryObject, (datum) => {
-                this.emit('missionRoleStatusChange', {
-                    role,
+    async getStatusForMissionAction(action) {
+        const missionStatusTelemetryObject = await this.missionStatus.getTelemetryObjectForAction(action);
+        if (this.unsubscribeMissionStatus[action] === undefined) {
+            this.unsubscribeMissionStatus[action] = this.realtimeTelemetryProvider.subscribe(missionStatusTelemetryObject, (datum) => {
+                this.emit('missionActionStatusChange', {
+                    action,
                     status: this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, datum)
                 });
             });
@@ -150,7 +150,7 @@ export default class UserProvider extends EventEmitter {
         if (status !== undefined) {
             return this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, status);
         } else {
-            const defaultStatus = await this.missionStatus.getDefaultStatusForRole(role);
+            const defaultStatus = await this.missionStatus.getDefaultStatusForAction(action);
 
             return defaultStatus;
         }
@@ -189,8 +189,8 @@ export default class UserProvider extends EventEmitter {
         return success;
     }
 
-    async setStatusForMissionRole(role, status) {
-        const success = await this.missionStatus.setStatusForMissionRole(role, status);
+    async setStatusForMissionAction(action, status) {
+        const success = await this.missionStatus.setStatusForMissionAction(action, status);
 
         return success;
     }

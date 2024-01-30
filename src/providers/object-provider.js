@@ -31,7 +31,7 @@ import { OBJECT_TYPES, NAMESPACE } from '../const.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';
 import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
-import { getMissionRoleFromParameter, getPossibleMissionRoleStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
+import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
@@ -414,15 +414,15 @@ export default class YamcsObjectProvider {
             }
 
             if (isMissionStatusParameter(parameter)) {
-                const role = getMissionRoleFromParameter(parameter);
-                if (!role) {
-                    throw new Error(`Mission Status Parameter "${parameter.qualifiedName}" does not specify a role`);
+                const action = getMissionActionFromParameter(parameter);
+                if (!action) {
+                    throw new Error(`Mission Status Parameter "${parameter.qualifiedName}" does not specify a mission action`);
                 }
 
-                const possibleStatuses = getPossibleMissionRoleStatusesFromParameter(parameter);
+                const possibleStatuses = getPossibleMissionActionStatusesFromParameter(parameter);
                 possibleStatuses.forEach(status => this.missionStatusTelemetry.addStatus(status));
-                this.missionStatusTelemetry.addMissionRole(role);
-                this.missionStatusTelemetry.setTelemetryObjectForRole(role, obj);
+                this.missionStatusTelemetry.addMissionAction(action);
+                this.missionStatusTelemetry.setTelemetryObjectForAction(action, obj);
             }
 
             if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {

@@ -25,8 +25,8 @@ import {
 
 export default class MissionStatusTelemetry {
     #missionStatusMap;
-    #missionRoles;
-    #missionRoleToTelemetryObjectMap;
+    #missionActions;
+    #missionActionToTelemetryObjectMap;
     #setReady;
     #readyPromise;
     #url;
@@ -36,16 +36,16 @@ export default class MissionStatusTelemetry {
 
     constructor(openmct, {url, instance, processor = 'realtime'}) {
         this.#missionStatusMap = {};
-        this.#missionRoles = new Set();
-        this.#missionRoleToTelemetryObjectMap = {};
+        this.#missionActions = new Set();
+        this.#missionActionToTelemetryObjectMap = {};
         this.#readyPromise = new Promise((resolve) => this.#setReady = resolve);
         this.#url = url;
         this.#instance = instance;
         this.#processor = processor;
         this.#openmct = openmct;
     }
-    async setStatusForMissionRole(role, status) {
-        const telemetryObject = await this.getTelemetryObjectForRole(role);
+    async setStatusForMissionAction(action, status) {
+        const telemetryObject = await this.getTelemetryObjectForAction(action);
         const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
         let success = false;
 
@@ -73,7 +73,7 @@ export default class MissionStatusTelemetry {
 
         return Object.values(this.#missionStatusMap).map(status => this.toMissionStatusFromMdbEntry(status));
     }
-    async getDefaultStatusForRole() {
+    async getDefaultStatusForAction() {
         const possibleStatuses = await this.getPossibleMissionStatuses();
 
         return possibleStatuses[0];
@@ -81,21 +81,21 @@ export default class MissionStatusTelemetry {
     addStatus(status) {
         this.#missionStatusMap[status.value] = status;
     }
-    async getTelemetryObjectForRole(role) {
+    async getTelemetryObjectForAction(action) {
         await this.#readyPromise;
 
-        return this.#missionRoleToTelemetryObjectMap[role];
+        return this.#missionActionToTelemetryObjectMap[action];
     }
-    setTelemetryObjectForRole(role, telemetryObject) {
-        this.#missionRoleToTelemetryObjectMap[role] = telemetryObject;
+    setTelemetryObjectForAction(action, telemetryObject) {
+        this.#missionActionToTelemetryObjectMap[action] = telemetryObject;
     }
-    addMissionRole(role) {
-        this.#missionRoles.add(role);
+    addMissionAction(action) {
+        this.#missionActions.add(action);
     }
-    async getAllMissionRoles() {
+    async getAllMissionActions() {
         await this.#readyPromise;
 
-        return Array.from(this.#missionRoles);
+        return Array.from(this.#missionActions);
     }
     toMissionStatusFromMdbEntry(yamcsStatus) {
         return {
