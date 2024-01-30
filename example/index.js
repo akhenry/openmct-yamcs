@@ -8,7 +8,9 @@ const config = {
     "yamcsUserEndpoint": "http://localhost:9000/yamcs-proxy/api/user/",
     "yamcsInstance": "myproject",
     "yamcsProcessor": "realtime",
-    "yamcsFolder": "myproject"
+    "yamcsFolder": "myproject",
+    "throttleRate": 1000,
+    "maxBatchSize": 15
 };
 const STATUS_STYLES = {
     "NO_STATUS": {

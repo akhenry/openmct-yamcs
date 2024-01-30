@@ -57,9 +57,12 @@ export default function install(configuration) {
         openmct.telemetry.addProvider(historicalTelemetryProvider);
 
         const realtimeTelemetryProvider = new RealtimeProvider(
+            openmct,
             configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            configuration.throttleRate,
+            configuration.maxBatchSize
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
