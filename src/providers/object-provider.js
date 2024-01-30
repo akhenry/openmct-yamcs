@@ -39,7 +39,7 @@ const YAMCS_API_MAP = {
 const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime') {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', dictionaryRequestCacheStrategyPromise = Promise.resolve({})) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -52,6 +52,7 @@ export default class YamcsObjectProvider {
         this.dictionary = {};
         this.limitOverrides = {};
         this.dictionaryPromise = null;
+        this.dictionaryRequestCacheStrategyPromise = dictionaryRequestCacheStrategyPromise;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
@@ -180,7 +181,7 @@ export default class YamcsObjectProvider {
 
     #getTelemetryDictionary() {
         if (!this.dictionaryPromise) {
-            this.dictionaryPromise = this.#loadTelemetryDictionary(this.url, this.instance, this.folderName)
+            this.dictionaryPromise = this.#loadTelemetryDictionary()
                 .finally(() => {
                     this.roleStatusTelemetry.dictionaryLoadComplete();
                 });
@@ -193,8 +194,10 @@ export default class YamcsObjectProvider {
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
         const url = this.#getMdbUrl('space-systems');
-        const spaceSystems = await accumulateResults(url, {}, 'spaceSystems', []);
-        const parameters = await accumulateResults(parameterUrl, {}, 'parameters', []);
+        const requestOptions = await this.dictionaryRequestCacheStrategyPromise;
+
+        const spaceSystems = await accumulateResults(url, requestOptions, 'spaceSystems', []);
+        const parameters = await accumulateResults(parameterUrl, requestOptions, 'parameters', []);
 
         /* Sort the space systems by name, so that the
             children of the root object are in sorted order. */

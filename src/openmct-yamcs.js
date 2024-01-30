@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2022, United States Government
+ * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -36,11 +36,13 @@ import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
-import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin.js";
+import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
-export default function installYamcsPlugin(configuration) {
-    return function install(openmct) {
-
+export default function install(
+    configuration,
+    dictionaryRequestCacheStrategyPromise
+) {
+    return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
 
         const latestTelemetryProvider = new LatestTelemetryProvider({
@@ -58,9 +60,12 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(historicalTelemetryProvider);
 
         const realtimeTelemetryProvider = new RealtimeProvider(
+            openmct,
             configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            configuration.throttleRate,
+            configuration.maxBatchSize
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
@@ -127,7 +132,8 @@ export default function installYamcsPlugin(configuration) {
             pollQuestionParameter,
             pollQuestionTelemetry,
             realtimeTelemetryProvider,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            dictionaryRequestCacheStrategyPromise
         );
 
         openmct.objects.addRoot({

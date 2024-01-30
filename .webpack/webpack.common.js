@@ -25,15 +25,14 @@ import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
-// eslint-disable no-undef
-const WEBPACK_COMMON_CONFIG = {
+/** @type {import('webpack').Configuration} */
+const commonConfig = {
+    context: projectRootDir,
     performance: {
         hints: false
     },
-    resolve: {
-        alias: {
-            saveAs: "file-saver/src/FileSaver.js",
-        }
+    entry: {
+        'openmct-yamcs': './src/openmct-yamcs.js'
     },
     module: {
         rules: [
@@ -42,16 +41,19 @@ const WEBPACK_COMMON_CONFIG = {
                 enforce: "pre",
                 use: ["source-map-loader"]
             }
-        ]
+        ],
     },
     output: {
         globalObject: "this",
         filename: '[name].js',
-        // eslint-disable-next-line no-undef
         path: path.resolve(projectRootDir, 'dist'),
-        libraryTarget: 'umd',
-        library: 'openmctYamcs'
+        library: {
+            type: 'umd',
+            export: 'default',
+            name: 'openmctYamcs'
+        }
     }
 };
-export default WEBPACK_COMMON_CONFIG;
+
+export default commonConfig;
 
