@@ -107,15 +107,15 @@ export default class UserProvider extends EventEmitter {
     }
 
     async getPossibleMissionRoles() {
-        const possibleStatuses = await this.missionStatus.getAllMissionRoles();
+        const possibleRoles = await this.missionStatus.getAllMissionRoles();
 
-        return possibleStatuses;
+        return possibleRoles;
     }
 
     async getPossibleMissionRoleStatuses() {
-        const statusRoles = await this.missionStatus.getPossibleMissionStatuses();
+        const statuses = await this.missionStatus.getPossibleMissionStatuses();
 
-        return statusRoles;
+        return statuses;
     }
 
     async canSetPollQuestion() {
