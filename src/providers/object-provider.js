@@ -39,7 +39,7 @@ const YAMCS_API_MAP = {
 const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', dictionaryRequestCacheStrategyPromise = Promise.resolve({})) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -52,7 +52,7 @@ export default class YamcsObjectProvider {
         this.dictionary = {};
         this.limitOverrides = {};
         this.dictionaryPromise = null;
-        this.dictionaryRequestCacheStrategyPromise = dictionaryRequestCacheStrategyPromise;
+        this.getDictionaryRequestOptions = getDictionaryRequestOptions;
         this.roleStatusTelemetry = roleStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
@@ -194,7 +194,8 @@ export default class YamcsObjectProvider {
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
         const url = this.#getMdbUrl('space-systems');
-        const requestOptions = await this.dictionaryRequestCacheStrategyPromise;
+
+        const requestOptions = await this.getDictionaryRequestOptions();
 
         const spaceSystems = await accumulateResults(url, requestOptions, 'spaceSystems', []);
         const parameters = await accumulateResults(parameterUrl, requestOptions, 'parameters', []);
