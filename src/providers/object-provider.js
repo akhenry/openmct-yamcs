@@ -39,7 +39,7 @@ const YAMCS_API_MAP = {
 const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => {}) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
