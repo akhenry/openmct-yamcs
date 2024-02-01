@@ -421,6 +421,7 @@ export default class YamcsObjectProvider {
 
                 const possibleStatuses = getPossibleMissionActionStatusesFromParameter(parameter);
                 possibleStatuses.forEach(status => this.missionStatusTelemetry.addStatus(status));
+                this.missionStatusTelemetry.addMissionStatusParameterName(parameter.qualifiedName);
                 this.missionStatusTelemetry.addMissionAction(action);
                 this.missionStatusTelemetry.setTelemetryObjectForAction(action, obj);
             }

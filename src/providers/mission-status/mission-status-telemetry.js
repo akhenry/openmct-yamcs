@@ -26,6 +26,8 @@ import {
 export default class MissionStatusTelemetry {
     #missionStatusMap;
     #missionActions;
+    /** @type {Set<string>} */
+    #missionStatusParameterNames;
     #missionActionToTelemetryObjectMap;
     #setReady;
     #readyPromise;
@@ -34,9 +36,10 @@ export default class MissionStatusTelemetry {
     #processor;
     #openmct;
 
-    constructor(openmct, {url, instance, processor = 'realtime'}) {
+    constructor(openmct, { url, instance, processor = 'realtime' }) {
         this.#missionStatusMap = {};
         this.#missionActions = new Set();
+        this.#missionStatusParameterNames = new Set();
         this.#missionActionToTelemetryObjectMap = {};
         this.#readyPromise = new Promise((resolve) => this.#setReady = resolve);
         this.#url = url;
@@ -44,6 +47,7 @@ export default class MissionStatusTelemetry {
         this.#processor = processor;
         this.#openmct = openmct;
     }
+
     async setStatusForMissionAction(action, status) {
         const telemetryObject = await this.getTelemetryObjectForAction(action);
         const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
@@ -68,35 +72,63 @@ export default class MissionStatusTelemetry {
 
         return success;
     }
+
     async getPossibleMissionStatuses() {
         await this.#readyPromise;
 
         return Object.values(this.#missionStatusMap).map(status => this.toMissionStatusFromMdbEntry(status));
     }
+
     async getDefaultStatusForAction() {
         const possibleStatuses = await this.getPossibleMissionStatuses();
 
         return possibleStatuses[0];
     }
+
     addStatus(status) {
         this.#missionStatusMap[status.value] = status;
     }
+
     async getTelemetryObjectForAction(action) {
         await this.#readyPromise;
 
         return this.#missionActionToTelemetryObjectMap[action];
     }
+
+    async isMissionStatusParameterName(parameterName) {
+        await this.#readyPromise;
+        if (this.#missionStatusParameterNames.has(parameterName)) {
+            return true;
+        }
+
+        const parameterRegExp = new RegExp(`^${parameterName}$`);
+        for (const missionStatusParameterName of this.#missionStatusParameterNames) {
+            if (parameterRegExp.test(missionStatusParameterName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     setTelemetryObjectForAction(action, telemetryObject) {
         this.#missionActionToTelemetryObjectMap[action] = telemetryObject;
     }
+
     addMissionAction(action) {
         this.#missionActions.add(action);
     }
+
+    addMissionStatusParameterName(parameterName) {
+        this.#missionStatusParameterNames.add(parameterName);
+    }
+
     async getAllMissionActions() {
         await this.#readyPromise;
 
         return Array.from(this.#missionActions);
     }
+
     toMissionStatusFromMdbEntry(yamcsStatus) {
         return {
             // eslint-disable-next-line radix
@@ -104,6 +136,7 @@ export default class MissionStatusTelemetry {
             label: yamcsStatus.label
         };
     }
+
     toStatusFromTelemetry(telemetryObject, datum) {
         const metadata = this.#openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
@@ -116,11 +149,12 @@ export default class MissionStatusTelemetry {
             label: formatter.format(datum),
             timestamp: dateFormatter.parse(datum)
         };
-
     }
+
     dictionaryLoadComplete() {
         this.#setReady();
     }
+
     #buildUrl(id) {
         let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
 

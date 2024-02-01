@@ -22,7 +22,6 @@
 
 import createYamcsUser from './createYamcsUser.js';
 import { EventEmitter } from 'eventemitter3';
-import { isMissionStatusParameter } from '../mission-status/mission-status-parameter.js';
 
 export default class UserProvider extends EventEmitter {
     constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry, missionStatus}) {
@@ -100,7 +99,7 @@ export default class UserProvider extends EventEmitter {
         const writeParameters = user.getWriteParameters();
 
         const areParametersStatus = await Promise.all(
-            writeParameters.map(parameterName => isMissionStatusParameter(parameterName))
+            writeParameters.map(parameterName => this.missionStatus.isMissionStatusParameterName(parameterName))
         );
 
         return areParametersStatus.some(isParameterStatus => isParameterStatus);
