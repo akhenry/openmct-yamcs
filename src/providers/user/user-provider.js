@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser.js';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry, missionStatus}) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry, missionStatus}) {
         super();
 
         this.openmct = openmct;
@@ -39,7 +39,6 @@ export default class UserProvider extends EventEmitter {
         this.unsubscribeMissionStatus = {};
 
         this.latestTelemetryProvider = latestTelemetryProvider;
-        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
         this.openmct.once('destroy', () => {
@@ -137,7 +136,7 @@ export default class UserProvider extends EventEmitter {
     async getStatusForMissionAction(action) {
         const missionStatusTelemetryObject = await this.missionStatus.getTelemetryObjectForAction(action);
         if (this.unsubscribeMissionStatus[action] === undefined) {
-            this.unsubscribeMissionStatus[action] = this.realtimeTelemetryProvider.subscribe(missionStatusTelemetryObject, (datum) => {
+            this.unsubscribeMissionStatus[action] = this.openmct.telemetry.subscribe(missionStatusTelemetryObject, (datum) => {
                 this.emit('missionActionStatusChange', {
                     action,
                     status: this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, datum)
@@ -158,7 +157,7 @@ export default class UserProvider extends EventEmitter {
     async getStatusForRole(role) {
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
         if (this.unsubscribeStatus[role] === undefined) {
-            this.unsubscribeStatus[role] = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
+            this.unsubscribeStatus[role] = this.openmct.telemetry.subscribe(statusTelemetryObject, (datum) => {
                 this.emit('statusChange', {
                     role,
                     status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)
@@ -204,7 +203,7 @@ export default class UserProvider extends EventEmitter {
         const pollQuestionTelemetryObject = await this.pollQuestionTelemetry.getTelemetryObject();
 
         if (this.unsubscribePollQuestion === undefined) {
-            this.unsubscribePollQuestion = this.realtimeTelemetryProvider.subscribe(pollQuestionTelemetryObject, (datum) => {
+            this.unsubscribePollQuestion = this.openmct.telemetry.subscribe(pollQuestionTelemetryObject, (datum) => {
                 const formattedPollQuestion = this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, datum);
                 this.emit("pollQuestionChange", formattedPollQuestion);
             });
