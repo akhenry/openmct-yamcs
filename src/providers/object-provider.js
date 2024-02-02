@@ -28,18 +28,18 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
-import OperatorStatusParameter from './user/operator-status-parameter.js';
 import { createCommandsObject } from './commands.js';
 import { createEventsObject } from './events.js';
+import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
+import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
 const YAMCS_API_MAP = {
     'space-systems': 'spaceSystems',
     'parameters': 'parameters'
 };
-const operatorStatusParameter = new OperatorStatusParameter();
 
 export default class YamcsObjectProvider {
-    constructor(openmct, url, instance, folderName, roleStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
+    constructor(openmct, url, instance, folderName, roleStatusTelemetry, missionStatusTelemetry, pollQuestionParameter, pollQuestionTelemetry, realtimeTelemetryProvider, processor = 'realtime', getDictionaryRequestOptions = () => Promise.resolve({})) {
         this.openmct = openmct;
         this.url = url;
         this.instance = instance;
@@ -54,6 +54,7 @@ export default class YamcsObjectProvider {
         this.dictionaryPromise = null;
         this.getDictionaryRequestOptions = getDictionaryRequestOptions;
         this.roleStatusTelemetry = roleStatusTelemetry;
+        this.missionStatusTelemetry = missionStatusTelemetry;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
 
@@ -184,6 +185,7 @@ export default class YamcsObjectProvider {
             this.dictionaryPromise = this.#loadTelemetryDictionary()
                 .finally(() => {
                     this.roleStatusTelemetry.dictionaryLoadComplete();
+                    this.missionStatusTelemetry.dictionaryLoadComplete();
                 });
         }
 
@@ -399,16 +401,29 @@ export default class YamcsObjectProvider {
                 telemetryValue.unit = unitSuffix;
             }
 
-            if (operatorStatusParameter.isOperatorStatusParameter(parameter)) {
-                const role = operatorStatusParameter.getRoleFromParameter(parameter);
+            if (isOperatorStatusParameter(parameter)) {
+                const role = getRoleFromParameter(parameter);
                 if (!role) {
                     throw new Error(`Operator Status Parameter "${parameter.qualifiedName}" does not specify a role`);
                 }
 
-                const possibleStatuses = operatorStatusParameter.getPossibleStatusesFromParameter(parameter);
+                const possibleStatuses = getPossibleStatusesFromParameter(parameter);
                 possibleStatuses.forEach(state => this.roleStatusTelemetry.addStatus(state));
                 this.roleStatusTelemetry.addStatusRole(role);
                 this.roleStatusTelemetry.setTelemetryObjectForRole(role, obj);
+            }
+
+            if (isMissionStatusParameter(parameter)) {
+                const action = getMissionActionFromParameter(parameter);
+                if (!action) {
+                    throw new Error(`Mission Status Parameter "${parameter.qualifiedName}" does not specify a mission action`);
+                }
+
+                const possibleStatuses = getPossibleMissionActionStatusesFromParameter(parameter);
+                possibleStatuses.forEach(status => this.missionStatusTelemetry.addStatus(status));
+                this.missionStatusTelemetry.addMissionStatusParameterName(parameter.qualifiedName);
+                this.missionStatusTelemetry.addMissionAction(action);
+                this.missionStatusTelemetry.setTelemetryObjectForAction(action, obj);
             }
 
             if (this.pollQuestionParameter.isPollQuestionParameter(parameter)) {

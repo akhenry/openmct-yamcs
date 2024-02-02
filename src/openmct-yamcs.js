@@ -33,6 +33,7 @@ import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-pro
 
 import { OBJECT_TYPES } from './const.js';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
+import MissionStatusTelemetry from './providers/mission-status/mission-status-telemetry.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
@@ -70,16 +71,15 @@ export default function install(
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
 
-        openmct.faults.addProvider(new YamcsFaultProvider({
-            faultModelConvertor,
-            historicalEndpoint: configuration.yamcsHistoricalEndpoint,
-            yamcsInstance: configuration.yamcsInstance,
-            realtimeTelemetryProvider
-        }));
+        openmct.faults.addProvider(new YamcsFaultProvider(openmct,
+            {
+                faultModelConvertor,
+                historicalEndpoint: configuration.yamcsHistoricalEndpoint,
+                yamcsInstance: configuration.yamcsInstance
+            }));
 
         const stalenessProvider = new YamcsStalenessProvider(
             openmct,
-            realtimeTelemetryProvider,
             latestTelemetryProvider
         );
         openmct.telemetry.addProvider(stalenessProvider);
@@ -87,13 +87,18 @@ export default function install(
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance,
-            realtimeTelemetryProvider));
+            configuration.yamcsInstance
+        ));
 
         openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
+
+        const missionStatusTelemetry = new MissionStatusTelemetry(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+        });
 
         const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
@@ -113,8 +118,8 @@ export default function install(
                 openmct, {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus: roleStatusTelemetry,
+                    missionStatus: missionStatusTelemetry,
                     latestTelemetryProvider,
-                    realtimeTelemetryProvider,
                     pollQuestionParameter,
                     pollQuestionTelemetry
                 });
@@ -129,6 +134,7 @@ export default function install(
             configuration.yamcsInstance,
             configuration.yamcsFolder,
             roleStatusTelemetry,
+            missionStatusTelemetry,
             pollQuestionParameter,
             pollQuestionTelemetry,
             realtimeTelemetryProvider,
@@ -199,6 +205,12 @@ export default function install(
         openmct.types.addType(OBJECT_TYPES.OPERATOR_STATUS_TYPE, {
             name: 'Operator Status',
             description: 'Operator status',
+            cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.MISSION_STATUS_TYPE, {
+            name: 'Mission Status',
+            description: 'Mission status',
             cssClass: 'icon-telemetry'
         });
 
