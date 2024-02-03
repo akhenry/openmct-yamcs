@@ -28,7 +28,7 @@ import {
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
     MDB_OBJECT,
-    MDB_CHANGES_PARAMTER_TYPE
+    MDB_CHANGES_PARAMETER_TYPE
 } from '../const.js';
 import {
     buildStalenessResponseObject,
@@ -359,7 +359,7 @@ export default class RealtimeProvider {
                         const datum = eventToTelemetryDatum(message.data);
                         subscriptionDetails.callback(datum);
                     }
-                } else if (this.isMdbChanges(message)) {
+                } else if (this.isMdbChangesMessage(message)) {
                     if (!this.isParameterType(message)) {
                         return;
                     }
@@ -401,11 +401,11 @@ export default class RealtimeProvider {
         return message.type === 'events';
     }
 
-    isMdbChanges(message) {
+    isMdbChangesMessage(message) {
         return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
     }
 
     isParameterType(message) {
-        return message.data?.type === MDB_CHANGES_PARAMTER_TYPE;
+        return message.data?.type === MDB_CHANGES_PARAMETER_TYPE;
     }
 }
