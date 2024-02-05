@@ -66,3 +66,5 @@ export const MDB_OBJECT = Object.freeze({
     },
     type: MDB_TYPE
 });
+
+export const MDB_CHANGES_PARAMETER_TYPE = 'PARAMETER';

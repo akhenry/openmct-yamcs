@@ -27,7 +27,8 @@ import {
     AGGREGATE_TYPE,
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
-    MDB_OBJECT
+    MDB_OBJECT,
+    MDB_CHANGES_PARAMETER_TYPE
 } from '../const.js';
 import {
     buildStalenessResponseObject,
@@ -359,6 +360,9 @@ export default class RealtimeProvider {
                         subscriptionDetails.callback(datum);
                     }
                 } else if (this.isMdbChangesMessage(message)) {
+                    if (!this.isParameterType(message)) {
+                        return;
+                    }
                     const parameterName = message.data.parameterOverride.parameter;
                     if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
@@ -399,5 +403,9 @@ export default class RealtimeProvider {
 
     isMdbChangesMessage(message) {
         return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
+    }
+
+    isParameterType(message) {
+        return message.data?.type === MDB_CHANGES_PARAMETER_TYPE;
     }
 }
