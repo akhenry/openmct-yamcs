@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2023, United States Government
+ * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,36 +20,22 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const.js';
-import { buildStalenessResponseObject } from '../utils.js';
+const MISSION_STATUS_TYPE = 'yamcs.missionStatus';
+const MISSION_ACTION_NAMESPACE = 'OpenMCT:action';
 
-export default class YamcsStalenessProvider {
-    #openmct;
-    constructor(openmct, latestTelemetryProvider) {
-        this.#openmct = openmct;
-        this.latestTelemetryProvider = latestTelemetryProvider;
-    }
+export function isMissionStatusParameter(parameter) {
+    const aliases = parameter.alias;
 
-    supportsStaleness(domainObject) {
-        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
-    }
+    return aliases !== undefined
+        && aliases.some(alias => alias.name === MISSION_STATUS_TYPE);
+}
 
-    subscribeToStaleness(domainObject, callback) {
-        return this.#openmct.telemetry.subscribeToStaleness(domainObject, callback);
-    }
+export function getMissionActionFromParameter(parameter) {
+    const aliases = parameter.alias;
 
-    async isStale(domainObject) {
-        const response = await this.latestTelemetryProvider.requestLatest(domainObject);
+    return aliases.find(alias => alias.namespace === MISSION_ACTION_NAMESPACE)?.name;
+}
 
-        if (!response?.acquisitionStatus) {
-            return;
-        }
-
-        const stalenessObject = buildStalenessResponseObject(
-            STALENESS_STATUS_MAP[response.acquisitionStatus],
-            response.timestamp
-        );
-
-        return stalenessObject;
-    }
+export function getPossibleMissionActionStatusesFromParameter(parameter) {
+    return parameter.type.enumValue;
 }
