@@ -91,6 +91,23 @@ openmct.install(installYamcsPlugin({
 | yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 | yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 
+## getDictionaryRequestOptions
+installYamcsPlugin also accepts an optional function argument `getDictionaryRequestOptions`. Use this function to return request options when requesting the YAMCS dictionary. An example of how to make use of this is below.
+```
+openmct.install(installYamcsPlugin(
+  configuration,
+  getDictionaryRequestOptions
+))
+
+function getDictionaryRequestOptions() {
+  const requestOptions = SOME_CHECK_IF_DICTIONARY_VERSION_IS_NEW
+    ? { cache: 'reload' }
+    : {};
+  
+  return requestOptions;
+}
+```
+
 ## Special XTCE features
 
 If you are using an XTCE configuration in Yamcs, there are two special

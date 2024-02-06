@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import ExportToCSVAction from './ExportToCSVAction';
+import ExportToCSVAction from './ExportToCSVAction.js';
 
 export default function (url, instance) {
     return function (openmct) {

@@ -21,7 +21,7 @@ jobs:
       matrix:
         yamcs-version:
           - default
-          - 5.8.3 #viper
+          - 5.8.7 #viper
           ## disabling until we get confirmation- 5.3.2 #ab
         openmct-version:
           - latest
@@ -56,7 +56,7 @@ jobs:
           fi
       - run: npx playwright@1.39.0 install chromium
       - name: Get Open MCT e2e tests
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -74,9 +74,7 @@ jobs:
             echo "Error: Unable to fetch Yamcs version. HTTP status code: $response"
             exit 1
           fi
-      - name: Run Quickstart tests and publish to deploysentinel
-        env:
-          DEPLOYSENTINEL_API_KEY: ${{ secrets.DEPLOYSENTINEL_API_KEY }} 
+      - name: Run Quickstart tests
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()

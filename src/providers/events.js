@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES, METADATA_TIME_KEY, SEVERITY_LEVELS } from "../const";
+import { OBJECT_TYPES, METADATA_TIME_KEY, SEVERITY_LEVELS } from "../const.js";
 
 export function createEventsObject(openmct, parentKey, namespace) {
     const location = openmct.objects.makeKeyString({

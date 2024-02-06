@@ -20,18 +20,19 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const path = require('path');
-const projectRootDir = path.resolve(__dirname, '..');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// eslint-disable no-undef
-const WEBPACK_COMMON_CONFIG = {
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
+
+/** @type {import('webpack').Configuration} */
+const commonConfig = {
+    context: projectRootDir,
     performance: {
         hints: false
     },
-    resolve: {
-        alias: {
-            saveAs: "file-saver/src/FileSaver.js",
-        }
+    entry: {
+        'openmct-yamcs': './src/openmct-yamcs.js'
     },
     module: {
         rules: [
@@ -40,17 +41,19 @@ const WEBPACK_COMMON_CONFIG = {
                 enforce: "pre",
                 use: ["source-map-loader"]
             }
-        ]
+        ],
     },
     output: {
         globalObject: "this",
         filename: '[name].js',
-        // eslint-disable-next-line no-undef
         path: path.resolve(projectRootDir, 'dist'),
-        libraryTarget: 'umd',
-        library: 'openmctYamcs'
+        library: {
+            type: 'umd',
+            export: 'default',
+            name: 'openmctYamcs'
+        }
     }
 };
 
-// eslint-disable-next-line no-undef
-module.exports = WEBPACK_COMMON_CONFIG;
+export default commonConfig;
+
