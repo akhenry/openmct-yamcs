@@ -51,8 +51,7 @@ const commonConfig = {
             type: 'umd',
             export: 'default',
             name: 'openmctYamcs'
-        },
-        libraryExport: 'default'
+        }
     },
     devServer: {
         compress: true,
