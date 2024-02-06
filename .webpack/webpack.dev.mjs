@@ -31,7 +31,7 @@ const devConfig = {
     mode: 'development',
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': './example/index.js'
+        'openmct-yamcs-example': '../example/index.js'
     },
 }
 export default merge(commonConfig, devConfig);
