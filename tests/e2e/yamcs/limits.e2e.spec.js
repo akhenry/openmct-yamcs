@@ -28,7 +28,7 @@ import { test, expect } from '../opensource/pluginFixtures.js';
 import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensource/appActions.js';
 const YAMCS_URL = 'http://localhost:8090/';
 
-test.describe.only("Mdb runtime limits tests @yamcs", () => {
+test.describe("Mdb runtime limits tests @yamcs", () => {
     test('Can show mdb limits when changed', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
