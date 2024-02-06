@@ -27,7 +27,7 @@ import prod from './webpack.prod.js';
 /** @type {import('webpack').Configuration} */
 const prodTestConfig = {
     entry: {
-        'openmct-yamcs-example': './example/index.js'
+        'openmct-yamcs-example': '../example/index.js'
     },
 }
 export default merge(prod, prodTestConfig);
