@@ -21,6 +21,7 @@
  *****************************************************************************/
 import { merge } from "webpack-merge";
 import commonConfig from "./webpack.common.mjs";
+import { fileURLToPath } from 'node:url';
 
 // Replicate __dirname functionality for ES modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
