@@ -23,16 +23,16 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const commonConfig = {
-    context: projectRootDir,
+    context: __dirname,
     performance: {
         hints: false
     },
     entry: {
-        'openmct-yamcs': './src/openmct-yamcs.js'
+        'openmct-yamcs': '../src/openmct-yamcs.js'
     },
     module: {
         rules: [
@@ -46,7 +46,7 @@ const commonConfig = {
     output: {
         globalObject: "this",
         filename: '[name].js',
-        path: path.resolve(projectRootDir, 'dist'),
+        path: path.resolve(__dirname, 'dist'),
         library: {
             type: 'umd',
             export: 'default',
@@ -57,10 +57,10 @@ const commonConfig = {
         compress: true,
         port: 9000,
         static: [{
-            directory: path.join(projectRootDir, 'example')
+            directory: path.join(__dirname, '../example'),
         }, {
-            directory: path.join(projectRootDir, '/node_modules/openmct/dist'),
-            publicPath: '/node_modules/openmct/dist'
+            directory: path.join(__dirname, '../node_modules/openmct/dist'),
+            publicPath: '/dist',
         }],
         proxy: {
             "/yamcs-proxy/*": {
@@ -76,6 +76,11 @@ const commonConfig = {
                 ws: true,
                 pathRewrite: { '^/yamcs-proxy-ws/': '' }
             }
+        }
+    },
+    resolve: {
+        alias: {
+            openmct: path.resolve(__dirname, '../node_modules/openmct/dist/openmct.js')
         }
     }
 };
