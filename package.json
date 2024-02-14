@@ -33,7 +33,7 @@
     "node": ">=16.19.1"
   },
   "optionalDependencies": {
-    "openmct": ">= 2.2.5"
+    "openmct": ">= 3.9.9"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
