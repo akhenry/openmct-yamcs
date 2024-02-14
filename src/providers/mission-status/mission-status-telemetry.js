@@ -73,28 +73,51 @@ export default class MissionStatusTelemetry {
         return success;
     }
 
+    /**
+     * Get the possible mission statuses.
+     * i.e: "Go" or "No Go"
+     * @returns {Promise<MissionStatus[]>}
+     */
     async getPossibleMissionStatuses() {
         await this.#readyPromise;
 
         return Object.values(this.#missionStatusMap).map(status => this.toMissionStatusFromMdbEntry(status));
     }
 
+    /**
+     * Get the default status for any mission action.
+     * Returns the first status in the list of possible statuses.
+     * @returns {Promise<MissionStatus>}
+     */
     async getDefaultStatusForAction() {
         const possibleStatuses = await this.getPossibleMissionStatuses();
 
         return possibleStatuses[0];
     }
 
+    /**
+     * Adds a mission status to the list of possible statuses.
+     * @param {MissionStatus} status
+     */
     addStatus(status) {
         this.#missionStatusMap[status.value] = status;
     }
 
+    /**
+     * @param {MissionAction} action
+     * @returns {Promise<TelemetryObject>}
+     */
     async getTelemetryObjectForAction(action) {
         await this.#readyPromise;
 
         return this.#missionActionToTelemetryObjectMap[action];
     }
 
+    /**
+     * 
+     * @param {string} parameterName 
+     * @returns {boolean}
+     */
     async isMissionStatusParameterName(parameterName) {
         await this.#readyPromise;
         if (this.#missionStatusParameterNames.has(parameterName)) {
@@ -111,24 +134,46 @@ export default class MissionStatusTelemetry {
         return false;
     }
 
+    /**
+     * 
+     * @param {MissionAction} action
+     * @param {TelemetryObject} telemetryObject
+     */
     setTelemetryObjectForAction(action, telemetryObject) {
         this.#missionActionToTelemetryObjectMap[action] = telemetryObject;
     }
 
+    /**
+     * Add a mission action to the list of possible actions.
+     * @param {string} action
+     */
     addMissionAction(action) {
         this.#missionActions.add(action);
     }
 
+    /**
+     * Add a mission status parameter name to the list of parameter names.
+     * @param {string} parameterName
+     */
     addMissionStatusParameterName(parameterName) {
         this.#missionStatusParameterNames.add(parameterName);
     }
 
+    /**
+     * Get a list of all mission actions.
+     * @returns {Promise<MissionAction[]>}
+     */
     async getAllMissionActions() {
         await this.#readyPromise;
 
         return Array.from(this.#missionActions);
     }
 
+    /**
+     * 
+     * @param {*} yamcsStatus 
+     * @returns {MissionStatus}
+     */
     toMissionStatusFromMdbEntry(yamcsStatus) {
         return {
             // eslint-disable-next-line radix
@@ -137,6 +182,12 @@ export default class MissionStatusTelemetry {
         };
     }
 
+    /**
+     * 
+     * @param {TelemetryObject} telemetryObject 
+     * @param {*} datum 
+     * @returns {MissionStatus}
+     */
     toStatusFromTelemetry(telemetryObject, datum) {
         const metadata = this.#openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
@@ -151,13 +202,50 @@ export default class MissionStatusTelemetry {
         };
     }
 
+    /**
+     * Fires when the dictionary is loaded.
+     */
     dictionaryLoadComplete() {
         this.#setReady();
     }
 
+    /**
+     * 
+     * @param {import('openmct').Identifier} id 
+     * @returns {string}
+     */
     #buildUrl(id) {
         let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
 
         return url;
     }
 }
+
+/**
+ * @typedef {Object} MissionStatus
+ * @property {number} key
+ * @property {string} label
+ * @property {number?} timestamp
+ */
+
+/**
+ * @typedef {string} MissionAction
+ */
+
+/**
+ * @typedef {Object} TelemetryObject
+ * @property {import('openmct').Identifier} identifier
+ * @property {string} name
+ * @property {string} type
+ * @property {string} key
+ * @property {string} namespace
+ * @property {string} domain
+ * @property {string} range
+ * @property {string} location
+ * @property {string} source
+ * @property {string} telemetry
+ * @property {string} metadata
+ * @property {string} composition
+ * @property {string} object
+ * @property {string} value
+ */
