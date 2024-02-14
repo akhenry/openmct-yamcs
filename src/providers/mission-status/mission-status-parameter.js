@@ -23,6 +23,11 @@
 const MISSION_STATUS_TYPE = 'yamcs.missionStatus';
 const MISSION_ACTION_NAMESPACE = 'OpenMCT:action';
 
+/**
+ * Check if the parameter is a mission status parameter
+ * @param {*} parameter
+ * @returns {boolean} true if the parameter is a mission status parameter, false otherwise
+ */
 export function isMissionStatusParameter(parameter) {
     const aliases = parameter.alias;
 
@@ -30,12 +35,22 @@ export function isMissionStatusParameter(parameter) {
         && aliases.some(alias => alias.name === MISSION_STATUS_TYPE);
 }
 
+/**
+ * Get the mission action from the parameter
+ * @param {*} parameter
+ * @returns {import("./mission-status-telemetry").MissionAction? } the mission action name if the parameter is a mission action parameter, null otherwise
+ */
 export function getMissionActionFromParameter(parameter) {
     const aliases = parameter.alias;
 
-    return aliases.find(alias => alias.namespace === MISSION_ACTION_NAMESPACE)?.name;
+    return aliases.find(alias => alias.namespace === MISSION_ACTION_NAMESPACE)?.name ?? null;
 }
 
+/**
+ * Get the possible mission action statuses from the parameter
+ * @param {*} parameter 
+ * @returns {string[]}
+ */
 export function getPossibleMissionActionStatusesFromParameter(parameter) {
     return parameter.type.enumValue;
 }
