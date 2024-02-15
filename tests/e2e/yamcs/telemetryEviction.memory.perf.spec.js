@@ -87,13 +87,9 @@ test.describe.only('Telemetry Eviction', () => {
         await page.evaluate(() => {
             const oldTelemetryRequest = window.openmct.telemetry.request.bind(window.openmct.telemetry);
             async function newTelemetryRequest(domainObject) {
-                console.debug('🧸 Telemetry request called', domainObject);
                 const returnedTelemetry = await oldTelemetryRequest(domainObject);
                 // only register items for garbage collection if we have some telemetry
                 if (returnedTelemetry?.[0]) {
-                    console.debug(`🧸 Telemetry request returned ${returnedTelemetry.length} items`);
-                    console.debug('🧸 Telemetry request returned first item', returnedTelemetry[0]);
-
                     if (!window.garbageCollectionPromises) {
                         window.garbageCollectionPromises = [];
                     }
@@ -103,7 +99,6 @@ test.describe.only('Telemetry Eviction', () => {
                     }
 
                     const newGarbageCollectionPromise = new Promise((resolve) => {
-                        console.debug(`🚨 garbage collection invoked`);
                         // eslint-disable-next-line no-undef
                         const newFinalizationRegistry = new FinalizationRegistry(resolve);
                         newFinalizationRegistry.register(
@@ -125,9 +120,31 @@ test.describe.only('Telemetry Eviction', () => {
         // handle subscribe telemetry
         await page.evaluate(() => {
             const oldTelemetrySubscribe = window.openmct.telemetry.subscribe.bind(window.openmct.telemetry);
-            function newTelemetrySubscribe(domainObject, callback, options) {
-                console.debug('🧸 Telemetry subscribe called', domainObject, callback, options);
-                const unsubscribeCallback = oldTelemetrySubscribe(domainObject, callback, options);
+            function newTelemetrySubscribe(domainObject, oldCallback, options) {
+                function newCallback(data) {
+                    if (!window.garbageCollectionPromises) {
+                        window.garbageCollectionPromises = [];
+                    }
+
+                    if (!window.finalizationRegistries) {
+                        window.finalizationRegistries = [];
+                    }
+
+                    const newGarbageCollectionPromise = new Promise((resolve) => {
+                        // eslint-disable-next-line no-undef
+                        const newFinalizationRegistry = new FinalizationRegistry(resolve);
+                        newFinalizationRegistry.register(
+                            data,
+                            'theReturnedTelemetry',
+                            data
+                        );
+                        window.finalizationRegistries.push(newFinalizationRegistry);
+                    });
+                    window.garbageCollectionPromises.push(newGarbageCollectionPromise);
+                    oldCallback(data);
+                }
+
+                const unsubscribeCallback = oldTelemetrySubscribe(domainObject, newCallback, options);
 
                 return unsubscribeCallback;
             }
