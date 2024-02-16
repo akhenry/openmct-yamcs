@@ -25,7 +25,7 @@ module.exports = {
         "browser": true,
         "es6": true,
         "jasmine": true,
-        "amd": true
+        "amd": false
     },
     "extends": "eslint:recommended",
     "parser": "@babel/eslint-parser",
@@ -37,7 +37,16 @@ module.exports = {
             "impliedStrict": true
         }
     },
+    "plugins": ['import'],
     "rules": {
+        'import/no-amd': 'error',
+        'import/no-commonjs': 'error',
+        'import/named': 'error',
+        'import/no-webpack-loader-syntax': 'error',
+        'import/first': 'error',
+        'import/no-import-module-exports': 'error',
+        'import/no-mutable-exports': 'error',
+        'import/no-unused-modules': 'error',
         "no-bitwise": "error",
         "curly": "error",
         "eqeqeq": "error",
@@ -237,6 +246,12 @@ module.exports = {
                         "varsIgnorePattern": "controller"
                     }
                 ]
+            }  
+        },
+        {
+            "files": ['*.eslintrc.cjs'],
+            "env": {
+              "node": true
             }
         }
     ]

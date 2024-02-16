@@ -24,8 +24,8 @@
 Network Specific Tests
 */
 
-const { test, expect } = require('../opensource/pluginFixtures');
-const { setFixedTimeMode } = require('../opensource/appActions');
+import { test, expect } from '../opensource/pluginFixtures.js';
+import { setFixedTimeMode } from '../opensource/appActions.js';
 
 test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     // Collect all request events, specifically for YAMCS

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2022, United States Government
+ * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -24,23 +24,26 @@ import YamcsHistoricalTelemetryProvider from './providers/historical-telemetry-p
 import RealtimeProvider from './providers/realtime-provider.js';
 import YamcsObjectProvider from './providers/object-provider.js';
 import YamcsStalenessProvider from './providers/staleness-provider.js';
-import LimitProvider from './providers/limit-provider';
-import EventLimitProvider from './providers/event-limit-provider';
-import UserProvider from './providers/user/user-provider';
+import LimitProvider from './providers/limit-provider.js';
+import EventLimitProvider from './providers/event-limit-provider.js';
+import UserProvider from './providers/user/user-provider.js';
 
-import { faultModelConvertor } from './providers/fault-mgmt-providers/utils';
-import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider';
+import { faultModelConvertor } from './providers/fault-mgmt-providers/utils.js';
+import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider.js';
 
-import { OBJECT_TYPES } from './const';
+import { OBJECT_TYPES } from './const.js';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
+import MissionStatusTelemetry from './providers/mission-status/mission-status-telemetry.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
-import ExportToCSVActionPlugin from "./actions/exportToCSV/plugin";
+import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
-export default function installYamcsPlugin(configuration) {
-    return function install(openmct) {
-
+export default function install(
+    configuration,
+    getDictionaryRequestOptions
+) {
+    return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
 
         const latestTelemetryProvider = new LatestTelemetryProvider({
@@ -58,23 +61,25 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(historicalTelemetryProvider);
 
         const realtimeTelemetryProvider = new RealtimeProvider(
+            openmct,
             configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            configuration.throttleRate,
+            configuration.maxBatchSize
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
 
-        openmct.faults.addProvider(new YamcsFaultProvider({
-            faultModelConvertor,
-            historicalEndpoint: configuration.yamcsHistoricalEndpoint,
-            yamcsInstance: configuration.yamcsInstance,
-            realtimeTelemetryProvider
-        }));
+        openmct.faults.addProvider(new YamcsFaultProvider(openmct,
+            {
+                faultModelConvertor,
+                historicalEndpoint: configuration.yamcsHistoricalEndpoint,
+                yamcsInstance: configuration.yamcsInstance
+            }));
 
         const stalenessProvider = new YamcsStalenessProvider(
             openmct,
-            realtimeTelemetryProvider,
             latestTelemetryProvider
         );
         openmct.telemetry.addProvider(stalenessProvider);
@@ -82,13 +87,18 @@ export default function installYamcsPlugin(configuration) {
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance,
-            realtimeTelemetryProvider));
+            configuration.yamcsInstance
+        ));
 
         openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
+
+        const missionStatusTelemetry = new MissionStatusTelemetry(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+        });
 
         const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
@@ -108,8 +118,8 @@ export default function installYamcsPlugin(configuration) {
                 openmct, {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus: roleStatusTelemetry,
+                    missionStatus: missionStatusTelemetry,
                     latestTelemetryProvider,
-                    realtimeTelemetryProvider,
                     pollQuestionParameter,
                     pollQuestionTelemetry
                 });
@@ -124,10 +134,12 @@ export default function installYamcsPlugin(configuration) {
             configuration.yamcsInstance,
             configuration.yamcsFolder,
             roleStatusTelemetry,
+            missionStatusTelemetry,
             pollQuestionParameter,
             pollQuestionTelemetry,
             realtimeTelemetryProvider,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            getDictionaryRequestOptions
         );
 
         openmct.objects.addRoot({
@@ -193,6 +205,12 @@ export default function installYamcsPlugin(configuration) {
         openmct.types.addType(OBJECT_TYPES.OPERATOR_STATUS_TYPE, {
             name: 'Operator Status',
             description: 'Operator status',
+            cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.MISSION_STATUS_TYPE, {
+            name: 'Mission Status',
+            description: 'Mission status',
             cssClass: 'icon-telemetry'
         });
 
