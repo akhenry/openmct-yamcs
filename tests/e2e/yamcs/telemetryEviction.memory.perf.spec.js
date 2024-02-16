@@ -28,7 +28,7 @@ const telemetryEvictionFilePath = fileURLToPath(
     new URL('../test-data/telemetry-eviction-test-objects.json', import.meta.url)
 );
 
-test.describe.only('Telemetry Eviction', () => {
+test.describe('Telemetry Eviction', () => {
     test.beforeEach(async ({ page }) => {
         page.on('console', (msg) => {
             console.log(msg);
@@ -72,18 +72,7 @@ test.describe.only('Telemetry Eviction', () => {
         expect(result).toBe(true);
     });
 
-    /**
-     *
-     * @param {import('@playwright/test').Page} page
-     * @param {*} objectName
-     * @returns
-     */
-    async function navigateToObjectAndDetectTelemetryEviction(page, objectName) {
-        await page.getByRole('searchbox', { name: 'Search Input' }).click();
-        // Fill Search input
-        await page.getByRole('searchbox', { name: 'Search Input' }).fill(objectName);
-
-        // handle request telemetry
+    async function setupRequestTelemetryEviction(page) {
         await page.evaluate(() => {
             const oldTelemetryRequest = window.openmct.telemetry.request.bind(window.openmct.telemetry);
             async function newTelemetryRequest(domainObject) {
@@ -116,8 +105,9 @@ test.describe.only('Telemetry Eviction', () => {
 
             window.openmct.telemetry.request = newTelemetryRequest;
         });
+    }
 
-        // handle subscribe telemetry
+    async function setupSubscribeTelemetryEviction(page) {
         await page.evaluate(() => {
             const oldTelemetrySubscribe = window.openmct.telemetry.subscribe.bind(window.openmct.telemetry);
             function newTelemetrySubscribe(domainObject, oldCallback, options) {
@@ -151,6 +141,22 @@ test.describe.only('Telemetry Eviction', () => {
 
             window.openmct.telemetry.subscribe = newTelemetrySubscribe;
         });
+    }
+
+    /**
+     *
+     * @param {import('@playwright/test').Page} page
+     * @param {*} objectName
+     * @returns
+     */
+    async function navigateToObjectAndDetectTelemetryEviction(page, objectName) {
+        await page.getByRole('searchbox', { name: 'Search Input' }).click();
+        // Fill Search input
+        await page.getByRole('searchbox', { name: 'Search Input' }).fill(objectName);
+
+        await setupRequestTelemetryEviction(page);
+
+        await setupSubscribeTelemetryEviction(page);
 
         //Search Result Appears and is clicked
         await page.getByText(objectName, { exact: true }).click();
@@ -158,18 +164,19 @@ test.describe.only('Telemetry Eviction', () => {
         // Wait a few seconds for some telemetry to accumulate
         await page.waitForTimeout(5000);
 
-        // This next code block blocks until the finalization listener is called and the gcPromise resolved. This means that the root node for the view has been garbage collected.
+        // This next code block blocks until the finalization listener is called and the gcPromise resolved.
+        // This means that the root node for the view has been garbage collected.
         // In the event that the root node is not garbage collected, the gcPromise will never resolve and the test will time out.
         await (page.evaluate(async () => {
             const garbageCollectionPromisesToWait = window.garbageCollectionPromises;
-            console.debug(`🚨 waiting for ${garbageCollectionPromisesToWait?.length} garbage collection promises to resolve`);
+            console.debug(`⏲️ Waiting for ${garbageCollectionPromisesToWait?.length} garbage collection promises to resolve`);
             window.garbageCollectionPromises = null;
 
             // Manually invoke the garbage collector once all references are removed.
             window.gc();
 
             await Promise.all(garbageCollectionPromisesToWait);
-            console.debug('🚨 garbage collection promises resolved');
+            console.debug('🎉 All garbage collection promises resolved');
         }));
 
         // Clean up the finalization registry since we don't need it any more.

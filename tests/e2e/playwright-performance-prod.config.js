@@ -16,7 +16,7 @@ const config = {
     },
     use: {
         baseURL: 'http://localhost:9000/',
-        headless: false,
+        headless: true,
         ignoreHTTPSErrors: false, //HTTP performance varies!
         screenshot: 'off',
         trace: 'on-first-retry',
