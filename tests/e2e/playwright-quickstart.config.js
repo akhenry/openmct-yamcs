@@ -9,7 +9,7 @@ const config = {
     testIgnore: '**/*.perf.spec.js',
     timeout: 30 * 1000,
     use: {
-        headless: false,
+        headless: true,
         video: 'off',
         screenshot: 'on',
         trace: 'on',
@@ -32,7 +32,7 @@ const config = {
             grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
-                headless: false,
+                headless: true,
                 trace: 'on-first-retry',
                 video: 'off',
                 screenshot: 'only-on-failure'
