@@ -48,6 +48,12 @@ export default class MissionStatusTelemetry {
         this.#openmct = openmct;
     }
 
+    /**
+     * Set the status for a particular mission action.
+     * @param {MissionAction} action the mission action
+     * @param {MissionStatus} status the status
+     * @returns {Promise<boolean>} true if the status was set successfully
+     */
     async setStatusForMissionAction(action, status) {
         const telemetryObject = await this.getTelemetryObjectForAction(action);
         const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
@@ -104,8 +110,9 @@ export default class MissionStatusTelemetry {
     }
 
     /**
-     * @param {MissionAction} action
-     * @returns {Promise<TelemetryObject>}
+     * Get the telemetry object for a mission action.
+     * @param {MissionAction} action the mission action
+     * @returns {Promise<TelemetryObject>} the telemetry object
      */
     async getTelemetryObjectForAction(action) {
         await this.#readyPromise;
@@ -114,9 +121,9 @@ export default class MissionStatusTelemetry {
     }
 
     /**
-     * 
-     * @param {string} parameterName 
-     * @returns {boolean}
+     * Check if this parameter name is a mission status parameter name.
+     * @param {string} parameterName
+     * @returns {boolean} true if the parameter name is a mission status parameter name
      */
     async isMissionStatusParameterName(parameterName) {
         await this.#readyPromise;
@@ -135,7 +142,7 @@ export default class MissionStatusTelemetry {
     }
 
     /**
-     * 
+     * Set the telemetry object for a mission action.
      * @param {MissionAction} action
      * @param {TelemetryObject} telemetryObject
      */
@@ -145,7 +152,7 @@ export default class MissionStatusTelemetry {
 
     /**
      * Add a mission action to the list of possible actions.
-     * @param {string} action
+     * @param {MissionAction} action
      */
     addMissionAction(action) {
         this.#missionActions.add(action);
@@ -170,8 +177,8 @@ export default class MissionStatusTelemetry {
     }
 
     /**
-     * 
-     * @param {*} yamcsStatus 
+     * Get the current status of a mission action given its MDB entry.
+     * @param {MdbEntry} yamcsStatus the MDB entry
      * @returns {MissionStatus}
      */
     toMissionStatusFromMdbEntry(yamcsStatus) {
@@ -183,9 +190,9 @@ export default class MissionStatusTelemetry {
     }
 
     /**
-     * 
-     * @param {TelemetryObject} telemetryObject 
-     * @param {*} datum 
+     * Receives a telemetry object and a datum and returns a mission status.
+     * @param {TelemetryObject} telemetryObject the telemetry object
+     * @param {Datum} datum the datum object
      * @returns {MissionStatus}
      */
     toStatusFromTelemetry(telemetryObject, datum) {
@@ -210,8 +217,8 @@ export default class MissionStatusTelemetry {
     }
 
     /**
-     * 
-     * @param {import('openmct').Identifier} id 
+     * Construct the URL for a parameter.
+     * @param {import('openmct').Identifier} id the identifier
      * @returns {string}
      */
     #buildUrl(id) {
@@ -237,15 +244,38 @@ export default class MissionStatusTelemetry {
  * @property {import('openmct').Identifier} identifier
  * @property {string} name
  * @property {string} type
- * @property {string} key
- * @property {string} namespace
- * @property {string} domain
- * @property {string} range
  * @property {string} location
- * @property {string} source
- * @property {string} telemetry
+ * @property {string} configuration
+ * @property {string} domain
+ * @property {object} telemetry
+ * @property {TelemetryValue[]} telemetry.values
  * @property {string} metadata
  * @property {string} composition
  * @property {string} object
  * @property {string} value
+ */
+
+/**
+ * @typedef {object} TelemetryValue
+ * @property {string} key
+ * @property {string} name
+ * @property {string} format
+ * @property {string} source
+ * @property {object} hints
+ * @property {number} hints.domain
+ */
+
+/**
+ * @typedef {object} Datum
+ * @property {string} id
+ * @property {string} timestamp
+ * @property {string} acquisitionStatus
+ * @property {*} value
+ */
+
+/**
+ * @typedef {object} MdbEntry
+ * @property {string} value
+ * @property {string} label
+ * @property {string} description
  */
