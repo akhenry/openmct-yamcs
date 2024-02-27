@@ -3,7 +3,10 @@
   "version": "4.0.0-next",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "type": "module",
-  "main": "dist/openmct-yamcs.js",
+  "module": "./dist/plugin.mjs",
+  "exports": {
+    "import": "./dist/plugin.mjs"
+  },
   "scripts": {
     "clean": "rm -rf ./dist ./node_modules ./package-lock.json ./coverage ./test-results ./tests/html-test-results ./tests/e2e/test-results ./.nyc_output ./tests/e2e/opensource",
     "test": "npm run test:getopensource && npm run test:e2e:smoke",

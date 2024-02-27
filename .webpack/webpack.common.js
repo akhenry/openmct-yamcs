@@ -23,16 +23,16 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const commonConfig = {
-    context: projectRootDir,
+    context: __dirname,
     performance: {
         hints: false
     },
     entry: {
-        'openmct-yamcs': './src/openmct-yamcs.js'
+        plugin: '../src/openmct-yamcs.js'
     },
     module: {
         rules: [
@@ -45,13 +45,14 @@ const commonConfig = {
     },
     output: {
         globalObject: "this",
-        filename: '[name].js',
-        path: path.resolve(projectRootDir, 'dist'),
+        filename: '[name].mjs',
+        path: path.resolve(__dirname, '../dist'),
         library: {
-            type: 'umd',
-            export: 'default',
-            name: 'openmctYamcs'
+            type: 'module'
         }
+    },
+    experiments: {
+        outputModule: true
     }
 };
 
