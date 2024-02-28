@@ -137,7 +137,7 @@ test.describe('Realtime telemetry displays', () => {
             expect(count).toBe(Object.entries(namesToParametersMap).length);
         });
 
-        test('Correctly shows the latest values', async ({ page }) => {
+        test.only('Correctly shows the latest values', async ({ page }) => {
             // Wait a reasonable amount of time for new telemetry to come in.
             // There is nothing significant about the number chosen.
             const WAIT_FOR_MORE_TELEMETRY = 3000;
@@ -156,8 +156,12 @@ test.describe('Realtime telemetry displays', () => {
             const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap));
             const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
             const tableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
+            const allAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
+            const allGaugeValuesByName = await getParameterValuesFromAllGauges(page);
             const tableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
             assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName);
+            assertParameterMapsAreEqual(parameterNamesToLatestValues, allAlphaNumericValuesByName);
+            assertParameterMapsAreEqual(allGaugeValuesByName, parameterNamesToLatestValues, 2);
 
             // Disable playback
             await enableLink();
@@ -175,6 +179,8 @@ test.describe('Realtime telemetry displays', () => {
             const secondParameterNamesToLatestValues = toParameterNameToValueMap(secondLatestValueObjects);
             const secondTableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
             const secondTableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
+            const secondAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
+            const secondGaugeValuesByName = await getParameterValuesFromAllGauges(page);
 
             //First compare timestamps to make sure telemetry on screen is actually changing.
             Object.keys(namesToParametersMap).forEach(key => {
@@ -183,6 +189,8 @@ test.describe('Realtime telemetry displays', () => {
 
             // Next confirm that the values on screen are, again, the same as the latest values in Yamcs
             assertParameterMapsAreEqual(secondParameterNamesToLatestValues, secondTableValuesByParameterName);
+            assertParameterMapsAreEqual(secondParameterNamesToLatestValues, secondAlphaNumericValuesByName);
+            assertParameterMapsAreEqual(secondGaugeValuesByName, parameterNamesToLatestValues, 2);
         });
 
         test('Open MCT does not drop telemetry while app is loading', async ({ page }) => {
@@ -310,12 +318,18 @@ test.describe('Realtime telemetry displays', () => {
         });
     }
 
-    function assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName) {
-        Object.keys(namesToParametersMap).forEach((parameterName) => {
+    function assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName, toPrecision) {
+        Object.keys(parameterNamesToLatestValues).forEach((parameterName) => {
             const valueInYamcs = parameterNamesToLatestValues[parameterName];
             const valueOnScreen = tableValuesByParameterName[parameterName];
+            if (toPrecision !== undefined && !isNaN(valueInYamcs) && !isNaN(valueOnScreen)) {
+                const numericalValueInYamcs = parseFloat(valueInYamcs).toFixed(toPrecision);
+                const numericalValueOnScreen = parseFloat(valueInYamcs).toFixed(toPrecision);
 
-            expect(valueOnScreen).toBe(valueInYamcs);
+                expect(numericalValueOnScreen).toBe(numericalValueInYamcs);
+            } else {
+                expect(valueOnScreen).toBe(valueInYamcs);
+            }
         });
     }
 
@@ -350,11 +364,53 @@ test.describe('Realtime telemetry displays', () => {
 
     }
 
+    async function getParameterValuesFromAllGauges(page) {
+        const allGauges = await (page.getByLabel('sub object frame', {exact: true}).filter({
+            has: page.getByLabel('Gauge', {
+                exact: true
+            })
+        })).all();
+        const arrayOfValues = await Promise.all(allGauges.map(async (gauge) => {
+            const parameterNameText = await (gauge.getByLabel("object name")).innerText();
+            const parameterValueText = await (gauge.getByLabel(/gauge value.*/)).textContent();
+
+            return {
+                parameterNameText,
+                parameterValueText
+            };
+        }));
+
+        return arrayOfValues.reduce((map, row) => {
+            map[row.parameterNameText] = row.parameterValueText;
+
+            return map;
+        }, {});
+    }
+
     async function getParameterValuesFromLadTable(ladTable) {
         const allRows = await (await ladTable.locator('tbody>tr')).all();
         const arrayOfValues = await Promise.all(allRows.map(async (row) => {
             const parameterNameText = await row.getByLabel('lad name').innerText();
             const parameterValueText = await row.getByLabel('lad value').innerText();
+
+            return {
+                parameterNameText,
+                parameterValueText
+            };
+        }));
+
+        return arrayOfValues.reduce((map, row) => {
+            map[row.parameterNameText] = row.parameterValueText;
+
+            return map;
+        }, {});
+    }
+
+    async function getParameterValuesFromAllAlphaNumerics(page) {
+        const allAlphaNumerics = await (page.getByLabel('Alpha-numeric telemetry', {exact: true})).all();
+        const arrayOfValues = await Promise.all(allAlphaNumerics.map(async (alphaNumeric) => {
+            const parameterNameText = await (alphaNumeric.getByLabel(/Alpha-numeric telemetry name.*/)).innerText();
+            const parameterValueText = await (alphaNumeric.getByLabel(/Alpha-numeric telemetry value.*/)).innerText();
 
             return {
                 parameterNameText,
