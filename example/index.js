@@ -53,13 +53,16 @@ document.addEventListener('DOMContentLoaded', function () {
     openmct.start();
 });
 
-openmct.install(openmct.plugins.RemoteClock({namespace: "taxonomy", key: "~myproject~Battery1_Temp"}));
+openmct.install(openmct.plugins.RemoteClock({
+    namespace: "taxonomy",
+    key: "~myproject~Battery1_Temp"
+}));
 openmct.install(openmct.plugins.Conductor({
     menuOptions: [
         {
             name: "Realtime",
             timeSystem: 'utc',
-            clock: 'remote-clock',
+            clock: 'local',
             clockOffsets: {
                 start: -THIRTY_MINUTES,
                 end: 0
@@ -68,7 +71,7 @@ openmct.install(openmct.plugins.Conductor({
         {
             name: "Realtime",
             timeSystem: 'utc',
-            clock: 'local',
+            clock: 'remote-clock',
             clockOffsets: {
                 start: -THIRTY_MINUTES,
                 end: 0
@@ -93,18 +96,6 @@ function installDefaultPlugins() {
     openmct.install(openmct.plugins.example.ExampleImagery());
     openmct.install(openmct.plugins.UTCTimeSystem());
     openmct.install(openmct.plugins.TelemetryMean());
-    openmct.install(() => {
-        const simpleIndicator = openmct.indicators.simpleIndicator();
-        simpleIndicator.text('Go. Slow.');
-        simpleIndicator.on('click', () => {
-            const start = Date.now();
-            while (Date.now() - start <= 1000) {
-                let math = Math.random();
-                window.result = math / Math.random();
-            }
-        });
-        openmct.indicators.add(simpleIndicator);
-    });
 
     openmct.install(openmct.plugins.DisplayLayout({
         showAsView: ['summary-widget', 'example.imagery', 'yamcs.image']
