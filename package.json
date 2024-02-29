@@ -1,6 +1,6 @@
 {
   "name": "openmct-yamcs",
-  "version": "3.3.0-next",
+  "version": "4.0.0-next",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "type": "module",
   "main": "dist/openmct-yamcs.js",
@@ -33,7 +33,7 @@
     "node": ">=16.19.1"
   },
   "optionalDependencies": {
-    "openmct": ">= 2.2.5"
+    "openmct": ">= 3.9.9"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
