@@ -19,7 +19,7 @@
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
     "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
-    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/ --debug",
+    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
     "test:e2e:watch": "npx playwright test --ui --config=./tests/e2e/playwright-quickstart.config.js",
     "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
