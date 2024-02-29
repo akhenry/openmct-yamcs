@@ -189,14 +189,8 @@ function base64ToHex(base64) {
         hexString += charCode.toString(16).padStart(2, '0');
     }
     
-    return hexString.toUpperCase();
+    return `0x${hexString.toUpperCase()}`;
 }
-
-// Example usage
-const base64String = 'SGVsbG8gV29ybGQ='; // "Hello World" in base64
-const hexString = base64ToHex(base64String);
-console.log(hexString); // Output will be the hexadecimal representation of "Hello World"
-
 
 /*
  * Accumulates results from a Yamcs API request that does paging
