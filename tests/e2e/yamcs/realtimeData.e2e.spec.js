@@ -27,58 +27,13 @@ import { expect, test } from '@playwright/test';
 import { fileURLToPath } from 'url';
 import { latestParameterValues, disableLink, enableLink, parameterArchive } from './quickstartTools.js';
 
+import fs from 'fs';
+
+const namesToParametersMap = JSON.parse(fs.readFileSync(new URL('./namesToParametersMap.json', import.meta.url)));
 const realTimeDisplayPath = fileURLToPath(
     new URL('./test-data/e2e-real-time-test-layout.json', import.meta.url)
 );
 
-const namesToParametersMap = {
-    "A": "/myproject/A",
-    "ADCS_Error_Flag":	"/myproject/ADCS_Error_Flag",
-    "Battery1_Temp":	"/myproject/Battery1_Temp",
-    "Battery1_Voltage":	"/myproject/Battery1_Voltage",
-    "Battery2_Temp":	"/myproject/Battery2_Temp",
-    "Battery2_Voltage":	"/myproject/Battery2_Voltage",
-    "CCSDS_Packet_Length":	"/myproject/CCSDS_Packet_Length",
-    "CDHS_Error_Flag":	"/myproject/CDHS_Error_Flag",
-    "CDHS_Status":	"/myproject/CDHS_Status",
-    "COMMS_Error_Flag":	"/myproject/COMMS_Error_Flag",
-    "COMMS_Status":	"/myproject/COMMS_Status",
-    "Contact_Golbasi_GS":	"/myproject/Contact_Golbasi_GS",
-    "Contact_Svalbard":	"/myproject/Contact_Svalbard",
-    "Detector_Temp":	"/myproject/Detector_Temp",
-    "ElapsedSeconds":	"/myproject/ElapsedSeconds",
-    "Enum_Para_1":	"/myproject/Enum_Para_1",
-    "Enum_Para_2":	"/myproject/Enum_Para_2",
-    "Enum_Para_3":	"/myproject/Enum_Para_3",
-    "EpochUSNO":	"/myproject/EpochUSNO",
-    "EPS_Error_Flag":	"/myproject/EPS_Error_Flag",
-    "Gyro.x":	"/myproject/Gyro.x",
-    "Gyro.y":	"/myproject/Gyro.y",
-    "Gyro.z":	"/myproject/Gyro.z",
-    "Height":	"/myproject/Height",
-    "Latitude":	"/myproject/Latitude",
-    "Longitude":	"/myproject/Longitude",
-    "Magnetometer.x":	"/myproject/Magnetometer.x",
-    "Magnetometer.y":	"/myproject/Magnetometer.y",
-    "Magnetometer.z":	"/myproject/Magnetometer.z",
-    "Mode_Day":	"/myproject/Mode_Day",
-    "Mode_Night":	"/myproject/Mode_Night",
-    "Mode_Payload":	"/myproject/Mode_Payload",
-    "Mode_Safe":	"/myproject/Mode_Safe",
-    "Mode_SBand":	"/myproject/Mode_SBand",
-    "Mode_XBand":	"/myproject/Mode_XBand",
-    "OrbitNumberCumulative":	"/myproject/OrbitNumberCumulative",
-    "Payload_Error_Flag":	"/myproject/Payload_Error_Flag",
-    "Payload_Status":	"/myproject/Payload_Status",
-    "Position.x":	"/myproject/Position.x",
-    "Position.y":	"/myproject/Position.y",
-    "Position.z":	"/myproject/Position.z",
-    "Shadow":	"/myproject/Shadow",
-    "Sunsensor":	"/myproject/Sunsensor",
-    "Velocity.x":	"/myproject/Velocity.x",
-    "Velocity.y":	"/myproject/Velocity.y",
-    "Velocity.z":	"/myproject/Velocity.z"
-};
 // Wait 1s from when telemetry is received before sampling values in the UI. This is 1s because by default
 // Open MCT is configured to release batches of telemetry every 1s. So depending on when it is sampled it
 // may take up to 1s for telemetry to propagate to the UI from when it is received.
@@ -90,7 +45,7 @@ test.describe('Realtime telemetry displays', () => {
     test.beforeEach(async ({ page }) => {
         // Go to baseURL
         await page.goto('./', { waitUntil: 'domcontentloaded' });
-        yamcsURL = `${page.url()}/yamcs-proxy/`;
+        yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
         await enableLink(yamcsURL);
 
         await page.evaluate((thirtyMinutes) => {
@@ -147,7 +102,7 @@ test.describe('Realtime telemetry displays', () => {
             expect(count).toBe(Object.entries(namesToParametersMap).length);
         });
 
-        test.only('Correctly shows the latest values', async ({ page }) => {
+        test('Correctly shows the latest values', async ({ page }) => {
             // Wait a reasonable amount of time for new telemetry to come in.
             // There is nothing significant about the number chosen.
             const WAIT_FOR_MORE_TELEMETRY = 3000;
@@ -185,7 +140,7 @@ test.describe('Realtime telemetry displays', () => {
             // Wait 1 second for values to propagate to client and render on screen.
             await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
-            const secondLatestValueObjects = await latestParameterValues(Object.values(namesToParametersMap, yamcsURL));
+            const secondLatestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
             const secondParameterNamesToLatestValues = toParameterNameToValueMap(secondLatestValueObjects);
             const secondTableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
             const secondTableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);

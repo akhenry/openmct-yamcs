@@ -20,19 +20,22 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 async function disableLink(yamcsURL) {
-    await fetch(`${yamcsURL}/api/links/myproject/udp-in:disable`, {
+    const url = new URL(`api/links/myproject/udp-in:disable`, yamcsURL);
+    await fetch(url.toString(), {
         method: 'POST'
     });
 }
 
 async function enableLink(yamcsURL) {
-    await fetch(`${yamcsURL}/api/links/myproject/udp-in:enable`, {
+    const url = new URL(`api/links/myproject/udp-in:enable`, yamcsURL);
+    await fetch(url.toString(), {
         method: 'POST'
     });
 }
 
 async function isLinkEnabled(yamcsURL) {
-    const response = await (await fetch(`${yamcsURL}/api/links/myproject/udp-in`)).json();
+    const url = new URL(`api/links/myproject/udp-in`, yamcsURL);
+    const response = await (await fetch(url.toString())).json();
 
     return response.disabled !== true;
 }
@@ -47,8 +50,8 @@ async function latestParameterValues(parameterIds, yamcsURL) {
         })
     };
     const parameterIdsRequestSerialized = JSON.stringify(parameterIdsRequest);
-
-    const response = await (await fetch(`${yamcsURL}/api/processors/myproject/realtime/parameters:batchGet`, {
+    const url = new URL('api/processors/myproject/realtime/parameters:batchGet', yamcsURL);
+    const response = await (await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
