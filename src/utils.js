@@ -74,7 +74,7 @@ const VALUE_EXTRACT_MAP = {
     'ENUMERATED': (value) => value.stringValue,
     'TIMESTAMP': (value) => value.stringValue,
     'BOOLEAN': (value) => value.booleanValue,
-    'BINARY': (value) => value.binaryValue
+    'BINARY': (value) => atob(value.binaryValue)
 };
 
 /*
