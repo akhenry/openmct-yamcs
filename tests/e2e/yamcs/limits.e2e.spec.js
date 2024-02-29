@@ -29,6 +29,15 @@ import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensou
 const YAMCS_URL = 'http://localhost:8090/';
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
+
+    test.beforeEach(async ({ page }) => {
+        await clearLimitsForParameter(page);
+    });
+
+    test.afterEach(async ({ page }) => {
+        await clearLimitsForParameter(page);
+    });
+
     test('Can show mdb limits when changed', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
@@ -246,4 +255,12 @@ async function checkForNoResponseAfterNetworkIdle(page, urlPattern) {
     await page.waitForLoadState('networkidle');
     // Return the inverse of responseReceived to indicate absence of response
     return !responseReceived;
+}
+
+async function clearLimitsForParameter(page) {
+    // clear the limits for the Detector_Temp parameter using the yamcs API
+    const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
+        data: {}
+    });
+    await expect(runTimeLimitChangeResponse).toBeOK();
 }
