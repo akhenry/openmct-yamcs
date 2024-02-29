@@ -83,12 +83,20 @@ const namesToParametersMap = {
 // Open MCT is configured to release batches of telemetry every 1s. So depending on when it is sampled it
 // may take up to 1s for telemetry to propagate to the UI from when it is received.
 const TELEMETRY_PROPAGATION_TIME = 1000;
+const THIRTY_MINUTES = 30 * 60 * 1000;
 
 test.describe('Realtime telemetry displays', () => {
     test.beforeEach(async ({ page }) => {
         await enableLink();
         // Go to baseURL
         await page.goto('./', { waitUntil: 'domcontentloaded' });
+
+        await page.evaluate(() => {
+            window.openmct.time.clock('remote-clock', {
+                start: -THIRTY_MINUTES,
+                end: 0
+            });
+        });
 
         await page
             .getByRole('treeitem', {
