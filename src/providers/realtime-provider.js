@@ -44,7 +44,7 @@ export default class RealtimeProvider {
     #socketWorker = null;
     #openmct;
 
-    constructor(openmct, url, instance, processor = 'realtime', rate = 1000, maxBatchSize = 15) {
+    constructor(openmct, url, instance, processor = 'realtime', maxBatchWait = 1000, maxBatchSize = 15) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
@@ -61,7 +61,7 @@ export default class RealtimeProvider {
         this.subscriptionsById = {};
         this.#socketWorker = new openmct.telemetry.BatchingWebSocket(openmct);
         this.#openmct = openmct;
-        this.#setBatchingStrategy(rate, maxBatchSize);
+        this.#setBatchingStrategy(maxBatchWait, maxBatchSize);
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
@@ -83,7 +83,7 @@ export default class RealtimeProvider {
             this.#setCallFromClock(clock);
         }
     }
-    #setBatchingStrategy(rate, maxBatchSize) {
+    #setBatchingStrategy(maxBatchWait, maxBatchSize) {
         // This strategy batches parameter value messages
         this.#socketWorker.setBatchingStrategy({
             /* istanbul ignore next */
@@ -107,7 +107,7 @@ export default class RealtimeProvider {
                 return callNumber;
             }
         });
-        this.#socketWorker.setRate(rate);
+        this.#socketWorker.setMaxBatchWait(maxBatchWait);
         this.#socketWorker.setMaxBatchSize(maxBatchSize);
     }
 
