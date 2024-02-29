@@ -33,7 +33,7 @@ jobs:
           node-version: "18"
       - uses: actions/checkout@v3
         with:
-          repository: yamcs/quickstart
+          repository: akhenry/quickstart
           ref: modify-playback-rate
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
