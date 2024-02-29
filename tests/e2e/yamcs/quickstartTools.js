@@ -20,21 +20,21 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 async function disableLink(yamcsURL) {
-    const url = new URL(`api/links/myproject/udp-in:disable`, yamcsURL);
+    const url = new URL(`api/links/myproject/udp-in:disable`, 'http://localhost:8090');
     await fetch(url.toString(), {
         method: 'POST'
     });
 }
 
 async function enableLink(yamcsURL) {
-    const url = new URL(`api/links/myproject/udp-in:enable`, yamcsURL);
+    const url = new URL(`api/links/myproject/udp-in:enable`, 'http://localhost:8090');
     await fetch(url.toString(), {
         method: 'POST'
     });
 }
 
 async function isLinkEnabled(yamcsURL) {
-    const url = new URL(`api/links/myproject/udp-in`, yamcsURL);
+    const url = new URL(`api/links/myproject/udp-in`, 'http://localhost:8090');
     const response = await (await fetch(url.toString())).json();
 
     return response.disabled !== true;
@@ -50,7 +50,7 @@ async function latestParameterValues(parameterIds, yamcsURL) {
         })
     };
     const parameterIdsRequestSerialized = JSON.stringify(parameterIdsRequest);
-    const url = new URL('api/processors/myproject/realtime/parameters:batchGet', yamcsURL);
+    const url = new URL('api/processors/myproject/realtime/parameters:batchGet', 'http://localhost:8090');
     const response = await (await fetch(url, {
         method: 'POST',
         headers: {
@@ -63,7 +63,7 @@ async function latestParameterValues(parameterIds, yamcsURL) {
 }
 
 async function parameterArchive({start, end, parameterId, yamcsURL}) {
-    const url = new URL(`api/archive/myproject/parameters/${parameterId}`, `${yamcsURL}`);
+    const url = new URL(`api/archive/myproject/parameters/${parameterId}`, 'http://localhost:8090');
     url.searchParams.set('start', start);
     url.searchParams.set('stop', end);
 
