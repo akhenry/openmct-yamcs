@@ -71,15 +71,18 @@ export default function install(
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
 
-        openmct.faults.addProvider(new YamcsFaultProvider(openmct,
+        openmct.faults.addProvider(new YamcsFaultProvider(
             {
                 faultModelConvertor,
                 historicalEndpoint: configuration.yamcsHistoricalEndpoint,
-                yamcsInstance: configuration.yamcsInstance
+                yamcsInstance: configuration.yamcsInstance,
+                yamcsProcessor: configuration.yamcsProcessor,
+                realtimeTelemetryProvider
             }));
 
         const stalenessProvider = new YamcsStalenessProvider(
             openmct,
+            realtimeTelemetryProvider,
             latestTelemetryProvider
         );
         openmct.telemetry.addProvider(stalenessProvider);
@@ -87,8 +90,8 @@ export default function install(
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance
-        ));
+            configuration.yamcsInstance,
+            realtimeTelemetryProvider));
 
         openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,

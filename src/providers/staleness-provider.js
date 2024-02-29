@@ -24,9 +24,9 @@ import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const.js';
 import { buildStalenessResponseObject } from '../utils.js';
 
 export default class YamcsStalenessProvider {
-    #openmct;
-    constructor(openmct, latestTelemetryProvider) {
-        this.#openmct = openmct;
+    constructor(openmct, realtimeTelemetryProvider, latestTelemetryProvider) {
+        this.openmct = openmct;
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
         this.latestTelemetryProvider = latestTelemetryProvider;
     }
 
@@ -35,7 +35,7 @@ export default class YamcsStalenessProvider {
     }
 
     subscribeToStaleness(domainObject, callback) {
-        return this.#openmct.telemetry.subscribeToStaleness(domainObject, callback);
+        return this.realtimeTelemetryProvider.subscribeToStaleness(domainObject, callback);
     }
 
     async isStale(domainObject) {
