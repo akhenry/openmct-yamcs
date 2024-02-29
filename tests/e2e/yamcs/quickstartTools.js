@@ -19,27 +19,25 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-const QUICKSTART_YAMCS_URL = 'http://127.0.0.1:8090';
-
-async function disableLink() {
-    await fetch(`${QUICKSTART_YAMCS_URL}/api/links/myproject/udp-in:disable`, {
+async function disableLink(yamcsURL) {
+    await fetch(`${yamcsURL}/api/links/myproject/udp-in:disable`, {
         method: 'POST'
     });
 }
 
-async function enableLink() {
-    await fetch(`${QUICKSTART_YAMCS_URL}/api/links/myproject/udp-in:enable`, {
+async function enableLink(yamcsURL) {
+    await fetch(`${yamcsURL}/api/links/myproject/udp-in:enable`, {
         method: 'POST'
     });
 }
 
-async function isLinkEnabled() {
-    const response = await (await fetch(`${QUICKSTART_YAMCS_URL}/api/links/myproject/udp-in`)).json();
+async function isLinkEnabled(yamcsURL) {
+    const response = await (await fetch(`${yamcsURL}/api/links/myproject/udp-in`)).json();
 
     return response.disabled !== true;
 }
 
-async function latestParameterValues(parameterIds) {
+async function latestParameterValues(parameterIds, yamcsURL) {
     const parameterIdsRequest = {
         fromCache: true,
         id: parameterIds.map(parameterName => {
@@ -50,7 +48,7 @@ async function latestParameterValues(parameterIds) {
     };
     const parameterIdsRequestSerialized = JSON.stringify(parameterIdsRequest);
 
-    const response = await (await fetch(`${QUICKSTART_YAMCS_URL}/api/processors/myproject/realtime/parameters:batchGet`, {
+    const response = await (await fetch(`${yamcsURL}/api/processors/myproject/realtime/parameters:batchGet`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -61,8 +59,8 @@ async function latestParameterValues(parameterIds) {
     return response.value;
 }
 
-async function parameterArchive({start, end, parameterId}) {
-    const url = new URL(`api/archive/myproject/parameters/${parameterId}`, `${QUICKSTART_YAMCS_URL}`);
+async function parameterArchive({start, end, parameterId, yamcsURL}) {
+    const url = new URL(`api/archive/myproject/parameters/${parameterId}`, `${yamcsURL}`);
     url.searchParams.set('start', start);
     url.searchParams.set('stop', end);
 

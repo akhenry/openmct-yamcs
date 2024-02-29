@@ -86,17 +86,19 @@ const TELEMETRY_PROPAGATION_TIME = 1000;
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 test.describe('Realtime telemetry displays', () => {
+    let yamcsURL;
     test.beforeEach(async ({ page }) => {
-        await enableLink();
         // Go to baseURL
         await page.goto('./', { waitUntil: 'domcontentloaded' });
+        yamcsURL = `${page.url()}/yamcs-proxy/`;
+        await enableLink(yamcsURL);
 
-        await page.evaluate(() => {
+        await page.evaluate((thirtyMinutes) => {
             window.openmct.time.clock('remote-clock', {
-                start: -THIRTY_MINUTES,
+                start: -thirtyMinutes,
                 end: 0
             });
-        });
+        }, THIRTY_MINUTES);
 
         await page
             .getByRole('treeitem', {
@@ -123,7 +125,7 @@ test.describe('Realtime telemetry displays', () => {
         await expect(page.locator('a:has-text("e2e real-time test layout")')).toBeVisible();
     });
     test.afterEach(async ({ page }) => {
-        await enableLink();
+        await enableLink(yamcsURL);
     });
 
     test.describe('A complex display', () => {
@@ -156,12 +158,12 @@ test.describe('Realtime telemetry displays', () => {
             await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
 
             // Disable playback
-            await disableLink();
+            await disableLink(yamcsURL);
 
             // Wait 1 second for values to propagate to client and render on screen.
             await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
-            const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap));
+            const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
             const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
             const tableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
             const allAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
@@ -171,19 +173,19 @@ test.describe('Realtime telemetry displays', () => {
             assertParameterMapsAreEqual(parameterNamesToLatestValues, allAlphaNumericValuesByName);
             assertParameterMapsAreEqual(allGaugeValuesByName, parameterNamesToLatestValues, 2);
 
-            // Disable playback
-            await enableLink();
+            // Enable playback
+            await enableLink(yamcsURL);
 
             // Let it run for a few seconds to cycle through a few telemetry values
             await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
 
             // Disable playback
-            await disableLink();
+            await disableLink(yamcsURL);
 
             // Wait 1 second for values to propagate to client and render on screen.
             await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
-            const secondLatestValueObjects = await latestParameterValues(Object.values(namesToParametersMap));
+            const secondLatestValueObjects = await latestParameterValues(Object.values(namesToParametersMap, yamcsURL));
             const secondParameterNamesToLatestValues = toParameterNameToValueMap(secondLatestValueObjects);
             const secondTableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
             const secondTableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
@@ -257,12 +259,12 @@ test.describe('Realtime telemetry displays', () => {
             });
 
             // Disable playback
-            await disableLink();
+            await disableLink(yamcsURL);
 
             // Wait 1 second for values to propagate to client and render on screen.
             await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
-            const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap));
+            const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
             const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
             const tableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
             assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName);
@@ -291,7 +293,7 @@ test.describe('Realtime telemetry displays', () => {
                 }, {strategy: 'batch'});
             });
         });
-        await disableLink();
+        await disableLink(yamcsURL);
         sortOpenMctTelemetryAscending(telemetryValues);
 
         // 2. confirm that it is received as an array.
@@ -301,7 +303,8 @@ test.describe('Realtime telemetry displays', () => {
         const parameterArchiveTelemetry = await parameterArchive({
             start,
             end,
-            parameterId: `/myproject/Battery1_Temp`
+            parameterId: `/myproject/Battery1_Temp`,
+            yamcsURL
         });
         const formattedParameterArchiveTelemetry = toOpenMctTelemetryFormat(parameterArchiveTelemetry);
         sortOpenMctTelemetryAscending(formattedParameterArchiveTelemetry);
