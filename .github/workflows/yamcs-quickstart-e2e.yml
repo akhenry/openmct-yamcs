@@ -45,8 +45,7 @@ jobs:
         run: |
           cd quickstart/docker
           touch makeout.txt
-          export SIMULATOR_PLAYBACK_RATE=10
-          make all &> makeout.txt &
+          make all-10hz &> makeout.txt &
       - run: npm install
       - name: Run build:example based on openmct-version
         run: |
