@@ -30,22 +30,27 @@ import {
 import { expect, test } from '@playwright/test';
 
 test.describe('Quickstart library functions', () => {
-    test.beforeEach(async () => {
-        await enableLink();
+    let yamcsURL;
+
+    test.beforeEach(async ({page}) => {
+        // Go to baseURL so we can get relative URL
+        await page.goto('./', { waitUntil: 'domcontentloaded' });
+        yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
+        await enableLink(yamcsURL);
     });
     test('Link can be disabled', async ({ page }) => {
-        await disableLink();
-        expect(await isLinkEnabled()).toBe(false);
+        await disableLink(yamcsURL);
+        expect(await isLinkEnabled(yamcsURL)).toBe(false);
     });
     test('Link can be enabled', async ({ page }) => {
-        await disableLink();
-        expect(await isLinkEnabled()).toBe(false);
+        await disableLink(yamcsURL);
+        expect(await isLinkEnabled(yamcsURL)).toBe(false);
 
-        await enableLink();
-        expect(await isLinkEnabled()).toBe(true);
+        await enableLink(yamcsURL);
+        expect(await isLinkEnabled(yamcsURL)).toBe(true);
     });
     test('Latest values can be retrieved', async () => {
-        const latestValues = await latestParameterValues(['/myproject/Battery1_Temp', '/myproject/Battery1_Voltage']);
+        const latestValues = await latestParameterValues(['/myproject/Battery1_Temp', '/myproject/Battery1_Voltage'], yamcsURL);
         expect(latestValues.length).toBe(2);
         const areAllParameterValuesNumbers = latestValues.every((parameter) => {
             return !isNaN(parameter.engValue.floatValue);
@@ -60,7 +65,8 @@ test.describe('Quickstart library functions', () => {
         const latestValues = await parameterArchive({
             start: then.toISOString(),
             end: now.toISOString(),
-            parameterId: '/myproject/Battery1_Temp'
+            parameterId: '/myproject/Battery1_Temp',
+            yamcsURL
         });
         expect(latestValues.length).toBeGreaterThan(0);
 
