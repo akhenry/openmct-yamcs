@@ -330,7 +330,8 @@ export default class YamcsObjectProvider {
         if (defaultAlarm?.staticAlarmRange) {
             return getLimitFromAlarmRange(defaultAlarm.staticAlarmRange);
         } else {
-            throw new Error(`Passed alarm has invalid object syntax for limit conversion`, defaultAlarm);
+            console.warn(`Passed alarm has invalid object syntax for limit conversion`, defaultAlarm);
+            return {};
         }
     }
 
