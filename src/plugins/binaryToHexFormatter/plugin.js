@@ -24,4 +24,5 @@ import BinaryToHexFormatter from "./BinaryToHexFormatter";
 export default function BinaryToHexFormatterPlugin() {
   return function (openmct) {
    openmct.telemetry.addFormat(new BinaryToHexFormatter());
+  }
 }
