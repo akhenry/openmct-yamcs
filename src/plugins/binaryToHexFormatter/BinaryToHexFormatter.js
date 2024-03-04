@@ -19,6 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+
 import base64ToHex from './base64ToHex.js';
 import hexToBase64 from './hexToBase64.js';
 

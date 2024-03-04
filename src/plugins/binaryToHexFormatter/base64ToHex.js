@@ -20,6 +20,7 @@
  * Note:
  *     This function assumes a browser environment where atob() is available for base64 decoding.
  */
+
 export default function base64ToHex(base64) {
   const binaryString = atob(base64);
 

@@ -19,6 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
+
 import BinaryToHexFormatter from './BinaryToHexFormatter.js';
 
 export default function BinaryToHexFormatterPlugin() {
