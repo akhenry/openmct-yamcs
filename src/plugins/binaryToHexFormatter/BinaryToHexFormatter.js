@@ -28,7 +28,7 @@ export default class BinaryToHexFormatter {
   }
 
   format(value) {
-    if (value !== undefined) {
+    if (value === undefined) {
       return value;
     }
 
