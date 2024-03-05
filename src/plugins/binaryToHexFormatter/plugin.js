@@ -23,7 +23,7 @@
 import BinaryToHexFormatter from './BinaryToHexFormatter.js';
 
 export default function BinaryToHexFormatterPlugin() {
-  return function (openmct) {
-   openmct.telemetry.addFormat(new BinaryToHexFormatter());
-  }
+    return function (openmct) {
+        openmct.telemetry.addFormat(new BinaryToHexFormatter());
+    };
 }

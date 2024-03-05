@@ -22,14 +22,14 @@
  */
 
 export default function base64ToHex(base64) {
-  const binaryString = atob(base64);
+    const binaryString = atob(base64);
 
-  let hexString = '';
-  for (let i = 0; i < binaryString.length; i++) {
-    const charCode = binaryString.charCodeAt(i);
+    let hexString = '';
+    for (let i = 0; i < binaryString.length; i++) {
+        const charCode = binaryString.charCodeAt(i);
 
-    hexString += charCode.toString(16).padStart(2, '0');
-  }
+        hexString += charCode.toString(16).padStart(2, '0');
+    }
 
-  return `0x${hexString.toUpperCase()}`;
+    return `0x${hexString.toUpperCase()}`;
 }
