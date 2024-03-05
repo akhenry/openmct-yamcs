@@ -293,8 +293,7 @@ export default class RealtimeProvider {
         this.connected = false;
 
         this.#socketWorker.connect(wsUrl);
-
-        this.#socketWorker.addEventListener('error', () => {
+        this.#socketWorker.addEventListener('reconnected', () => {
             this.resubscribeToAll();
         });
 

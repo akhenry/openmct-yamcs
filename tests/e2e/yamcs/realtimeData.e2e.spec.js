@@ -42,7 +42,15 @@ const THIRTY_MINUTES = 30 * 60 * 1000;
 
 test.describe('Realtime telemetry displays', () => {
     let yamcsURL;
+    let websocketWorker;
+
     test.beforeEach(async ({ page }) => {
+        page.on('worker', worker => {
+            if (worker.url().startsWith('blob')) {
+                websocketWorker = worker;
+            }
+        });
+
         // Go to baseURL
         await page.goto('./', { waitUntil: 'domcontentloaded' });
         yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
@@ -130,6 +138,70 @@ test.describe('Realtime telemetry displays', () => {
 
             // Enable playback
             await enableLink(yamcsURL);
+
+            // Let it run for a few seconds to cycle through a few telemetry values
+            await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
+
+            // Disable playback
+            await disableLink(yamcsURL);
+
+            // Wait 1 second for values to propagate to client and render on screen.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+
+            const secondLatestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
+            const secondParameterNamesToLatestValues = toParameterNameToValueMap(secondLatestValueObjects);
+            const secondTableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
+            const secondTableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
+            const secondAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
+            const secondGaugeValuesByName = await getParameterValuesFromAllGauges(page);
+
+            //First compare timestamps to make sure telemetry on screen is actually changing.
+            Object.keys(namesToParametersMap).forEach(key => {
+                expect(tableTimestampsByParameterName[key]).not.toBe(secondTableTimestampsByParameterName[key]);
+            });
+
+            // Next confirm that the values on screen are, again, the same as the latest values in Yamcs
+            assertParameterMapsAreEqual(secondParameterNamesToLatestValues, secondTableValuesByParameterName);
+            assertParameterMapsAreEqual(secondParameterNamesToLatestValues, secondAlphaNumericValuesByName);
+            assertParameterMapsAreEqual(secondGaugeValuesByName, parameterNamesToLatestValues, 2);
+        });
+
+        test('Correctly reconnects and shows the latest values after websocket drop', async ({ page }) => {
+            // Wait a reasonable amount of time for new telemetry to come in.
+            // There is nothing significant about the number chosen.
+            const WAIT_FOR_MORE_TELEMETRY = 3000;
+
+            const ladTable = await getLadTableByName(page, 'Test LAD Table');
+
+            // Let it run for a few seconds
+            await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
+
+            // Disable playback
+            await disableLink(yamcsURL);
+
+            // Wait 1 second for values to propagate to client and render on screen.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+
+            const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
+            const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
+            const tableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
+            const allAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
+            const allGaugeValuesByName = await getParameterValuesFromAllGauges(page);
+            const tableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
+            assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName);
+            assertParameterMapsAreEqual(parameterNamesToLatestValues, allAlphaNumericValuesByName);
+            assertParameterMapsAreEqual(allGaugeValuesByName, parameterNamesToLatestValues, 2);
+
+            // Enable playback
+            await enableLink(yamcsURL);
+
+            // Drop the websocket
+            websocketWorker.evaluate(() => {
+                self.currentWebSocket.close();
+            });
+
+            //Wait for websocket to be re-established
+            await page.waitForEvent('websocket');
 
             // Let it run for a few seconds to cycle through a few telemetry values
             await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
