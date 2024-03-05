@@ -26,14 +26,14 @@
  */
 
 export default function hexToBase64(hexStr) {
-  // just in case
-  hexStr = hexStr.replace(/^0x/, '');
+    // just in case
+    hexStr = hexStr.replace(/^0x/, '');
 
-  let binaryStr = '';
+    let binaryStr = '';
 
-  for (let i = 0; i < hexStr.length; i += 2) {
-    binaryStr += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
-  }
+    for (let i = 0; i < hexStr.length; i += 2) {
+        binaryStr += String.fromCharCode(parseInt(hexStr.substr(i, 2), 16));
+    }
 
-  return btoa(binaryStr);
+    return btoa(binaryStr);
 }
