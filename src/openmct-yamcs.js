@@ -39,12 +39,15 @@ import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
+import BinaryToHexFormatterPlugin from './plugins/binaryToHexFormatter/plugin.js';
+
 export default function install(
     configuration,
     getDictionaryRequestOptions
 ) {
     return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
+        openmct.install(BinaryToHexFormatterPlugin());
 
         const latestTelemetryProvider = new LatestTelemetryProvider({
             url: configuration.yamcsHistoricalEndpoint,
