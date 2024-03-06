@@ -53,25 +53,12 @@ document.addEventListener('DOMContentLoaded', function () {
     openmct.start();
 });
 
-openmct.install(openmct.plugins.RemoteClock({
-    namespace: "taxonomy",
-    key: "~myproject~Battery1_Temp"
-}));
 openmct.install(openmct.plugins.Conductor({
     menuOptions: [
         {
             name: "Realtime",
             timeSystem: 'utc',
             clock: 'local',
-            clockOffsets: {
-                start: -THIRTY_MINUTES,
-                end: 0
-            }
-        },
-        {
-            name: "Realtime",
-            timeSystem: 'utc',
-            clock: 'remote-clock',
             clockOffsets: {
                 start: -THIRTY_MINUTES,
                 end: 0

@@ -53,15 +53,22 @@ test.describe('Realtime telemetry displays', () => {
 
         // Go to baseURL
         await page.goto('./', { waitUntil: 'domcontentloaded' });
-        yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
-        await enableLink(yamcsURL);
-
         await page.evaluate((thirtyMinutes) => {
-            window.openmct.time.clock('remote-clock', {
+            const openmct = window.openmct;
+
+            openmct.install(openmct.plugins.RemoteClock({
+                namespace: "taxonomy",
+                key: "~myproject~Battery1_Temp"
+            }));
+
+            openmct.time.setClock('remote-clock');
+            openmct.time.setClockOffsets({
                 start: -thirtyMinutes,
                 end: 0
             });
         }, THIRTY_MINUTES);
+        yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
+        await enableLink(yamcsURL);
 
         await page
             .getByRole('treeitem', {
