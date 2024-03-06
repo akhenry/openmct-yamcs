@@ -90,8 +90,8 @@ export default function install(
         openmct.telemetry.addProvider(new LimitProvider(
             openmct,
             configuration.yamcsHistoricalEndpoint,
-            configuration.yamcsInstance
-        ));
+            configuration.yamcsInstance,
+            realtimeTelemetryProvider));
 
         openmct.telemetry.addProvider(new EventLimitProvider(
             openmct,
