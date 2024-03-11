@@ -30,9 +30,9 @@ const RANGE_CONDITION_CSS = {
  * @property {number} high a higher limit violation
  */
 export default class LimitProvider {
-    #openmct;
-    constructor(openmct, url, instance) {
-        this.#openmct = openmct;
+    constructor(openmct, url, instance, realtimeTelemetryProvider) {
+        this.openmct = openmct;
+        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
         this.url = url;
         this.instance = instance;
     }
@@ -105,6 +105,6 @@ export default class LimitProvider {
     }
 
     subscribeToLimits(domainObject, callback) {
-        return this.#openmct.telemetry.subscribeToLimits(domainObject, callback);
+        return this.realtimeTelemetryProvider.subscribeToLimits(domainObject, callback);
     }
 }

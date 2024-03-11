@@ -26,8 +26,18 @@ MDB Limits Specific Tests
 
 import { test, expect } from '../opensource/pluginFixtures.js';
 import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensource/appActions.js';
+const YAMCS_URL = 'http://localhost:8090/';
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
+
+    test.beforeEach(async ({ page }) => {
+        await clearLimitsForParameter(page);
+    });
+
+    test.afterEach(async ({ page }) => {
+        await clearLimitsForParameter(page);
+    });
+
     test('Can show mdb limits when changed', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
@@ -84,8 +94,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.getByRole('button', { name: 'Save' }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
-        // Change the limits for the Detector_Temp parameter using the yamcs API)
-        const runTimeLimitChangeResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+        // Change the limits for the Detector_Temp parameter using the yamcs API
+        const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
             data: {
                 action: 'SET_DEFAULT_ALARMS',
                 defaultAlarm: {
@@ -107,12 +117,12 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await assertLimitLinesExistAndAreVisible(page);
     });
 
-    test('Can show changed mdb limits when you navigate away from the view and back', async ({ page }) => {
+    test('Can show changed mdb limits when you navigate away from the view and back and no new requests are made on resize', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
         // Reset the limits for the Detector_Temp parameter using the yamcs API
-        const runTimeLimitResetResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+        const runTimeLimitResetResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
             data: {}
         });
         await expect(runTimeLimitResetResponse).toBeOK();
@@ -173,7 +183,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.goto("./", { waitUntil: "networkidle" });
 
         // Change the limits for the Detector_Temp parameter using the yamcs API
-        const runTimeLimitChangeResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+        const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
             data: {
                 action: 'SET_DEFAULT_ALARMS',
                 defaultAlarm: {
@@ -196,6 +206,22 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
         // Ensure that the changed limits are now displayed without a reload
         await assertLimitLinesExistAndAreVisible(page);
+
+        // Setting up checks for the absence of specific network responses after networkidle.
+        const responsesChecks = [
+            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb/myproject/space-systems'),
+            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb/myproject/parameters?details=yes&limit=1000'),
+            checkForNoResponseAfterNetworkIdle(page, '**/api/user/'),
+            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb-overrides/myproject/realtime'),
+        ];
+
+        // Resize the chart container by showing the snapshot pane.
+        await page.getByLabel('Show Snapshots').click();
+        // Wait for all checks to complete
+        const responsesNotFound = await Promise.all(responsesChecks);
+        // Ensure no network responses were found
+        const noResponsesFound = responsesNotFound.every(notFound => notFound);
+        expect(noResponsesFound).toBe(true);
     });
 });
 
@@ -214,4 +240,27 @@ async function assertLimitLinesExistAndAreVisible(page) {
     for (let i = 0; i < limitLineCount; i++) {
         await expect(page.locator('.c-plot-limit-line').nth(i)).toBeVisible();
     }
+}
+
+// Function to check for the absence of a network response after networkidle
+async function checkForNoResponseAfterNetworkIdle(page, urlPattern) {
+    let responseReceived = false;
+    // Listen for the network response before navigating to ensure we catch early requests
+    page.on('response', response => {
+        if (response.url().match(urlPattern)) {
+            responseReceived = true;
+        }
+    });
+    // Wait for the network to be idle
+    await page.waitForLoadState('networkidle');
+    // Return the inverse of responseReceived to indicate absence of response
+    return !responseReceived;
+}
+
+async function clearLimitsForParameter(page) {
+    // clear the limits for the Detector_Temp parameter using the yamcs API
+    const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
+        data: {}
+    });
+    await expect(runTimeLimitChangeResponse).toBeOK();
 }

@@ -363,6 +363,7 @@ export default class RealtimeProvider {
                     if (!this.isParameterType(message)) {
                         return;
                     }
+
                     const parameterName = message.data.parameterOverride.parameter;
                     if (this.observingLimitChanges[parameterName] !== undefined) {
                         const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
