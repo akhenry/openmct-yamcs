@@ -24,33 +24,33 @@ import base64ToHex from './base64ToHex.js';
 import hexToBase64 from './hexToBase64.js';
 
 export default class BinaryToHexFormatter {
-  constructor() {
-    this.key = 'binary';
-  }
-
-  format(value) {
-    if (value === undefined) {
-      return value;
+    constructor() {
+        this.key = 'binary';
     }
 
-    return base64ToHex(value);
-  }
+    format(value) {
+        if (value === undefined) {
+            return value;
+        }
 
-  parse(text) {
-    if (text === undefined) {
-      return text;
+        return base64ToHex(value);
     }
 
-    return hexToBase64(text);
-  }
+    parse(text) {
+        if (text === undefined) {
+            return text;
+        }
 
-  validate(text) {
-    try {
-      atob(text);
-    } catch (e) {
-      return false;
+        return hexToBase64(text);
     }
 
-    return true;
-  }
+    validate(text) {
+        try {
+            atob(text);
+        } catch (e) {
+            return false;
+        }
+
+        return true;
+    }
 }
