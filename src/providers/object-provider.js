@@ -451,7 +451,7 @@ export default class YamcsObjectProvider {
                 });
             }
 
-            if (this.#isArray(parameter)) {
+            if (this.#isArray(parameter) || this.#isBinary(parameter)) {
                 telemetryValue.format = parameter.type.engType;
             }
 
@@ -502,6 +502,10 @@ export default class YamcsObjectProvider {
 
     #isEnumeration(parameter) {
         return parameter?.type?.engType === 'enumeration';
+    }
+
+    #isBinary(parameter) {
+        return parameter?.type?.engType === 'binary';
     }
 
     #isArray(parameter) {
