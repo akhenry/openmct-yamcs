@@ -64,7 +64,8 @@ export function createEventsObject(openmct, parentKey, namespace) {
                 },
                 {
                     key: 'receptionTime',
-                    name: 'Reception Time'
+                    name: 'Reception Time',
+                    format: 'iso'
                 },
                 {
                     key: 'seqNumber',
