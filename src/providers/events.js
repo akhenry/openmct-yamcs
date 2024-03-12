@@ -68,7 +68,8 @@ export function createEventsObject(openmct, parentKey, namespace) {
                 },
                 {
                     key: 'seqNumber',
-                    name: 'Sequence Number'
+                    name: 'Sequence Number',
+                    format: 'number'
                 },
                 {
                     key: 'message',
@@ -77,15 +78,18 @@ export function createEventsObject(openmct, parentKey, namespace) {
                 },
                 {
                     key: 'type',
-                    name: 'Type'
+                    name: 'Type',
+                    format: 'string'
                 },
                 {
                     key: 'source',
-                    name: 'Source'
+                    name: 'Source',
+                    format: 'string'
                 },
                 {
                     key: 'createdBy',
-                    name: 'Created By'
+                    name: 'Created By',
+                    format: 'string'
                 }
             ]
         }
