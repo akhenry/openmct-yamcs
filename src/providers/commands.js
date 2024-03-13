@@ -92,7 +92,7 @@ export function createCommandsObject(openmct, parentKey, namespace) {
                 {
                     key: 'Acknowledge_Queued_Time',
                     name: 'Acknowledge Queued Time',
-                    format: 'iso',
+                    format: 'iso'
                 },
                 {
                     key: 'Acknowledge_Released_Status',
@@ -102,7 +102,7 @@ export function createCommandsObject(openmct, parentKey, namespace) {
                 {
                     key: 'Acknowledge_Released_Time',
                     name: 'Acknowledge Released Time',
-                    format: 'iso',
+                    format: 'iso'
                 },
                 {
                     key: 'Acknowledge_Sent_Status',
@@ -112,7 +112,7 @@ export function createCommandsObject(openmct, parentKey, namespace) {
                 {
                     key: 'Acknowledge_Sent_Time',
                     name: 'Acknowledge Sent Time',
-                    format: 'iso',
+                    format: 'iso'
                 },
                 {
                     key: 'username',
