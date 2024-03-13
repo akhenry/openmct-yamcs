@@ -33,8 +33,8 @@ jobs:
           node-version: "18"
       - uses: actions/checkout@v3
         with:
-          repository: yamcs/quickstart
-          ref: master
+          repository: akhenry/quickstart
+          ref: modify-playback-rate
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
         if: matrix.yamcs-version != 'default'
@@ -45,7 +45,7 @@ jobs:
         run: |
           cd quickstart/docker
           touch makeout.txt
-          make all &> makeout.txt &
+          make all-10hz &> makeout.txt &
       - run: npm install
       - name: Run build:example based on openmct-version
         run: |

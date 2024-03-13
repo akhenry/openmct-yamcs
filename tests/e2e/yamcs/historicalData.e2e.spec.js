@@ -125,7 +125,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
 
         //switch to table view
         networkRequests = [];
-        await page.locator("button[title='Change the current view']").click();
+        await page.getByLabel('Open the View Switcher Menu').click();
         await page.getByRole('menuitem', { name: /Telemetry Table/ }).click();
         await page.waitForLoadState('networkidle');
 
@@ -169,7 +169,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
 
         //switch to table view
         networkRequests = [];
-        await page.locator("button[title='Change the current view']").click();
+        await page.getByLabel('Open the View Switcher Menu').click();
         await page.getByRole('menuitem', { name: /Telemetry Table/ }).click();
         await page.waitForLoadState('networkidle');
 
