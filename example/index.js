@@ -10,7 +10,7 @@ const config = {
     "yamcsProcessor": "realtime",
     "yamcsFolder": "myproject",
     "throttleRate": 1000,
-    "maxBatchSize": 15
+    "maxBatchSize": 20
 };
 const STATUS_STYLES = {
     "NO_STATUS": {
@@ -79,6 +79,28 @@ document.addEventListener('DOMContentLoaded', function () {
     openmct.start();
 });
 
+openmct.install(openmct.plugins.Conductor({
+    menuOptions: [
+        {
+            name: "Realtime",
+            timeSystem: 'utc',
+            clock: 'local',
+            clockOffsets: {
+                start: -THIRTY_MINUTES,
+                end: 0
+            }
+        },
+        {
+            name: "Fixed",
+            timeSystem: 'utc',
+            bounds: {
+                start: Date.now() - THIRTY_MINUTES,
+                end: 0
+            }
+        }
+    ]
+}));
+
 function installDefaultPlugins() {
     openmct.install(openmct.plugins.LocalStorage());
     openmct.install(openmct.plugins.Espresso());
@@ -119,27 +141,6 @@ function installDefaultPlugins() {
 
     openmct.install(openmct.plugins.DisplayLayout({
         showAsView: ['summary-widget', 'example.imagery', 'yamcs.image']
-    }));
-    openmct.install(openmct.plugins.Conductor({
-        menuOptions: [
-            {
-                name: "Realtime",
-                timeSystem: 'utc',
-                clock: 'local',
-                clockOffsets: {
-                    start: -THIRTY_MINUTES,
-                    end: 0
-                }
-            },
-            {
-                name: "Fixed",
-                timeSystem: 'utc',
-                bounds: {
-                    start: Date.now() - THIRTY_MINUTES,
-                    end: 0
-                }
-            }
-        ]
     }));
     openmct.install(openmct.plugins.SummaryWidget());
     openmct.install(openmct.plugins.Notebook());
