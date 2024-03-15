@@ -27,7 +27,7 @@ Staleness Specific Tests
 import { test, expect } from '../opensource/pluginFixtures.js';
 import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
 
-test.describe.skip("Fault management tests @yamcs", () => {
+test.describe.fixme("Fault management tests @yamcs", () => {
     test('Show faults ', async ({ page }) => {
         test.step('for historic alarm violations', () =>{
             // Navigate to fault management in the tree

@@ -27,7 +27,7 @@ Staleness Specific Tests
 import { test, expect } from '../opensource/pluginFixtures.js';
 import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
 
-test.describe.skip("Staleness tests @yamcs", () => {
+test.describe.fixme("Staleness tests @yamcs", () => {
     test('Staleness ', async ({ page }) => {
         test.step('Indicator is displayed for historic data', () =>{
             // Create a plot
