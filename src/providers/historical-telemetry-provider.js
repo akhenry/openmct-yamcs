@@ -19,15 +19,13 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, OBJECT_TYPES, METADATA_TIME_KEY } from '../const.js';
+import { OBJECT_TYPES } from '../const.js';
 import {
     idToQualifiedName,
-    getValue,
     addLimitInformation,
     accumulateResults,
     yieldResults,
-    qualifiedNameFromParameterId,
-    qualifiedNameToId
+    convertYamcsToOpenMctDatum
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands.js';
 import { eventToTelemetryDatum } from './events.js';
@@ -240,19 +238,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let data = [];
         results.forEach(result => {
-            let datum = {
-                timestamp: result[METADATA_TIME_KEY]
-            };
-            let value = getValue(result);
-
-            if (result.engValue.type !== AGGREGATE_TYPE) {
-                datum.value = value;
-            } else {
-                datum = {
-                    ...datum,
-                    ...value
-                };
-            }
+            const datum = convertYamcsToOpenMctDatum(result);
 
             addLimitInformation(result, datum);
             data.push(datum);
