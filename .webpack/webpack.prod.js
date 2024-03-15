@@ -26,6 +26,6 @@ import common from './webpack.common.js';
 /** @type {import('webpack').Configuration} */
 const prodConfig = {
     mode: 'production',
-    devtool: 'eval-source-map'
+    devtool: 'source-map'
 }
 export default merge(common, prodConfig);
