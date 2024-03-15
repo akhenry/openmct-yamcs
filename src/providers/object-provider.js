@@ -331,6 +331,7 @@ export default class YamcsObjectProvider {
             return getLimitFromAlarmRange(defaultAlarm.staticAlarmRange);
         } else {
             console.warn('Open MCT supports default static alarms only at this time', defaultAlarm);
+
             return {};
         }
     }
