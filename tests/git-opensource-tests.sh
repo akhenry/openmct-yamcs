@@ -21,7 +21,8 @@ REPO_URL=https://github.com/nasa/openmct.git
 REPO_PATH=e2e
 LOCAL_REPO_ROOT="e2e/opensource"
 
-git clone --no-checkout --depth 1 $REPO_URL "$LOCAL_REPO_ROOT"
+# remove the branch later
+git clone --no-checkout --depth 1 --branch "fix-import-require" $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
 git config core.sparsecheckout true
 echo "/$REPO_PATH/**" > .git/info/sparse-checkout
@@ -30,6 +31,10 @@ git read-tree -m -u HEAD
 # moving back to /tests/ dir
 cd ..
 
+# Move index.js to root
+mv opensource/e2e/index.js ./opensource
+# Move package.json, package-lock.json
+mv opensource/e2e/package*.json ./opensource
 # Move fixtures and appActions
 mv opensource/e2e/*Fixtures.js ./opensource
 mv opensource/e2e/appActions.js ./opensource
