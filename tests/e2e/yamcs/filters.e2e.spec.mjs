@@ -24,8 +24,9 @@
 Filter Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
+import { pluginFixtures, appActions } from 'openmct-e2e';
+const { test, expect } = pluginFixtures;
+const { createDomainObjectWithDefaults } = appActions;
 
 test.describe("Filter tests @yamcs", () => {
     test('Can filter events by severity', async ({ page }) => {

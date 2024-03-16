@@ -26,10 +26,11 @@ import {
     isLinkEnabled,
     latestParameterValues,
     parameterArchive
-} from './quickstartTools.js';
-import { expect, test } from '@playwright/test';
+} from './quickstartTools.mjs';
+import { pluginFixtures } from 'openmct-e2e';
+const { test, expect } = pluginFixtures;
 
-test.describe('Quickstart library functions', () => {
+test.describe.only('Quickstart library functions', () => {
     let yamcsURL;
 
     test.beforeEach(async ({page}) => {
