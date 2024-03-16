@@ -3,10 +3,17 @@ import fs from 'node:fs/promises';
 import semver from 'semver';
 import process from 'node:process';
 
+/**
+ * Checks if an optional dependency satisfies the expected version.
+ *
+ * @param {string} dependency - The name of the dependency to check.
+ * @param {string} expectedVersion - The semver range the version should satisfy.
+ * @returns {Promise<string|null>} A promise that resolves with an error message if the dependency does not satisfy the expected version, or is not installed; otherwise, null.
+ */
 async function checkOptionalDependency(dependency, expectedVersion) {
     try {
-        const packageJsonPath = new URL(`./node_modules/${dependency}/package.json`, import.meta.url);
-        const installedPackageJsonData = await fs.readFile(packageJsonPath);
+        const packageJsonPath = new URL(`./node_modules/${dependency}/package.json`, import.meta.url).pathname;
+        const installedPackageJsonData = await fs.readFile(packageJsonPath, { encoding: 'utf8' });
         const { version: installedVersion } = JSON.parse(installedPackageJsonData);
 
         if (!semver.satisfies(installedVersion, expectedVersion)) {
@@ -19,6 +26,11 @@ async function checkOptionalDependency(dependency, expectedVersion) {
     return null;
 }
 
+/**
+ * Checks all optional dependencies listed in the package.json against their expected versions.
+ *
+ * @returns {Promise<void>} A promise that resolves if all optional dependencies satisfy their expected versions, or rejects with an error message if any do not.
+ */
 async function checkAllOptionalDependencies() {
     const packageJsonPath = new URL('./package.json', import.meta.url);
     const myPackageJsonData = await fs.readFile(packageJsonPath);
