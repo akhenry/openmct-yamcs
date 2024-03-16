@@ -22,10 +22,7 @@
 
 import config from './webpack.dev.mjs';
 
-// eslint-disable-next-line no-undef
-const CI = process.env.CI === 'true';
-
-config.devtool = CI ? false : undefined;
+config.devtool = 'source-map';
 
 config.devServer.hot = false;
 
@@ -36,7 +33,6 @@ config.module.rules.push({
         loader: 'babel-loader',
         options: {
             retainLines: true,
-            // eslint-disable-next-line no-undef
             plugins: [['babel-plugin-istanbul', {
                 extension: ['.js']
             }]]
