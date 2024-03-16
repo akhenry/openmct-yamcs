@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import config from './webpack.dev.js';
+import config from './webpack.dev.mjs';
 
 // eslint-disable-next-line no-undef
 const CI = process.env.CI === 'true';
