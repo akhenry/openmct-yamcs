@@ -21,7 +21,7 @@
     "build:dist": "webpack --config ./.webpack/webpack.prod.mjs",
     "build:example": "npm install openmct@unstable --no-save",
     "build:example:master": "npm install nasa/openmct#master --no-save",
-    "postbuild:example": "node check-optional-dependencies.js",
+    "postbuild:example": "node check-optional-dependencies.mjs",
     "start": "npx webpack serve --config ./.webpack/webpack.dev.mjs",
     "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.mjs",
     "prepare": "npm run build:dist",
