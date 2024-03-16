@@ -1,25 +1,43 @@
 // check-optional-dependencies.mjs
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import semver from 'semver';
 import process from 'node:process';
 
-const myPackageJson = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url)));
+async function checkOptionalDependency(dependency, expectedVersion) {
+    try {
+        const packageJsonPath = new URL(`./node_modules/${dependency}/package.json`, import.meta.url);
+        const installedPackageJsonData = await fs.readFile(packageJsonPath);
+        const { version: installedVersion } = JSON.parse(installedPackageJsonData);
 
-function checkOptionalDependency(dependency, expectedVersion) {
-    if (!fs.existsSync(`node_modules/${dependency}`)) {
-        console.error(`The optional dependency ${dependency} is not installed. Please install it before building.`);
-        process.exit(1);
-    } else {
-        const installedPackageJson = JSON.parse(fs.readFileSync(new URL(`./node_modules/${dependency}/package.json`, import.meta.url)));
-        const installedVersion = installedPackageJson.version;
         if (!semver.satisfies(installedVersion, expectedVersion)) {
-            console.error(`The installed version of optional dependency ${dependency} is ${installedVersion}, which does not satisfy the expected version ${expectedVersion}. Please update it before building.`);
-            process.exit(1);
+            return `The installed version of optional dependency ${dependency} is ${installedVersion}, which does not satisfy the expected version ${expectedVersion}. Please update it before building.`;
         }
+    } catch (error) {
+        return `The optional dependency ${dependency} is not installed. Please install it before building.\n${error}`;
+    }
+
+    return null;
+}
+
+async function checkAllOptionalDependencies() {
+    const packageJsonPath = new URL('./package.json', import.meta.url);
+    const myPackageJsonData = await fs.readFile(packageJsonPath);
+    const { optionalDependencies } = JSON.parse(myPackageJsonData);
+
+    const checks = Object.entries(optionalDependencies).map(([dependency, expectedVersion]) =>
+        checkOptionalDependency(dependency, expectedVersion)
+    );
+
+    const results = await Promise.all(checks);
+    const errors = results.filter(result => result !== null);
+
+    if (errors.length > 0) {
+        console.error(errors.join('\n'));
+        process.exit(1);
     }
 }
 
-const optionalDependencies = myPackageJson.optionalDependencies;
-for (const [dependency, expectedVersion] of Object.entries(optionalDependencies)) {
-    checkOptionalDependency(dependency, expectedVersion);
-}
+checkAllOptionalDependencies().catch(error => {
+    console.error(error);
+    process.exit(1);
+});
