@@ -41,7 +41,7 @@ const devConfig = {
             directory: path.join(__dirname, '../example'),
         }, {
             directory: path.join(__dirname, '../node_modules/openmct/dist'),
-            publicPath: '/dist',
+            publicPath: '/node_modules/openmct/dist'
         }],
         proxy: {
             "/yamcs-proxy/*": {
