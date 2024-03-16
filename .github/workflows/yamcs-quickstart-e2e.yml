@@ -46,6 +46,12 @@ jobs:
           cd quickstart/docker
           touch makeout.txt
           make all-10hz &> makeout.txt &
+      - name: Get Open MCT e2e tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm run test:getopensource
       - run: npm install
       - name: Run build:example based on openmct-version
         run: |
@@ -55,12 +61,6 @@ jobs:
             npm run build:example
           fi
       - run: npx playwright@1.39.0 install chromium
-      - name: Get Open MCT e2e tests
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
