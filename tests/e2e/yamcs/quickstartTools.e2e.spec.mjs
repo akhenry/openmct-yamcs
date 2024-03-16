@@ -30,7 +30,7 @@ import {
 import { pluginFixtures } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 
-test.describe.only('Quickstart library functions', () => {
+test.describe('Quickstart library functions', () => {
     let yamcsURL;
 
     test.beforeEach(async ({page}) => {
