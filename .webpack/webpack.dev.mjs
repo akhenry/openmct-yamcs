@@ -33,7 +33,7 @@ const devConfig = {
     context: path.resolve(__dirname, '../'),
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': './example/index.js'
+        'openmct-yamcs-example': path.resolve(__dirname, '../example/index.js')
     },
     devServer: {
         compress: true,
