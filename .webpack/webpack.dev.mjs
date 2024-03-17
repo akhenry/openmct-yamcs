@@ -30,6 +30,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('webpack').Configuration} */
 const devConfig = {
     mode: 'development',
+    context: path.resolve(__dirname, '../'),
     devtool: 'eval-source-map',
     entry: {
         'openmct-yamcs-example': './example/index.js'
@@ -57,11 +58,6 @@ const devConfig = {
                 ws: true,
                 pathRewrite: { '^/yamcs-proxy-ws/': '' }
             }
-        }
-    },
-    resolve: {
-        alias: {
-            openmct: path.resolve(__dirname, '../node_modules/openmct/dist/openmct.js')
         }
     }
 };
