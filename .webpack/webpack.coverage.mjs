@@ -27,7 +27,7 @@ config.devtool = 'source-map';
 config.devServer.hot = false;
 
 config.module.rules.push({
-    test: /\.js$/,
+    test: /\.(mjs|js)$/,
     exclude: /(node_modules)/,
     use: {
         loader: 'babel-loader',
