@@ -1,15 +1,15 @@
 {
   "openmct": {
-    "c965501f-86c7-4d63-8857-95618462ea2d": {
+    "49346c05-8228-4e98-a006-ad425e0fdd6a": {
       "identifier": {
-        "key": "c965501f-86c7-4d63-8857-95618462ea2d",
+        "key": "49346c05-8228-4e98-a006-ad425e0fdd6a",
         "namespace": ""
       },
       "name": "e2e real-time test layout",
       "type": "layout",
       "composition": [
         {
-          "key": "797785c7-035a-4ea2-b69b-d595cf48b49c",
+          "key": "aeb468ba-1163-4331-9067-f7b80b4ab337",
           "namespace": ""
         },
         {
@@ -193,96 +193,100 @@
           "namespace": "taxonomy"
         },
         {
-          "key": "1816debc-38b6-4680-8019-701689be4fc5",
+          "key": "0867a749-ac6a-478a-ab7f-ccc3a275e5ef",
           "namespace": ""
         },
         {
-          "key": "cc400028-b156-43cc-8bae-de13171d5431",
+          "key": "227afd35-1912-4423-9d63-a22541d247ad",
           "namespace": ""
         },
         {
-          "key": "798e729f-420c-45f6-aecf-5bbc44b55dad",
+          "key": "6be514e1-f094-4a61-923b-c1ea2b0d1c67",
           "namespace": ""
         },
         {
-          "key": "fada1f9c-668d-49c4-a653-81bb3d466922",
+          "key": "fe0e3d43-c452-48fd-b34a-2bf9d334adb0",
           "namespace": ""
         },
         {
-          "key": "c3eb99c4-db3c-4a92-8967-3b3052efd0cf",
+          "key": "7df40f29-34ab-4714-8eda-8b0584ba1027",
           "namespace": ""
         },
         {
-          "key": "0dd60b42-66a3-4326-b829-2cde71025d32",
+          "key": "9a718032-4b06-4e41-81b3-b793b37b9541",
           "namespace": ""
         },
         {
-          "key": "eeda19bc-6302-47b6-b115-81204b16aaa3",
+          "key": "1e2f6bff-e1d6-4b3b-8aed-1a0193f955f7",
           "namespace": ""
         },
         {
-          "key": "3093a1ef-ac30-4ac3-abff-e4ef5ca858e6",
+          "key": "de7fb34a-cfb7-4a8d-a6fe-5a1518ce628d",
           "namespace": ""
         },
         {
-          "key": "e4b66733-2e89-4bf8-8a12-5ef3f247e4ec",
+          "key": "67edda3e-dba8-4ba1-8d53-0d546625d25d",
           "namespace": ""
         },
         {
-          "key": "a91d265d-b36d-41fe-9d11-b799e52036ed",
+          "key": "026a5cc8-8ebc-42e9-8ee0-30dae16f41fb",
           "namespace": ""
         },
         {
-          "key": "739c26b2-776a-4abb-949f-24a2066aee80",
+          "key": "b8f93070-4fe5-4491-a5f8-70bc53690363",
           "namespace": ""
         },
         {
-          "key": "94997ceb-00c8-4702-af70-afb014cdf629",
+          "key": "0d289f02-d55f-43df-b6ba-bb8a50f29efe",
           "namespace": ""
         },
         {
-          "key": "803121a1-d187-489f-a124-5e903657bedb",
+          "key": "8da80135-c186-4d08-84a4-477ffab305f6",
           "namespace": ""
         },
         {
-          "key": "c984a025-e4a8-4c25-9b0e-1723b5a30303",
+          "key": "614f5b22-ad0a-42fb-9ef7-adfdb29f5cf5",
           "namespace": ""
         },
         {
-          "key": "95cac0f8-cc42-4357-aac8-77d7ea5e31c9",
+          "key": "3f53bec7-3348-41ab-b750-ed4f383d05c3",
           "namespace": ""
         },
         {
-          "key": "1011058f-8dec-4426-87d9-58135f663ea6",
+          "key": "a832e904-d1d1-42c8-ba7e-9741a53a0773",
           "namespace": ""
         },
         {
-          "key": "c1881c9a-a638-4bbe-b320-a0ea5d7f4e4f",
+          "key": "70ee1948-9282-4e09-b69e-1e7d33065e83",
           "namespace": ""
         },
         {
-          "key": "d510bf8a-f03d-4cac-b58c-1242cc039b22",
+          "key": "d3282b47-2e6a-4137-932e-18d2dcc94d18",
           "namespace": ""
         },
         {
-          "key": "a211ae9a-f013-4a97-87ed-401baee94a3e",
+          "key": "e1728950-2594-457e-be2d-01bc3b37bca6",
           "namespace": ""
         },
         {
-          "key": "f051b323-d22a-419a-a6e6-42ea6041b238",
+          "key": "d68f8704-e2f0-424c-9aa5-eb7395c62d86",
           "namespace": ""
         },
         {
-          "key": "77ce4615-53d4-4ae7-809c-8535a57a041b",
+          "key": "b2077f4e-3236-461f-9693-08ca598b0b4c",
           "namespace": ""
         },
         {
-          "key": "b425c7bd-6912-4e40-908e-6a21c73c7db3",
+          "key": "c8c58bc8-0a1e-48e0-aef6-b653772ad9d8",
           "namespace": ""
         },
         {
           "key": "~myproject~Sunsensor",
           "namespace": "taxonomy"
+        },
+        {
+          "key": "79a69ad7-240c-4c65-a4b4-b8993b195950",
+          "namespace": ""
         }
       ],
       "configuration": {
@@ -293,7 +297,7 @@
             "x": 1,
             "y": 13,
             "identifier": {
-              "key": "797785c7-035a-4ea2-b69b-d595cf48b49c",
+              "key": "aeb468ba-1163-4331-9067-f7b80b4ab337",
               "namespace": ""
             },
             "hasFrame": true,
@@ -308,7 +312,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 6,
+            "y": 0,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -327,7 +331,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 8,
+            "y": 2,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -346,7 +350,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 10,
+            "y": 4,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -365,7 +369,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 12,
+            "y": 6,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -384,7 +388,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 14,
+            "y": 8,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -403,7 +407,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 16,
+            "y": 10,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -422,7 +426,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 18,
+            "y": 12,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -441,7 +445,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 20,
+            "y": 14,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -460,7 +464,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 22,
+            "y": 16,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -479,7 +483,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 24,
+            "y": 18,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -498,7 +502,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 26,
+            "y": 20,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -517,7 +521,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 28,
+            "y": 22,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -536,7 +540,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 30,
+            "y": 24,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -555,7 +559,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 32,
+            "y": 26,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -574,7 +578,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 34,
+            "y": 28,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -593,7 +597,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 36,
+            "y": 30,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -612,7 +616,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 38,
+            "y": 32,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -631,7 +635,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 40,
+            "y": 34,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -650,7 +654,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 42,
+            "y": 36,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -669,7 +673,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 44,
+            "y": 38,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -688,7 +692,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 46,
+            "y": 40,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -707,7 +711,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 48,
+            "y": 42,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -726,7 +730,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 50,
+            "y": 44,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -745,7 +749,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 52,
+            "y": 46,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -764,7 +768,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 60,
+            "y": 48,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -783,7 +787,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 62,
+            "y": 50,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -802,7 +806,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 64,
+            "y": 52,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -821,7 +825,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 66,
+            "y": 54,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -840,7 +844,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 68,
+            "y": 56,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -859,7 +863,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 70,
+            "y": 58,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -878,7 +882,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 72,
+            "y": 60,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -897,7 +901,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 74,
+            "y": 62,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -916,7 +920,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 76,
+            "y": 64,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -935,7 +939,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 78,
+            "y": 66,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -954,7 +958,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 80,
+            "y": 68,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -973,7 +977,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 82,
+            "y": 70,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -992,7 +996,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 84,
+            "y": 72,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1011,7 +1015,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 86,
+            "y": 74,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1030,7 +1034,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 88,
+            "y": 76,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1049,7 +1053,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 90,
+            "y": 78,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1068,7 +1072,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 92,
+            "y": 80,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1087,7 +1091,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 94,
+            "y": 82,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1106,7 +1110,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 96,
+            "y": 84,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1125,7 +1129,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 98,
+            "y": 86,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1144,7 +1148,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 100,
+            "y": 88,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1163,7 +1167,7 @@
             "x": 124,
             "y": 56,
             "identifier": {
-              "key": "1816debc-38b6-4680-8019-701689be4fc5",
+              "key": "0867a749-ac6a-478a-ab7f-ccc3a275e5ef",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1178,7 +1182,7 @@
             "x": 156,
             "y": 56,
             "identifier": {
-              "key": "cc400028-b156-43cc-8bae-de13171d5431",
+              "key": "227afd35-1912-4423-9d63-a22541d247ad",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1193,7 +1197,7 @@
             "x": 124,
             "y": 2,
             "identifier": {
-              "key": "798e729f-420c-45f6-aecf-5bbc44b55dad",
+              "key": "6be514e1-f094-4a61-923b-c1ea2b0d1c67",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1208,7 +1212,7 @@
             "x": 156,
             "y": 38,
             "identifier": {
-              "key": "fada1f9c-668d-49c4-a653-81bb3d466922",
+              "key": "fe0e3d43-c452-48fd-b34a-2bf9d334adb0",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1223,7 +1227,7 @@
             "x": 156,
             "y": 2,
             "identifier": {
-              "key": "c3eb99c4-db3c-4a92-8967-3b3052efd0cf",
+              "key": "7df40f29-34ab-4714-8eda-8b0584ba1027",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1238,7 +1242,7 @@
             "x": 124,
             "y": 74,
             "identifier": {
-              "key": "0dd60b42-66a3-4326-b829-2cde71025d32",
+              "key": "9a718032-4b06-4e41-81b3-b793b37b9541",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1253,7 +1257,7 @@
             "x": 124,
             "y": 20,
             "identifier": {
-              "key": "eeda19bc-6302-47b6-b115-81204b16aaa3",
+              "key": "1e2f6bff-e1d6-4b3b-8aed-1a0193f955f7",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1268,7 +1272,7 @@
             "x": 156,
             "y": 20,
             "identifier": {
-              "key": "3093a1ef-ac30-4ac3-abff-e4ef5ca858e6",
+              "key": "de7fb34a-cfb7-4a8d-a6fe-5a1518ce628d",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1283,7 +1287,7 @@
             "x": 124,
             "y": 38,
             "identifier": {
-              "key": "e4b66733-2e89-4bf8-8a12-5ef3f247e4ec",
+              "key": "67edda3e-dba8-4ba1-8d53-0d546625d25d",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1298,7 +1302,7 @@
             "x": 124,
             "y": 92,
             "identifier": {
-              "key": "a91d265d-b36d-41fe-9d11-b799e52036ed",
+              "key": "026a5cc8-8ebc-42e9-8ee0-30dae16f41fb",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1313,7 +1317,7 @@
             "x": 188,
             "y": 20,
             "identifier": {
-              "key": "739c26b2-776a-4abb-949f-24a2066aee80",
+              "key": "b8f93070-4fe5-4491-a5f8-70bc53690363",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1328,7 +1332,7 @@
             "x": 188,
             "y": 2,
             "identifier": {
-              "key": "94997ceb-00c8-4702-af70-afb014cdf629",
+              "key": "0d289f02-d55f-43df-b6ba-bb8a50f29efe",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1343,7 +1347,7 @@
             "x": 188,
             "y": 38,
             "identifier": {
-              "key": "803121a1-d187-489f-a124-5e903657bedb",
+              "key": "8da80135-c186-4d08-84a4-477ffab305f6",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1358,7 +1362,7 @@
             "x": 188,
             "y": 56,
             "identifier": {
-              "key": "c984a025-e4a8-4c25-9b0e-1723b5a30303",
+              "key": "614f5b22-ad0a-42fb-9ef7-adfdb29f5cf5",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1373,7 +1377,7 @@
             "x": 156,
             "y": 74,
             "identifier": {
-              "key": "95cac0f8-cc42-4357-aac8-77d7ea5e31c9",
+              "key": "3f53bec7-3348-41ab-b750-ed4f383d05c3",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1388,7 +1392,7 @@
             "x": 188,
             "y": 74,
             "identifier": {
-              "key": "1011058f-8dec-4426-87d9-58135f663ea6",
+              "key": "a832e904-d1d1-42c8-ba7e-9741a53a0773",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1403,7 +1407,7 @@
             "x": 156,
             "y": 92,
             "identifier": {
-              "key": "c1881c9a-a638-4bbe-b320-a0ea5d7f4e4f",
+              "key": "70ee1948-9282-4e09-b69e-1e7d33065e83",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1418,7 +1422,7 @@
             "x": 188,
             "y": 92,
             "identifier": {
-              "key": "d510bf8a-f03d-4cac-b58c-1242cc039b22",
+              "key": "d3282b47-2e6a-4137-932e-18d2dcc94d18",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1433,7 +1437,7 @@
             "x": 1,
             "y": 0,
             "identifier": {
-              "key": "a211ae9a-f013-4a97-87ed-401baee94a3e",
+              "key": "e1728950-2594-457e-be2d-01bc3b37bca6",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1448,7 +1452,7 @@
             "x": 22,
             "y": 0,
             "identifier": {
-              "key": "f051b323-d22a-419a-a6e6-42ea6041b238",
+              "key": "d68f8704-e2f0-424c-9aa5-eb7395c62d86",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1463,7 +1467,7 @@
             "x": 43,
             "y": 0,
             "identifier": {
-              "key": "77ce4615-53d4-4ae7-809c-8535a57a041b",
+              "key": "b2077f4e-3236-461f-9693-08ca598b0b4c",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1478,7 +1482,7 @@
             "x": 64,
             "y": 0,
             "identifier": {
-              "key": "b425c7bd-6912-4e40-908e-6a21c73c7db3",
+              "key": "c8c58bc8-0a1e-48e0-aef6-b653772ad9d8",
               "namespace": ""
             },
             "hasFrame": true,
@@ -1493,7 +1497,7 @@
               "namespace": "taxonomy"
             },
             "x": 85,
-            "y": 102,
+            "y": 90,
             "width": 37,
             "height": 2,
             "displayMode": "all",
@@ -1505,6 +1509,21 @@
             "font": "default",
             "type": "telemetry-view",
             "id": "b27f8bbe-7aea-4680-95be-2dac4ab0399d"
+          },
+          {
+            "width": 39,
+            "height": 19,
+            "x": 85,
+            "y": 92,
+            "identifier": {
+              "key": "79a69ad7-240c-4c65-a4b4-b8993b195950",
+              "namespace": ""
+            },
+            "hasFrame": true,
+            "fontSize": "default",
+            "font": "default",
+            "type": "subobject-view",
+            "id": "8f3a85c8-e220-4adc-9031-79953224381a"
           }
         ],
         "layoutGrid": [
@@ -1513,16 +1532,16 @@
         ],
         "objectStyles": {}
       },
-      "modified": 1709249767953,
+      "modified": 1710544232101,
       "location": "mine",
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1707870958033,
-      "persisted": 1709249767979
+      "created": 1710543858050,
+      "persisted": 1710544232108
     },
-    "797785c7-035a-4ea2-b69b-d595cf48b49c": {
+    "aeb468ba-1163-4331-9067-f7b80b4ab337": {
       "identifier": {
-        "key": "797785c7-035a-4ea2-b69b-d595cf48b49c",
+        "key": "aeb468ba-1163-4331-9067-f7b80b4ab337",
         "namespace": ""
       },
       "name": "Test LAD Table",
@@ -1715,14 +1734,14 @@
       ],
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1701396684986,
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708721945970,
-      "persisted": 1708721945972
+      "created": 1710543858051,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858051,
+      "persisted": 1710543858051
     },
-    "1816debc-38b6-4680-8019-701689be4fc5": {
+    "0867a749-ac6a-478a-ab7f-ccc3a275e5ef": {
       "identifier": {
-        "key": "1816debc-38b6-4680-8019-701689be4fc5",
+        "key": "0867a749-ac6a-478a-ab7f-ccc3a275e5ef",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1743,16 +1762,16 @@
         ]
       },
       "name": "Magnetometer.x",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530618,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858052,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720440462,
-      "persisted": 1708720530618
+      "created": 1710543858052,
+      "persisted": 1710543858052
     },
-    "cc400028-b156-43cc-8bae-de13171d5431": {
+    "227afd35-1912-4423-9d63-a22541d247ad": {
       "identifier": {
-        "key": "cc400028-b156-43cc-8bae-de13171d5431",
+        "key": "227afd35-1912-4423-9d63-a22541d247ad",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1773,16 +1792,16 @@
         ]
       },
       "name": "Magnetometer.y",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530625,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858054,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720446196,
-      "persisted": 1708720530625
+      "created": 1710543858054,
+      "persisted": 1710543858054
     },
-    "798e729f-420c-45f6-aecf-5bbc44b55dad": {
+    "6be514e1-f094-4a61-923b-c1ea2b0d1c67": {
       "identifier": {
-        "key": "798e729f-420c-45f6-aecf-5bbc44b55dad",
+        "key": "6be514e1-f094-4a61-923b-c1ea2b0d1c67",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1803,16 +1822,16 @@
         ]
       },
       "name": "Magnetometer.z",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530631,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858055,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720452504,
-      "persisted": 1708720530631
+      "created": 1710543858055,
+      "persisted": 1710543858055
     },
-    "fada1f9c-668d-49c4-a653-81bb3d466922": {
+    "fe0e3d43-c452-48fd-b34a-2bf9d334adb0": {
       "identifier": {
-        "key": "fada1f9c-668d-49c4-a653-81bb3d466922",
+        "key": "fe0e3d43-c452-48fd-b34a-2bf9d334adb0",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1833,16 +1852,16 @@
         ]
       },
       "name": "Position.x",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530637,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858056,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720459109,
-      "persisted": 1708720530637
+      "created": 1710543858056,
+      "persisted": 1710543858056
     },
-    "c3eb99c4-db3c-4a92-8967-3b3052efd0cf": {
+    "7df40f29-34ab-4714-8eda-8b0584ba1027": {
       "identifier": {
-        "key": "c3eb99c4-db3c-4a92-8967-3b3052efd0cf",
+        "key": "7df40f29-34ab-4714-8eda-8b0584ba1027",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1863,16 +1882,16 @@
         ]
       },
       "name": "Position.y",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530643,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858058,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720465842,
-      "persisted": 1708720530643
+      "created": 1710543858058,
+      "persisted": 1710543858058
     },
-    "0dd60b42-66a3-4326-b829-2cde71025d32": {
+    "9a718032-4b06-4e41-81b3-b793b37b9541": {
       "identifier": {
-        "key": "0dd60b42-66a3-4326-b829-2cde71025d32",
+        "key": "9a718032-4b06-4e41-81b3-b793b37b9541",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1893,16 +1912,16 @@
         ]
       },
       "name": "Position.z",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530649,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858059,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720471945,
-      "persisted": 1708720530649
+      "created": 1710543858059,
+      "persisted": 1710543858059
     },
-    "eeda19bc-6302-47b6-b115-81204b16aaa3": {
+    "1e2f6bff-e1d6-4b3b-8aed-1a0193f955f7": {
       "identifier": {
-        "key": "eeda19bc-6302-47b6-b115-81204b16aaa3",
+        "key": "1e2f6bff-e1d6-4b3b-8aed-1a0193f955f7",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1923,16 +1942,16 @@
         ]
       },
       "name": "Velocity.x",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530655,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858061,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720478416,
-      "persisted": 1708720530655
+      "created": 1710543858061,
+      "persisted": 1710543858061
     },
-    "3093a1ef-ac30-4ac3-abff-e4ef5ca858e6": {
+    "de7fb34a-cfb7-4a8d-a6fe-5a1518ce628d": {
       "identifier": {
-        "key": "3093a1ef-ac30-4ac3-abff-e4ef5ca858e6",
+        "key": "de7fb34a-cfb7-4a8d-a6fe-5a1518ce628d",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1953,16 +1972,16 @@
         ]
       },
       "name": "Velocity.y",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530661,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858062,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720484585,
-      "persisted": 1708720530661
+      "created": 1710543858062,
+      "persisted": 1710543858062
     },
-    "e4b66733-2e89-4bf8-8a12-5ef3f247e4ec": {
+    "67edda3e-dba8-4ba1-8d53-0d546625d25d": {
       "identifier": {
-        "key": "e4b66733-2e89-4bf8-8a12-5ef3f247e4ec",
+        "key": "67edda3e-dba8-4ba1-8d53-0d546625d25d",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -1983,16 +2002,16 @@
         ]
       },
       "name": "Velocity.z",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720530667,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858063,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720489953,
-      "persisted": 1708720530667
+      "created": 1710543858063,
+      "persisted": 1710543858063
     },
-    "a91d265d-b36d-41fe-9d11-b799e52036ed": {
+    "026a5cc8-8ebc-42e9-8ee0-30dae16f41fb": {
       "identifier": {
-        "key": "a91d265d-b36d-41fe-9d11-b799e52036ed",
+        "key": "026a5cc8-8ebc-42e9-8ee0-30dae16f41fb",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2013,16 +2032,16 @@
         ]
       },
       "name": "Battery1_Temp",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829096,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858065,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720730175,
-      "persisted": 1708720829096
+      "created": 1710543858065,
+      "persisted": 1710543858065
     },
-    "739c26b2-776a-4abb-949f-24a2066aee80": {
+    "b8f93070-4fe5-4491-a5f8-70bc53690363": {
       "identifier": {
-        "key": "739c26b2-776a-4abb-949f-24a2066aee80",
+        "key": "b8f93070-4fe5-4491-a5f8-70bc53690363",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2043,16 +2062,16 @@
         ]
       },
       "name": "Battery1_Voltage",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829103,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858066,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720736954,
-      "persisted": 1708720829103
+      "created": 1710543858066,
+      "persisted": 1710543858066
     },
-    "94997ceb-00c8-4702-af70-afb014cdf629": {
+    "0d289f02-d55f-43df-b6ba-bb8a50f29efe": {
       "identifier": {
-        "key": "94997ceb-00c8-4702-af70-afb014cdf629",
+        "key": "0d289f02-d55f-43df-b6ba-bb8a50f29efe",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2073,16 +2092,16 @@
         ]
       },
       "name": "Battery2_Temp",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829110,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858068,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720741955,
-      "persisted": 1708720829110
+      "created": 1710543858068,
+      "persisted": 1710543858068
     },
-    "803121a1-d187-489f-a124-5e903657bedb": {
+    "8da80135-c186-4d08-84a4-477ffab305f6": {
       "identifier": {
-        "key": "803121a1-d187-489f-a124-5e903657bedb",
+        "key": "8da80135-c186-4d08-84a4-477ffab305f6",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2103,16 +2122,16 @@
         ]
       },
       "name": "Battery2_Voltage",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829117,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858069,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720755105,
-      "persisted": 1708720829117
+      "created": 1710543858069,
+      "persisted": 1710543858069
     },
-    "c984a025-e4a8-4c25-9b0e-1723b5a30303": {
+    "614f5b22-ad0a-42fb-9ef7-adfdb29f5cf5": {
       "identifier": {
-        "key": "c984a025-e4a8-4c25-9b0e-1723b5a30303",
+        "key": "614f5b22-ad0a-42fb-9ef7-adfdb29f5cf5",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2133,16 +2152,16 @@
         ]
       },
       "name": "ElapsedSeconds",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829124,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858071,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720769807,
-      "persisted": 1708720829124
+      "created": 1710543858071,
+      "persisted": 1710543858071
     },
-    "95cac0f8-cc42-4357-aac8-77d7ea5e31c9": {
+    "3f53bec7-3348-41ab-b750-ed4f383d05c3": {
       "identifier": {
-        "key": "95cac0f8-cc42-4357-aac8-77d7ea5e31c9",
+        "key": "3f53bec7-3348-41ab-b750-ed4f383d05c3",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2163,16 +2182,16 @@
         ]
       },
       "name": "Gyro.x",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829132,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858072,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720777813,
-      "persisted": 1708720829132
+      "created": 1710543858072,
+      "persisted": 1710543858072
     },
-    "1011058f-8dec-4426-87d9-58135f663ea6": {
+    "a832e904-d1d1-42c8-ba7e-9741a53a0773": {
       "identifier": {
-        "key": "1011058f-8dec-4426-87d9-58135f663ea6",
+        "key": "a832e904-d1d1-42c8-ba7e-9741a53a0773",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2193,16 +2212,16 @@
         ]
       },
       "name": "Gyro.y",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829138,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858074,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720785052,
-      "persisted": 1708720829138
+      "created": 1710543858074,
+      "persisted": 1710543858074
     },
-    "c1881c9a-a638-4bbe-b320-a0ea5d7f4e4f": {
+    "70ee1948-9282-4e09-b69e-1e7d33065e83": {
       "identifier": {
-        "key": "c1881c9a-a638-4bbe-b320-a0ea5d7f4e4f",
+        "key": "70ee1948-9282-4e09-b69e-1e7d33065e83",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2223,16 +2242,16 @@
         ]
       },
       "name": "Gyro.z",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829144,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858075,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720792578,
-      "persisted": 1708720829144
+      "created": 1710543858075,
+      "persisted": 1710543858075
     },
-    "d510bf8a-f03d-4cac-b58c-1242cc039b22": {
+    "d3282b47-2e6a-4137-932e-18d2dcc94d18": {
       "identifier": {
-        "key": "d510bf8a-f03d-4cac-b58c-1242cc039b22",
+        "key": "d3282b47-2e6a-4137-932e-18d2dcc94d18",
         "namespace": ""
       },
       "type": "telemetry.plot.overlay",
@@ -2253,16 +2272,16 @@
         ]
       },
       "name": "Latitude",
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
-      "modified": 1708720829150,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modified": 1710543858076,
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720799474,
-      "persisted": 1708720829150
+      "created": 1710543858076,
+      "persisted": 1710543858076
     },
-    "a211ae9a-f013-4a97-87ed-401baee94a3e": {
+    "e1728950-2594-457e-be2d-01bc3b37bca6": {
       "identifier": {
-        "key": "a211ae9a-f013-4a97-87ed-401baee94a3e",
+        "key": "e1728950-2594-457e-be2d-01bc3b37bca6",
         "namespace": ""
       },
       "name": "Battery1_Temp",
@@ -2287,16 +2306,16 @@
           "precision": 2
         }
       },
-      "modified": 1709078820625,
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
+      "modified": 1710543858078,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720863228,
-      "persisted": 1709078820625
+      "created": 1710543858078,
+      "persisted": 1710543858078
     },
-    "f051b323-d22a-419a-a6e6-42ea6041b238": {
+    "d68f8704-e2f0-424c-9aa5-eb7395c62d86": {
       "identifier": {
-        "key": "f051b323-d22a-419a-a6e6-42ea6041b238",
+        "key": "d68f8704-e2f0-424c-9aa5-eb7395c62d86",
         "namespace": ""
       },
       "name": "Battery1_Voltage",
@@ -2321,16 +2340,16 @@
           "precision": 2
         }
       },
-      "modified": 1709078831357,
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
+      "modified": 1710543858079,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720957879,
-      "persisted": 1709078831358
+      "created": 1710543858079,
+      "persisted": 1710543858079
     },
-    "77ce4615-53d4-4ae7-809c-8535a57a041b": {
+    "b2077f4e-3236-461f-9693-08ca598b0b4c": {
       "identifier": {
-        "key": "77ce4615-53d4-4ae7-809c-8535a57a041b",
+        "key": "b2077f4e-3236-461f-9693-08ca598b0b4c",
         "namespace": ""
       },
       "name": "Battery2_Temp",
@@ -2355,16 +2374,16 @@
           "precision": 2
         }
       },
-      "modified": 1709078840709,
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
+      "modified": 1710543858081,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708720982313,
-      "persisted": 1709078840709
+      "created": 1710543858081,
+      "persisted": 1710543858081
     },
-    "b425c7bd-6912-4e40-908e-6a21c73c7db3": {
+    "c8c58bc8-0a1e-48e0-aef6-b653772ad9d8": {
       "identifier": {
-        "key": "b425c7bd-6912-4e40-908e-6a21c73c7db3",
+        "key": "c8c58bc8-0a1e-48e0-aef6-b653772ad9d8",
         "namespace": ""
       },
       "name": "Battery2_Voltage",
@@ -2389,13 +2408,43 @@
           "precision": 2
         }
       },
-      "modified": 1709078853693,
-      "location": "c965501f-86c7-4d63-8857-95618462ea2d",
+      "modified": 1710543858082,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
       "modifiedBy": "guest",
       "createdBy": "guest",
-      "created": 1708721005947,
-      "persisted": 1709078853693
+      "created": 1710543858082,
+      "persisted": 1710543858082
+    },
+    "79a69ad7-240c-4c65-a4b4-b8993b195950": {
+      "identifier": {
+        "key": "79a69ad7-240c-4c65-a4b4-b8993b195950",
+        "namespace": ""
+      },
+      "name": "Telemetry Table",
+      "type": "table",
+      "composition": [
+        {
+          "key": "~myproject~Enum_Para_1",
+          "namespace": "taxonomy"
+        }
+      ],
+      "configuration": {
+        "columnWidths": {},
+        "hiddenColumns": {},
+        "telemetryMode": "performance",
+        "persistModeChange": true,
+        "rowLimit": 50,
+        "columnOrder": [],
+        "cellFormat": {},
+        "autosize": true
+      },
+      "modified": 1710544282302,
+      "location": "49346c05-8228-4e98-a006-ad425e0fdd6a",
+      "modifiedBy": "guest",
+      "createdBy": "guest",
+      "created": 1710544042155,
+      "persisted": 1710544282302
     }
   },
-  "rootId": "c965501f-86c7-4d63-8857-95618462ea2d"
+  "rootId": "49346c05-8228-4e98-a006-ad425e0fdd6a"
 }
