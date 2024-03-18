@@ -349,10 +349,19 @@ test.describe('Realtime telemetry displays', () => {
     });
 
     test('Open MCT de-duplicates telemetry when requested and subscribed', async ({ page }) => {
+        const searchBox = await page.getByRole('searchbox', { name: 'Search Input' });
+        await searchBox.click();
+        // Fill Search input
+        await searchBox.fill("Telemetry Table");
+
+        const searchResults = await page.getByLabel('Search Results Dropdown');
+
+        //Search Result Appears and is clicked
+        const layoutSearchResult = await searchResults.getByText("Telemetry Table", { exact: true });
+        await layoutSearchResult.click();
+
         // this is an important step in order to test duplicate telemetry
         await page.reload({ waitUntil: 'domcontentloaded' });
-
-        const telemetryTable = await getTelemetryTableByName(page, 'Telemetry Table');
 
         // Disable playback
         await disableLink(yamcsURL);
@@ -361,9 +370,10 @@ test.describe('Realtime telemetry displays', () => {
         await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
         // TODO stuff
-        const allRows = await (await telemetryTable.locator('tbody>tr')).all();
-        const firstRow = allRows[0];
-        const secondRow = allRows[1];
+        const telemetryTable = await getTelemetryTableByName(page, 'Telemetry Table');
+        // const allRows = await (await telemetryTable.locator('tbody>tr')).all();
+        const firstRow = await (await telemetryTable.locator('tbody>tr')).first();
+        const secondRow = await (await telemetryTable.locator('tbody>tr')).nth(1);
         const firstRowData = {
             timestamp: await firstRow.getByLabel('utc').innerText(),
             value: await firstRow.getByLabel('value').innerText()
