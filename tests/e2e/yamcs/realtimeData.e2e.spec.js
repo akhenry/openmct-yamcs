@@ -306,7 +306,6 @@ test.describe('Realtime telemetry displays', () => {
     });
 
     test('Open MCT accurately batches telemetry when requested', async ({ page }) => {
-
         // 1. Subscribe to batched telemetry,
         const telemetryValues = await page.evaluate(async () => {
             const openmct = window.openmct;
@@ -347,6 +346,34 @@ test.describe('Realtime telemetry displays', () => {
             expect(telemetry.value).toBe(formattedParameterArchiveTelemetry[index].value);
             expect(telemetry.timestamp).toBe(formattedParameterArchiveTelemetry[index].timestamp);
         });
+    });
+
+    test('Open MCT de-duplicates telemetry when requested and subscribed', async ({ page }) => {
+        // this is an important step in order to test duplicate telemetry
+        await page.reload({ waitUntil: 'domcontentloaded' });
+
+        const telemetryTable = await getTelemetryTableByName(page, 'Telemetry Table');
+
+        // Disable playback
+        await disableLink(yamcsURL);
+
+        // Wait 1 second for values to propagate to client and render on screen.
+        await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+
+        // TODO stuff
+        const allRows = await (await telemetryTable.locator('tbody>tr')).all();
+        const firstRow = allRows[0];
+        const secondRow = allRows[1];
+        const firstRowData = {
+            timestamp: await firstRow.getByLabel('utc').innerText(),
+            value: await firstRow.getByLabel('value').innerText()
+        };
+        const secondRowData = {
+            timestamp: await secondRow.getByLabel('utc').innerText(),
+            value: await secondRow.getByLabel('value').innerText()
+        };
+
+        expect(JSON.stringify(firstRowData)).not.toBe(JSON.stringify(secondRowData));
     });
 
     function sortOpenMctTelemetryAscending(telemetry) {
@@ -406,7 +433,12 @@ test.describe('Realtime telemetry displays', () => {
         const matchingLadTableFrames = await page.locator(`[aria-label="sub object frame"]:has([aria-label="object name"][title="${ladTableName}"])`);
 
         return matchingLadTableFrames.locator('[aria-label="lad table"]').first();
+    }
 
+    async function getTelemetryTableByName(page, telemetryTableName) {
+        const matchingTelemetryTableFrames = await page.locator(`[aria-label="sub object frame"]:has([aria-label="object name"][title="${telemetryTableName}"])`);
+
+        return matchingTelemetryTableFrames.locator(`[aria-label="${telemetryTableName} table content"]`).first();
     }
 
     async function getParameterValuesFromAllGauges(page) {
