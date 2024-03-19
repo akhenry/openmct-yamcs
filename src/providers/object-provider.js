@@ -61,6 +61,10 @@ export default class YamcsObjectProvider {
         this.#initialize();
     }
 
+    isReadOnly() {
+        return true;
+    }
+
     #initialize() {
         this.#createRootObject();
         const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
