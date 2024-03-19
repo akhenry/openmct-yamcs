@@ -1,0 +1,60 @@
+name: Lint and PR Template Check
+
+on:
+  pull_request:
+    types:
+      - labeled
+      - unlabeled
+      - opened
+      - reopened
+      - synchronize
+      - edited
+  pull_request_review_comment:
+    types:
+      - created
+env:
+  LABELS: ${{ join( github.event.pull_request.labels.*.name, ' ' ) }}
+
+jobs:
+  lint-and-template-check:
+    runs-on: ubuntu-latest
+    name: Lint and Template Check
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/hydrogen'
+      
+      - name: Install dependencies
+        run: npm install --no-audit --progress=false
+      
+      - name: Run lint
+        run: npm run lint
+      
+      - name: Check for required files
+        run: |
+          if [ ! -f ".github/workflows/prcop-config.json" ]; then
+            echo "Required config file is missing."
+            exit 1
+          fi
+
+  check-type-label:
+    name: Check type Label
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains( env.LABELS, 'type:' ) == false
+        run: |
+          echo "Error: No 'type:' label found on the PR."
+          exit 1
+
+  check-milestone:
+    name: Check Milestone
+    runs-on: ubuntu-latest
+    steps:
+      - if: github.event.pull_request.milestone == null && contains( env.LABELS, 'no milestone' ) == false
+        run: |
+          echo "Error: PR does not have a milestone and is not labeled 'no milestone'."
+          exit 1
