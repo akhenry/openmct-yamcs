@@ -39,13 +39,13 @@ jobs:
       - name: replace yamcsVersion with matrix param
         if: matrix.yamcs-version != 'default'
         run: |
-          cd quickstart
           mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
+        working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          cd quickstart/docker
           touch makeout.txt
           make all-10hz &> makeout.txt &
+        working-directory: quickstart/docker
       - run: npm install
       - name: Run build:example based on openmct-version
         run: |
@@ -53,14 +53,14 @@ jobs:
             npm run build:example:master
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
-          fi
-      - run: npx playwright@1.39.0 install chromium
-      - name: Get Open MCT e2e tests
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: npm run test:getopensource
+            fi
+          - run: npx playwright@1.39.0 install chromium
+          - name: Get Open MCT e2e tests
+            uses: nick-fields/retry@v3
+            with:
+              timeout_minutes: 10
+              max_attempts: 3
+              command: npm run test:getopensource
       - name: Check that yamcs is available
         run: |
           docker ps -a
