@@ -51,8 +51,14 @@ test.describe('Realtime telemetry displays', () => {
             }
         });
 
+        // Install a remote clock
+        // await page.addInitScript({
+        //     path: fileURLToPath(new URL('./addInitRemoteClockPlugin.js', import.meta.url))
+        // });
+
         // Go to baseURL
         await page.goto('./', { waitUntil: 'domcontentloaded' });
+
         await page.evaluate((thirtyMinutes) => {
             const openmct = window.openmct;
 
@@ -67,6 +73,7 @@ test.describe('Realtime telemetry displays', () => {
                 end: 0
             });
         }, THIRTY_MINUTES);
+
         yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
         await enableLink(yamcsURL);
 
@@ -349,19 +356,26 @@ test.describe('Realtime telemetry displays', () => {
     });
 
     test('Open MCT de-duplicates telemetry when requested and subscribed', async ({ page }) => {
+        const TABLE_NAME = 'Telemetry Table';
         const searchBox = await page.getByRole('searchbox', { name: 'Search Input' });
         await searchBox.click();
         // Fill Search input
-        await searchBox.fill("Telemetry Table");
+        await searchBox.fill(TABLE_NAME);
 
         const searchResults = await page.getByLabel('Search Results Dropdown');
 
         //Search Result Appears and is clicked
-        const layoutSearchResult = await searchResults.getByText("Telemetry Table", { exact: true });
+        const layoutSearchResult = await searchResults.getByText(TABLE_NAME, { exact: true });
         await layoutSearchResult.click();
 
+        await page.waitForTimeout(5000);
+
         // this is an important step in order to test duplicate telemetry
-        await page.reload({ waitUntil: 'domcontentloaded' });
+        await page.reload();
+        // Install remote clock
+        await page.addInitScript({
+            path: fileURLToPath(new URL('./addInitRemoteClockPlugin.js', import.meta.url))
+        });
 
         // Disable playback
         await disableLink(yamcsURL);
@@ -369,21 +383,15 @@ test.describe('Realtime telemetry displays', () => {
         // Wait 1 second for values to propagate to client and render on screen.
         await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
-        // TODO stuff
-        const telemetryTable = await getTelemetryTableByName(page, 'Telemetry Table');
-        // const allRows = await (await telemetryTable.locator('tbody>tr')).all();
-        const firstRow = await (await telemetryTable.locator('tbody>tr')).first();
-        const secondRow = await (await telemetryTable.locator('tbody>tr')).nth(1);
-        const firstRowData = {
-            timestamp: await firstRow.getByLabel('utc').innerText(),
-            value: await firstRow.getByLabel('value').innerText()
-        };
-        const secondRowData = {
-            timestamp: await secondRow.getByLabel('utc').innerText(),
-            value: await secondRow.getByLabel('value').innerText()
-        };
+        const telemetryTable = await page.getByLabel(`${TABLE_NAME} table content`);
+        const firstRow = await telemetryTable.getByLabel('Table Row').first();
+        const secondRow = await telemetryTable.getByLabel('Table Row').nth(1);
+        const firstRowTimestamp = await (firstRow.getByLabel('utc')).innerText();
+        const firstRowValue = await (firstRow.getByLabel('value')).innerText();
+        const secondRowTimestamp = await (secondRow.getByLabel('utc')).innerText();
+        const secondRowValue = await (secondRow.getByLabel('value')).innerText();
 
-        expect(JSON.stringify(firstRowData)).not.toBe(JSON.stringify(secondRowData));
+        expect(`${firstRowTimestamp}${firstRowValue}`).not.toBe(`${secondRowTimestamp}${secondRowValue}`);
     });
 
     function sortOpenMctTelemetryAscending(telemetry) {
