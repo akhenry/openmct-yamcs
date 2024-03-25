@@ -82,7 +82,7 @@ export default function install(
             }));
 
         const stalenessProvider = new YamcsStalenessProvider(
-            openmct,
+            realtimeTelemetryProvider,
             latestTelemetryProvider
         );
         openmct.telemetry.addProvider(stalenessProvider);

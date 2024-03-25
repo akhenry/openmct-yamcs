@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2023, United States Government
+ * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,35 +20,23 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const.js';
-import { buildStalenessResponseObject } from '../utils.js';
+/*
+Staleness Specific Tests
+*/
 
-export default class YamcsStalenessProvider {
-    constructor(realtimeTelemetryProvider, latestTelemetryProvider) {
-        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
-        this.latestTelemetryProvider = latestTelemetryProvider;
-    }
+import { test, expect } from '../opensource/pluginFixtures.js';
+import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
 
-    supportsStaleness(domainObject) {
-        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
-    }
+test.describe.fixme("Fault management tests @yamcs", () => {
+    test('Show faults ', async ({ page }) => {
+        test.step('for historic alarm violations', () =>{
+            // Navigate to fault management in the tree
+            // Expect that there is indication of a fault
+        });
 
-    subscribeToStaleness(domainObject, callback) {
-        return this.realtimeTelemetryProvider.subscribeToStaleness(domainObject, callback);
-    }
-
-    async isStale(domainObject) {
-        const response = await this.latestTelemetryProvider.requestLatest(domainObject);
-
-        if (!response?.acquisitionStatus) {
-            return;
-        }
-
-        const stalenessObject = buildStalenessResponseObject(
-            STALENESS_STATUS_MAP[response.acquisitionStatus],
-            response.timestamp
-        );
-
-        return stalenessObject;
-    }
-}
+        test.step('show historic and live faults when new alarms are triggered in real time', () => {
+            // Wait for new data
+            // Expect that live faults are displayed
+        });
+    });
+});
