@@ -141,20 +141,16 @@ test.describe('Reload action', () => {
     allNetworkRequests = [];
 
     battery1tempRequest = page.waitForResponse('**/api/archive/myproject/parameters/myproject/Battery1_Temp**')
-    battery1tempRequestCont = page.waitForResponse('**/api/archive/myproject/parameters/myproject/Battery1_Temp**')
     battery1voltageRequest = page.waitForResponse('**/api/archive/myproject/parameters/myproject/Battery1_Voltage**')
-    battery1voltageRequestCont = page.waitForResponse('**/api/archive/myproject/parameters/myproject/Battery1_Voltage**')
     batchGet = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
     batchGet2 = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
 
     await page.getByTitle('More actions').click();
     await page.getByRole('menuitem', { name: /Reload/ }).click();
-    await Promise.all([battery1tempRequest, battery1tempRequestCont, batchGet]);
-    expect(allNetworkRequests.length).toBe(3);
+    await Promise.all([battery1tempRequest, battery1voltageRequest, batchGet, batchGet2]);
+    await page.waitForLoadState('networkidle');
 
-    // now reload parent
-    await page.getByTitle('More actions').click();
-    await page.getByRole('menuitem', { name: /Reload/ }).click();
+    expect(allNetworkRequests.length).toBe(3);
 
     const fullReloadAlphaTelemetryValue = await page
       .getByLabel('Alpha Table table content')
