@@ -48,6 +48,12 @@ export default class MissionStatusTelemetry {
         this.#openmct = openmct;
     }
 
+    /**
+     * Set the status for a particular mission action.
+     * @param {MissionAction} action the mission action
+     * @param {MissionStatus} status the status
+     * @returns {Promise<boolean>} true if the status was set successfully
+     */
     async setStatusForMissionAction(action, status) {
         const telemetryObject = await this.getTelemetryObjectForAction(action);
         const setParameterUrl = this.#buildUrl(telemetryObject.identifier);
@@ -73,28 +79,52 @@ export default class MissionStatusTelemetry {
         return success;
     }
 
+    /**
+     * Get the possible mission statuses.
+     * i.e: "Go" or "No Go"
+     * @returns {Promise<MissionStatus[]>}
+     */
     async getPossibleMissionStatuses() {
         await this.#readyPromise;
 
         return Object.values(this.#missionStatusMap).map(status => this.toMissionStatusFromMdbEntry(status));
     }
 
+    /**
+     * Get the default status for any mission action.
+     * Returns the first status in the list of possible statuses.
+     * @returns {Promise<MissionStatus>}
+     */
     async getDefaultStatusForAction() {
         const possibleStatuses = await this.getPossibleMissionStatuses();
 
         return possibleStatuses[0];
     }
 
+    /**
+     * Adds a mission status to the list of possible statuses.
+     * @param {MissionStatus} status
+     */
     addStatus(status) {
         this.#missionStatusMap[status.value] = status;
     }
 
+    /**
+     * Get the telemetry object for a mission action.
+     * @param {MissionAction} action the mission action
+     * @returns {Promise<TelemetryObject>} the telemetry object
+     */
     async getTelemetryObjectForAction(action) {
         await this.#readyPromise;
 
         return this.#missionActionToTelemetryObjectMap[action];
     }
 
+    /**
+     * Check if this parameter name is a mission status parameter name.
+     * @param {string} parameterName
+     * @returns {boolean} true if the parameter name is a mission status parameter name
+     */
     async isMissionStatusParameterName(parameterName) {
         await this.#readyPromise;
         if (this.#missionStatusParameterNames.has(parameterName)) {
@@ -111,24 +141,46 @@ export default class MissionStatusTelemetry {
         return false;
     }
 
+    /**
+     * Set the telemetry object for a mission action.
+     * @param {MissionAction} action
+     * @param {TelemetryObject} telemetryObject
+     */
     setTelemetryObjectForAction(action, telemetryObject) {
         this.#missionActionToTelemetryObjectMap[action] = telemetryObject;
     }
 
+    /**
+     * Add a mission action to the list of possible actions.
+     * @param {MissionAction} action
+     */
     addMissionAction(action) {
         this.#missionActions.add(action);
     }
 
+    /**
+     * Add a mission status parameter name to the list of parameter names.
+     * @param {string} parameterName
+     */
     addMissionStatusParameterName(parameterName) {
         this.#missionStatusParameterNames.add(parameterName);
     }
 
+    /**
+     * Get a list of all mission actions.
+     * @returns {Promise<MissionAction[]>}
+     */
     async getAllMissionActions() {
         await this.#readyPromise;
 
         return Array.from(this.#missionActions);
     }
 
+    /**
+     * Get the current status of a mission action given its MDB entry.
+     * @param {MdbEntry} yamcsStatus the MDB entry
+     * @returns {MissionStatus}
+     */
     toMissionStatusFromMdbEntry(yamcsStatus) {
         return {
             // eslint-disable-next-line radix
@@ -137,6 +189,12 @@ export default class MissionStatusTelemetry {
         };
     }
 
+    /**
+     * Receives a telemetry object and a datum and returns a mission status.
+     * @param {TelemetryObject} telemetryObject the telemetry object
+     * @param {Datum} datum the datum object
+     * @returns {MissionStatus}
+     */
     toStatusFromTelemetry(telemetryObject, datum) {
         const metadata = this.#openmct.telemetry.getMetadata(telemetryObject);
         const rangeMetadata = metadata.valuesForHints(['range'])[0];
@@ -151,13 +209,73 @@ export default class MissionStatusTelemetry {
         };
     }
 
+    /**
+     * Fires when the dictionary is loaded.
+     */
     dictionaryLoadComplete() {
         this.#setReady();
     }
 
+    /**
+     * Construct the URL for a parameter.
+     * @param {import('openmct').Identifier} id the identifier
+     * @returns {string}
+     */
     #buildUrl(id) {
         let url = `${this.#url}api/processors/${this.#instance}/${this.#processor}/parameters/${idToQualifiedName(id.key)}`;
 
         return url;
     }
 }
+
+/**
+ * @typedef {Object} MissionStatus
+ * @property {number} key
+ * @property {string} label
+ * @property {number?} timestamp
+ */
+
+/**
+ * @typedef {string} MissionAction
+ */
+
+/**
+ * @typedef {Object} TelemetryObject
+ * @property {import('openmct').Identifier} identifier
+ * @property {string} name
+ * @property {string} type
+ * @property {string} location
+ * @property {string} configuration
+ * @property {string} domain
+ * @property {object} telemetry
+ * @property {TelemetryValue[]} telemetry.values
+ * @property {string} metadata
+ * @property {string} composition
+ * @property {string} object
+ * @property {string} value
+ */
+
+/**
+ * @typedef {object} TelemetryValue
+ * @property {string} key
+ * @property {string} name
+ * @property {string} format
+ * @property {string} source
+ * @property {object} hints
+ * @property {number} hints.domain
+ */
+
+/**
+ * @typedef {object} Datum
+ * @property {string} id
+ * @property {string} timestamp
+ * @property {string} acquisitionStatus
+ * @property {*} value
+ */
+
+/**
+ * @typedef {object} MdbEntry
+ * @property {string} value
+ * @property {string} label
+ * @property {string} description
+ */

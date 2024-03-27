@@ -23,6 +23,11 @@
 const MISSION_STATUS_TYPE = 'yamcs.missionStatus';
 const MISSION_ACTION_NAMESPACE = 'OpenMCT:action';
 
+/**
+ * Check if the parameter is a mission status parameter
+ * @param {Parameter} parameter
+ * @returns {boolean} true if the parameter is a mission status parameter, false otherwise
+ */
 export function isMissionStatusParameter(parameter) {
     const aliases = parameter.alias;
 
@@ -30,12 +35,41 @@ export function isMissionStatusParameter(parameter) {
         && aliases.some(alias => alias.name === MISSION_STATUS_TYPE);
 }
 
+/**
+ * Get the mission action from the parameter
+ * @param {Parameter} parameter
+ * @returns {import("./mission-status-telemetry").MissionAction? } the mission action name if the parameter is a mission action parameter, null otherwise
+ */
 export function getMissionActionFromParameter(parameter) {
     const aliases = parameter.alias;
 
-    return aliases.find(alias => alias.namespace === MISSION_ACTION_NAMESPACE)?.name;
+    return aliases.find(alias => alias.namespace === MISSION_ACTION_NAMESPACE)?.name ?? null;
 }
 
+/**
+ * Get the possible mission action statuses from the parameter
+ * @param {Parameter} parameter
+ * @returns {string[]}
+ */
 export function getPossibleMissionActionStatusesFromParameter(parameter) {
     return parameter.type.enumValue;
 }
+
+/**
+ * @typedef {import("./mission-status-telemetry").MdbEntry} MdbEntry
+ */
+
+/**
+ * @typedef {object} Parameter
+ * @property {string} name
+ * @property {string} qualifiedName
+ * @property {object} type
+ * @property {string} type.engType
+ * @property {object} type.dataEncoding
+ * @property {string} type.dataEncoding.type
+ * @property {boolean} type.dataEncoding.littleEndian
+ * @property {number} type.dataEncoding.sizeInBits
+ * @property {string} type.dataEncoding.encoding
+ * @property {MdbEntry[]} type.enumValue
+ * @property {string} dataSource
+ */
