@@ -120,9 +120,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
     standardizeOptions(options, domainObject) {
         options.sizeType = 'limit';
-        options.order = 'asc';
+        options.order = options.order ?? 'asc';
         options.isSamples = false;
-        options.totalRequestSize = options.size || 1000000;
+        options.totalRequestSize = options.size ?? 1000000;
 
         options.size = this.getAppropriateSize(options.size);
 
