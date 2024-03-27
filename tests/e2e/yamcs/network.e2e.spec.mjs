@@ -24,8 +24,9 @@
  * This suite verifies the network requests made by the application to ensure correct interaction with YAMCS.
  */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { setFixedTimeMode } from '../opensource/appActions.js';
+import { pluginFixtures, appActions } from 'openmct-e2e';
+const { test, expect } = pluginFixtures;
+const { setFixedTimeMode } = appActions;
 
 /**
  * This test suite checks the network requests made by Open MCT to YAMCS.
