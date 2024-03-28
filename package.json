@@ -46,7 +46,7 @@
     "openmct": ">= 3.9.9"
   },
   "devDependencies": {
-    "@babel/core": "7.20.12",
+    "@babel/core": "7.21.3",
     "@babel/eslint-parser": "7.19.1",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
