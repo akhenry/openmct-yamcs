@@ -63,9 +63,17 @@ test.describe('Telemetry Eviction', () => {
 
         // put in real time mode so telemetry will eventually go out of range and be garbage collected
         await setRealTimeMode(page);
+
+        // set the time range to 5 seconds
+        await page.getByLabel('Global Time Conductor').click();
+        await page.getByLabel('Start offset minutes').click();
+        await page.getByLabel('Start offset minutes').fill('0');
+        await page.getByLabel('Start offset seconds').click();
+        await page.getByLabel('Start offset seconds').fill('5');
+        await page.getByLabel('Submit time offsets').click();
     });
 
-    test('Complex Display', async ({ page }) => {
+    test.only('Complex Display', async ({ page }) => {
         const result = await navigateToObjectAndDetectTelemetryEviction(page, 'Complex Display Layout');
 
         // If we got here without timing out, then the root view object was garbage collected and no memory leak was detected.
@@ -162,14 +170,14 @@ test.describe('Telemetry Eviction', () => {
         await page.getByText(objectName, { exact: true }).click();
 
         // Wait a few seconds for some telemetry to accumulate
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(7000);
 
         // This next code block blocks until the finalization listener is called and the gcPromise resolved.
         // This means that the root node for the view has been garbage collected.
         // In the event that the root node is not garbage collected, the gcPromise will never resolve and the test will time out.
         await (page.evaluate(async () => {
             const garbageCollectionPromisesToWait = window.garbageCollectionPromises;
-            console.debug(`⏲️ Waiting for ${garbageCollectionPromisesToWait?.length} garbage collection promises to resolve`);
+            console.debug(`⏲️  Waiting for ${garbageCollectionPromisesToWait?.length} garbage collection promises to resolve`);
             window.garbageCollectionPromises = null;
 
             // Manually invoke the garbage collector once all references are removed.
