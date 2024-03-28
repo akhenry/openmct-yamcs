@@ -25,7 +25,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { fileURLToPath } from 'url';
-import { latestParameterValues, disableLink, enableLink, parameterArchive } from './quickstartTools.js';
+import { latestParameterValues, disableLink, enableLink, parameterArchive } from './quickstartTools.mjs';
 
 import fs from 'fs';
 

@@ -22,7 +22,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { merge } from 'webpack-merge';
-import commonConfig from './webpack.common.js';
+import commonConfig from './webpack.common.mjs';
 
 // Replicate __dirname functionality for ES modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,9 +30,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('webpack').Configuration} */
 const devConfig = {
     mode: 'development',
+    context: path.resolve(__dirname, '../'),
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': './example/index.js'
+        'openmct-yamcs-example': path.resolve(__dirname, '../example/index.js')
     },
     devServer: {
         compress: true,
@@ -41,7 +42,7 @@ const devConfig = {
             directory: path.join(__dirname, '../example'),
         }, {
             directory: path.join(__dirname, '../node_modules/openmct/dist'),
-            publicPath: '/dist',
+            publicPath: '/node_modules/openmct/dist'
         }],
         proxy: {
             "/yamcs-proxy/*": {
@@ -57,11 +58,6 @@ const devConfig = {
                 ws: true,
                 pathRewrite: { '^/yamcs-proxy-ws/': '' }
             }
-        }
-    },
-    resolve: {
-        alias: {
-            openmct: path.resolve(__dirname, '../node_modules/openmct/dist/openmct.js')
         }
     }
 };

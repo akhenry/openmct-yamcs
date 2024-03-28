@@ -24,12 +24,13 @@
 Staleness Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
+import { pluginFixtures } from 'openmct-e2e';
+const { test } = pluginFixtures;
 
 test.describe.fixme("Fault management tests @yamcs", () => {
+    // eslint-disable-next-line require-await
     test('Show faults ', async ({ page }) => {
-        test.step('for historic alarm violations', () =>{
+        test.step('for historic alarm violations', () => {
             // Navigate to fault management in the tree
             // Expect that there is indication of a fault
         });
