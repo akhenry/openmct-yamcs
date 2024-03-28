@@ -24,8 +24,9 @@
 MDB Limits Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensource/appActions.js';
+import { pluginFixtures, appActions } from 'openmct-e2e';
+const { test, expect } = pluginFixtures;
+const { createDomainObjectWithDefaults, waitForPlotsToRender } = appActions;
 const YAMCS_URL = 'http://localhost:8090/';
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
