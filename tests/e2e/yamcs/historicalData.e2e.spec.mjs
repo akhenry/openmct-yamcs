@@ -33,32 +33,27 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     let filteredRequests = [];
     let networkRequests = [];
     test.beforeEach(async ({ page }) => {
-        networkRequests = [];
-        filteredRequests = [];
         page.on('request', (request) => networkRequests.push(request));
         // Go to baseURL
         await page.goto("./", { waitUntil: "domcontentloaded" });
-        await expect(page.getByText('Loading...')).not.toBeVisible();
-    });
-
-    test('When in plot view, samples endpoint is used for enum type parameters with the useRawValue parameter', async ({ page }) => {
+        await expect(page.getByText('Loading...')).toBeHidden();
         // Change to fixed time
         await setFixedTimeMode(page);
 
-        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        await expect(myProjectTreeItem).toBeVisible();
-        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-        await firstMyProjectTriangle.click();
-        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
-        await secondMyProjectTriangle.click();
-
-        await page.waitForLoadState('networkidle');
+        // Expand myproject and subfolder myproject
+        await page.getByLabel('Expand myproject').click();
+        await page.getByLabel('Expand myproject').click();
+        // await expect(page.getByText('Loading...')).toBeHidden();
         networkRequests = [];
-        await page.locator('text=Enum_Para_1').first().click();
-        await page.waitForLoadState('networkidle');
+        filteredRequests = [];
+    });
+
+    test('When in plot view, samples endpoint is used for enum type parameters with the useRawValue parameter', async ({ page }) => {
+        await page.getByLabel('Navigate to Enum_Para_1 yamcs').click();
 
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // FIXME: can we use waitForRequest?
+        await page.waitForTimeout(500);
 
         filteredRequests = filterNonFetchRequests(networkRequests);
 
@@ -72,23 +67,11 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in plot view, samples endpoint is used for scalar (number) type parameters with no useRawValue parameter', async ({ page }) => {
-        // Change to fixed time
-        await setFixedTimeMode(page);
-
-        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        await expect(myProjectTreeItem).toBeVisible();
-        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-        await firstMyProjectTriangle.click();
-        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
-        await secondMyProjectTriangle.click();
-
-        await page.waitForLoadState('networkidle');
-        networkRequests = [];
-        await page.locator('text=CCSDS_Packet_Length').first().click();
-        await page.waitForLoadState('networkidle');
+        await page.getByLabel('Navigate to CCSDS_Packet_Length yamcs').click();
 
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // FIXME: can we use waitForRequest?
+        await page.waitForTimeout(500);
 
         filteredRequests = filterNonFetchRequests(networkRequests);
 
@@ -102,19 +85,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in table view, samples endpoint and useRawValue are not used for scalar (number) type parameters', async ({ page }) => {
-        // Change to fixed time
-        await setFixedTimeMode(page);
-
-        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        await expect(myProjectTreeItem).toBeVisible();
-        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-        await firstMyProjectTriangle.click();
-        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
-        await secondMyProjectTriangle.click();
-
-        await page.waitForLoadState('networkidle');
-        await page.locator('text=Enum_Para_1').first().click();
-        await page.waitForLoadState('networkidle');
+        await page.getByLabel('Navigate to Enum_Para_1 yamcs').click();
 
         //switch to table view
         networkRequests = [];
@@ -123,7 +94,8 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
         await page.waitForLoadState('networkidle');
 
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // FIXME: can we use waitForRequest?
+        await page.waitForTimeout(500);
 
         filteredRequests = filterNonFetchRequests(networkRequests);
 
@@ -140,22 +112,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in table view and in unlimited mode, requests contain the "order=desc" parameter', async ({ page }) => {
-        networkRequests = [];
-        filteredRequests = [];
-        page.on('request', (request) => networkRequests.push(request));
-        // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
-
-        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        await expect(myProjectTreeItem).toBeVisible();
-        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-        await firstMyProjectTriangle.click();
-        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
-        await secondMyProjectTriangle.click();
-
-        await page.waitForLoadState('networkidle');
-        await page.locator('text=Battery1_Temp').first().click();
-        await page.waitForLoadState('networkidle');
+        await page.getByLabel('Navigate to Enum_Para_1 yamcs').click();
 
         //switch to table view
         networkRequests = [];
@@ -163,11 +120,11 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
         await page.getByRole('menuitem', { name: /Telemetry Table/ }).click();
         await page.waitForLoadState('networkidle');
 
-       // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
+        // FIXME: can we use waitForRequest?
+        await page.waitForTimeout(500);
 
         filteredRequests = filterNonFetchRequests(networkRequests);
-
         // Verify we are in "Limited" mode
         await expect(page.getByRole('button', { name: 'SHOW UNLIMITED' })).toBeVisible();
 
@@ -177,19 +134,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in table view, samples endpoint and useRawValue are not used for enum type parameters', async ({ page }) => {
-        // Change to fixed time
-        await setFixedTimeMode(page);
-
-        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        await expect(myProjectTreeItem).toBeVisible();
-        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-        await firstMyProjectTriangle.click();
-        const secondMyProjectTriangle = myProjectTreeItem.nth(1).locator('span.c-disclosure-triangle');
-        await secondMyProjectTriangle.click();
-
-        await page.waitForLoadState('networkidle');
-        await page.locator('text=Enum_Para_1').first().click();
-        await page.waitForLoadState('networkidle');
+        await page.getByLabel('Navigate to Enum_Para_1 yamcs').click();
 
         //switch to table view
         networkRequests = [];
@@ -198,7 +143,8 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
         await page.waitForLoadState('networkidle');
 
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // FIXME: can we use waitForRequest?
+        await page.waitForTimeout(500);
 
         filteredRequests = filterNonFetchRequests(networkRequests);
 
