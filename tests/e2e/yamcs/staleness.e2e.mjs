@@ -24,12 +24,13 @@
 Staleness Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
+import { pluginFixtures } from 'openmct-e2e';
+const { test } = pluginFixtures;
 
 test.describe.fixme("Staleness tests @yamcs", () => {
+    // eslint-disable-next-line require-await
     test('Staleness ', async ({ page }) => {
-        test.step('Indicator is displayed for historic data', () =>{
+        test.step('Indicator is displayed for historic data', () => {
             // Create a plot
             // Add a telemetry endpoint that has stale data to this plot
             // Expect that there is indication of staleness for the plot
