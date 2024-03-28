@@ -30,14 +30,18 @@ const { setFixedTimeMode } = appActions;
 
 test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     // Collect all request events, specifically for YAMCS
-    let networkRequests = [];
     let filteredRequests = [];
-
-    test('When in plot view, samples endpoint is used for enum type parameters with the useRawValue parameter', async ({ page }) => {
+    let networkRequests = [];
+    test.beforeEach(async ({ page }) => {
+        networkRequests = [];
+        filteredRequests = [];
         page.on('request', (request) => networkRequests.push(request));
         // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./", { waitUntil: "domcontentloaded" });
+        await expect(page.getByText('Loading...')).not.toBeVisible();
+    });
 
+    test('When in plot view, samples endpoint is used for enum type parameters with the useRawValue parameter', async ({ page }) => {
         // Change to fixed time
         await setFixedTimeMode(page);
 
@@ -68,12 +72,6 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in plot view, samples endpoint is used for scalar (number) type parameters with no useRawValue parameter', async ({ page }) => {
-        networkRequests = [];
-        filteredRequests = [];
-        page.on('request', (request) => networkRequests.push(request));
-        // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
-
         // Change to fixed time
         await setFixedTimeMode(page);
 
@@ -104,12 +102,6 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in table view, samples endpoint and useRawValue are not used for scalar (number) type parameters', async ({ page }) => {
-        networkRequests = [];
-        filteredRequests = [];
-        page.on('request', (request) => networkRequests.push(request));
-        // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
-
         // Change to fixed time
         await setFixedTimeMode(page);
 
@@ -148,12 +140,6 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
     });
 
     test('When in table view, samples endpoint and useRawValue are not used for enum type parameters', async ({ page }) => {
-        networkRequests = [];
-        filteredRequests = [];
-        page.on('request', (request) => networkRequests.push(request));
-        // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
-
         // Change to fixed time
         await setFixedTimeMode(page);
 
