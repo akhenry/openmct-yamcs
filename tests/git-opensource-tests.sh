@@ -22,7 +22,7 @@ REPO_PATH=e2e
 LOCAL_REPO_ROOT="e2e/opensource"
 
 # remove the branch later
-git clone --no-checkout --depth 1 --branch "fix-import-require" $REPO_URL "$LOCAL_REPO_ROOT"
+git clone --no-checkout --depth 1 $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
 git config core.sparsecheckout true
 echo "/$REPO_PATH/**" > .git/info/sparse-checkout
