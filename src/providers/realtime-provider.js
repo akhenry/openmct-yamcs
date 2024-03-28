@@ -24,7 +24,6 @@ import { SUBSCRIBE, UNSUBSCRIBE } from './messages.js';
 import {
     OBJECT_TYPES,
     DATA_TYPES,
-    AGGREGATE_TYPE,
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
     MDB_OBJECT,
@@ -33,9 +32,9 @@ import {
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
-    getValue,
     addLimitInformation,
-    getLimitFromAlarmRange
+    getLimitFromAlarmRange,
+    convertYamcsToOpenMctDatum
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands.js';
 import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
@@ -246,10 +245,7 @@ export default class RealtimeProvider {
             const parentName = subscriptionDetails.domainObject.name;
 
             values.forEach(parameter => {
-                let datum = {
-                    timestamp: parameter[METADATA_TIME_KEY]
-                };
-                const value = getValue(parameter, parentName);
+                const datum = convertYamcsToOpenMctDatum(parameter, parentName);
 
                 if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
                     const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
@@ -262,15 +258,6 @@ export default class RealtimeProvider {
                         this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
                         this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
                     }
-                }
-
-                if (parameter.engValue.type !== AGGREGATE_TYPE) {
-                    datum.value = value;
-                } else {
-                    datum = {
-                        ...datum,
-                        ...value
-                    };
                 }
 
                 addLimitInformation(parameter, datum);

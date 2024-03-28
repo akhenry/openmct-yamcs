@@ -41,6 +41,7 @@ export function createEventsObject(openmct, parentKey, namespace) {
                 {
                     key: 'severity',
                     name: 'Severity Threshold',
+                    format: 'string',
                     filters: [{
                         singleSelectionThreshold: true,
                         comparator: 'equals',
@@ -63,27 +64,33 @@ export function createEventsObject(openmct, parentKey, namespace) {
                 },
                 {
                     key: 'receptionTime',
-                    name: 'Reception Time'
+                    name: 'Reception Time',
+                    format: 'iso'
                 },
                 {
                     key: 'seqNumber',
-                    name: 'Sequence Number'
+                    name: 'Sequence Number',
+                    format: 'number'
                 },
                 {
                     key: 'message',
-                    name: 'Message'
+                    name: 'Message',
+                    format: 'string'
                 },
                 {
                     key: 'type',
-                    name: 'Type'
+                    name: 'Type',
+                    format: 'string'
                 },
                 {
                     key: 'source',
-                    name: 'Source'
+                    name: 'Source',
+                    format: 'string'
                 },
                 {
                     key: 'createdBy',
-                    name: 'Created By'
+                    name: 'Created By',
+                    format: 'string'
                 }
             ]
         }

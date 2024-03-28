@@ -42,7 +42,8 @@ export function createCommandsObject(openmct, parentKey, namespace) {
             values: [
                 {
                     key: 'commandName',
-                    name: 'Command'
+                    name: 'Command',
+                    format: 'string'
                 },
                 {
                     key: 'utc',
@@ -55,87 +56,108 @@ export function createCommandsObject(openmct, parentKey, namespace) {
                 },
                 {
                     key: 'sequenceNumber',
-                    name: 'Sequence Number'
+                    name: 'Sequence Number',
+                    format: 'number'
                 },
                 {
                     key: 'comment',
-                    name: 'Comment'
+                    name: 'Comment',
+                    format: 'string'
                 },
                 {
                     key: 'source',
-                    name: 'Source'
+                    name: 'Source',
+                    format: 'string'
                 },
                 {
                     key: 'queue',
-                    name: 'Queue'
+                    name: 'Queue',
+                    format: 'string'
                 },
                 {
                     key: 'binary',
-                    name: 'Binary'
+                    name: 'Binary',
+                    format: 'binary'
                 },
                 {
                     key: 'unprocessedBinary',
-                    name: 'Unprocessed Binary'
+                    name: 'Unprocessed Binary',
+                    format: 'string'
                 },
                 {
                     key: 'Acknowledge_Queued_Status',
-                    name: 'Acknowledge Queued Status'
+                    name: 'Acknowledge Queued Status',
+                    format: 'string'
                 },
                 {
                     key: 'Acknowledge_Queued_Time',
-                    name: 'Acknowledge Queued Time'
+                    name: 'Acknowledge Queued Time',
+                    format: 'iso'
                 },
                 {
                     key: 'Acknowledge_Released_Status',
-                    name: 'Acknowledge Released Status'
+                    name: 'Acknowledge Released Status',
+                    format: 'string'
                 },
                 {
                     key: 'Acknowledge_Released_Time',
-                    name: 'Acknowledge Released Time'
+                    name: 'Acknowledge Released Time',
+                    format: 'iso'
                 },
                 {
                     key: 'Acknowledge_Sent_Status',
-                    name: 'Acknowledge Sent Status'
+                    name: 'Acknowledge Sent Status',
+                    format: 'string'
                 },
                 {
                     key: 'Acknowledge_Sent_Time',
-                    name: 'Acknowledge Sent Time'
+                    name: 'Acknowledge Sent Time',
+                    format: 'iso'
                 },
                 {
                     key: 'username',
-                    name: 'Issuer'
+                    name: 'Issuer',
+                    format: 'string'
                 },
                 {
                     key: 'origin',
-                    name: 'Origin'
+                    name: 'Origin',
+                    format: 'string'
                 },
                 {
                     key: 'CCSDS_Version',
-                    name: 'CCSDS Version'
+                    name: 'CCSDS Version',
+                    format: 'string'
                 },
                 {
                     key: 'CCSDS_Type',
-                    name: 'CCSDS Type'
+                    name: 'CCSDS Type',
+                    format: 'string'
                 },
                 {
                     key: 'CCSDS_Sec_Hdr_Flag',
-                    name: 'CCSDS Sec Hdr Flag'
+                    name: 'CCSDS Sec Hdr Flag',
+                    format: 'string'
                 },
                 {
                     key: 'CCSDS_APID',
-                    name: 'CCSDS APID'
+                    name: 'CCSDS APID',
+                    format: 'string'
                 },
                 {
                     key: 'CCSDS_Group_Flags',
-                    name: 'CCSDS Group Flags'
+                    name: 'CCSDS Group Flags',
+                    format: 'string'
                 },
                 {
                     key: 'Packet_ID',
-                    name: 'Packet ID'
+                    name: 'Packet ID',
+                    format: 'string'
                 },
                 {
                     key: 'messageId',
                     name: 'row identifier',
+                    format: 'string',
                     useToUpdateInPlace: true
                 }
             ]

@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const.js';
+import { AGGREGATE_TYPE, UNSUPPORTED_TYPE, METADATA_TIME_KEY } from './const.js';
 import limitConfig from "./limits-config.json";
 
 function idToQualifiedName(id) {
@@ -362,6 +362,24 @@ function flattenObjectArray(array, baseObj = {}) {
     }, baseObj);
 }
 
+function convertYamcsToOpenMctDatum(parameter, parentName) {
+    let datum = {
+        timestamp: parameter[METADATA_TIME_KEY]
+    };
+    const value = getValue(parameter, parentName);
+
+    if (parameter.engValue.type !== AGGREGATE_TYPE) {
+        datum.value = value;
+    } else {
+        datum = {
+            ...datum,
+            ...value
+        };
+    }
+
+    return datum;
+}
+
 export {
     buildStalenessResponseObject,
     getLimitFromAlarmRange,
@@ -373,5 +391,6 @@ export {
     accumulateResults,
     addLimitInformation,
     yieldResults,
-    getLimitOverrides
+    getLimitOverrides,
+    convertYamcsToOpenMctDatum
 };
