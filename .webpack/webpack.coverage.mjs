@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2024, United States Government
+ * Open MCT, Copyright (c) 2014-2020, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,24 +20,24 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-/*
-Staleness Specific Tests
-*/
+import config from './webpack.dev.mjs';
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
+config.devtool = 'source-map';
 
-test.describe.fixme("Staleness tests @yamcs", () => {
-    test('Staleness ', async ({ page }) => {
-        test.step('Indicator is displayed for historic data', () =>{
-            // Create a plot
-            // Add a telemetry endpoint that has stale data to this plot
-            // Expect that there is indication of staleness for the plot
-        });
+config.devServer.hot = false;
 
-        test.step('Indicator is removed when new data arrives in real time', () => {
-            // Wait for new data
-            // Expect that stale indication is removed
-        });
-    });
+config.module.rules.push({
+    test: /\.(mjs|js)$/,
+    exclude: /(node_modules)/,
+    use: {
+        loader: 'babel-loader',
+        options: {
+            retainLines: true,
+            plugins: [['babel-plugin-istanbul', {
+                extension: ['.js']
+            }]]
+        }
+    }
 });
+
+export default config;
