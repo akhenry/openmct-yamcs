@@ -6,7 +6,7 @@ const config = {
     retries: 0, //Only for debugging purposes for trace: 'on-first-retry'
     testDir: 'yamcs',
     testMatch: '**/*.perf.spec.js',
-    timeout: 15000 * 1000, // 15 minutes
+    timeout: 60 * 1000,
     workers: 1, //Only run in serial with 1 worker
     webServer: {
         command: 'npm run start:prod', //Production mode
