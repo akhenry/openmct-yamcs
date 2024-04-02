@@ -40,28 +40,28 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=16.19.1"
+    "node": ">=18.14.2 <22"
   },
   "optionalDependencies": {
     "openmct": ">= 3.9.9"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
-    "@babel/eslint-parser": "7.19.1",
+    "@babel/eslint-parser": "7.23.3",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
-    "eslint": "8.38.0",
+    "eslint": "8.56.0",
     "eslint-plugin-import": "2.29.1",
     "eventemitter3": "4.0.7",
     "file-saver": "2.0.5",
     "semver": "7.5.2",
     "sinon": "14.0.0",
     "source-map-loader": "4.0.1",
-    "uuid": "9.0.0",
+    "uuid": "9.0.1",
     "wait-on": "7.0.1",
-    "webpack": "5.88.2",
-    "webpack-cli": "5.0.1",
-    "webpack-dev-server": "4.11.1",
-    "webpack-merge": "5.8.0"
+    "webpack": "5.90.3",
+    "webpack-cli": "5.1.1",
+    "webpack-dev-server": "5.0.2",
+    "webpack-merge": "5.10.0"
   }
 }
