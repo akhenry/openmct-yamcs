@@ -13,6 +13,6 @@ yamcs/quickstart and openmct-yamcs (this one).
 5. `npm install` in openmct-yamcs
 6. `npx playwright@1.42.1 install chromium` in openmct-yamcs
 7. Sanity test that yamcs is up with `npm run wait-for-yamcs` in openmct-yamcs
-8. `npm run build:example`
-9. `npm run test:getopensource`
-10. `npm run test:e2e:quickstart:local`
+8. `npm run test:getopensource`
+9. `npm run build:example` or `npm run build:example:master`
+10. `npm run test:e2e:watch`
