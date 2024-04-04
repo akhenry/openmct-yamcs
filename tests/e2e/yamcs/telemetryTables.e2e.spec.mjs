@@ -34,7 +34,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await page.goto("./", { waitUntil: "domcontentloaded" });
         await expect(page.getByText('Loading...')).toBeHidden();
 
-        // Expand myproject and subfolder myproject
+        // Expand myproject
         await page.getByLabel('Expand myproject').click();
     });
 
@@ -49,7 +49,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
             }
         });
 
-        // Find the mode switch button and click it
+        // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
 
         // Assert that the mutation error message is not present in the consoleErrors array
