@@ -29,6 +29,10 @@ const { test, expect } = pluginFixtures;
 
 test.describe("Telemetry Tables tests @yamcs", () => {
 
+    // An error will be thrown if an attempt to mutate an immutable object is made, this will cover
+    // that case as well as any other errors during the test
+    test.use({ failOnConsoleError: true });
+
     test.beforeEach(async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "domcontentloaded" });
@@ -39,21 +43,14 @@ test.describe("Telemetry Tables tests @yamcs", () => {
     });
 
     test('Telemetry Tables viewing an unpersistable object, will not modify the configuration on mode change', async ({ page }) => {
+        // Navigat to the Events table
         await page.getByLabel('Navigate to Events yamcs.').click();
-
-        // Before clicking the button, start listening for console errors
-        let consoleErrors = [];
-        page.on('console', message => {
-            if (message.type() === 'error') {
-                consoleErrors.push(message.text());
-            }
-        });
 
         // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
 
-        // Assert that the mutation error message is not present in the consoleErrors array
-        await expect(consoleErrors).not.toContain('Error: Attempted to mutate immutable object Events');
+        // Assert that the 'SHOW LIMITED' button is now visible
+        await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
 
 });
