@@ -73,7 +73,7 @@ test.describe('Telemetry Eviction', () => {
         await page.getByLabel('Submit time offsets').click();
     });
 
-    test.only('Complex Display', async ({ page }) => {
+    test('Complex Display', async ({ page }) => {
         const result = await navigateToObjectAndDetectTelemetryEviction(page, 'Complex Display Layout');
 
         // If we got here without timing out, then the root view object was garbage collected and no memory leak was detected.
@@ -95,17 +95,28 @@ test.describe('Telemetry Eviction', () => {
                         window.finalizationRegistries = [];
                     }
 
-                    const newGarbageCollectionPromise = new Promise((resolve) => {
+                    window.garbageCollectionPromises.push(new Promise((resolve) => {
                         // eslint-disable-next-line no-undef
                         const newFinalizationRegistry = new FinalizationRegistry(resolve);
                         newFinalizationRegistry.register(
-                            returnedTelemetry,
-                            'theReturnedTelemetry',
-                            returnedTelemetry
+                            returnedTelemetry[0],
+                            'firstReturnedTelemetry',
+                            returnedTelemetry[0]
                         );
+
                         window.finalizationRegistries.push(newFinalizationRegistry);
-                    });
-                    window.garbageCollectionPromises.push(newGarbageCollectionPromise);
+                    }));
+                    window.garbageCollectionPromises.push(new Promise((resolve) => {
+                        // eslint-disable-next-line no-undef
+                        const newFinalizationRegistry = new FinalizationRegistry(resolve);
+                        newFinalizationRegistry.register(
+                            returnedTelemetry[returnedTelemetry.length - 1],
+                            'lastReturnedTelemetry',
+                            returnedTelemetry[returnedTelemetry.length - 1]
+                        );
+
+                        window.finalizationRegistries.push(newFinalizationRegistry);
+                    }));
                 }
 
                 return returnedTelemetry;
