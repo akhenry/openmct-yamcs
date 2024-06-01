@@ -24,20 +24,20 @@
 Staleness Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults } from '../opensource/appActions.js';
+import { pluginFixtures } from 'openmct-e2e';
+const { test } = pluginFixtures;
 
-test.describe.fixme("Staleness tests @yamcs", () => {
-    test('Staleness ', async ({ page }) => {
-        test.step('Indicator is displayed for historic data', () =>{
-            // Create a plot
-            // Add a telemetry endpoint that has stale data to this plot
-            // Expect that there is indication of staleness for the plot
+test.describe.fixme("Fault management tests @yamcs", () => {
+    // eslint-disable-next-line require-await
+    test('Show faults ', async ({ page }) => {
+        test.step('for historic alarm violations', () => {
+            // Navigate to fault management in the tree
+            // Expect that there is indication of a fault
         });
 
-        test.step('Indicator is removed when new data arrives in real time', () => {
+        test.step('show historic and live faults when new alarms are triggered in real time', () => {
             // Wait for new data
-            // Expect that stale indication is removed
+            // Expect that live faults are displayed
         });
     });
 });

@@ -5,8 +5,8 @@
 const config = {
     retries: 0,
     testDir: '.',
-    testMatch: '**/*.e2e.spec.js',
-    testIgnore: '**/*.perf.spec.js',
+    testMatch: /.*\.e2e\.spec\.(mjs|js)$/,
+    testIgnore: /.*\.e2e\.perf\.spec\.(mjs|js)$/,
     timeout: 30 * 1000,
     use: {
         headless: true,
@@ -19,6 +19,7 @@ const config = {
         failOnConsoleError: false
     },
     webServer: {
+        cwd: '../',
         command: 'npm run start:coverage',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
