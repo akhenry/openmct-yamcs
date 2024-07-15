@@ -53,4 +53,25 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
 
+    test('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
+        const EVENTS_URL_STRING = 'events?';
+
+        // Navigate to the Events table
+        await page.getByLabel('Navigate to Events yamcs.').click();
+
+        // Intercept and validate the request before clicking the button
+        const requestBefore = await page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING) && request.url().includes('order=desc'));
+        expect(requestBefore.url()).toContain('order=desc');
+
+        // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
+        await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
+
+        // Intercept and validate the request after clicking the button
+        const requestAfter = await page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING) && request.url().includes('order=desc'));
+        expect(requestAfter.url()).toContain('order=desc');
+
+        // Assert that the 'SHOW LIMITED' button is now visible
+        await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
+    });
+
 });
