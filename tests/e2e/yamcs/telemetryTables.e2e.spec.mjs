@@ -56,18 +56,27 @@ test.describe("Telemetry Tables tests @yamcs", () => {
     test('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
         const EVENTS_URL_STRING = 'events?';
 
+        // Log all network requests
+        page.on('request', request => {
+            console.log('>>', request.method(), request.url());
+        });
+
+        // Set up request interception before navigating
+        const requestPromise = page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING));
+
         // Navigate to the Events table
         await page.getByLabel('Navigate to Events yamcs.').click();
 
-        // Intercept and validate the request before clicking the button
-        const requestBefore = await page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING) && request.url().includes('order=desc'));
+        // Wait for the request and validate it
+        const requestBefore = await requestPromise;
         expect(requestBefore.url()).toContain('order=desc');
 
+        const requestAfterPromise = page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING));
         // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
 
         // Intercept and validate the request after clicking the button
-        const requestAfter = await page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING) && request.url().includes('order=desc'));
+        const requestAfter = await requestAfterPromise;
         expect(requestAfter.url()).toContain('order=desc');
 
         // Assert that the 'SHOW LIMITED' button is now visible
