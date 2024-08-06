@@ -81,7 +81,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
         await page.getByRole('tab', { name: 'Config' }).click();
-        await page.getByRole('button', { name: 'Expand Detector_Temp yamcs.' }).click();
+        await page.getByLabel('Expand Detector_Temp Plot').click();
         await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
@@ -151,7 +151,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
         await page.getByRole('tab', { name: 'Config' }).click();
-        await page.getByRole('button', { name: 'Expand Detector_Temp yamcs.' }).click(); 
+        await page.getByLabel('Expand Detector_Temp Plot').click();
         await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
