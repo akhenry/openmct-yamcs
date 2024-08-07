@@ -33,7 +33,7 @@ jobs:
           node-version: "18"
       - uses: actions/checkout@v3
         with:
-          repository: akhenry/quickstart
+          repository: ozyx/quickstart
           ref: modify-playback-rate
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
@@ -44,7 +44,7 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           touch makeout.txt
-          make all &> makeout.txt &
+          make all-10hz &> makeout.txt &
         working-directory: quickstart/docker
       - run: npm install
       - name: Get Open MCT e2e tests
