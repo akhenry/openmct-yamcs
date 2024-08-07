@@ -443,8 +443,8 @@ test.describe('Realtime telemetry displays', () => {
     async function getParameterValuesFromLadTable(ladTable) {
         const allRows = await (await ladTable.getByLabel('lad row')).all();
         const arrayOfValues = await Promise.all(allRows.map(async (row) => {
-            const parameterNameText = await row.getByLabel('lad name').textContent();
-            const parameterValueText = await row.getByLabel('lad value').textContent();
+            const parameterNameText = await row.getByLabel('lad name').innerText();
+            const parameterValueText = await row.getByLabel('lad value').innerText();
 
             return {
                 parameterNameText,
@@ -462,8 +462,8 @@ test.describe('Realtime telemetry displays', () => {
     async function getParameterValuesFromAllAlphaNumerics(page) {
         const allAlphaNumerics = await (page.getByLabel('Alpha-numeric telemetry', {exact: true})).all();
         const arrayOfValues = await Promise.all(allAlphaNumerics.map(async (alphaNumeric) => {
-            const parameterNameText = await (alphaNumeric.getByLabel(/Alpha-numeric telemetry name.*/)).textContent();
-            const parameterValueText = await (alphaNumeric.getByLabel(/Alpha-numeric telemetry value.*/)).textContent();
+            const parameterNameText = await (alphaNumeric.getByLabel(/Alpha-numeric telemetry name.*/)).innerText();
+            const parameterValueText = await (alphaNumeric.getByLabel(/Alpha-numeric telemetry value.*/)).innerText();
 
             return {
                 parameterNameText,
@@ -481,8 +481,8 @@ test.describe('Realtime telemetry displays', () => {
     async function getParameterTimestampsFromLadTable(ladTable) {
         const allRows = await (await ladTable.getByLabel('lad row')).all();
         const arrayOfValues = await Promise.all(allRows.map(async (row) => {
-            const parameterNameText = await row.getByLabel('lad name').textContent();
-            const parameterValueText = await row.getByLabel('lad timestamp').textContent();
+            const parameterNameText = await row.getByLabel('lad name').innerText();
+            const parameterValueText = await row.getByLabel('lad timestamp').innerText();
 
             return {
                 parameterNameText,
