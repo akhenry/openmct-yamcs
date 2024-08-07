@@ -413,6 +413,10 @@ test.describe('Realtime telemetry displays', () => {
 
     }
 
+    /**
+     * @param {import('playwright').Page} page 
+     * @returns {Promise<{parameterNameText: string, parameterValueText: string}[]>}
+     */
     async function getParameterValuesFromAllGauges(page) {
         const allGauges = await (page.getByLabel('sub object frame', { exact: true}).filter({
             has: page.getByLabel('Gauge', {
@@ -420,8 +424,8 @@ test.describe('Realtime telemetry displays', () => {
             })
         })).all();
         const arrayOfValues = await Promise.all(allGauges.map(async (gauge) => {
-            const parameterNameText = await (gauge.getByLabel("object name")).textContent();
-            const parameterValueText = await (gauge.getByLabel(/gauge value.*/)).textContent();
+            const parameterNameText = await (gauge.getByLabel("object name")).innerText();
+            const parameterValueText = await (gauge.getByLabel(/gauge value.*/)).innerText();
 
             return {
                 parameterNameText,
