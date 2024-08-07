@@ -44,7 +44,7 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           touch makeout.txt
-          make all-10hz &> makeout.txt &
+          make all &> makeout.txt &
         working-directory: quickstart/docker
       - run: npm install
       - name: Get Open MCT e2e tests
