@@ -53,7 +53,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
 
-    test.only('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
+    test('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
         const EVENTS_URL_STRING = 'events?';
 
         // Log all network requests
