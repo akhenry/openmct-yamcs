@@ -56,11 +56,6 @@ test.describe("Telemetry Tables tests @yamcs", () => {
     test('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
         const EVENTS_URL_STRING = 'events?';
 
-        // Log all network requests
-        page.on('request', request => {
-            console.log('>>', request.method(), request.url());
-        });
-
         // Set up request interception before navigating
         const requestPromise = page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING));
 
