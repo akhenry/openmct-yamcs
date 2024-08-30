@@ -50,7 +50,6 @@ const openmct = window.openmct;
     const THIRTY_MINUTES = ONE_MINUTE * 30;
 
     openmct.setAssetPath("/node_modules/openmct/dist");
-
     installDefaultPlugins();
     openmct.install(installYamcsPlugins(config));
     openmct.install(
@@ -111,5 +110,92 @@ const openmct = window.openmct;
 
         openmct.install(openmct.plugins.FaultManagement());
         openmct.install(openmct.plugins.BarChart());
+
+        // setup example display layout
+        openmct.on('start', async () => {
+            if (localStorage.getItem('exampleDisplayLayout') !== null) {
+                return;
+            }
+
+            // try to import the example display layout, fail gracefully
+            try {
+                // Function to fetch JSON content as text
+                async function fetchJsonText(url) {
+                    const response = await fetch(url);
+                    const text = await response.text();
+
+                    return text;
+                }
+
+                async function getExampleDisplayLayoutPath() {
+                    const objects = Object.values(JSON.parse(localStorage.getItem('mct')));
+                    const exampleDisplayLayout = objects.find(object => object.name === 'Example Display Layout');
+                    let path = await openmct.objects.getOriginalPath(exampleDisplayLayout.identifier);
+
+                    path.pop();
+                    path = path.reverse();
+                    path = path.reduce((prev, curr) => {
+                        return prev + '/' + openmct.objects.makeKeyString(curr.identifier);
+                    }, '#/browse');
+
+                    return path;
+                }
+
+                // poll for the localStorage item
+                function mctItemExists() {
+                    return new Promise((resolve) => {
+                        function checkItem() {
+                            if (localStorage.getItem('mct') !== null) {
+                                resolve(true);
+                            } else {
+                                setTimeout(checkItem, 100);
+                            }
+                        }
+
+                        checkItem();
+                    });
+                }
+
+                // wait for the 'mct' item to exist
+                await mctItemExists();
+
+                // setup to use import as JSON action
+                const importAction = openmct.actions.getAction('import.JSON');
+                const myItems = await openmct.objects.get('mine');
+                const exampleDisplayText = await fetchJsonText('./example-display.json');
+                const selectFile = {
+                    body: exampleDisplayText
+                };
+
+                // import the example display layout
+                importAction.onSave(myItems, { selectFile });
+
+                // the importAction has asynchronous code, so we will need to check
+                // the composition of My Items to confirm the import was successful
+                const compositionCollection = openmct.composition.get(myItems);
+                let compositionLength = 0;
+                let composition;
+
+                while (compositionLength === 0) {
+                    composition = await compositionCollection.load();
+                    compositionLength = composition.length;
+                }
+
+                const exampleDisplayLayoutPath = await getExampleDisplayLayoutPath();
+
+                // give everything time to initialize
+                await new Promise(resolve => setTimeout(resolve, 250));
+
+                openmct.notifications.info('Navigated to Example Display Layout');
+
+                // navigate to the "Example Display Layout"
+                openmct.router.navigate(exampleDisplayLayoutPath);
+
+                // set the localStorage item to prevent this from running again
+                localStorage.setItem('exampleDisplayLayout', 'true');
+            } catch (error) {
+                console.warn('Issue setting up example display layout:', error);
+            }
+        });
     }
 })();
