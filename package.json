@@ -20,7 +20,7 @@
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack --config ./.webpack/webpack.prod.mjs",
     "build:example": "npm install openmct@unstable --no-save",
-    "build:example:master": "npm install nasa/openmct --no-save",
+    "build:example:master": "npm install nasa/openmct#bar-graph-historical-requests --no-save",
     "postbuild:example": "node check-optional-dependencies.mjs",
     "start": "npx webpack serve --config ./.webpack/webpack.dev.mjs",
     "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.mjs",
