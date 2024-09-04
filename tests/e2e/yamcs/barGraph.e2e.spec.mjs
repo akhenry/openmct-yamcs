@@ -59,7 +59,7 @@ test.describe('Bar Graph', () => {
     await page.getByLabel('Edit Object').click();
 
     networkRequests = [];
-    historicalGet = page.waitForResponse('**/api/archive/myproject/parameters/**');
+    historicalGet = page.waitForRequest('**/api/archive/myproject/parameters/**');
 
     //Drag and drop the Magnetometer telemetry endpoint into this bar graph
     const objectPane = page.locator('.c-object-view');
@@ -69,8 +69,8 @@ test.describe('Bar Graph', () => {
     await page.getByRole('button', { name: 'Save' }).click();
     await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
-    const historicalResponse = await historicalGet;
-    await expect(historicalResponse.url()).toContain('limit=1');
+    const historicalRequest = await historicalGet;
+    await expect(historicalRequest.url()).toContain('limit=1');
   });
 });
 
