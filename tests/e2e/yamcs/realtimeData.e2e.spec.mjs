@@ -100,15 +100,15 @@ test.describe('Realtime telemetry displays', () => {
 
     test.describe('A complex display', () => {
         test.beforeEach(async ({ page }) => {
-            const searchBox = await page.getByRole('searchbox', { name: 'Search Input' });
+            const searchBox = page.getByRole('searchbox', { name: 'Search Input' });
             await searchBox.click();
             // Fill Search input
             await searchBox.fill("e2e real-time test layout");
 
-            const searchResults = await page.getByLabel('Search Results Dropdown');
+            const searchResults = page.getByLabel('Search Results Dropdown');
 
             //Search Result Appears and is clicked
-            const layoutSearchResult = await searchResults.getByText("e2e real-time test layout", { exact: true });
+            const layoutSearchResult = searchResults.getByText("e2e real-time test layout", { exact: true });
             await layoutSearchResult.click();
         });
 
@@ -238,7 +238,7 @@ test.describe('Realtime telemetry displays', () => {
         });
 
         test('Open MCT does not drop telemetry while app is loading', async ({ page }) => {
-            const notification = await page.getByRole('alert');
+            const notification = page.getByRole('alert');
             const count = await notification.count();
 
             if (count > 0) {
@@ -269,7 +269,7 @@ test.describe('Realtime telemetry displays', () => {
                 });
             });
             // Check for telemetry dropped notification
-            const notification = await page.getByRole('alert');
+            const notification = page.getByRole('alert');
             expect(notification).toHaveCount(1);
             const text = await notification.innerText();
             expect(text).toBe('Telemetry dropped due to client rate limiting.');
@@ -403,21 +403,29 @@ test.describe('Realtime telemetry displays', () => {
     }
 
     async function getLadTableByName(page, ladTableName) {
-        const matchingLadTableFrames = await page.locator(`[aria-label="sub object frame"]:has([aria-label="object name"][title="${ladTableName}"])`);
+        const matchingLadTableFrames = await page.getByLabel("sub object frame").filter({
+            has: page.getByLabel("object name", {
+                name: ladTableName
+            })
+        });
 
-        return matchingLadTableFrames.locator('[aria-label="lad table"]').first();
+        return matchingLadTableFrames.getByLabel('lad table').first();
 
     }
 
+    /**
+     * @param {import('playwright').Page} page 
+     * @returns {Promise<{parameterNameText: string, parameterValueText: string}[]>}
+     */
     async function getParameterValuesFromAllGauges(page) {
-        const allGauges = await (page.getByLabel('sub object frame', {exact: true}).filter({
+        const allGauges = await (page.getByLabel('sub object frame', { exact: true}).filter({
             has: page.getByLabel('Gauge', {
                 exact: true
             })
         })).all();
         const arrayOfValues = await Promise.all(allGauges.map(async (gauge) => {
             const parameterNameText = await (gauge.getByLabel("object name")).innerText();
-            const parameterValueText = await (gauge.getByLabel(/gauge value.*/)).textContent();
+            const parameterValueText = await (gauge.getByLabel(/gauge value.*/)).innerText();
 
             return {
                 parameterNameText,
@@ -433,7 +441,7 @@ test.describe('Realtime telemetry displays', () => {
     }
 
     async function getParameterValuesFromLadTable(ladTable) {
-        const allRows = await (await ladTable.locator('tbody>tr')).all();
+        const allRows = await (await ladTable.getByLabel('lad row')).all();
         const arrayOfValues = await Promise.all(allRows.map(async (row) => {
             const parameterNameText = await row.getByLabel('lad name').innerText();
             const parameterValueText = await row.getByLabel('lad value').innerText();
@@ -471,7 +479,7 @@ test.describe('Realtime telemetry displays', () => {
     }
 
     async function getParameterTimestampsFromLadTable(ladTable) {
-        const allRows = await (await ladTable.locator('tbody>tr')).all();
+        const allRows = await (await ladTable.getByLabel('lad row')).all();
         const arrayOfValues = await Promise.all(allRows.map(async (row) => {
             const parameterNameText = await row.getByLabel('lad name').innerText();
             const parameterValueText = await row.getByLabel('lad timestamp').innerText();

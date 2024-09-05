@@ -3,6 +3,7 @@
 This project is using Open MCT's e2e-as-a-dependency model. To learn more, please see the official documentation on the [Official README](https://github.com/nasa/openmct/blob/master/e2e/README.md)
 
 ## How to Run Locally
+
 To run the tests, we recommend the following workflow which bridges two separate github repos:
 yamcs/quickstart and openmct-yamcs (this one).
 
