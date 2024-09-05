@@ -40,21 +40,15 @@ test.describe("Tests to ensure that open mct loads correctly @yamcs", () => {
     test('Can load correctly when mdb algorithms are changed at runtime', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", {waitUntil: "networkidle"});
-        await assertTreeIsLoaded(page);
+        await expect(page.getByLabel('Navigate to myproject folder')).toBeVisible();
 
         await updateCustomAlgorithm(page);
 
         await page.reload({waitUntil: "networkidle"});
-        await assertTreeIsLoaded(page);
+
+        await expect(page.getByLabel('Navigate to myproject folder')).toBeVisible();
     });
 });
-
-async function assertTreeIsLoaded(page) {
-    //Expand the myproject folder (/myproject)
-    const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-    const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-    await firstMyProjectTriangle.click();
-}
 
 async function clearCustomAlgorithm(page) {
     // clear the custom algorithm for the copySunsensor using the yamcs API
