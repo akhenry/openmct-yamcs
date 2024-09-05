@@ -54,25 +54,24 @@ test.describe("Telemetry Tables tests @yamcs", () => {
     });
 
     test('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
-        const EVENTS_URL_STRING = 'events?';
-
-        // Set up request interception before navigating
-        const requestPromise = page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING));
+        // Set up request promise for an events request in descending order
+        let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
         await page.getByLabel('Navigate to Events yamcs.').click();
+        await page.waitForLoadState('networkidle');
 
-        // Wait for the request and validate it
-        const requestBefore = await requestPromise;
-        expect(requestBefore.url()).toContain('order=desc');
+        // Wait for the descending events request
+        await eventRequestOrderDescending;
 
-        const requestAfterPromise = page.waitForRequest(request => request.url().includes(EVENTS_URL_STRING));
-        // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
+        // Reset request promise for an events request in descending order
+        eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
+
+        // Find the mode switch button and click it, this will trigger another events request
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
+        await page.waitForLoadState('networkidle');
 
-        // Intercept and validate the request after clicking the button
-        const requestAfter = await requestAfterPromise;
-        expect(requestAfter.url()).toContain('order=desc');
+        await eventRequestOrderDescending;
 
         // Assert that the 'SHOW LIMITED' button is now visible
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
