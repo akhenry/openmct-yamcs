@@ -55,18 +55,14 @@ test.describe('Bar Graph', () => {
     //Find the Magnetometer parameter (/myproject/myproject/Magnetometer)
     const magnetometerTreeItem = page.getByRole('treeitem', { name: /Magnetometer/ });
 
-    // Enter edit mode for the bar graph
-    await page.getByLabel('Edit Object').click();
-
     networkRequests = [];
     historicalGet = page.waitForRequest('**/api/archive/myproject/parameters/**');
 
     //Drag and drop the Magnetometer telemetry endpoint into this bar graph
-    const objectPane = page.locator('.c-object-view');
-    await magnetometerTreeItem.dragTo(objectPane);
+    await magnetometerTreeItem.dragTo(page.getByLabel('Object View'));
 
     // Save (exit edit mode)
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByLabel('Save').click();
     await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
     const historicalRequest = await historicalGet;
