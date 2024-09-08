@@ -39,11 +39,14 @@ import {
 import { commandToTelemetryDatum } from './commands.js';
 import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
 
+const ONE_SECOND = 1000;
+const ONE_MILLION_CHARACTERS = 1000000;
+
 export default class RealtimeProvider {
     #socketWorker = null;
     #openmct;
 
-    constructor(openmct, url, instance, processor = 'realtime', maxBatchWait = 1000, maxBatchSize = 15) {
+    constructor(openmct, url, instance, processor = 'realtime', throttleRate = ONE_SECOND, maxBufferSize = ONE_MILLION_CHARACTERS) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
@@ -60,7 +63,8 @@ export default class RealtimeProvider {
         this.subscriptionsById = {};
         this.#socketWorker = new openmct.telemetry.BatchingWebSocket(openmct);
         this.#openmct = openmct;
-        this.#setBatchingStrategy(maxBatchWait, maxBatchSize);
+        this.#socketWorker.setThrottleRate(throttleRate);
+        this.#socketWorker.setMaxBufferSize(maxBufferSize);
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
@@ -81,33 +85,6 @@ export default class RealtimeProvider {
         if (clock.key === 'remote-clock') {
             this.#setCallFromClock(clock);
         }
-    }
-    #setBatchingStrategy(maxBatchWait, maxBatchSize) {
-        // This strategy batches parameter value messages
-        this.#socketWorker.setBatchingStrategy({
-            /* istanbul ignore next */
-            shouldBatchMessage: /* istanbul ignore next */ (message) => {
-                // If a parameter value message, the message type will be "parameters"
-                // The type field is always located at a character offset of 13 and
-                // if it is "parameters" will be 10 characters long.
-                const type = message.substring(13, 23);
-
-                return type === 'parameters';
-            },
-            /* istanbul ignore next */
-            getBatchIdFromMessage: /* istanbul ignore next */ (message) => {
-                // Only dealing with "parameters" messages at this point. The call number
-                // identifies the parameter, and is used for batching. Will be located
-                // at a character offset of 36. Because it is of indeterminate length
-                // (we don't know the number) we have to do a sequential search forward
-                // from the 37th character for a terminating ",".
-                const callNumber = message.substring(36, message.indexOf(",", 37));
-
-                return callNumber;
-            }
-        });
-        this.#socketWorker.setMaxBatchWait(maxBatchWait);
-        this.#socketWorker.setMaxBatchSize(maxBatchSize);
     }
 
     addSupportedObjectTypes(types) {
@@ -230,44 +207,70 @@ export default class RealtimeProvider {
         }
     }
 
-    #processBatchQueue(batchQueue, call) {
-        let subscriptionDetails = this.subscriptionsByCall.get(call);
-        let telemetryData = [];
+    #processParameterUpdates(parameterValuesByCall) {
+        //If remote clock active, process its value before any telemetry values to ensure the bounds are always up to date.
+        if (this.remoteClockCallNumber !== undefined) {
+            const remoteClockValues = parameterValuesByCall.get(this.remoteClockCallNumber);
+            const subscriptionDetails = this.subscriptionsByCall.get(this.remoteClockCallNumber);
 
-        // possibly cancelled
-        if (!subscriptionDetails) {
-            return;
-        }
+            if (remoteClockValues !== undefined && remoteClockValues.length > 0) {
+                const allClockValues = [];
 
-        batchQueue.forEach((rawMessage) => {
-            const message = JSON.parse(rawMessage);
-            const values = message.data.values || [];
-            const parentName = subscriptionDetails.domainObject.name;
+                // We only care about the most recent clock tick message in the batch.
+                this.#convertMessageToDatumAndReportStaleness(remoteClockValues[remoteClockValues.length - 1], subscriptionDetails, allClockValues);
 
-            values.forEach(parameter => {
-                const datum = convertYamcsToOpenMctDatum(parameter, parentName);
-
-                if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
-                    const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
-
-                    if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
-                        const stalenesResponseObject = buildStalenessResponseObject(
-                            status,
-                            parameter[METADATA_TIME_KEY]
-                        );
-                        this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
-                        this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
-                    }
+                if (allClockValues.length > 0) {
+                    // A single parameter update message can include multiple values, again we only care about the most recent one.
+                    subscriptionDetails.callback(allClockValues[allClockValues.length - 1]);
                 }
 
-                addLimitInformation(parameter, datum);
-                telemetryData.push(datum);
-            });
-        });
-
-        if (telemetryData.length > 0) {
-            subscriptionDetails.callback(telemetryData);
+                // Delete so we don't process it twice.
+                parameterValuesByCall.delete(this.remoteClockCallNumber);
+            }
         }
+
+        // Now process all non-clock parameter updates
+        for (const [call, parameterValues] of parameterValuesByCall.entries()) {
+            const allTelemetryData = [];
+            const subscriptionDetails = this.subscriptionsByCall.get(call);
+
+            // possibly cancelled
+            if (!subscriptionDetails) {
+                continue;
+            }
+
+            parameterValues.forEach((parameterValue) => {
+                this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allTelemetryData);
+            });
+
+            if (allTelemetryData.length > 0) {
+                subscriptionDetails.callback(allTelemetryData);
+            }
+        }
+    }
+
+    #convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allTelemetryData) {
+        const values = parameterValue.data.values || [];
+        const parentName = subscriptionDetails.domainObject.name;
+        values.forEach(parameter => {
+            const datum = convertYamcsToOpenMctDatum(parameter, parentName);
+
+            if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
+                const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
+
+                if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
+                    const stalenesResponseObject = buildStalenessResponseObject(
+                        status,
+                        parameter[METADATA_TIME_KEY]
+                    );
+                    this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
+                    this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
+                }
+            }
+
+            addLimitInformation(parameter, datum);
+            allTelemetryData.push(datum);
+        });
     }
 
     connect() {
@@ -285,84 +288,82 @@ export default class RealtimeProvider {
         });
 
         this.#socketWorker.addEventListener('batch', (batchEvent) => {
-            const batch = batchEvent.detail;
+            const newBatch = batchEvent.detail;
+            const parametersByCall = new Map();
+            newBatch.forEach(messageString => {
+                //const message = JSON.parse(messageString);
+                const message = JSON.parse(messageString);
+                const call = message.call;
+                if (message.type === 'parameters') {
+                    // First, group parameter updates by call
+                    let arrayOfParametersForCall = parametersByCall.get(call);
 
-            let remoteClockValue;
-            // If remote clock active, process its value before any telemetry values to ensure the bounds are always up to date.
-            if (this.remoteClockCallNumber !== undefined) {
-                remoteClockValue = batch[this.remoteClockCallNumber];
-                if (remoteClockValue !== undefined) {
-                    this.#processBatchQueue(batch[this.remoteClockCallNumber], this.remoteClockCallNumber);
-
-                    // Delete so we don't process it twice.
-                    delete batch[this.remoteClockCallNumber];
-                }
-            }
-
-            Object.keys(batch).forEach((call) => {
-                this.#processBatchQueue(batch[call], call);
-            });
-        });
-
-        this.#socketWorker.addEventListener('message', (messageEvent) => {
-            const message = JSON.parse(messageEvent.detail);
-            if (!this.isSupportedDataType(message.type)) {
-                return;
-            }
-
-            const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
-            const call = message.call;
-            let subscriptionDetails;
-
-            if (isReply) {
-                const id = message.data.replyTo;
-                subscriptionDetails = this.subscriptionsById[id];
-                subscriptionDetails.call = call;
-                // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
-                this.subscriptionsByCall.set(call.toString(), subscriptionDetails);
-
-                const remoteClockIdentifier = this.#openmct.time.getClock()?.identifier;
-                const isRemoteClockActive = remoteClockIdentifier !== undefined;
-
-                if (isRemoteClockActive && subscriptionDetails.domainObject.identifier.key === remoteClockIdentifier.key) {
-                    this.remoteClockCallNumber = call.toString();
-                }
-            } else {
-                subscriptionDetails = this.subscriptionsByCall.get(message.call.toString());
-
-                // possibly cancelled
-                if (!subscriptionDetails) {
-                    return;
-                }
-
-                if (this.isCommandMessage(message)) {
-                    const datum = commandToTelemetryDatum(message.data);
-                    subscriptionDetails.callback(datum);
-                } else if (this.isEventMessage(message)) {
-                    if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
-                        // ignore event
-                    } else {
-                        const datum = eventToTelemetryDatum(message.data);
-                        subscriptionDetails.callback(datum);
+                    if (arrayOfParametersForCall === undefined) {
+                        arrayOfParametersForCall = [];
+                        parametersByCall.set(call, arrayOfParametersForCall);
                     }
-                } else if (this.isMdbChangesMessage(message)) {
-                    if (!this.isParameterType(message)) {
+
+                    arrayOfParametersForCall.push(message);
+                } else {
+                    if (!this.isSupportedDataType(message.type)) {
                         return;
                     }
 
-                    const parameterName = message.data.parameterOverride.parameter;
-                    if (this.observingLimitChanges[parameterName] !== undefined) {
-                        const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
-                        this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
-                    }
+                    const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
+                    let subscriptionDetails;
 
-                    if (subscriptionDetails.callback) {
-                        subscriptionDetails.callback(message.data);
+                    if (isReply) {
+                        const id = message.data.replyTo;
+                        subscriptionDetails = this.subscriptionsById[id];
+                        subscriptionDetails.call = call;
+                        // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
+                        this.subscriptionsByCall.set(call, subscriptionDetails);
+
+                        const remoteClockIdentifier = this.#openmct.time.getClock()?.identifier;
+                        const isRemoteClockActive = remoteClockIdentifier !== undefined;
+
+                        if (isRemoteClockActive && subscriptionDetails.domainObject.identifier.key === remoteClockIdentifier.key) {
+                            this.remoteClockCallNumber = call;
+                        }
+                    } else {
+                        subscriptionDetails = this.subscriptionsByCall.get(message.call);
+
+                        // possibly cancelled
+                        if (!subscriptionDetails) {
+                            return;
+                        }
+
+                        if (this.isCommandMessage(message)) {
+                            const datum = commandToTelemetryDatum(message.data);
+                            subscriptionDetails.callback(datum);
+                        } else if (this.isEventMessage(message)) {
+                            if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
+                            // ignore event
+                            } else {
+                                const datum = eventToTelemetryDatum(message.data);
+                                subscriptionDetails.callback(datum);
+                            }
+                        } else if (this.isMdbChangesMessage(message)) {
+                            if (!this.isParameterType(message)) {
+                                return;
+                            }
+
+                            const parameterName = message.data.parameterOverride.parameter;
+                            if (this.observingLimitChanges[parameterName] !== undefined) {
+                                const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+                                this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
+                            }
+
+                            if (subscriptionDetails.callback) {
+                                subscriptionDetails.callback(message.data);
+                            }
+                        } else {
+                            subscriptionDetails.callback(message.data);
+                        }
                     }
-                } else {
-                    subscriptionDetails.callback(message.data);
                 }
-            }
+            });
+            this.#processParameterUpdates(parametersByCall);
         });
     }
 

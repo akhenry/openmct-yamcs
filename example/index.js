@@ -9,7 +9,11 @@ const config = {
     yamcsProcessor: "realtime",
     yamcsFolder: "myproject",
     throttleRate: 1000,
-    maxBatchSize: 20
+    // Batch size is specified in characers as there is no performant way of calculating true
+    // memory usage of a string buffer in real-time.
+    // String characters can be 8 or 16 bits in JavaScript, depending on the code page used.
+    // Thus 500,000 characters requires up to 16MB of memory (1,000,000 * 16).
+    maxBatchSize: 1000000
 };
 const STATUS_STYLES = {
     NO_STATUS: {
@@ -41,7 +45,11 @@ const STATUS_STYLES = {
 const openmct = window.openmct;
 
 (() => {
-    const THIRTY_MINUTES = 30 * 60 * 1000;
+    const ONE_SECOND = 1000;
+    const FIFTEEN_SECONDS = ONE_SECOND * 15;
+    const ONE_MINUTE = ONE_SECOND * 60;
+    const FIFTEEN_MINUTES = ONE_MINUTE * 15;
+    const THIRTY_MINUTES = ONE_MINUTE * 30;
 
     openmct.setAssetPath("/node_modules/openmct/dist");
 
@@ -54,10 +62,21 @@ const openmct = window.openmct;
     document.addEventListener("DOMContentLoaded", function () {
         openmct.start();
     });
-
+    openmct.install(openmct.plugins.RemoteClock({namespace: 'taxonomy',
+        key: '~myproject~A'
+    }));
     openmct.install(
         openmct.plugins.Conductor({
             menuOptions: [
+                {
+                    name: "Remote",
+                    timeSystem: 'utc',
+                    clock: 'remote-clock',
+                    clockOffsets: {
+                        start: -FIFTEEN_MINUTES,
+                        end: FIFTEEN_SECONDS
+                    }
+                },
                 {
                     name: "Realtime",
                     timeSystem: "utc",
