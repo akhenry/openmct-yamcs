@@ -13,7 +13,7 @@ const config = {
     // memory usage of a string buffer in real-time.
     // String characters can be 8 or 16 bits in JavaScript, depending on the code page used.
     // Thus 500,000 characters requires up to 16MB of memory (1,000,000 * 16).
-    maxBatchSize: 1000000
+    maxBufferSize: 1000000
 };
 const STATUS_STYLES = {
     NO_STATUS: {
