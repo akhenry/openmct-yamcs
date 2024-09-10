@@ -33,8 +33,7 @@ jobs:
           node-version: "18"
       - uses: actions/checkout@v3
         with:
-          repository: ozyx/quickstart
-          ref: modify-playback-rate
+          repository: yamcs/quickstart
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
         if: matrix.yamcs-version != 'default'
