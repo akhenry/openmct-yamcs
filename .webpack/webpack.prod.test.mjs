@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import { merge } from 'webpack-merge';
-import prod from './webpack.prod.js';
+import prod from './webpack.prod.mjs';
 
 
 /** @type {import('webpack').Configuration} */
