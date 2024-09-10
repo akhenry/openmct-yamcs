@@ -22,12 +22,15 @@
 
 import { merge } from 'webpack-merge';
 import prod from './webpack.prod.mjs';
+import { fileURLToPath } from 'node:url';
 
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const prodTestConfig = {
+    context: projectRootDir,
     entry: {
-        'openmct-yamcs-example': '../example/index.js'
+        'openmct-yamcs-example': './example/index.js'
     },
 }
 export default merge(prod, prodTestConfig);

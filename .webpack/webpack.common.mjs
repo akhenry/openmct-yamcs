@@ -23,16 +23,17 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
+console.error('PROJECT ROOT DIR', projectRootDir);
 
 /** @type {import('webpack').Configuration} */
 const commonConfig = {
-    context: __dirname,
+    context: projectRootDir,
     performance: {
         hints: false
     },
     entry: {
-        'openmct-yamcs': '../src/openmct-yamcs.js'
+        'openmct-yamcs': './src/openmct-yamcs.js'
     },
     module: {
         rules: [
@@ -46,7 +47,7 @@ const commonConfig = {
     output: {
         globalObject: "this",
         filename: '[name].js',
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(projectRootDir, 'dist'),
         library: {
             type: 'umd',
             export: 'default',
@@ -56,35 +57,33 @@ const commonConfig = {
     devServer: {
         compress: true,
         port: 9000,
-        static: [{
-            directory: path.join(__dirname, '../example'),
-        }, {
-            directory: path.join(__dirname, '../node_modules/openmct/dist'),
-            publicPath: '/dist',
-        }],
+        static: [
+          {
+            directory: path.resolve(projectRootDir, './example'),
+          },
+          {
+            directory: path.resolve(projectRootDir, './node_modules/openmct/dist'),
+            publicPath: '/node_modules/openmct/dist'
+          },
+        ],
         proxy: [
-            {
-                context: ['/yamcs-proxy/'],
-                target: "http://0.0.0.0:8090/",
-                secure: false,
-                changeOrigin: true,
-                pathRewrite: { '^/yamcs-proxy/': '' }
-            },
-            {
-                context: ['/yamcs-proxy-ws/'],
-                target: "ws://0.0.0.0:8090/api/websocket",
-                secure: false,
-                changeOrigin: true,
-                ws: true,
-                pathRewrite: { '^/yamcs-proxy-ws/': '' }
-            }
-        ]
-    },
-    resolve: {
-        alias: {
-            openmct: path.resolve(__dirname, '../node_modules/openmct/dist/openmct.js')
-        }
-    }
+          {
+            context: ["/yamcs-proxy/"],
+            target: "http://0.0.0.0:8090/",
+            secure: false,
+            changeOrigin: true,
+            pathRewrite: { "^/yamcs-proxy/": "" },
+          },
+          {
+            context: ["/yamcs-proxy-ws/"],
+            target: "ws://0.0.0.0:8090/api/websocket",
+            secure: false,
+            changeOrigin: true,
+            ws: true,
+            pathRewrite: { "^/yamcs-proxy-ws/": "" },
+          },
+        ],
+      }
 };
 
 export default commonConfig;

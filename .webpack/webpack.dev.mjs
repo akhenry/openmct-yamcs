@@ -23,15 +23,15 @@ import { merge } from "webpack-merge";
 import commonConfig from "./webpack.common.mjs";
 import { fileURLToPath } from 'node:url';
 
-// Replicate __dirname functionality for ES modules
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
 const devConfig = {
+    context: projectRootDir,
     mode: 'development',
     devtool: 'eval-source-map',
     entry: {
-        'openmct-yamcs-example': '../example/index.js'
+        'openmct-yamcs-example': './example/index.js'
     },
 }
 export default merge(commonConfig, devConfig);
