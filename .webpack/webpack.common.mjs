@@ -62,21 +62,23 @@ const commonConfig = {
             directory: path.join(__dirname, '../node_modules/openmct/dist'),
             publicPath: '/dist',
         }],
-        proxy: {
-            "/yamcs-proxy/*": {
+        proxy: [
+            {
+                context: ['/yamcs-proxy/'],
                 target: "http://0.0.0.0:8090/",
                 secure: false,
                 changeOrigin: true,
                 pathRewrite: { '^/yamcs-proxy/': '' }
             },
-            "/yamcs-proxy-ws/*": {
+            {
+                context: ['/yamcs-proxy-ws/'],
                 target: "ws://0.0.0.0:8090/api/websocket",
                 secure: false,
                 changeOrigin: true,
                 ws: true,
                 pathRewrite: { '^/yamcs-proxy-ws/': '' }
             }
-        }
+        ]
     },
     resolve: {
         alias: {
