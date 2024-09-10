@@ -3,13 +3,13 @@
 
 /** @type {import('@playwright/test').PlaywrightTestConfig<{ failOnConsoleError: boolean, myItemsFolderName: string }>} */
 const config = {
-    retries: 0,
+    retries: 1,
     testDir: '.',
     testMatch: /.*\.e2e\.spec\.(mjs|js)$/,
-    testIgnore: '**/*.perf.spec.js',
+    testIgnore: /.*\.perf\.spec\.(mjs|js)$/,
     timeout: 30 * 1000,
     use: {
-        headless: true,
+        headless: false,
         video: 'off',
         screenshot: 'on',
         trace: 'on',

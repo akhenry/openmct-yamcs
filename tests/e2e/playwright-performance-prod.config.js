@@ -4,11 +4,12 @@
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 const config = {
     retries: 0, //Only for debugging purposes for trace: 'on-first-retry'
-    testDir: 'yamcs',
-    testMatch: '**/*.perf.spec.js',
+    testDir: '.',
+    testMatch: /.*\.e2e\.perf\.spec\.(mjs|js)$/,
     timeout: 60 * 1000,
     workers: 1, //Only run in serial with 1 worker
     webServer: {
+        cwd: '../',
         command: 'npm run start:prod', //Production mode
         url: 'http://localhost:9000/#',
         timeout: 200 * 1000,
@@ -25,7 +26,7 @@ const config = {
     projects: [
         {
             name: 'chrome-memory',
-            testMatch: '*.memory.perf.spec.js', //Only run memory tests
+            testMatch: /.*\.memory\.perf\.spec\.(mjs|js)$/, //Only run memory tests
             use: {
                 browserName: 'chromium',
                 launchOptions: {
@@ -43,7 +44,7 @@ const config = {
         },
         {
             name: 'chrome',
-            testIgnore: '*.memory.perf.spec.js', //Do not run memory tests without proper flags
+            testIgnore: /.*\.memory\.perf\.spec\.(mjs|js)$/, //Do not run memory tests without proper flags
             use: {
                 browserName: 'chromium'
             }
