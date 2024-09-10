@@ -20,9 +20,10 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { expect, test } from '@playwright/test';
-import { fileURLToPath } from 'url';
-import { setRealTimeMode } from '../opensource/appActions.js';
+import { pluginFixtures, appActions } from 'openmct-e2e';
+import { fileURLToPath } from 'node:url';
+const { test, expect } = pluginFixtures;
+const { setRealTimeMode } = appActions;
 
 const telemetryEvictionFilePath = fileURLToPath(
     new URL('../test-data/telemetry-eviction-test-objects.json', import.meta.url)
