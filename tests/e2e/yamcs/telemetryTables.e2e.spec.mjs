@@ -53,4 +53,28 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
 
+    test('Telemetry tables when changing mode, will not change the sort order of the request', async ({ page }) => {
+        // Set up request promise for an events request in descending order
+        let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
+
+        // Navigate to the Events table
+        await page.getByLabel('Navigate to Events yamcs.').click();
+        await page.waitForLoadState('networkidle');
+
+        // Wait for the descending events request
+        await eventRequestOrderDescending;
+
+        // Reset request promise for an events request in descending order
+        eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
+
+        // Find the mode switch button and click it, this will trigger another events request
+        await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
+        await page.waitForLoadState('networkidle');
+
+        await eventRequestOrderDescending;
+
+        // Assert that the 'SHOW LIMITED' button is now visible
+        await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
+    });
+
 });
