@@ -442,8 +442,6 @@ test.describe('Realtime telemetry displays', () => {
         });
         const formattedParameterArchiveTelemetry = toOpenMctTelemetryFormat(parameterArchiveTelemetry);
         sortOpenMctTelemetryAscending(formattedParameterArchiveTelemetry);
-        console.log(`RT batch: ${JSON.stringify(telemetryValues)}`);
-        console.log(`Archive: ${JSON.stringify(formattedParameterArchiveTelemetry)}`);
         telemetryValues.forEach((telemetry, index) => {
             expect(telemetry.value).toBe(formattedParameterArchiveTelemetry[index].value);
             expect(telemetry.timestamp).toBe(formattedParameterArchiveTelemetry[index].timestamp);
