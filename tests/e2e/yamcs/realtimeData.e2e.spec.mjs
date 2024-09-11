@@ -240,7 +240,6 @@ test.describe('Realtime telemetry displays', () => {
         });
 
         test('Open MCT does not drop telemetry while app is loading', async ({ page }) => {
-            //TODO: Upgrade this test to cycle through notifications, don't just use the last visible one.
             const notification = page.getByRole('alert');
             const count = await notification.count();
 

@@ -222,7 +222,6 @@ export default class RealtimeProvider {
             if (remoteClockValues !== undefined && remoteClockValues.length > 0) {
                 const allClockValues = [];
 
-                // We only care about the most recent clock tick message in the batch.
                 remoteClockValues.forEach((parameterValue) => {
                     this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allClockValues);
                 });
