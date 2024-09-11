@@ -62,7 +62,8 @@ const openmct = window.openmct;
     document.addEventListener("DOMContentLoaded", function () {
         openmct.start();
     });
-    openmct.install(openmct.plugins.RemoteClock({namespace: 'taxonomy',
+    openmct.install(openmct.plugins.RemoteClock({
+        namespace: 'taxonomy',
         key: '~myproject~A'
     }));
     openmct.install(

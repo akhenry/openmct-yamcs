@@ -167,8 +167,6 @@ export default class RealtimeProvider {
     }
 
     getSubscriptionByObjectIdentifier(identifier) {
-        const objectKeystring = this.#openmct.objects.makeKeyString(identifier);
-
         return Object.values(this.subscriptionsById).find(subscription => this.#openmct.objects.areIdsEqual(subscription.domainObject.identifier, identifier));
     }
 
