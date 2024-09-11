@@ -26,7 +26,7 @@
 
 import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
-const { createDomainObjectWithDefaults } = appActions;
+const { createDomainObjectWithDefaults, expandEntireTree } = appActions;
 
 test.describe('Bar Graph', () => {
   let barGraph;
@@ -39,30 +39,26 @@ test.describe('Bar Graph', () => {
 
     // Create the Bar Graph
     barGraph = await createDomainObjectWithDefaults(page, { type: 'Graph' });
+    // Enter edit mode for the overlay plot
+    await page.getByLabel('Edit Object').click();
   });
 
   test('Requests a single historical datum', async ({ page }) => {
     //Expand the myproject folder (/myproject)
-    const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-    const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-    await firstMyProjectTriangle.click();
-
-    //Expand the myproject under the previous folder (/myproject/myproject)
-    const viperRoverTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-    const viperRoverProjectTriangle = viperRoverTreeItem.nth(1).locator('span.c-disclosure-triangle');
-    await viperRoverProjectTriangle.click();
-
-    //Find the Magnetometer parameter (/myproject/myproject/Magnetometer)
-    const magnetometerTreeItem = page.getByRole('treeitem', { name: /Magnetometer/ });
+    await page.getByLabel('Expand myproject folder').click();
+    //Expand the myproject folder (/myproject/myproject)
+    await page.getByLabel('Expand myproject folder').click();
 
     networkRequests = [];
     historicalGet = page.waitForRequest('**/api/archive/myproject/parameters/**');
 
     //Drag and drop the Magnetometer telemetry endpoint into this bar graph
+    const magnetometerTreeItem = page.getByLabel('Preview Magnetometer yamcs.');
     await magnetometerTreeItem.dragTo(page.getByLabel('Object View'));
 
     // Save (exit edit mode)
     await page.getByLabel('Save').click();
+    await page.getByRole('listitem', { name: 'Save and Finish Editing' }).isVisible();
     await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
     const historicalRequest = await historicalGet;
