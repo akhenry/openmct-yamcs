@@ -114,7 +114,7 @@ const openmct = window.openmct;
 
         // setup example display layout
         openmct.on('start', async () => {
-            if (localStorage.getItem('exampleDisplayLayout') !== null) {
+            if (localStorage.getItem('exampleLayout') !== null) {
                 return;
             }
 
@@ -128,10 +128,10 @@ const openmct = window.openmct;
                     return text;
                 }
 
-                async function getExampleDisplayLayoutPath() {
+                async function getExampleLayoutPath() {
                     const objects = Object.values(JSON.parse(localStorage.getItem('mct')));
-                    const exampleDisplayLayout = objects.find(object => object.name === 'Example Display Layout');
-                    let path = await openmct.objects.getOriginalPath(exampleDisplayLayout.identifier);
+                    const exampleLayout = objects.find(object => object.name === 'Example Flexible Layout');
+                    let path = await openmct.objects.getOriginalPath(exampleLayout.identifier);
 
                     path.pop();
                     path = path.reverse();
@@ -182,7 +182,7 @@ const openmct = window.openmct;
                     compositionLength = composition.length;
                 }
 
-                const exampleDisplayLayoutPath = await getExampleDisplayLayoutPath();
+                const exampleLayoutPath = await getExampleLayoutPath();
 
                 // give everything time to initialize
                 await new Promise(resolve => setTimeout(resolve, 250));
@@ -190,10 +190,10 @@ const openmct = window.openmct;
                 openmct.notifications.info('Navigated to Example Display Layout');
 
                 // navigate to the "Example Display Layout"
-                openmct.router.navigate(exampleDisplayLayoutPath);
+                openmct.router.navigate(exampleLayoutPath);
 
                 // set the localStorage item to prevent this from running again
-                localStorage.setItem('exampleDisplayLayout', 'true');
+                localStorage.setItem('exampleLayout', 'true');
             } catch (error) {
                 console.warn('Issue setting up example display layout:', error);
             }
