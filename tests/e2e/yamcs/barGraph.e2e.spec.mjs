@@ -30,7 +30,6 @@ const { createDomainObjectWithDefaults, expandEntireTree } = appActions;
 
 test.describe('Bar Graph', () => {
   let barGraph;
-  let networkRequests = [];
   let historicalGet;
 
   test.beforeEach(async ({ page }) => {
@@ -49,20 +48,18 @@ test.describe('Bar Graph', () => {
     //Expand the myproject folder (/myproject/myproject)
     await page.getByLabel('Expand myproject folder').click();
 
-    networkRequests = [];
-    historicalGet = page.waitForRequest('**/api/archive/myproject/parameters/**');
+    historicalGet = page.waitForRequest(/.*\/api\/.*\/parameters.*limit=1$/);
 
     //Drag and drop the Magnetometer telemetry endpoint into this bar graph
-    const magnetometerTreeItem = page.getByLabel('Preview Magnetometer yamcs.');
-    await magnetometerTreeItem.dragTo(page.getByLabel('Object View'));
+    await page.getByLabel('Preview Magnetometer yamcs.').dragTo(page.getByLabel('Object View'));
 
     // Save (exit edit mode)
     await page.getByLabel('Save').click();
-    await page.getByRole('listitem', { name: 'Save and Finish Editing' }).isVisible();
+    // The following line doesn't work unless in debug mode for some reason
     await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
+    await page.waitForLoadState('networkidle');
 
-    const historicalRequest = await historicalGet;
-    await expect(historicalRequest.url()).toContain('limit=1');
+    await historicalGet;
   });
 });
 
