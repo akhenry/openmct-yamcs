@@ -12,8 +12,7 @@ yamcs/quickstart and openmct-yamcs (this one).
 3. `make all` in yamcs/quickstart
 4. `cd openmct-yamcs` to move out of yamcs/quickstart
 5. `npm install` in openmct-yamcs
-6. `npm run test:getopensource` in openmct-yamcs
-7. `npx playwright@1.45.2 install chromium` in openmct-yamcs
-8. Sanity test that yamcs is up with `npm run wait-for-yamcs` in openmct-yamcs
-9. `npm run build:example` or `npm run build:example:master`
-10. `npm run test:e2e:watch`
+6. Sanity test that yamcs is up with `npm run wait-for-yamcs` in openmct-yamcs
+7. `npm run test:getopensource`
+8. `npm run build:example` or `npm run build:example:master`
+9. `npm run test:e2e:watch`
