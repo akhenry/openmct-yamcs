@@ -27,6 +27,7 @@ async function disableLink(yamcsURL) {
 }
 
 async function enableLink(yamcsURL) {
+    console.log(`YAMCS URL: ${yamcsURL}`);
     const url = new URL(`api/links/myproject/udp-in:enable`, yamcsURL);
     await fetch(url.toString(), {
         method: 'POST'

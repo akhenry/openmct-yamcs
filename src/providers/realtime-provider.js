@@ -135,7 +135,7 @@ export default class RealtimeProvider {
             if (subscriptionDetails) {
                 this.sendUnsubscribeMessage(subscriptionDetails);
 
-                this.subscriptionsByCall.delete(subscriptionDetails.call.toString());
+                this.subscriptionsByCall.delete(subscriptionDetails.call);
                 delete this.subscriptionsById[id];
             }
         };
@@ -160,10 +160,16 @@ export default class RealtimeProvider {
             this.sendUnsubscribeMessage(subscriptionDetails);
 
             if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call.toString());
+                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
                 delete this.subscriptionsById[id];
             }
         };
+    }
+
+    getSubscriptionByObjectIdentifier(identifier) {
+        const objectKeystring = this.#openmct.objects.makeKeyString(identifier);
+
+        return Object.values(this.subscriptionsById).find(subscription => this.#openmct.objects.areIdsEqual(subscription.domainObject.identifier, identifier));
     }
 
     buildSubscriptionDetails(domainObject, callback, options) {
@@ -201,7 +207,7 @@ export default class RealtimeProvider {
         });
 
         if (correspondingSubscription !== undefined) {
-            this.remoteClockCallNumber = correspondingSubscription.call.toString();
+            this.remoteClockCallNumber = correspondingSubscription.call;
         } else {
             delete this.remoteClockCallNumber;
         }
@@ -217,11 +223,12 @@ export default class RealtimeProvider {
                 const allClockValues = [];
 
                 // We only care about the most recent clock tick message in the batch.
-                this.#convertMessageToDatumAndReportStaleness(remoteClockValues[remoteClockValues.length - 1], subscriptionDetails, allClockValues);
+                remoteClockValues.forEach((parameterValue) => {
+                    this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allClockValues);
+                });
 
                 if (allClockValues.length > 0) {
-                    // A single parameter update message can include multiple values, again we only care about the most recent one.
-                    subscriptionDetails.callback(allClockValues[allClockValues.length - 1]);
+                    subscriptionDetails.callback(allClockValues);
                 }
 
                 // Delete so we don't process it twice.
@@ -291,7 +298,6 @@ export default class RealtimeProvider {
             const newBatch = batchEvent.detail;
             const parametersByCall = new Map();
             newBatch.forEach(messageString => {
-                //const message = JSON.parse(messageString);
                 const message = JSON.parse(messageString);
                 const call = message.call;
                 if (message.type === 'parameters') {

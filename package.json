@@ -19,7 +19,7 @@
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack --config ./.webpack/webpack.prod.mjs",
-    "build:example": "npm install openmct@unstable --no-save",
+    "build:example": "npm install nasa/openmct#improved-buffering --no-save",
     "build:example:master": "npm install nasa/openmct --no-save",
     "postbuild:example": "node check-optional-dependencies.mjs",
     "start": "npx webpack serve --config ./.webpack/webpack.dev.mjs",
@@ -29,7 +29,7 @@
     "posttest:getopensource": "npm install",
     "test:e2e:smoke": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
-    "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/ --debug",
     "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
     "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
