@@ -34,6 +34,9 @@ npm start
 This should build the example, and launch a web browser with Open MCT connected to a locally running YAMCS server. By 
 default it is configured to connect to the "myproject" instance provided in the [YAMCS QuickStart](https://github.com/yamcs/quickstart) server.
 
+> #### IMPORTANT NOTE
+> If Open MCT version issues are encountered with `npm run build:example`, try using `npm run build:example:master` to force usage of the latest version of Open MCT.
+
 ### Testing
 
 This project is using the openmct-e2e-as-a-dependency model. For getting started with our tests, please see [our README](./tests/README.md)
