@@ -24,7 +24,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
-console.error('PROJECT ROOT DIR', projectRootDir);
 
 /** @type {import('webpack').Configuration} */
 const commonConfig = {
