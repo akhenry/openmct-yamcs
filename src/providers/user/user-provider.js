@@ -24,7 +24,7 @@ import createYamcsUser from './createYamcsUser.js';
 import { EventEmitter } from 'eventemitter3';
 
 export default class UserProvider extends EventEmitter {
-    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, realtimeTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry}) {
+    constructor(openmct, {userEndpoint, roleStatus, latestTelemetryProvider, pollQuestionParameter, pollQuestionTelemetry, missionStatus}) {
         super();
 
         this.openmct = openmct;
@@ -32,12 +32,13 @@ export default class UserProvider extends EventEmitter {
         this.user = undefined;
         this.loggedIn = false;
         this.roleStatus = roleStatus;
+        this.missionStatus = missionStatus;
         this.pollQuestionParameter = pollQuestionParameter;
         this.pollQuestionTelemetry = pollQuestionTelemetry;
         this.unsubscribeStatus = {};
+        this.unsubscribeMissionStatus = {};
 
         this.latestTelemetryProvider = latestTelemetryProvider;
-        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
 
         this.YamcsUser = createYamcsUser(openmct.user.User);
         this.openmct.once('destroy', () => {
@@ -92,6 +93,29 @@ export default class UserProvider extends EventEmitter {
         });
     }
 
+    async canSetMissionStatus() {
+        const user = await this.getCurrentUser();
+        const writeParameters = user.getWriteParameters();
+
+        const areParametersStatus = await Promise.all(
+            writeParameters.map(parameterName => this.missionStatus.isMissionStatusParameterName(parameterName))
+        );
+
+        return areParametersStatus.some(isParameterStatus => isParameterStatus);
+    }
+
+    async getPossibleMissionActions() {
+        const possibleActions = await this.missionStatus.getAllMissionActions();
+
+        return possibleActions;
+    }
+
+    async getPossibleMissionActionStatuses() {
+        const statuses = await this.missionStatus.getPossibleMissionStatuses();
+
+        return statuses;
+    }
+
     async canSetPollQuestion() {
         const user = await this.getCurrentUser();
         const writeParameters = user.getWriteParameters();
@@ -109,10 +133,31 @@ export default class UserProvider extends EventEmitter {
         return success;
     }
 
+    async getStatusForMissionAction(action) {
+        const missionStatusTelemetryObject = await this.missionStatus.getTelemetryObjectForAction(action);
+        if (this.unsubscribeMissionStatus[action] === undefined) {
+            this.unsubscribeMissionStatus[action] = this.openmct.telemetry.subscribe(missionStatusTelemetryObject, (datum) => {
+                this.emit('missionActionStatusChange', {
+                    action,
+                    status: this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, datum)
+                });
+            });
+        }
+
+        const status = await this.latestTelemetryProvider.requestLatest(missionStatusTelemetryObject);
+        if (status !== undefined) {
+            return this.missionStatus.toStatusFromTelemetry(missionStatusTelemetryObject, status);
+        } else {
+            const defaultStatus = await this.missionStatus.getDefaultStatusForAction(action);
+
+            return defaultStatus;
+        }
+    }
+
     async getStatusForRole(role) {
         const statusTelemetryObject = await this.roleStatus.getTelemetryObjectForRole(role);
         if (this.unsubscribeStatus[role] === undefined) {
-            this.unsubscribeStatus[role] = this.realtimeTelemetryProvider.subscribe(statusTelemetryObject, (datum) => {
+            this.unsubscribeStatus[role] = this.openmct.telemetry.subscribe(statusTelemetryObject, (datum) => {
                 this.emit('statusChange', {
                     role,
                     status: this.roleStatus.toStatusFromTelemetry(statusTelemetryObject, datum)
@@ -142,6 +187,12 @@ export default class UserProvider extends EventEmitter {
         return success;
     }
 
+    async setStatusForMissionAction(action, status) {
+        const success = await this.missionStatus.setStatusForMissionAction(action, status);
+
+        return success;
+    }
+
     async getPossibleStatuses() {
         const possibleStatuses = await this.roleStatus.getPossibleStatuses();
 
@@ -152,7 +203,7 @@ export default class UserProvider extends EventEmitter {
         const pollQuestionTelemetryObject = await this.pollQuestionTelemetry.getTelemetryObject();
 
         if (this.unsubscribePollQuestion === undefined) {
-            this.unsubscribePollQuestion = this.realtimeTelemetryProvider.subscribe(pollQuestionTelemetryObject, (datum) => {
+            this.unsubscribePollQuestion = this.openmct.telemetry.subscribe(pollQuestionTelemetryObject, (datum) => {
                 const formattedPollQuestion = this.pollQuestionTelemetry.toPollQuestionObjectFromTelemetry(pollQuestionTelemetryObject, datum);
                 this.emit("pollQuestionChange", formattedPollQuestion);
             });
@@ -200,4 +251,3 @@ export default class UserProvider extends EventEmitter {
     }
 
 }
-

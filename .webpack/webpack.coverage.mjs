@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2023, United States Government
+ * Open MCT, Copyright (c) 2014-2020, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,35 +20,24 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const.js';
-import { buildStalenessResponseObject } from '../utils.js';
+import config from './webpack.dev.mjs';
 
-export default class YamcsStalenessProvider {
-    constructor(realtimeTelemetryProvider, latestTelemetryProvider) {
-        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
-        this.latestTelemetryProvider = latestTelemetryProvider;
-    }
+config.devtool = 'source-map';
 
-    supportsStaleness(domainObject) {
-        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
-    }
+config.devServer.hot = false;
 
-    subscribeToStaleness(domainObject, callback) {
-        return this.realtimeTelemetryProvider.subscribeToStaleness(domainObject, callback);
-    }
-
-    async isStale(domainObject) {
-        const response = await this.latestTelemetryProvider.requestLatest(domainObject);
-
-        if (!response?.acquisitionStatus) {
-            return;
+config.module.rules.push({
+    test: /\.(mjs|js)$/,
+    exclude: /(node_modules)/,
+    use: {
+        loader: 'babel-loader',
+        options: {
+            retainLines: true,
+            plugins: [['babel-plugin-istanbul', {
+                extension: ['.js']
+            }]]
         }
-
-        const stalenessObject = buildStalenessResponseObject(
-            STALENESS_STATUS_MAP[response.acquisitionStatus],
-            response.timestamp
-        );
-
-        return stalenessObject;
     }
-}
+});
+
+export default config;

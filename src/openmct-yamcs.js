@@ -33,14 +33,21 @@ import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-pro
 
 import { OBJECT_TYPES } from './const.js';
 import OperatorStatusTelemetry from './providers/user/operator-status-telemetry.js';
+import MissionStatusTelemetry from './providers/mission-status/mission-status-telemetry.js';
 import LatestTelemetryProvider from './providers/latest-telemetry-provider.js';
 import PollQuestionParameter from './providers/user/poll-question-parameter.js';
 import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
-export default function install(configuration) {
+import BinaryToHexFormatterPlugin from './plugins/binaryToHexFormatter/plugin.js';
+
+export default function install(
+    configuration,
+    getDictionaryRequestOptions
+) {
     return (openmct) => {
         openmct.install(openmct.plugins.ISOTimeFormat());
+        openmct.install(BinaryToHexFormatterPlugin());
 
         const latestTelemetryProvider = new LatestTelemetryProvider({
             url: configuration.yamcsHistoricalEndpoint,
@@ -57,22 +64,24 @@ export default function install(configuration) {
         openmct.telemetry.addProvider(historicalTelemetryProvider);
 
         const realtimeTelemetryProvider = new RealtimeProvider(
+            openmct,
             configuration.yamcsWebsocketEndpoint,
             configuration.yamcsInstance,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            configuration.throttleRate,
+            configuration.maxBatchSize
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
 
-        openmct.faults.addProvider(new YamcsFaultProvider({
-            faultModelConvertor,
-            historicalEndpoint: configuration.yamcsHistoricalEndpoint,
-            yamcsInstance: configuration.yamcsInstance,
-            realtimeTelemetryProvider
-        }));
+        openmct.faults.addProvider(new YamcsFaultProvider(openmct,
+            {
+                faultModelConvertor,
+                historicalEndpoint: configuration.yamcsHistoricalEndpoint,
+                yamcsInstance: configuration.yamcsInstance
+            }));
 
         const stalenessProvider = new YamcsStalenessProvider(
-            openmct,
             realtimeTelemetryProvider,
             latestTelemetryProvider
         );
@@ -88,6 +97,11 @@ export default function install(configuration) {
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
+
+        const missionStatusTelemetry = new MissionStatusTelemetry(openmct, {
+            url: configuration.yamcsHistoricalEndpoint,
+            instance: configuration.yamcsInstance
+        });
 
         const roleStatusTelemetry = new OperatorStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,
@@ -107,8 +121,8 @@ export default function install(configuration) {
                 openmct, {
                     userEndpoint: configuration.yamcsUserEndpoint,
                     roleStatus: roleStatusTelemetry,
+                    missionStatus: missionStatusTelemetry,
                     latestTelemetryProvider,
-                    realtimeTelemetryProvider,
                     pollQuestionParameter,
                     pollQuestionTelemetry
                 });
@@ -123,10 +137,12 @@ export default function install(configuration) {
             configuration.yamcsInstance,
             configuration.yamcsFolder,
             roleStatusTelemetry,
+            missionStatusTelemetry,
             pollQuestionParameter,
             pollQuestionTelemetry,
             realtimeTelemetryProvider,
-            configuration.yamcsProcessor
+            configuration.yamcsProcessor,
+            getDictionaryRequestOptions
         );
 
         openmct.objects.addRoot({
@@ -192,6 +208,12 @@ export default function install(configuration) {
         openmct.types.addType(OBJECT_TYPES.OPERATOR_STATUS_TYPE, {
             name: 'Operator Status',
             description: 'Operator status',
+            cssClass: 'icon-telemetry'
+        });
+
+        openmct.types.addType(OBJECT_TYPES.MISSION_STATUS_TYPE, {
+            name: 'Mission Status',
+            description: 'Mission status',
             cssClass: 'icon-telemetry'
         });
 

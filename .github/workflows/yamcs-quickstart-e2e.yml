@@ -21,7 +21,7 @@ jobs:
       matrix:
         yamcs-version:
           - default
-          - 5.8.7 #viper
+          - 5.9.8 #viper
           ## disabling until we get confirmation- 5.3.2 #ab
         openmct-version:
           - latest
@@ -34,19 +34,24 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: yamcs/quickstart
-          ref: master
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
         if: matrix.yamcs-version != 'default'
         run: |
-          cd quickstart
           mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
+        working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          cd quickstart/docker
           touch makeout.txt
-          make all &> makeout.txt &
+          make all-10hz &> makeout.txt &
+        working-directory: quickstart/docker
       - run: npm install
+      - name: Get Open MCT e2e tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm run test:getopensource
       - name: Run build:example based on openmct-version
         run: |
           if [ "${{ matrix.openmct-version }}" = "latest" ]; then
@@ -54,13 +59,7 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npx playwright@1.39.0 install chromium
-      - name: Get Open MCT e2e tests
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: npm run test:getopensource
+      - run: npx playwright@1.45.2 install chromium
       - name: Check that yamcs is available
         run: |
           docker ps -a
