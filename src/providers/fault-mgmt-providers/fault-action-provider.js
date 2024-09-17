@@ -13,23 +13,22 @@ export default class FaultActionProvider {
             state: 'acknowledged'
         };
         const options = this._getOptions(payload);
-        const url = this._getUrl(fault);
+        const url = this._getUrl(fault, 'acknowledge');
 
         return this._sendRequest(url, options);
     }
 
     shelveFault(fault, { shelved = true, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
         let payload = {};
+        let action = shelved ? 'shelve' : 'unshelve';
+
         if (shelved) {
             payload.comment = comment;
             payload.shelveDuration = shelveDuration;
-            payload.state = 'shelved';
-        } else {
-            payload.state = 'unshelved';
         }
 
         const options = this._getOptions(payload);
-        let url = this._getUrl(fault);
+        let url = this._getUrl(fault, action);
 
         return this._sendRequest(url, options);
     }
@@ -41,15 +40,16 @@ export default class FaultActionProvider {
             headers: {
                 'Content-Type': 'application/json'
             },
-            method: 'PATCH',
+            method: 'POST',
             mode: 'cors'
         };
     }
 
-    _getUrl(fault) {
+    _getUrl(fault, action) {
         let url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MANAGEMENT_ALARMS}`;
         url += `${fault.namespace}/${fault.name}`;
         url += `/${fault.seqNum}`;
+        url += `:${action}`;
 
         return url;
     }
