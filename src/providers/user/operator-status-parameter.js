@@ -22,21 +22,19 @@
 
 const OPERATOR_STATUS_TYPE = 'yamcs.operatorStatus';
 
-export default class OperatorStatusParameter {
-    isOperatorStatusParameter(parameter) {
-        const aliases = parameter.alias;
+export function isOperatorStatusParameter(parameter) {
+    const aliases = parameter.alias;
 
-        return aliases !== undefined
-            && aliases.some(alias => alias.name === OPERATOR_STATUS_TYPE);
-    }
+    return aliases !== undefined
+        && aliases.some(alias => alias.name === OPERATOR_STATUS_TYPE);
+}
 
-    getRoleFromParameter(parameter) {
-        const aliases = parameter.alias;
+export function getRoleFromParameter(parameter) {
+    const aliases = parameter.alias;
 
-        return aliases.find(alias => alias.namespace === 'OpenMCT:role')?.name;
-    }
+    return aliases.find(alias => alias.namespace === 'OpenMCT:role')?.name;
+}
 
-    getPossibleStatusesFromParameter(parameter) {
-        return parameter.type.enumValue;
-    }
+export function getPossibleStatusesFromParameter(parameter) {
+    return parameter.type.enumValue;
 }

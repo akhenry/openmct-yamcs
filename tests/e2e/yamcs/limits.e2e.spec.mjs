@@ -24,10 +24,21 @@
 MDB Limits Specific Tests
 */
 
-import { test, expect } from '../opensource/pluginFixtures.js';
-import { createDomainObjectWithDefaults, waitForPlotsToRender } from '../opensource/appActions.js';
+import { pluginFixtures, appActions } from 'openmct-e2e';
+const { test, expect } = pluginFixtures;
+const { createDomainObjectWithDefaults, waitForPlotsToRender } = appActions;
+const YAMCS_URL = 'http://localhost:8090/';
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
+
+    test.beforeEach(async ({ page }) => {
+        await clearLimitsForParameter(page);
+    });
+
+    test.afterEach(async ({ page }) => {
+        await clearLimitsForParameter(page);
+    });
+
     test('Can show mdb limits when changed', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
@@ -70,22 +81,15 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
         await page.getByRole('tab', { name: 'Config' }).click();
-        await page
-            .getByRole('list', { name: 'Plot Series Properties' })
-            .locator('span')
-            .first()
-            .click();
-        await page
-            .getByRole('list', { name: 'Plot Series Properties' })
-            .locator('[title="Display limit lines"]~div input')
-            .check();
+        await page.getByLabel('Expand Detector_Temp Plot').click();
+        await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
         await page.getByRole('button', { name: 'Save' }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
-        // Change the limits for the Detector_Temp parameter using the yamcs API)
-        const runTimeLimitChangeResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+        // Change the limits for the Detector_Temp parameter using the yamcs API
+        const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
             data: {
                 action: 'SET_DEFAULT_ALARMS',
                 defaultAlarm: {
@@ -107,12 +111,12 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await assertLimitLinesExistAndAreVisible(page);
     });
 
-    test('Can show changed mdb limits when you navigate away from the view and back', async ({ page }) => {
+    test('Can show changed mdb limits when you navigate away from the view and back and no new requests are made on resize', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
 
         // Reset the limits for the Detector_Temp parameter using the yamcs API
-        const runTimeLimitResetResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+        const runTimeLimitResetResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
             data: {}
         });
         await expect(runTimeLimitResetResponse).toBeOK();
@@ -123,27 +127,19 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         });
 
         //Expand the myproject folder (/myproject)
-        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
-        await firstMyProjectTriangle.click();
-
+        await page.getByLabel('Expand myproject folder').click();
         //Expand the myproject under the previous folder (/myproject/myproject)
-        const viperRoverTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
-        const viperRoverProjectTriangle = viperRoverTreeItem.nth(1).locator('span.c-disclosure-triangle');
-        await viperRoverProjectTriangle.click();
+        await page.getByLabel('Expand myproject folder').click();
 
         //Find the Detector_Temp parameter (/myproject/myproject/Detector_Temp)
         const detectorTreeItem = page.getByRole('treeitem', { name: /Detector_Temp/ });
-
-        // Enter edit mode for the overlay plot
         await page.getByLabel('Edit Object').click();
 
         //Drag and drop the Detector_Temp telemetry endpoint into this overlay plot
-        const objectPane = page.locator('.c-object-view');
-        await detectorTreeItem.dragTo(objectPane);
+        await detectorTreeItem.dragTo(page.locator('.c-object-view'));
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByLabel('Save').click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
@@ -155,15 +151,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
         // Expand the "Detector_Temp" plot series options and enable limit lines
         await page.getByRole('tab', { name: 'Config' }).click();
-        await page
-            .getByRole('list', { name: 'Plot Series Properties' })
-            .locator('span')
-            .first()
-            .click();
-        await page
-            .getByRole('list', { name: 'Plot Series Properties' })
-            .locator('[title="Display limit lines"]~div input')
-            .check();
+        await page.getByLabel('Expand Detector_Temp Plot').click();
+        await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
         await page.getByRole('button', { name: 'Save' }).click();
@@ -173,7 +162,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.goto("./", { waitUntil: "networkidle" });
 
         // Change the limits for the Detector_Temp parameter using the yamcs API
-        const runTimeLimitChangeResponse = await page.request.patch('http://localhost:8090/api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp', {
+        const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
             data: {
                 action: 'SET_DEFAULT_ALARMS',
                 defaultAlarm: {
@@ -196,6 +185,41 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
         // Ensure that the changed limits are now displayed without a reload
         await assertLimitLinesExistAndAreVisible(page);
+        await page.locator('.plot-legend-item').hover();
+        await expect(page.locator('.c-plot-limit')).toHaveCount(2);
+        await assertExpectedLimitsValues(page.locator('.c-plot-limit'), {
+            minInclusive: -0.8,
+            maxInclusive: 0.5
+        });
+
+        // Setting up checks for the absence of specific network responses after networkidle.
+        const responsesChecks = [
+            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb/myproject/space-systems'),
+            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb/myproject/parameters?details=yes&limit=1000'),
+            checkForNoResponseAfterNetworkIdle(page, '**/api/user/'),
+            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb-overrides/myproject/realtime')
+        ];
+
+        // Resize the chart container by showing the snapshot pane.
+        await page.getByLabel('Show Snapshots').click();
+        // Wait for all checks to complete
+        const responsesNotFound = await Promise.all(responsesChecks);
+        // Ensure no network responses were found
+        const noResponsesFound = responsesNotFound.every(notFound => notFound);
+        expect(noResponsesFound).toBe(true);
+
+        test.info().annotations.push({
+            type: 'issue',
+            description: 'https://github.com/akhenry/openmct-yamcs/issues/447'
+        });
+        // Ensure that the limits still show and have not changed
+        await assertLimitLinesExistAndAreVisible(page);
+        await page.locator('.plot-legend-item').hover();
+        await expect(page.locator('.c-plot-limit')).toHaveCount(2);
+        await assertExpectedLimitsValues(page.locator('.c-plot-limit'), {
+            minInclusive: -0.8,
+            maxInclusive: 0.5
+        });
     });
 });
 
@@ -208,10 +232,44 @@ async function assertLimitLinesExistAndAreVisible(page) {
     await waitForPlotsToRender(page);
     // Wait for limit lines to be created
     await page.waitForSelector('.c-plot-limit-line', { state: 'attached' });
-    const limitLineCount = await page.locator('.c-plot-limit-line').count();
     // There should be 2 limit lines created by default
-    expect(await page.locator('.c-plot-limit-line').count()).toBe(2);
+    await expect(page.locator('.c-plot-limit-line')).toHaveCount(2);
+    const limitLineCount = await page.locator('.c-plot-limit-line').count();
     for (let i = 0; i < limitLineCount; i++) {
         await expect(page.locator('.c-plot-limit-line').nth(i)).toBeVisible();
     }
+}
+
+/**
+ * Asserts that the limit line has the expected min and max values
+ * @param {import('@playwright/test').Locator} limitLine
+ * @param {{ minInclusive: number, maxInclusive: number }} expectedResults
+ */
+async function assertExpectedLimitsValues(limitLine, { minInclusive, maxInclusive }) {
+    await expect(limitLine.first()).toContainText(`${maxInclusive}`);
+    await expect(limitLine.nth(1)).toContainText(`${minInclusive}`);
+}
+
+// Function to check for the absence of a network response after networkidle
+async function checkForNoResponseAfterNetworkIdle(page, urlPattern) {
+    let responseReceived = false;
+    // Listen for the network response before navigating to ensure we catch early requests
+    page.on('response', response => {
+        if (response.url().match(urlPattern)) {
+            responseReceived = true;
+        }
+    });
+    // Wait for the network to be idle
+    await page.waitForLoadState('networkidle');
+
+    // Return the inverse of responseReceived to indicate absence of response
+    return !responseReceived;
+}
+
+async function clearLimitsForParameter(page) {
+    // clear the limits for the Detector_Temp parameter using the yamcs API
+    const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
+        data: {}
+    });
+    await expect(runTimeLimitChangeResponse).toBeOK();
 }

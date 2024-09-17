@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2023, United States Government
+ * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,35 +20,37 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, STALENESS_STATUS_MAP } from '../const.js';
-import { buildStalenessResponseObject } from '../utils.js';
+import base64ToHex from './base64ToHex.js';
+import hexToBase64 from './hexToBase64.js';
 
-export default class YamcsStalenessProvider {
-    constructor(realtimeTelemetryProvider, latestTelemetryProvider) {
-        this.realtimeTelemetryProvider = realtimeTelemetryProvider;
-        this.latestTelemetryProvider = latestTelemetryProvider;
+export default class BinaryToHexFormatter {
+    constructor() {
+        this.key = 'binary';
     }
 
-    supportsStaleness(domainObject) {
-        return domainObject.type === OBJECT_TYPES.TELEMETRY_OBJECT_TYPE;
-    }
-
-    subscribeToStaleness(domainObject, callback) {
-        return this.realtimeTelemetryProvider.subscribeToStaleness(domainObject, callback);
-    }
-
-    async isStale(domainObject) {
-        const response = await this.latestTelemetryProvider.requestLatest(domainObject);
-
-        if (!response?.acquisitionStatus) {
-            return;
+    format(value) {
+        if (value === undefined) {
+            return value;
         }
 
-        const stalenessObject = buildStalenessResponseObject(
-            STALENESS_STATUS_MAP[response.acquisitionStatus],
-            response.timestamp
-        );
+        return base64ToHex(value);
+    }
 
-        return stalenessObject;
+    parse(text) {
+        if (text === undefined) {
+            return text;
+        }
+
+        return hexToBase64(text);
+    }
+
+    validate(text) {
+        try {
+            atob(text);
+        } catch (e) {
+            return false;
+        }
+
+        return true;
     }
 }

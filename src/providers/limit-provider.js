@@ -97,11 +97,8 @@ export default class LimitProvider {
     }
 
     getLimits(domainObject) {
-        const limits = domainObject.configuration.limits;
-
         return {
-            // eslint-disable-next-line require-await
-            limits: async () => limits
+            limits: () => Promise.resolve(domainObject.configuration.limits)
         };
     }
 
