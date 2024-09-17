@@ -45,6 +45,10 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Setting up promises to wait for specific network responses.
         allNetworkRequests = [];
+        // Listening for all network requests and pushing them into networkRequests array.
+        page.on('request', request => networkRequests.push(request));
+
+        // Setting up promises to wait for specific network responses.
         mdbGet = page.waitForResponse('**/api/mdb/myproject/space-systems');
         allParams = page.waitForResponse('**/api/mdb/myproject/parameters?details=yes&limit=1000');
         userGet = page.waitForResponse('**/api/user/');
@@ -65,6 +69,7 @@ test.describe("Quickstart network requests @yamcs", () => {
         // More UI interactions and network request verifications.
         await page.waitForLoadState('networkidle');
         allNetworkRequests = [];
+      
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
         await page.getByRole('treeitem', { name: 'Expand CCSDS_Packet_Sequence' }).click();
         await batchGetStaleness;
@@ -74,6 +79,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Further UI interactions and network requests verification.
         allNetworkRequests = [];
+
         parameterArchiveGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Length/samples**');
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
         await page.getByRole('treeitem', { name: 'CCSDS_Packet_Length' }).click();
@@ -85,6 +91,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Simulating the change to fixed time mode and validating network requests.
         allNetworkRequests = [];
+
         parameterArchiveGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Length/samples**');
         await setFixedTimeMode(page);
         await page.waitForLoadState('networkidle');
@@ -93,6 +100,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Clicking on a different telemetry item to generate new requests.
         allNetworkRequests = [];
+
         let groupFlagsGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Sequence.GroupFlags**');
         let countGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Sequence.Count**');
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
@@ -106,6 +114,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Clicking on the telemetry item in Fixed Time mode to generate two requests.
         allNetworkRequests = [];
+
         parameterArchiveGet = page.waitForResponse('**/api/archive/myproject/parameters/myproject/CCSDS_Packet_Length/samples**');
         batchGetStaleness = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
         await page.getByRole('treeitem', { name: 'CCSDS_Packet_Length' }).click();
@@ -118,6 +127,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Simulating a page refresh to generate a sequence of network requests.
         allNetworkRequests = [];
+
         userGet = page.waitForResponse('**/api/user/');
         allParams = page.waitForResponse('**/api/mdb/myproject/parameters?details=yes&limit=1000');
         mdbOverride = page.waitForResponse('**/api/mdb-overrides/myproject/realtime');
@@ -134,6 +144,7 @@ test.describe("Quickstart network requests @yamcs", () => {
 
         // Removing the 'request' event listener to prevent potential memory leaks.
         page.removeListener('request', request => allNetworkRequests.push(request));
+
     });
 
     /**
