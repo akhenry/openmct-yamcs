@@ -1,3 +1,4 @@
+/* eslint-disable func-style */
 /*****************************************************************************
  * Open MCT, Copyright (c) 2014-2021, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
@@ -19,15 +20,22 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-
 import { getValue } from '../../utils.js';
 
-function faultModelConvertor(faultData, type) {
+/**
+ * Converts fault data to a FaultModel.
+ * 
+ * @param {Object} faultData
+ * @param {string} [type]
+ * @returns {FaultModel}
+ */
+const convertDataToFaultModel = (faultData, type) => {
+    const parameterDetail = faultData?.parameterDetail;
+    const currentValueDetail = parameterDetail?.currentValue;
+    const triggerValueDetail = parameterDetail?.triggerValue;
 
-    const currentValue = faultData?.parameterDetail?.currentValue
-        && getValue(faultData.parameterDetail.currentValue);
-    const triggerValue = faultData?.parameterDetail?.triggerValue
-        && getValue(faultData.parameterDetail.triggerValue);
+    const currentValue = currentValueDetail ? getValue(currentValueDetail) : undefined;
+    const triggerValue = triggerValueDetail ? getValue(triggerValueDetail) : undefined;
 
     return {
         type: type || faultData?.type,
@@ -35,8 +43,8 @@ function faultModelConvertor(faultData, type) {
             acknowledged: Boolean(faultData?.acknowledged),
             currentValueInfo: {
                 value: currentValue,
-                rangeCondition: faultData?.parameterDetail?.currentValue?.rangeCondition,
-                monitoringResult: faultData?.parameterDetail?.currentValue?.monitoringResult
+                rangeCondition: currentValueDetail?.rangeCondition,
+                monitoringResult: currentValueDetail?.monitoringResult
             },
             id: `id-${faultData?.id?.namespace}-${faultData?.id?.name}`,
             name: faultData?.id?.name,
@@ -44,17 +52,38 @@ function faultModelConvertor(faultData, type) {
             seqNum: faultData?.seqNum,
             severity: faultData?.severity,
             shelved: Boolean(faultData?.shelveInfo),
-            shortDescription: faultData?.parameterDetail?.parameter?.shortDescription,
+            shortDescription: parameterDetail?.parameter?.shortDescription,
             triggerTime: faultData?.triggerTime,
             triggerValueInfo: {
                 value: triggerValue,
-                rangeCondition: faultData?.parameterDetail?.triggerValue?.rangeCondition,
-                monitoringResult: faultData?.parameterDetail?.triggerValue?.monitoringResult
+                rangeCondition: triggerValueDetail?.rangeCondition,
+                monitoringResult: triggerValueDetail?.monitoringResult
             }
         }
     };
-}
-
-export {
-    faultModelConvertor
 };
+
+export { convertDataToFaultModel };
+
+/**
+ * @typedef {Object} FaultModel
+ * @property {string} type
+ * @property {Object} fault
+ * @property {boolean} fault.acknowledged
+ * @property {Object} fault.currentValueInfo
+ * @property {*} fault.currentValueInfo.value
+ * @property {string} fault.currentValueInfo.rangeCondition
+ * @property {string} fault.currentValueInfo.monitoringResult
+ * @property {string} fault.id
+ * @property {string} fault.name
+ * @property {string} fault.namespace
+ * @property {number} fault.seqNum
+ * @property {string} fault.severity
+ * @property {boolean} fault.shelved
+ * @property {string} fault.shortDescription
+ * @property {number} fault.triggerTime
+ * @property {Object} fault.triggerValueInfo
+ * @property {*} fault.triggerValueInfo.value
+ * @property {string} fault.triggerValueInfo.rangeCondition
+ * @property {string} fault.triggerValueInfo.monitoringResult
+ */

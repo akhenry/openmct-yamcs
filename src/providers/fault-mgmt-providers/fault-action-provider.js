@@ -1,4 +1,4 @@
-import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } from './fault-mgmt-constants.js';
+import { FAULT_MGMT_ALARMS, DEFAULT_SHELVE_DURATION, FAULT_MGMT_ACTIONS } from './fault-mgmt-constants.js';
 
 export default class FaultActionProvider {
     constructor(url, instance, processor = 'realtime') {
@@ -12,31 +12,30 @@ export default class FaultActionProvider {
             comment,
             state: 'acknowledged'
         };
-        const options = this._getOptions(payload);
-        const url = this._getUrl(fault, 'acknowledge');
+        const options = this.#getOptions(payload);
+        const url = this.#getUrl(fault, FAULT_MGMT_ACTIONS.ACKNOWLEDGE);
 
-        return this._sendRequest(url, options);
+        return this.#sendRequest(url, options);
     }
 
-    shelveFault(fault, { shelved = true, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
-        let payload = {};
-        let action = shelved ? 'shelve' : 'unshelve';
+    shelveFault(fault, { shelved = true, comment = '', shelveDuration = DEFAULT_SHELVE_DURATION } = {}) {
+        const payload = {};
+        const action = shelved ? FAULT_MGMT_ACTIONS.SHELVE : FAULT_MGMT_ACTIONS.UNSHELVE;
 
         if (shelved) {
             payload.comment = comment;
             payload.shelveDuration = shelveDuration;
         }
 
-        const options = this._getOptions(payload);
-        let url = this._getUrl(fault, action);
+        const options = this.#getOptions(payload);
+        const url = this.#getUrl(fault, action);
 
-        return this._sendRequest(url, options);
+        return this.#sendRequest(url, options);
     }
 
-    _getOptions(payload) {
+    #getOptions(payload) {
         return {
             body: JSON.stringify(payload),
-            // credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -45,16 +44,19 @@ export default class FaultActionProvider {
         };
     }
 
-    _getUrl(fault, action) {
-        let url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MANAGEMENT_ALARMS}`;
-        url += `${fault.namespace}/${fault.name}`;
-        url += `/${fault.seqNum}`;
-        url += `:${action}`;
-
-        return url;
+    /**
+     * @param {FaultModel} fault the fault to perform the action on
+     * @param {'acknowledge' | 'shelve' | 'unshelve' | 'clear'} action the action to perform on the fault
+     * @returns {string} the URL to perform the action on the fault
+     */
+    #getUrl(fault, action) {
+        return `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MGMT_ALARMS}`
+               + `${fault.namespace}/${fault.name}/${fault.seqNum}:${action}`;
     }
 
-    _sendRequest(url, options) {
+    #sendRequest(url, options) {
         return fetch(url, options);
     }
 }
+
+/** @typedef {import('./utils.js').FaultModel} FaultModel */

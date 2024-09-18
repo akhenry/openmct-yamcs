@@ -1,11 +1,12 @@
-import { FAULT_MANAGEMENT_TYPE } from './fault-mgmt-constants.js';
+import { FAULT_MGMT_TYPE } from './fault-mgmt-constants.js';
 import { DATA_TYPES, NAMESPACE, OBJECT_TYPES } from '../../const.js';
+import { convertDataToFaultModel } from './utils.js';
 
 export default class RealtimeFaultProvider {
     #openmct;
-    constructor(openmct, faultModelConverter, instance) {
+    constructor(openmct, instance) {
         this.#openmct = openmct;
-        this.faultModelConverter = faultModelConverter;
+        this.convertDataToFaultModel = convertDataToFaultModel;
         this.instance = instance;
 
         this.lastSubscriptionId = 1;
@@ -30,7 +31,7 @@ export default class RealtimeFaultProvider {
     }
 
     supportsSubscribe(domainObject) {
-        return domainObject.type === FAULT_MANAGEMENT_TYPE;
+        return domainObject.type === FAULT_MGMT_TYPE;
     }
 
     subscribe(domainObject, callback) {
@@ -53,8 +54,6 @@ export default class RealtimeFaultProvider {
     }
 
     handleResponse(type, response, callback) {
-        const faultData = this.faultModelConverter(response, type);
-
-        callback(faultData);
+        callback(convertDataToFaultModel(response, type));
     }
 }

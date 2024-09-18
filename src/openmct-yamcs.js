@@ -28,7 +28,7 @@ import LimitProvider from './providers/limit-provider.js';
 import EventLimitProvider from './providers/event-limit-provider.js';
 import UserProvider from './providers/user/user-provider.js';
 
-import { faultModelConvertor } from './providers/fault-mgmt-providers/utils.js';
+import { convertDataToFaultModel } from './providers/fault-mgmt-providers/utils.js';
 import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider.js';
 
 import { OBJECT_TYPES } from './const.js';
@@ -76,7 +76,7 @@ export default function install(
 
         openmct.faults.addProvider(new YamcsFaultProvider(openmct,
             {
-                faultModelConvertor,
+                convertDataToFaultModel,
                 historicalEndpoint: configuration.yamcsHistoricalEndpoint,
                 yamcsInstance: configuration.yamcsInstance
             }));

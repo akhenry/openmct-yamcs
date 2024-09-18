@@ -3,9 +3,8 @@ import RealtimeFaultProvider from './realtime-fault-provider.js';
 import FaultActionProvider from './fault-action-provider.js';
 
 export default class YamcsFaultProvider {
-    constructor(openmct, { faultModelConvertor, historicalEndpoint, yamcsInstance, yamcsProcessor } = {}) {
+    constructor(openmct, { historicalEndpoint, yamcsInstance, yamcsProcessor } = {}) {
         this.historicalFaultProvider = new HistoricalFaultProvider(
-            faultModelConvertor,
             historicalEndpoint,
             yamcsInstance,
             yamcsProcessor
@@ -13,7 +12,6 @@ export default class YamcsFaultProvider {
 
         this.realtimeFaultProvider = new RealtimeFaultProvider(
             openmct,
-            faultModelConvertor,
             yamcsInstance
         );
 
