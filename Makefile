@@ -1,6 +1,6 @@
-.PHONY: all clone-quickstart setup-quickstart setup-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
+.PHONY: all clone-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
 
-all: clone-quickstart setup-quickstart setup-openmct-yamcs sanity-test build-example test-getopensource test-e2e
+all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e
 
 clone-quickstart:
 	@echo "Running target: clone-quickstart"
@@ -11,12 +11,22 @@ clone-quickstart:
 		echo "Directory 'quickstart' already exists."; \
 	fi
 
-setup-quickstart:
-	@echo "Running target: setup-quickstart"
-	cd quickstart/docker && make wait-for-sent
+install-quickstart:
+	@echo "Running target: install-quickstart"
+	@cd quickstart/docker && $(MAKE) wait-for-sent
 
-setup-openmct-yamcs:
-	@echo "Running target: setup-openmct-yamcs"
+start-quickstart:
+	@echo "Running target: start-quickstart"
+	@cd quickstart/docker && $(MAKE) all
+
+restart-quickstart:
+	@echo "Running target: reset-quickstart"
+	@cd quickstart/docker && $(MAKE) yamcs-down
+	@cd quickstart/docker && $(MAKE) simulator-down
+	@cd quickstart/docker && $(MAKE) all
+
+install-openmct-yamcs:
+	@echo "Running target: install-openmct-yamcs"
 	npm install
 
 sanity-test:
@@ -35,12 +45,9 @@ build-example:
 		npm run build:example:master || { echo "Failed to run build:example:master"; exit 1; }; \
 	fi
 
-test-getopensource:
-	@echo "Running target: test-getopensource"
-	npm run test:getopensource
-
 test-e2e:
 	@echo "Running target: test-e2e"
+	npm run test:getopensource
 	npm run test:e2e:quickstart:local
 
 clean:

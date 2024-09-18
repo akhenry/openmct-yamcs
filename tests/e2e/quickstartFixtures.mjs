@@ -26,7 +26,7 @@
  */
 
 // import { createDomainObjectWithDefaults } from './appActions.js';
-import { test, request, expect } from './opensource/pluginFixtures.js';
+const { test, request, expect } = await import('./opensource/pluginFixtures.js');
 
 /**
  * The name of the "My Items" folder in the domain object tree.

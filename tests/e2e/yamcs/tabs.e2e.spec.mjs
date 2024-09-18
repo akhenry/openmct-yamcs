@@ -23,7 +23,7 @@
  * Network Specific Tests for Open MCT and YAMCS connectivity with regard to tabs
  */
 
-import { test, expect, filterNonFetchRequests } from '../quickstartFixtures.js';
+import { test, expect, filterNonFetchRequests } from '../quickstartFixtures.mjs';
 import { createDomainObjectWithDefaults, setFixedTimeMode } from '../opensource/appActions.js';
 
 test.describe('Tabs View', () => {

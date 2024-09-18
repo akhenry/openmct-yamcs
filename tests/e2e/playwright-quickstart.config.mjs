@@ -15,7 +15,7 @@ const config = {
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
-        failOnConsoleError: false
+        failOnConsoleError: true
     },
     webServer: {
         cwd: '../',
@@ -28,7 +28,7 @@ const config = {
     projects: [
         {
             name: "chromium",
-            grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
+            grepInvert: /@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
                 headless: true,
@@ -40,7 +40,7 @@ const config = {
         // -- Local Browsers --
         {
             name: "local-chrome",
-            grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
+            grepInvert: /@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
                 channel: 'chrome'
