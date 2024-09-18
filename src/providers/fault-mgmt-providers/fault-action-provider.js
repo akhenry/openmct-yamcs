@@ -1,4 +1,4 @@
-import { FAULT_MGMT_ALARMS, DEFAULT_SHELVE_DURATION, FAULT_MGMT_ACTIONS } from './fault-mgmt-constants.js';
+import { FAULT_MGMT_ALARMS, FAULT_MGMT_ACTIONS } from './fault-mgmt-constants.js';
 
 export default class FaultActionProvider {
     constructor(url, instance, processor = 'realtime') {
@@ -18,7 +18,16 @@ export default class FaultActionProvider {
         return this.#sendRequest(url, options);
     }
 
-    shelveFault(fault, { shelved = true, comment = '', shelveDuration = DEFAULT_SHELVE_DURATION } = {}) {
+    /**
+     * Shelves or unshelves a fault.
+     * @param {FaultModel} fault the fault to perform the action on
+     * @param {Object} options the options to perform the action with
+     * @param {boolean} options.shelved whether to shelve or unshelve the fault
+     * @param {string} options.comment the comment to add to the fault
+     * @param {number} options.shelveDuration the duration to shelve the fault for
+     * @returns {Promise<Response>} the response from the server
+     */
+    shelveFault(fault, { shelved = true, comment = '', shelveDuration } = {}) {
         const payload = {};
         const action = shelved ? FAULT_MGMT_ACTIONS.SHELVE : FAULT_MGMT_ACTIONS.UNSHELVE;
 
@@ -31,6 +40,36 @@ export default class FaultActionProvider {
         const url = this.#getUrl(fault, action);
 
         return this.#sendRequest(url, options);
+    }
+
+    /**
+     * @typedef {Object} ShelveDuration
+     * @property {string} name - The name of the shelve duration
+     * @property {number|null} value - The value of the shelve duration in milliseconds, or null for indefinite
+     */
+
+    /**
+     * @returns {ShelveDuration[]} the list of shelve durations
+     */
+    getShelveDurations() {
+        return [
+            {
+                name: '5 Minutes',
+                value: 300000
+            },
+            {
+                name: '10 Minutes',
+                value: 600000
+            },
+            {
+                name: '15 Minutes',
+                value: 900000
+            },
+            {
+                name: 'Indefinite',
+                value: null
+            }
+        ];
     }
 
     #getOptions(payload) {

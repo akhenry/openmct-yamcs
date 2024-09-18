@@ -27,5 +27,6 @@ export default class YamcsFaultProvider {
         this.supportsSubscribe = this.realtimeFaultProvider.supportsSubscribe.bind(this.realtimeFaultProvider);
         this.acknowledgeFault = this.faultActionProvider.acknowledgeFault.bind(this.faultActionProvider);
         this.shelveFault = this.faultActionProvider.shelveFault.bind(this.faultActionProvider);
+        this.getShelveDurations = this.faultActionProvider.getShelveDurations.bind(this.faultActionProvider);
     }
 }
