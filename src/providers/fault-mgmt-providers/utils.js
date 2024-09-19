@@ -24,7 +24,7 @@ import { getValue } from '../../utils.js';
 
 /**
  * Converts fault data to a FaultModel.
- * 
+ *
  * @param {Object} faultData
  * @param {string} [type]
  * @returns {FaultModel}

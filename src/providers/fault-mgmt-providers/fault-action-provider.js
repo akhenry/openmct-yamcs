@@ -9,8 +9,7 @@ export default class FaultActionProvider {
 
     acknowledgeFault(fault, { comment = '' } = {}) {
         const payload = {
-            comment,
-            state: 'acknowledged'
+            comment
         };
         const options = this.#getOptions(payload);
         const url = this.#getUrl(fault, FAULT_MGMT_ACTIONS.ACKNOWLEDGE);

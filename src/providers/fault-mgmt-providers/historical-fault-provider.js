@@ -8,10 +8,17 @@ export default class HistoricalFaultProvider {
         this.processor = processor;
     }
 
+    /**
+     * @param {import('openmct').DomainObject} domainObject
+     * @returns {boolean}
+     */
     supportsRequest(domainObject) {
         return domainObject.type === FAULT_MGMT_TYPE;
     }
 
+    /**
+     * @returns {Promise<FaultModel[]>}
+     */
     async request() {
         const url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MGMT_ALARMS}`;
 
@@ -21,3 +28,7 @@ export default class HistoricalFaultProvider {
         return faultsData.alarms?.map(convertDataToFaultModel);
     }
 }
+
+/**
+ * @typedef {import('./utils.js').FaultModel} FaultModel
+ */
