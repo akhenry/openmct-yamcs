@@ -251,7 +251,7 @@ test.describe('Realtime telemetry displays', () => {
             }
         });
 
-        test.only('Open MCT does not drop telemetry when a burst of telemetry arrives', async ({ page }) => {
+        test.only('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds the length of the buffer', async ({ page }) => {
             const PARAMETER_VALUES_COUNT = 60;
             /**
              * A failure mode of the previous implementation of batching was when bursts of telemetry from a parameter arrived all at once.
@@ -261,7 +261,15 @@ test.describe('Realtime telemetry displays', () => {
             // Disable real playback. We are going to inject our own batch of messages
             await disableLink(yamcsURL);
 
-            const callNumber = await page.evaluate(async () => {
+            /**
+             * Yamcs tracks subscriptions by "call number". The call number is assigned by Yamcs,
+             * so we don't know it ahead of time. We have to retrieve it at runtime after the subscription
+             * has been established.
+             *
+             * We need to know the call number, because it's how the receiver (Open MCT) ties a parameter
+             * value that is received over a WebSocket back to the correct subscription.
+             */
+            const batteryTempParameterCallNumber = await page.evaluate(async () => {
                 const openmct = window.openmct;
                 const objectIdentifier = {
                     namespace: 'taxonomy',
@@ -274,13 +282,15 @@ test.describe('Realtime telemetry displays', () => {
 
             });
 
-            // Need to get call number of `Battery1_Temp` so we can use it in injected telemetry data
             websocketWorker.evaluate(({call, COUNT}) => {
                 const messageEvents = [];
-
+                /**
+                 * Inject a burst of 60 messages.
+                 */
                 for (let messageCount = 0; messageCount < COUNT; messageCount++) {
                     const message = {
                         "type": "parameters",
+                        //This is where we use the call number retrieved previously
                         "call": call,
                         "seq": messageCount,
                         "data": {
@@ -303,17 +313,27 @@ test.describe('Realtime telemetry displays', () => {
                             ]
                         }
                     };
+                    /**
+                    * We are building an array of Event objects of type 'message'. Dispatching an event of this
+                    * type on a WebSocket will cause all listeners subscribed to 'message' events to receive it.
+                    * The receiving code will not know the difference between an Event that is dispatched from
+                    * code vs. one that caused by the arrival of data over the wire.
+                    * @see https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/message_event
+                    */
                     const event = new Event('message');
                     event.data = JSON.stringify(message);
                     messageEvents.push(event);
                 }
 
+                /**
+                 * Dispatch the 60 WebSocket message events we just created
+                 */
                 messageEvents.forEach(event => {
                     self.currentWebSocket.dispatchEvent(event);
                 });
 
             }, {
-                call: callNumber,
+                call: batteryTempParameterCallNumber,
                 COUNT: PARAMETER_VALUES_COUNT
             });
 
