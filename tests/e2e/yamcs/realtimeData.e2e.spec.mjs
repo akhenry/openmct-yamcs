@@ -251,7 +251,7 @@ test.describe('Realtime telemetry displays', () => {
             }
         });
 
-        test.only('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds the length of the buffer', async ({ page }) => {
+        test('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds the length of the buffer', async ({ page }) => {
             const PARAMETER_VALUES_COUNT = 60;
             /**
              * A failure mode of the previous implementation of batching was when bursts of telemetry from a parameter arrived all at once.
