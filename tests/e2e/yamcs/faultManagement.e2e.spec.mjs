@@ -31,6 +31,8 @@ const YAMCS_API_URL = "http://localhost:8090/api/";
 
 test.describe("Fault Management @yamcs", () => {
     test.beforeAll("activate alarms on a telemetry point", async () => {
+        // Set the default alarms for the parameter in such a way
+        // that it is guaranteed to produce a fault on load.
         const response = await setDefaultAlarms('Latitude', [
             {
                 level: 'WATCH',
@@ -62,34 +64,46 @@ test.describe("Fault Management @yamcs", () => {
     });
 
     test.beforeEach(async ({ page }) => {
-        await page.route('**/api/**/alarms', async route => {
-            const response = await route.fetch();
-            let body = await response.json();
 
-            // Modify the rawValue.floatValue to trigger a specific alarm
-            body.alarms.forEach(alarm => {
-                if (alarm.id.name === "Latitude") {
-                    alarm.parameterDetail.currentValue.rawValue.floatValue = 815; // Example value to trigger CRITICAL alarm
-                    alarm.parameterDetail.currentValue.engValue.floatValue = 815; // Example value to trigger CRITICAL alarm
-                }
-            });
+        const networkPromise = page.waitForResponse('**/api/mdb/myproject/parameters**');
 
-            await route.fulfill({
-                response,
-                body: JSON.stringify(body),
-                headers: {
-                    ...response.headers(),
-                    'content-type': 'application/json'
-                }
-            });
-        });
         await page.goto('./', { waitUntil: 'domcontentloaded' });
-        await page.waitForResponse('**/api/mdb/myproject/parameters**');
+        await networkPromise;
     });
 
-    test('Show faults ', async ({ page }) => {
-        await page.getByLabel('Navigate to Fault Management').click();
+    test('Shows faults of differing severities ', async ({ page }) => {
+        await test.step('Shows fault with severity WATCH', async () => {
+            await page.route('**/api/**/alarms', async route => {
+                await modifyAlarmSeverity(route, "Latitude", 'WATCH');
+            });
 
+            await page.goto('./', { waitUntil: 'domcontentloaded' });
+
+            await page.getByLabel('Navigate to Fault Management').click();
+            await expect(page.getByLabel('Fault Latitude with severity WATCH in /myproject')).toBeVisible();
+        });
+
+        await test.step('Shows fault with severity WARNING', async () => {
+            await page.route('**/api/**/alarms', async route => {
+                await modifyAlarmSeverity(route, "Latitude", 'WARNING');
+            });
+
+            await page.goto('./', { waitUntil: 'domcontentloaded' });
+
+            await page.getByLabel('Navigate to Fault Management').click();
+            await expect(page.getByLabel('Fault Latitude with severity WARNING in /myproject')).toBeVisible();
+        });
+
+        await test.step('Shows fault with severity CRITICAL', async () => {
+            await page.route('**/api/**/alarms', async route => {
+                await modifyAlarmSeverity(route, "Latitude", 'CRITICAL');
+            });
+
+            await page.goto('./', { waitUntil: 'domcontentloaded' });
+
+            await page.getByLabel('Navigate to Fault Management').click();
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+        });
     });
 
     test.afterAll("remove alarms from a telemetry point", async () => {
@@ -165,4 +179,25 @@ async function clearAlarms(parameter, instance = 'myproject', processor = 'realt
 // eslint-disable-next-line require-await
 async function getAlarms(instance = 'myproject') {
     return fetch(`${YAMCS_API_URL}archive/${instance}/alarms`);
+}
+
+async function modifyAlarmSeverity(route, alarmName, newSeverity) {
+    const response = await route.fetch();
+    let body = await response.json();
+
+    // Modify the rawValue.floatValue to trigger a specific alarm
+    body.alarms.forEach(alarm => {
+        if (alarm.id.name === alarmName) {
+            alarm.severity = newSeverity;
+        }
+    });
+
+    await route.fulfill({
+        response,
+        body: JSON.stringify(body),
+        headers: {
+            ...response.headers(),
+            'content-type': 'application/json'
+        }
+    });
 }
