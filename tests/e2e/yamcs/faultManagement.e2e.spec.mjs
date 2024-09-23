@@ -25,19 +25,144 @@ Staleness Specific Tests
 */
 
 import { pluginFixtures } from 'openmct-e2e';
-const { test } = pluginFixtures;
+const { test, expect } = pluginFixtures;
 
-test.describe.fixme("Fault management tests @yamcs", () => {
-    // eslint-disable-next-line require-await
+const YAMCS_API_URL = "http://localhost:8090/api/";
+
+test.describe("Fault Management @yamcs", () => {
+    test.beforeAll("activate alarms on a telemetry point", async () => {
+        const response = await setDefaultAlarms('Latitude', [
+            {
+                level: 'WATCH',
+                minInclusive: 808,
+                maxInclusive: 810
+            },
+            {
+                level: 'WARNING',
+                minInclusive: 810.01,
+                maxInclusive: 812
+            },
+            {
+                level: 'DISTRESS',
+                minInclusive: 812.01,
+                maxInclusive: 814
+            },
+            {
+                level: 'CRITICAL',
+                minInclusive: 814.01,
+                maxInclusive: 820
+            },
+            {
+                level: 'SEVERE',
+                minInclusive: 820.01,
+                maxInclusive: 824
+            }
+        ]);
+        expect(response.status).toBe(200);
+    });
+
+    test.beforeEach(async ({ page }) => {
+        await page.route('**/api/**/alarms', async route => {
+            const response = await route.fetch();
+            let body = await response.json();
+
+            // Modify the rawValue.floatValue to trigger a specific alarm
+            body.alarms.forEach(alarm => {
+                if (alarm.id.name === "Latitude") {
+                    alarm.parameterDetail.currentValue.rawValue.floatValue = 815; // Example value to trigger CRITICAL alarm
+                    alarm.parameterDetail.currentValue.engValue.floatValue = 815; // Example value to trigger CRITICAL alarm
+                }
+            });
+
+            await route.fulfill({
+                response,
+                body: JSON.stringify(body),
+                headers: {
+                    ...response.headers(),
+                    'content-type': 'application/json'
+                }
+            });
+        });
+        await page.goto('./', { waitUntil: 'domcontentloaded' });
+        await page.waitForResponse('**/api/mdb/myproject/parameters**');
+    });
+
     test('Show faults ', async ({ page }) => {
-        test.step('for historic alarm violations', () => {
-            // Navigate to fault management in the tree
-            // Expect that there is indication of a fault
-        });
+        await page.getByLabel('Navigate to Fault Management').click();
 
-        test.step('show historic and live faults when new alarms are triggered in real time', () => {
-            // Wait for new data
-            // Expect that live faults are displayed
-        });
+    });
+
+    test.afterAll("remove alarms from a telemetry point", async () => {
+        const responses = await clearAlarms('Latitude');
+        for (const res of responses) {
+            expect.soft(res.status).toBe(200);
+        }
     });
 });
+
+/**
+ * @typedef {Object} AlarmRange
+ * @property {'WATCH' | 'WARNING' | 'DISTRESS' | 'CRITICAL' | 'SEVERE'} level - The alarm level.
+ * @property {number} minInclusive - The minimum inclusive value for the alarm.
+ * @property {number} maxInclusive - The maximum inclusive value for the alarm.
+ */
+
+/**
+ * Set default alarms for a parameter.
+ * @param {string} parameter - The parameter to set alarms for.
+ * @param {AlarmRange[]} staticAlarmRange - The static alarm range configuration.
+ * @param {string} [instance='myproject'] - The instance name.
+ * @param {string} [processor='realtime'] - The processor name.
+ */
+// eslint-disable-next-line require-await
+async function setDefaultAlarms(parameter, staticAlarmRange = [], instance = 'myproject', processor = 'realtime') {
+    return fetch(`${YAMCS_API_URL}mdb-overrides/${instance}/${processor}/parameters/${instance}/${parameter}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            action: 'SET_DEFAULT_ALARMS',
+            defaultAlarm: {
+                staticAlarmRange
+            }
+        })
+    });
+}
+
+/**
+ * Clear alarms for a parameter.
+ * @param {string} parameter - The parameter to clear alarms for.
+ * @param {string} [instance='myproject'] - The instance name.
+ * @param {string} [processor='realtime'] - The processor name.
+ * @returns {Promise<Response>} - The response from the server.
+ */
+// eslint-disable-next-line require-await
+async function clearAlarms(parameter, instance = 'myproject', processor = 'realtime') {
+    await setDefaultAlarms(parameter, [], instance, processor);
+    const response = await getAlarms(instance);
+    const alarms = await response.json();
+    const alarmsToClear = Object.values(alarms).map(alarm => {
+
+        return {
+            name: alarm[0].id.name,
+            seqNum: alarm[0].seqNum
+        };
+    });
+
+    return Promise.all(
+        alarmsToClear.map(alarm =>
+            fetch(`${YAMCS_API_URL}processors/${instance}/${processor}/alarms/${alarm.name}/${alarm.seqNum}:clear`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+        )
+    );
+}
+
+// eslint-disable-next-line require-await
+async function getAlarms(instance = 'myproject') {
+    return fetch(`${YAMCS_API_URL}archive/${instance}/alarms`);
+}
