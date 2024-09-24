@@ -25,7 +25,7 @@
  */
 
 import { test, expect, filterNonFetchRequests } from '../quickstartFixtures.mjs';
-import { createDomainObjectWithDefaults, setFixedTimeMode } from '../opensource/appActions.js';
+import { createDomainObjectWithDefaults, setFixedTimeMode, navigateToObjectWithRealTime,navigateToObjectWithFixedTimeBounds } from '../opensource/appActions.js';
 
 test.describe('Reload action', () => {
   let displayLayout;
@@ -45,14 +45,14 @@ test.describe('Reload action', () => {
 
     await createDomainObjectWithDefaults(page, {
       type: 'Telemetry Table',
-      name: 'Alpha Table'
+      name: 'Battery1_Temp Table'
     });
 
     //Expand the quickstart myproject twice to get to the telemetry in the tree
     await page.getByLabel('Expand myproject folder').click();
     await page.getByLabel('Expand myproject folder').click();
 
-    //Add Battery1_Temp to Alpha Table
+    //Add Battery1_Temp to Battery1_Temp Table
     await page.getByLabel('Edit Object').click();
     await page.getByRole('treeitem', { name: 'Battery1_Temp' }).dragTo(page.locator('.c-table__body-w'));
     await page.getByRole('button', { name: 'Save' }).click();
@@ -75,7 +75,7 @@ test.describe('Reload action', () => {
     await page.getByLabel('Collapse myproject folder').first().click();
     await page.getByLabel('Expand My Items folder').click();
 
-    await page.getByLabel('Preview Alpha Table table')
+    await page.getByLabel('Preview Battery1_Temp Table table')
       .dragTo(page.getByLabel('Display Layout Layout Grid').locator('div').nth(1), {
       targetPosition: { x: 0, y: 0 }
     });
@@ -89,41 +89,19 @@ test.describe('Reload action', () => {
     await page.getByRole('button', { name: 'Save' }).click();
     await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
-    await page.goto(displayLayout.url, { waitUntil: 'networkidle' });
-    //Set to 1 Minute to reduce the time the opportunity for paginated data
-    // await page.getByRole('menuitem', { name: /Real-Time/ }).click();
-
-    await page.getByLabel('Start offset: 00:30:00').click();
-    await page.getByLabel('Start offset minutes').fill('1');
-    await page.getByLabel('Submit time offsets').click();
-    await page.waitForLoadState('networkidle');
   });
 
-  test('can reload display layout and its telemetry table children', async ({ page }) => {
-    // Listening for all network requests and pushing them into allNetworkRequests array.
-    page.on('request', request => allNetworkRequests.push(request));
+  test('can reload telemetry table in display layout in real time mode', async ({ page }) => {
+    /*
+    * This test will 
+    * 1. Load the display layout in realtime mode with seeded values
+    * 2. Reload the telemetry table
+    * 3. Verify that the network requests are correct
+    * 4. Verify that the telemetry values are different
+    */
 
-    const beforeReloadAlphaTelemetryValue = await page
-      .getByLabel('Alpha Table table content')
-      .getByLabel('value table cell')
-      .first()
-      .getAttribute('title');
-    const beforeReloadBetaTelemetryValue = await page
-      .getByLabel('Beta Table table content')
-      .getByLabel('value table cell')
-      .first()
-      .getAttribute('title');
-
-    //reload Alpha Table and verify network correctness
-    await page.waitForLoadState('networkidle');
-    allNetworkRequests = [];
-
-    //Create response promises
-    battery1tempResponse = page.waitForResponse('**/api/archive/myproject/parameters/myproject/Battery1_Temp**')
-    batchGetResponse = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
-
-    //Intercept the request to /api/archive/myproject/parameters/myproject/Battery1_Temp
-    await page.route('**/api/archive/myproject/parameters/myproject/Battery1_Temp', async route => {
+    //Intercept the request to /api/archive/myproject/parameters/myproject/Battery1_Temp before pageload
+    await page.route('**/api/archive/myproject/parameters/myproject/Battery1_Temp**', async route => {
       const response = await route.fetch();
       const json = await response.json();
 
@@ -137,40 +115,49 @@ test.describe('Reload action', () => {
         }
       });
 
-      console.log('Request:', JSON.stringify({
-        url: route.request().url(),
-        method: route.request().method(),
-        headers: route.request().headers(),
-        postData: route.request().postData()
-      }, null, 2));
-
-      console.log('Response:', JSON.stringify({
-        status: response.status(),
-        statusText: response.statusText(),
-        headers: response.headers(),
-        body: json
-      }, null, 2));
-
       // Fulfill using the modified JSON object
       await route.fulfill({
-        status: response.status(),
-        headers: response.headers(),
-        contentType: response.headers()['content-type'],
         body: JSON.stringify(json)
       });
     });
+    //Set to 1 Minute to reduce the time the opportunity for paginated data
+    await navigateToObjectWithRealTime(page, displayLayout.url, 60000, 0);
+    
+    // Listening for all network requests and pushing them into allNetworkRequests array.
+    page.on('request', request => allNetworkRequests.push(request));
 
-    //Click on Reload Action on Alpha Table
-    await page.getByLabel('Alpha Table Frame Controls').getByLabel('View menu items').click();
+    const beforeReloadBattery1TempTelemetryValue = await page
+      .getByLabel('Battery1_Temp Table table content')
+      .getByLabel('value table cell')
+      .first()
+      .getAttribute('title');
+
+    const beforeReloadBetaTelemetryValue = await page
+      .getByLabel('Beta Table table content')
+      .getByLabel('value table cell')
+      .first()
+      .getAttribute('title');
+
+    //reload Battery1_Temp Table and verify network correctness
+    await page.waitForLoadState('networkidle');
+    allNetworkRequests = [];
+
+    //Create response promises
+    battery1tempResponse = page.waitForResponse('**/api/archive/myproject/parameters/myproject/Battery1_Temp**')
+    batchGetResponse = page.waitForResponse('**/api/processors/myproject/realtime/parameters:batchGet');
+
+    //Click on Reload Action on Battery1_Temp Table
+    await page.getByLabel('Battery1_Temp Table Frame Controls').getByLabel('View menu items').click();
     await page.getByLabel('Reload').click();
     
     await Promise.all([battery1tempResponse, batchGetResponse]);
 
     await page.waitForLoadState('networkidle');
+    //Only 2 requests should be made
     expect(allNetworkRequests.length).toBe(2);
 
     const afterReloadAlphaTelemetryValue = await page
-      .getByLabel('Alpha Table table content')
+      .getByLabel('Battery1_Temp Table table content')
       .getByLabel('value table cell')
       .first()
       .getAttribute('title');
@@ -180,10 +167,10 @@ test.describe('Reload action', () => {
       .first()
       .getAttribute('title');
 
-    //After reload, the telemetry value should be different for Alpha Table
-    expect(beforeReloadAlphaTelemetryValue).not.toEqual(afterReloadAlphaTelemetryValue);
+    //After reload, the telemetry value should be different for Battery1_Temp Table
+    expect(beforeReloadBattery1TempTelemetryValue).not.toEqual(afterReloadAlphaTelemetryValue);
 
-    // expect(beforeReloadBetaTelemetryValue).toEqual(afterReloadBetaTelemetryValue);
+    expect(beforeReloadBetaTelemetryValue).toEqual(afterReloadBetaTelemetryValue);
 
     await page.waitForLoadState('networkidle');
     allNetworkRequests = [];
@@ -196,13 +183,14 @@ test.describe('Reload action', () => {
     await page.getByRole('menuitem', { name: /Reload/ }).click();
 
     await Promise.all([battery1tempResponse, battery1voltageResponse, batchGetResponse]);
+
     await page.waitForLoadState('networkidle');
     console.log(JSON.stringify(allNetworkRequests));
 
     expect(allNetworkRequests.length).toBe(3);
 
     const fullReloadAlphaTelemetryValue = await page
-      .getByLabel('Alpha Table table content')
+      .getByLabel('Battery1_Temp Table table content')
       .getByLabel('value table cell')
       .first()
       .getAttribute('title');
@@ -214,6 +202,13 @@ test.describe('Reload action', () => {
 
     expect(fullReloadAlphaTelemetryValue).not.toEqual(afterReloadAlphaTelemetryValue);
     expect(fullReloadBetaTelemetryValue).not.toEqual(afterReloadBetaTelemetryValue);
+  });
+  test('can reload telemetry table in display layout in fixed time mode', async ({ page }) => {
+    http://localhost:9000/#/browse/mine/83ae30a5-8d13-4def-881a-920b9fa795c1?tc.mode=local&tc.startDelta=60000&tc.endDelta=0&tc.timeSystem=utc
+
+
+    // Switch to fixed time mode with all plan events within the bounds
+    await navigateToObjectWithFixedTimeBounds(page, displayLayout.url, 60000, endBound);
   });
   test.fixme('can reload notebook', async ({ page }) => {});
   test.fixme('can reload gauge', async ({ page }) => {});

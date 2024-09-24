@@ -52,3 +52,5 @@ export { expect, request, test };
 export function filterNonFetchRequests(requests) {
     return requests.filter(request => request.resourceType() === 'fetch');
 }
+
+//get linkZeroTelemetryToCurrentObject
