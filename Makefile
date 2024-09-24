@@ -1,6 +1,8 @@
 .PHONY: all clone-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
 
-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e
+all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
+
+start: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
 
 clone-quickstart:
 	@echo "Running target: clone-quickstart"
@@ -38,12 +40,16 @@ build-example:
 	@current_branch=$(shell git rev-parse --abbrev-ref HEAD)
 	@echo "Current branch of openmct-yamcs: $$current_branch checking if it exists in openmct repository"
 	@if git ls-remote --exit-code --heads https://github.com/nasa/openmct.git refs/heads/$$current_branch; then \
-		echo "Branch $$current_branch exists in openmct repository. Running build:example:current"; \
-		npm run build:example:current || { echo "Failed to run build:example:current"; exit 1; }; \
+		echo "Branch $$current_branch exists in openmct repository. Running build:example:currentbranch"; \
+		npm run build:example:currentbranch || { echo "Failed to run build:example:currentbranch"; exit 1; }; \
 	else \
 		echo "Branch $$current_branch does not exist in openmct repository. Running build:example:master"; \
 		npm run build:example:master || { echo "Failed to run build:example:master"; exit 1; }; \
 	fi
+
+start-openmct:
+	@echo "Running target: start-openmct"
+	npm start
 
 test-e2e:
 	@echo "Running target: test-e2e"
