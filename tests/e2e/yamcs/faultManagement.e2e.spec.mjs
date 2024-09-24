@@ -30,6 +30,16 @@ const { test, expect } = pluginFixtures;
 const YAMCS_API_URL = "http://localhost:8090/api/";
 const FAULT_PARAMETER = "Latitude";
 
+/**
+ * Get the locator for a triggered fault list item by severity.
+ * @param {import('@playwright/test').Page} page - The page object.
+ * @param {string} severity - The severity of the fault.
+ * @returns {import('@playwright/test').Locator} - The locator for the fault's severity label.
+ */
+function getTriggeredFaultBySeverity(page, severity) {
+    return page.getByLabel(new RegExp(`Fault triggered at.*${severity}.*`, 'i'));
+}
+
 test.describe("Fault Management @yamcs", () => {
     test.beforeAll("activate alarms on the telemetry point", async () => {
         // Set the default alarms for the parameter in such a way
@@ -81,7 +91,7 @@ test.describe("Fault Management @yamcs", () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
             await page.getByLabel('Navigate to Fault Management').click();
-            await expect(page.getByLabel('Fault Latitude with severity WATCH in /myproject')).toBeVisible();
+            await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeVisible();
         });
 
         await test.step('Shows fault with severity WARNING', async () => {
@@ -93,7 +103,7 @@ test.describe("Fault Management @yamcs", () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
             await page.getByLabel('Navigate to Fault Management').click();
-            await expect(page.getByLabel('Fault Latitude with severity WARNING in /myproject')).toBeVisible();
+            await expect(getTriggeredFaultBySeverity(page, 'WARNING')).toBeVisible();
         });
 
         await test.step('Shows fault with severity CRITICAL', async () => {
@@ -105,7 +115,7 @@ test.describe("Fault Management @yamcs", () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
             await page.getByLabel('Navigate to Fault Management').click();
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
         });
     });
 
@@ -127,7 +137,7 @@ test.describe("Fault Management @yamcs", () => {
 
         await test.step('Shelve the fault', async () => {
             await page.getByLabel('Navigate to Fault Management').click();
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await expect(page.getByLabel(/Fault triggered at.*CRITICAL.*/)).toBeVisible();
             await page.getByLabel('Select fault: Latitude in /myproject').check();
             await page.getByLabel('Shelve selected faults').click();
             await page.locator('#comment-textarea').fill("Shelvin' a fault!");
@@ -135,15 +145,15 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Shelved faults are visible in the Shelved view', async () => {
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeHidden();
+            await expect(page.getByLabel(/Fault triggered at.*CRITICAL.*/)).toBeHidden();
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await expect(page.getByLabel(/Fault triggered at.*CRITICAL.*/)).toBeVisible();
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Standard View');
         });
         await test.step('Fault is visible in the Standard view after shelve duration expires', async () => {
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeHidden();
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeHidden();
         });
     });
 
@@ -157,7 +167,7 @@ test.describe("Fault Management @yamcs", () => {
 
         await test.step('Acknowledge the fault', async () => {
             await page.getByLabel('Navigate to Fault Management').click();
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
             await page.getByLabel('Select fault: Latitude in /myproject').check();
             await page.getByLabel('Acknowledge selected faults').click();
             await page.locator('#comment-textarea').fill("Acknowledging a fault!");
@@ -165,9 +175,9 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Acknowledged faults are visible in the Acknowledged view', async () => {
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeHidden();
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeHidden();
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Acknowledged');
-            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
         });
     });
 
