@@ -28,12 +28,13 @@ import { pluginFixtures } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 
 const YAMCS_API_URL = "http://localhost:8090/api/";
+const FAULT_PARAMETER = "Latitude";
 
 test.describe("Fault Management @yamcs", () => {
-    test.beforeAll("activate alarms on a telemetry point", async () => {
+    test.beforeAll("activate alarms on the telemetry point", async () => {
         // Set the default alarms for the parameter in such a way
         // that it is guaranteed to produce a fault on load.
-        const response = await setDefaultAlarms('Latitude', [
+        const response = await setDefaultAlarms(FAULT_PARAMETER, [
             {
                 level: 'WATCH',
                 minInclusive: 808,
@@ -64,17 +65,17 @@ test.describe("Fault Management @yamcs", () => {
     });
 
     test.beforeEach(async ({ page }) => {
-
         const networkPromise = page.waitForResponse('**/api/mdb/myproject/parameters**');
-
         await page.goto('./', { waitUntil: 'domcontentloaded' });
+        // Wait until the YAMCS parameter request resolves
         await networkPromise;
     });
 
     test('Shows faults of differing severities ', async ({ page }) => {
         await test.step('Shows fault with severity WATCH', async () => {
+            // Intercept the request to set the alarm to WATCH severity
             await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, "Latitude", 'WATCH');
+                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'WATCH');
             });
 
             await page.goto('./', { waitUntil: 'domcontentloaded' });
@@ -84,8 +85,9 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Shows fault with severity WARNING', async () => {
+            // Intercept the request to set the alarm to WARNING severity
             await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, "Latitude", 'WARNING');
+                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'WARNING');
             });
 
             await page.goto('./', { waitUntil: 'domcontentloaded' });
@@ -95,8 +97,9 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Shows fault with severity CRITICAL', async () => {
+            // Intercept the request to set the alarm to CRITICAL severity
             await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, "Latitude", 'CRITICAL');
+                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL');
             });
 
             await page.goto('./', { waitUntil: 'domcontentloaded' });
@@ -106,8 +109,70 @@ test.describe("Fault Management @yamcs", () => {
         });
     });
 
-    test.afterAll("remove alarms from a telemetry point", async () => {
-        const responses = await clearAlarms('Latitude');
+    test('Faults may be shelved for a period of time', async ({ page }) => {
+        await test.step('Set the alarm to critical and mock the shelve request', async () => {
+            // Intercept the response to set the alarm to critical
+            await page.route('**/api/**/alarms', async route => {
+                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL');
+            });
+
+            // Intercept the request to shelve the fault and set the duration to 1000ms so
+            // we don't have to wait long for the fault to un-shelve
+            await page.route(/.*:shelve$/, async route => {
+                let requestBody = await route.request().postDataJSON();
+                requestBody.shelveDuration = 1000;
+                await route.continue({ postData: requestBody });
+            });
+        });
+
+        await test.step('Shelve the fault', async () => {
+            await page.getByLabel('Navigate to Fault Management').click();
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await page.getByLabel('Select fault: Latitude in /myproject').check();
+            await page.getByLabel('Shelve selected faults').click();
+            await page.locator('#comment-textarea').fill("Shelvin' a fault!");
+            await page.getByLabel('Save').click();
+        });
+
+        await test.step('Shelved faults are visible in the Shelved view', async () => {
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeHidden();
+            await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await page.getByTitle('View Filter').getByRole('combobox').selectOption('Standard View');
+        });
+        await test.step('Fault is visible in the Standard view after shelve duration expires', async () => {
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeHidden();
+        });
+    });
+
+    test('Faults may be acknowledged', async ({ page }) => {
+        await test.step('Set the alarm to critical', async () => {
+            // Intercept the response to set the alarm to critical
+            await page.route('**/api/**/alarms', async route => {
+                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL');
+            });
+        });
+
+        await test.step('Acknowledge the fault', async () => {
+            await page.getByLabel('Navigate to Fault Management').click();
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+            await page.getByLabel('Select fault: Latitude in /myproject').check();
+            await page.getByLabel('Acknowledge selected faults').click();
+            await page.locator('#comment-textarea').fill("Acknowledging a fault!");
+            await page.getByLabel('Save').click();
+        });
+
+        await test.step('Acknowledged faults are visible in the Acknowledged view', async () => {
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeHidden();
+            await page.getByTitle('View Filter').getByRole('combobox').selectOption('Acknowledged');
+            await expect(page.getByLabel('Fault Latitude with severity CRITICAL in /myproject')).toBeVisible();
+        });
+    });
+
+    test.afterAll("remove alarms from the telemetry point", async () => {
+        const responses = await clearAlarms(FAULT_PARAMETER);
         for (const res of responses) {
             expect.soft(res.status).toBe(200);
         }
