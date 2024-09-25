@@ -1,8 +1,8 @@
 .PHONY: all clone-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
 
-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
+test-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
 
-start: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
+start-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
 
 clone-quickstart:
 	@echo "Running target: clone-quickstart"
@@ -21,19 +21,17 @@ start-quickstart:
 	@echo "Running target: start-quickstart"
 	@cd quickstart/docker && $(MAKE) all
 
-restart-quickstart:
+reset-quickstart:
 	@echo "Running target: reset-quickstart"
-	@cd quickstart/docker && $(MAKE) yamcs-down
-	@cd quickstart/docker && $(MAKE) simulator-down
-	@cd quickstart/docker && $(MAKE) all
+	@cd quickstart/docker && $(MAKE) yamcs-simulator-restart
 
 install-openmct-yamcs:
 	@echo "Running target: install-openmct-yamcs"
-	npm install
+	npm install || exit 1
 
 sanity-test:
 	@echo "Running target: sanity-test"
-	npm run wait-for-yamcs
+	npm run wait-for-yamcs || exit 1
 
 build-example:
 	@echo "Running target: build-example"
@@ -49,16 +47,16 @@ build-example:
 
 start-openmct:
 	@echo "Running target: start-openmct"
-	npm start
+	npm start || exit 1
 
 test-e2e:
 	@echo "Running target: test-e2e"
-	npm run test:getopensource
-	npm run test:e2e:quickstart:local
+	npm run test:getopensource || exit 1
+	npm run test:e2e:quickstart:local || exit 1
 
 clean:
 	@echo "Running target: clean"
-	npm run clean
+	npm run clean || exit 1
 	if [ -d "quickstart" ]; then \
 		rm -rf quickstart; \
 		echo "Removed 'quickstart' directory."; \
