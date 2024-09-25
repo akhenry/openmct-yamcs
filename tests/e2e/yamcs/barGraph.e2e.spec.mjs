@@ -53,6 +53,5 @@ test.describe('Bar Graph @yamcs', () => {
     await historicalGet;
 
     await expect(page.getByRole('main').getByText(barGraph.name)).toBeVisible();
-    await page.waitForTimeout(10000);
   });
 });
