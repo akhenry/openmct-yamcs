@@ -27,13 +27,13 @@ reset-quickstart:
 
 install-openmct-yamcs:
 	@echo "Running target: install-openmct-yamcs"
-	npm install || exit 1
+	npm install
 
 sanity-test:
 	@echo "Running target: sanity-test"
-	npm run wait-for-yamcs || exit 1
+	npm run wait-for-yamcs
 
-build-example:
+build-example: #This will run buid example based on the current branch of openmct-yamcs and fallback to master
 	@echo "Running target: build-example"
 	@current_branch=$(shell git rev-parse --abbrev-ref HEAD)
 	@echo "Current branch of openmct-yamcs: $$current_branch checking if it exists in openmct repository"
@@ -47,19 +47,16 @@ build-example:
 
 start-openmct:
 	@echo "Running target: start-openmct"
-	npm start || exit 1
+	npm start
 
 test-e2e:
 	@echo "Running target: test-e2e"
-	npm run test:getopensource || exit 1
-	npm run test:e2e:quickstart:local || exit 1
+	npm run test:getopensource
+	npm run test:e2e:quickstart:local
 
 clean:
 	@echo "Running target: clean"
-	npm run clean || exit 1
-	if [ -d "quickstart" ]; then \
-		rm -rf quickstart; \
-		echo "Removed 'quickstart' directory."; \
-	else \
-		echo "Directory 'quickstart' does not exist."; \
-	fi
+	npm run clean
+	echo "Ran npm run clean."
+	rm -rf quickstart
+	echo "Removed 'quickstart' directory."
