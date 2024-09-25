@@ -25,70 +25,34 @@
  */
 
 import { pluginFixtures, appActions } from 'openmct-e2e';
+import { searchAndLinkTelemetryToObject } from '../yamcsAppActions.mjs';
 const { test, expect } = pluginFixtures;
-const { createDomainObjectWithDefaults, expandEntireTree } = appActions;
+const { createDomainObjectWithDefaults } = appActions;
 
-test.describe('Bar Graph', () => {
+test.describe('Bar Graph @yamcs', () => {
   let barGraph;
   let historicalGet;
 
   test.beforeEach(async ({ page }) => {
     // Open a browser, navigate to the main page, and wait until all networkevents to resolve
-    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    await page.goto('./', { waitUntil: 'networkidle' });
 
     // Create the Bar Graph
-    barGraph = await createDomainObjectWithDefaults(page, { type: 'Graph' });
+    barGraph = await createDomainObjectWithDefaults(page, { type: 'Graph', name: 'Bar Graph' });
     // Enter edit mode for the overlay plot
-    await page.getByLabel('Edit Object').click();
+    await searchAndLinkTelemetryToObject(page, 'Magnetometer', barGraph.name);
   });
 
   test('Requests a single historical datum', async ({ page }) => {
-    //Expand the myproject folder (/myproject)
-    await page.getByLabel('Expand myproject folder').click();
-    //Expand the myproject folder (/myproject/myproject)
-    await page.getByLabel('Expand myproject folder').click();
 
-    historicalGet = page.waitForRequest(/.*\/api\/.*\/parameters.*limit=1$/);
+    //http://localhost:9000/yamcs-proxy/api/archive/myproject/parameters/myproject/Magnetometer?start=2024-09-25T14%3A08%3A46.244Z&stop=2024-09-25T14%3A38%3A46.245Z&limit=1&order=desc
+    historicalGet = page.waitForRequest(/.*\/api\/.*\/parameters.*limit=1&order=desc$/);
 
-    //Drag and drop the Magnetometer telemetry endpoint into this bar graph
-    await page.getByLabel('Preview Magnetometer yamcs.').dragTo(page.getByLabel('Object View'));
-
-    // Save (exit edit mode)
-    await page.getByLabel('Save').click();
-    // The following line doesn't work unless in debug mode for some reason
-    await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
-    await page.waitForLoadState('networkidle');
+    await page.goto(barGraph.url, { waitUntil: 'networkidle' });
 
     await historicalGet;
+
+    await expect(page.getByRole('main').getByText(barGraph.name)).toBeVisible();
+    await page.waitForTimeout(10000);
   });
 });
-
-/**
- * Util for returning the size option for telemetry requests
- * @param {import('@playwright/test').Page} page
- */
-async function addTelemetryInterceptor(page) {
-  const getRequestOptionsPromise = new Promise((resolve) =>
-    page.exposeFunction('getRequestOptions', resolve)
-  );
-
-  await page.evaluate(() => {
-    function requestOptionsChecker() {
-      return {
-        appliesTo: () => {
-          return true;
-        },
-        invoke: (request) => {
-          window.getRequestOptions({
-            strategy: request.strategy,
-            size: request.size
-          });
-          return request;
-        }
-      };
-    }
-    window.openmct.telemetry.addRequestInterceptor(requestOptionsChecker());
-  });
-
-  return getRequestOptionsPromise;
-}
