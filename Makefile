@@ -1,8 +1,8 @@
 .PHONY: all clone-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
 
-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
+test-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
 
-start: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
+start-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
 
 clone-quickstart:
 	@echo "Running target: clone-quickstart"
@@ -21,11 +21,9 @@ start-quickstart:
 	@echo "Running target: start-quickstart"
 	@cd quickstart/docker && $(MAKE) all
 
-restart-quickstart:
+reset-quickstart:
 	@echo "Running target: reset-quickstart"
-	@cd quickstart/docker && $(MAKE) yamcs-down
-	@cd quickstart/docker && $(MAKE) simulator-down
-	@cd quickstart/docker && $(MAKE) all
+	@cd quickstart/docker && $(MAKE) yamcs-simulator-restart
 
 install-openmct-yamcs:
 	@echo "Running target: install-openmct-yamcs"
@@ -35,11 +33,11 @@ sanity-test:
 	@echo "Running target: sanity-test"
 	npm run wait-for-yamcs
 
-build-example:
+build-example: #This will run build example based on the current branch of openmct-yamcs and fallback to master
 	@echo "Running target: build-example"
-	@current_branch=$(shell git rev-parse --abbrev-ref HEAD)
-	@echo "Current branch of openmct-yamcs: $$current_branch checking if it exists in openmct repository"
-	@if git ls-remote --exit-code --heads https://github.com/nasa/openmct.git refs/heads/$$current_branch; then \
+	current_branch=$(shell git rev-parse --abbrev-ref HEAD); \
+	echo "Current branch of openmct-yamcs: $$current_branch checking if it exists in openmct repository"; \
+	if git ls-remote --exit-code --heads https://github.com/nasa/openmct.git refs/heads/$$current_branch; then \
 		echo "Branch $$current_branch exists in openmct repository. Running build:example:currentbranch"; \
 		npm run build:example:currentbranch || { echo "Failed to run build:example:currentbranch"; exit 1; }; \
 	else \
@@ -59,9 +57,13 @@ test-e2e:
 clean:
 	@echo "Running target: clean"
 	npm run clean
-	if [ -d "quickstart" ]; then \
+	echo "Ran npm run clean."
+	@if [ -d "quickstart/docker" ]; then \
+		echo "Directory 'quickstart/docker' exists. Running make clean in quickstart/docker."; \
+		cd quickstart/docker && $(MAKE) clean; \
+		cd ../..; \
 		rm -rf quickstart; \
 		echo "Removed 'quickstart' directory."; \
 	else \
-		echo "Directory 'quickstart' does not exist."; \
+		echo "Directory 'quickstart/docker' does not exist. Skipping."; \
 	fi
