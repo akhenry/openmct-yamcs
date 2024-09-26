@@ -32,13 +32,13 @@
 /**
  * Search for telemetry and link it to an object. objectName should come from the domainObject.name function.
  * @param {import('@playwright/test').Page} page 
- * @param {string} telemetryText 
+ * @param {string} parameterName 
  * @param {string} objectName 
  */
-async function searchAndLinkTelemetryToObject(page, telemetryText, objectName) {
+async function searchAndLinkTelemetryToObject(page, parameterName, objectName) {
     await page.getByRole('searchbox', { name: 'Search Input' }).click();
-    await page.getByRole('searchbox', { name: 'Search Input' }).fill(telemetryText);
-    await page.getByLabel(`${telemetryText} yamcs.aggregate result`).getByText(telemetryText).click();
+    await page.getByRole('searchbox', { name: 'Search Input' }).fill(parameterName);
+    await page.getByLabel(`${parameterName} yamcs.aggregate result`).getByText(parameterName).click();
     await page.getByLabel('More actions').click();
     await page.getByLabel('Create Link').click();
     await page.getByLabel('Modal Overlay').getByLabel('Search Input').click();
