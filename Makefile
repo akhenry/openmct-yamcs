@@ -58,5 +58,12 @@ clean:
 	@echo "Running target: clean"
 	npm run clean
 	echo "Ran npm run clean."
-	rm -rf quickstart
-	echo "Removed 'quickstart' directory."
+	@if [ -d "quickstart/docker" ]; then \
+		echo "Directory 'quickstart/docker' exists. Running make clean in quickstart/docker."; \
+		cd quickstart/docker && $(MAKE) clean; \
+		cd ../..; \
+		rm -rf quickstart; \
+		echo "Removed 'quickstart' directory."; \
+	else \
+		echo "Directory 'quickstart/docker' does not exist. Skipping."; \
+	fi
