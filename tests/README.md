@@ -4,6 +4,14 @@ This project is using Open MCT's e2e-as-a-dependency model. To learn more, pleas
 
 ## How to Run Locally
 
+** Note: if you are running the tests to match a specific branch of openmct, you will need to run `npm run build:example:currentbranch` **
+
+### Makefile
+
+1. `make test-all`
+
+### Manually
+
 To run the tests, we recommend the following workflow which bridges two separate github repos:
 yamcs/quickstart and openmct-yamcs (this one).
 
@@ -14,5 +22,5 @@ yamcs/quickstart and openmct-yamcs (this one).
 5. `npm install` in openmct-yamcs
 6. Sanity test that yamcs is up with `npm run wait-for-yamcs` in openmct-yamcs
 7. `npm run test:getopensource`
-8. `npm run build:example` or `npm run build:example:master`
+8. `npm run build:example` or `npm run build:example:master` or `npm run build:example:currentbranch`
 9. `npm run test:e2e:watch`

@@ -33,11 +33,11 @@ sanity-test:
 	@echo "Running target: sanity-test"
 	npm run wait-for-yamcs
 
-build-example: #This will run buid example based on the current branch of openmct-yamcs and fallback to master
+build-example: #This will run build example based on the current branch of openmct-yamcs and fallback to master
 	@echo "Running target: build-example"
-	@current_branch=$(shell git rev-parse --abbrev-ref HEAD)
-	@echo "Current branch of openmct-yamcs: $$current_branch checking if it exists in openmct repository"
-	@if git ls-remote --exit-code --heads https://github.com/nasa/openmct.git refs/heads/$$current_branch; then \
+	current_branch=$(shell git rev-parse --abbrev-ref HEAD); \
+	echo "Current branch of openmct-yamcs: $$current_branch checking if it exists in openmct repository"; \
+	if git ls-remote --exit-code --heads https://github.com/nasa/openmct.git refs/heads/$$current_branch; then \
 		echo "Branch $$current_branch exists in openmct repository. Running build:example:currentbranch"; \
 		npm run build:example:currentbranch || { echo "Failed to run build:example:currentbranch"; exit 1; }; \
 	else \
@@ -58,5 +58,12 @@ clean:
 	@echo "Running target: clean"
 	npm run clean
 	echo "Ran npm run clean."
-	rm -rf quickstart
-	echo "Removed 'quickstart' directory."
+	@if [ -d "quickstart/docker" ]; then \
+		echo "Directory 'quickstart/docker' exists. Running make clean in quickstart/docker."; \
+		cd quickstart/docker && $(MAKE) clean; \
+		cd ../..; \
+		rm -rf quickstart; \
+		echo "Removed 'quickstart' directory."; \
+	else \
+		echo "Directory 'quickstart/docker' does not exist. Skipping."; \
+	fi
