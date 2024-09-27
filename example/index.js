@@ -46,9 +46,7 @@ const openmct = window.openmct;
 
 (() => {
     const ONE_SECOND = 1000;
-    const FIFTEEN_SECONDS = ONE_SECOND * 15;
     const ONE_MINUTE = ONE_SECOND * 60;
-    const FIFTEEN_MINUTES = ONE_MINUTE * 15;
     const THIRTY_MINUTES = ONE_MINUTE * 30;
 
     openmct.setAssetPath("/node_modules/openmct/dist");
