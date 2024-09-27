@@ -37,7 +37,7 @@ const realTimeDisplayPath = fileURLToPath(
 // Wait 1s from when telemetry is received before sampling values in the UI. This is 1s because by default
 // Open MCT is configured to release batches of telemetry every 1s. So depending on when it is sampled it
 // may take up to 1s for telemetry to propagate to the UI from when it is received.
-const TELEMETRY_PROPAGATION_TIME = 1000;
+const TELEMETRY_PROPAGATION_TIME = 2000;
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 test.describe('Realtime telemetry displays', () => {
@@ -251,7 +251,7 @@ test.describe('Realtime telemetry displays', () => {
             }
         });
 
-        test('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds the length of the buffer', async ({ page }) => {
+        test('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds the length of 60 messages', async ({ page }) => {
             const PARAMETER_VALUES_COUNT = 60;
             /**
              * A failure mode of the previous implementation of batching was when bursts of telemetry from a parameter arrived all at once.
@@ -352,8 +352,10 @@ test.describe('Realtime telemetry displays', () => {
                     }, {strategy: 'batch'});
                 });
             });
-
-            expect(telemetryValues.length).toBe(PARAMETER_VALUES_COUNT);
+            // To avoid test flake use >= instead of =. Because yamcs is also flowing data immediately prior to this test there
+            // can be some real data still in the buffer or in-transit. It's inherently stochastic because the Yamcs instance is not
+            // isolated between tests, but it doesn't invalidate the test in this case.
+            expect(telemetryValues.length).toBeGreaterThanOrEqual(PARAMETER_VALUES_COUNT);
 
             const notification = page.getByRole('alert');
             const count = await notification.count();

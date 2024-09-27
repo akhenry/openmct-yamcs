@@ -318,6 +318,12 @@ export default class RealtimeProvider {
                     if (isReply) {
                         const id = message.data.replyTo;
                         subscriptionDetails = this.subscriptionsById[id];
+
+                        // Susbcriptions can be cancelled before we even get to this stage during tests due to rapid navigation.
+                        if (!subscriptionDetails) {
+                            return;
+                        }
+
                         subscriptionDetails.call = call;
                         // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
                         this.subscriptionsByCall.set(call, subscriptionDetails);
