@@ -62,22 +62,9 @@ const openmct = window.openmct;
     document.addEventListener("DOMContentLoaded", function () {
         openmct.start();
     });
-    openmct.install(openmct.plugins.RemoteClock({
-        namespace: 'taxonomy',
-        key: '~myproject~A'
-    }));
     openmct.install(
         openmct.plugins.Conductor({
             menuOptions: [
-                {
-                    name: "Remote",
-                    timeSystem: 'utc',
-                    clock: 'remote-clock',
-                    clockOffsets: {
-                        start: -FIFTEEN_MINUTES,
-                        end: FIFTEEN_SECONDS
-                    }
-                },
                 {
                     name: "Realtime",
                     timeSystem: "utc",
