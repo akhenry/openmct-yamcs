@@ -125,5 +125,6 @@ const openmct = window.openmct;
         );
 
         openmct.install(openmct.plugins.FaultManagement());
+        openmct.install(openmct.plugins.BarChart());
     }
 })();
