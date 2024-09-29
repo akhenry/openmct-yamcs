@@ -37,7 +37,7 @@ const realTimeDisplayPath = fileURLToPath(
 // Wait 1s from when telemetry is received before sampling values in the UI. This is 1s because by default
 // Open MCT is configured to release batches of telemetry every 1s. So depending on when it is sampled it
 // may take up to 1s for telemetry to propagate to the UI from when it is received.
-const TELEMETRY_PROPAGATION_TIME = 2000;
+const TELEMETRY_PROPAGATION_TIME = 1000;
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 test.describe('Realtime telemetry displays', () => {
@@ -333,7 +333,7 @@ test.describe('Realtime telemetry displays', () => {
             await disableLink(yamcsURL);
 
             // Wait for values to propagate to client and render on screen.
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
             const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
             const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
