@@ -42,6 +42,9 @@ import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
 const ONE_SECOND = 1000;
 const ONE_MILLION_CHARACTERS = 1000000;
 
+//Everything except parameter messages are housekeeping and if they're dropped bad things can happen.
+const PARAMETER_MESSAGES = '^{[\\s]*"type":\\s"parameters';
+
 export default class RealtimeProvider {
     #socketWorker = null;
     #openmct;
@@ -62,6 +65,7 @@ export default class RealtimeProvider {
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
         this.#socketWorker = new openmct.telemetry.BatchingWebSocket(openmct);
+        this.#socketWorker.setThrottleMessagePattern(PARAMETER_MESSAGES);
         this.#openmct = openmct;
         this.#socketWorker.setThrottleRate(throttleRate);
         this.#socketWorker.setMaxBufferSize(maxBufferSize);
