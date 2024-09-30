@@ -2,7 +2,7 @@ import { FAULT_MGMT_ALARMS, FAULT_MGMT_TYPE } from './fault-mgmt-constants.js';
 import { convertDataToFaultModel } from './utils.js';
 
 export default class HistoricalFaultProvider {
-    constructor(url, instance, processor = 'realtime') {
+    constructor(url, instance, processor) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;

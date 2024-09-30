@@ -6,7 +6,6 @@ export default class RealtimeFaultProvider {
     #openmct;
     constructor(openmct, instance) {
         this.#openmct = openmct;
-        this.convertDataToFaultModel = convertDataToFaultModel;
         this.instance = instance;
 
         this.lastSubscriptionId = 1;
