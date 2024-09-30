@@ -52,19 +52,22 @@ test.describe('Realtime telemetry displays', () => {
         });
 
         // Go to baseURL
-        await page.goto('./', { waitUntil: 'domcontentloaded' });
+        await page.goto('./', { waitUntil: 'networkidle' });
         await page.evaluate((thirtyMinutes) => {
-            const openmct = window.openmct;
+            return new Promise((resolve) => {
+                const openmct = window.openmct;
 
-            openmct.install(openmct.plugins.RemoteClock({
-                namespace: "taxonomy",
-                key: "~myproject~Battery1_Temp"
-            }));
+                openmct.install(openmct.plugins.RemoteClock({
+                    namespace: "taxonomy",
+                    key: "~myproject~Battery1_Temp"
+                }));
 
-            openmct.time.setClock('remote-clock');
-            openmct.time.setClockOffsets({
-                start: -thirtyMinutes,
-                end: 0
+                openmct.time.setClock('remote-clock');
+                openmct.time.setClockOffsets({
+                    start: -thirtyMinutes,
+                    end: 15000
+                });
+                setTimeout(resolve, 2000);
             });
         }, THIRTY_MINUTES);
         yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
@@ -119,7 +122,9 @@ test.describe('Realtime telemetry displays', () => {
 
         test('Correctly shows the latest values', async ({ page }) => {
             // Wait a reasonable amount of time for new telemetry to come in.
-            // There is nothing significant about the number chosen.
+            // There is nothing significant about the number chosen. It's
+            // long enough to ensure we have new telemetry, short enough that
+            // it doesn't significantly increase test time.
             const WAIT_FOR_MORE_TELEMETRY = 3000;
 
             const ladTable = await getLadTableByName(page, 'Test LAD Table');
@@ -248,31 +253,58 @@ test.describe('Realtime telemetry displays', () => {
                 expect(notification).toHaveCount(0);
             }
         });
-
-        test('Open MCT does drop telemetry when the UI is under load', async ({ page }) => {
-            // 1. Make sure the display is done loading, and populated with values (ie. we are in a steady state)
-            const ladTable = await getLadTableByName(page, 'Test LAD Table');
-            await getParameterValuesFromLadTable(ladTable);
-
-            // 2. Block the UI with a loop
+        /**
+         * This tests for an edge-case found during testing where throttling occurs during subscription handshaking with the server.
+         * In this scenario, subscribers never receive telemetry because the subscription was never properly initialized.
+         * This test confirms that after blocking the UI and inducing throttling, that all subscribed telemetry objects received telemetry.
+         */
+        test('When the UI is blocked during initialization, does not drop subscription housekeeping messages', async ({ page }) => {
+            // 1. Block the UI
             await page.evaluate(() => {
                 return new Promise((resolveBlockingLoop) => {
-                    //5s x 10Hz data = 50 telemetry values which should easily overrun the buffer length of 20.
                     let start = Date.now();
                     let now = Date.now();
-                    // Block the UI thread for 5s
-                    while (now - start < 5000) {
+                    // Block the UI thread for 6s
+                    while (now - start < 10000) {
                         now = Date.now();
                     }
 
                     resolveBlockingLoop();
                 });
             });
-            // Check for telemetry dropped notification
+
+            //Confirm that throttling occurred
             const notification = page.getByRole('alert');
-            expect(notification).toHaveCount(1);
             const text = await notification.innerText();
             expect(text).toBe('Telemetry dropped due to client rate limiting.');
+
+            //Confirm that all subscribed telemetry points receive telemetry. This tests that subscriptions were established successfully and
+            //tests for a failure mode where housekeeping telemetry was being dropped if the UI was blocked during initialization of telemetry subscriptions
+            const parametersToSubscribeTo = Object.values(namesToParametersMap).map(parameter => parameter.replaceAll('/', '~'));
+            const subscriptionsThatTelemetry = await page.evaluate(async (parameters) => {
+                const openmct = window.openmct;
+                const telemetryObjects = await Promise.all(
+                    Object.values(parameters).map(
+                        (parameterId) => openmct.objects.get(
+                            {
+                                namespace: 'taxonomy',
+                                key: parameterId
+                            }
+                        )
+                    ));
+                const subscriptionsAllReturned = await Promise.all(telemetryObjects.map((telemetryObject) => {
+                    return new Promise(resolve => {
+                        const unsubscribe = openmct.telemetry.subscribe(telemetryObject, () => {
+                            unsubscribe();
+                            resolve(true);
+                        });
+                    });
+                }));
+
+                return subscriptionsAllReturned;
+            }, parametersToSubscribeTo);
+
+            expect(subscriptionsThatTelemetry.length).toBe(parametersToSubscribeTo.length);
         });
 
         test('Open MCT shows the latest telemetry after UI is temporarily blocked', async ({ page }) => {
@@ -283,19 +315,24 @@ test.describe('Realtime telemetry displays', () => {
                 return new Promise((resolveBlockingLoop) => {
                     let start = Date.now();
                     let now = Date.now();
-                    // Block the UI thread for 5s
-                    while (now - start < 5000) {
+                    // Block the UI thread for 10s
+                    while (now - start < 10000) {
                         now = Date.now();
                     }
 
-                    resolveBlockingLoop();
+                    requestIdleCallback(resolveBlockingLoop);
                 });
             });
+
+            //Confirm that throttling occurred
+            const notification = page.getByRole('alert');
+            const text = await notification.innerText();
+            expect(text).toBe('Telemetry dropped due to client rate limiting.');
 
             // Disable playback
             await disableLink(yamcsURL);
 
-            // Wait 1 second for values to propagate to client and render on screen.
+            // Wait for values to propagate to client and render on screen.
             await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
 
             const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
@@ -307,7 +344,7 @@ test.describe('Realtime telemetry displays', () => {
 
     test('Open MCT accurately batches telemetry when requested', async ({ page }) => {
 
-        // 1. Subscribe to batched telemetry,
+        // 1. Subscribe to batched telemetry,e
         const telemetryValues = await page.evaluate(async () => {
             const openmct = window.openmct;
             const telemetryObject = await openmct.objects.get({
@@ -342,7 +379,6 @@ test.describe('Realtime telemetry displays', () => {
         });
         const formattedParameterArchiveTelemetry = toOpenMctTelemetryFormat(parameterArchiveTelemetry);
         sortOpenMctTelemetryAscending(formattedParameterArchiveTelemetry);
-
         telemetryValues.forEach((telemetry, index) => {
             expect(telemetry.value).toBe(formattedParameterArchiveTelemetry[index].value);
             expect(telemetry.timestamp).toBe(formattedParameterArchiveTelemetry[index].timestamp);
@@ -414,7 +450,7 @@ test.describe('Realtime telemetry displays', () => {
     }
 
     /**
-     * @param {import('playwright').Page} page 
+     * @param {import('playwright').Page} page
      * @returns {Promise<{parameterNameText: string, parameterValueText: string}[]>}
      */
     async function getParameterValuesFromAllGauges(page) {

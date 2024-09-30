@@ -69,7 +69,7 @@ export default function install(
             configuration.yamcsInstance,
             configuration.yamcsProcessor,
             configuration.throttleRate,
-            configuration.maxBatchSize
+            configuration.maxBufferSize
         );
         openmct.telemetry.addProvider(realtimeTelemetryProvider);
         realtimeTelemetryProvider.connect();
