@@ -14,8 +14,7 @@ export default class YamcsFaultProvider {
 
         this.realtimeFaultProvider = new RealtimeFaultProvider(
             openmct,
-            yamcsInstance,
-            yamcsProcessor
+            yamcsInstance
         );
 
         this.faultActionProvider = new FaultActionProvider(

@@ -76,7 +76,8 @@ export default function install(
         openmct.faults.addProvider(new YamcsFaultProvider(openmct,
             {
                 historicalEndpoint: configuration.yamcsHistoricalEndpoint,
-                yamcsInstance: configuration.yamcsInstance
+                yamcsInstance: configuration.yamcsInstance,
+                yamcsProcessor: configuration.yamcsProcessor
             }));
 
         const stalenessProvider = new YamcsStalenessProvider(
