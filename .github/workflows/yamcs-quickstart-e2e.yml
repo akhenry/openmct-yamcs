@@ -40,19 +40,6 @@ jobs:
         run: |
           mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
         working-directory: quickstart
-      - name: create docker-compose.override.yml
-        run: |
-          # Create a docker-compose.override.yml file to override the default settings
-          # This override file will configure the Yamcs service to use host networking,
-          # and clear any port and network configurations.
-          cat <<EOF > docker-compose.override.yml
-          services:
-            yamcs:
-              network_mode: "host"  # Use host networking
-              ports: []  # Clear ports
-              networks: []  # Clear networks
-          EOF
-        working-directory: quickstart/docker
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           touch makeout.txt
