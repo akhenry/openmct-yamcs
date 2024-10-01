@@ -129,7 +129,7 @@ test.describe("Fault Management @yamcs", () => {
             await page.route('**/api/**/*:shelve', async route => {
                 if (route.request().method() === 'POST') {
                     let requestBody = await route.request().postDataJSON();
-                    requestBody.shelveDuration = 5000;
+                    requestBody.shelveDuration = 10000;
                     await route.continue({ postData: requestBody });
                 } else {
                     await route.continue();
