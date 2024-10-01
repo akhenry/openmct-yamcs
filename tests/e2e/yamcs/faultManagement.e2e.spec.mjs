@@ -129,7 +129,7 @@ test.describe("Fault Management @yamcs", () => {
             await page.route('**/api/**/*:shelve', async route => {
                 if (route.request().method() === 'POST') {
                     let requestBody = await route.request().postDataJSON();
-                    requestBody.shelveDuration = 2000;
+                    requestBody.shelveDuration = 5000;
                     await route.continue({ postData: requestBody });
                 } else {
                     await route.continue();
@@ -155,7 +155,8 @@ test.describe("Fault Management @yamcs", () => {
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Standard View');
         });
         await test.step('Fault is visible in the Standard view after shelve duration expires', async () => {
-            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
+            // Have a longer timeout to account for the fault being shelved
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible({ timeout: 10000 });
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeHidden();
         });
