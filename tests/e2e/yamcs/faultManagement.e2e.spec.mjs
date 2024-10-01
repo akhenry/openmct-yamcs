@@ -82,39 +82,39 @@ test.describe("Fault Management @yamcs", () => {
     });
 
     test('Shows faults of differing severities ', async ({ page }) => {
-        await test.step('Shows fault with severity WATCH', async () => {
-            // Intercept the request to set the alarm to WATCH severity
-            await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'WATCH');
-            });
+        // Intercept the request to set the alarm to WATCH severity
+        await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'WATCH'));
 
+        await test.step('Shows fault with severity WATCH', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
+            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeVisible();
         });
 
-        await test.step('Shows fault with severity WARNING', async () => {
-            // Intercept the request to set the alarm to WARNING severity
-            await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'WARNING');
-            });
+        // Intercept the request to set the alarm to WARNING severity
+        await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'WARNING'));
 
+        await test.step('Shows fault with severity WARNING', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
+            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'WARNING')).toBeVisible();
         });
 
-        await test.step('Shows fault with severity CRITICAL', async () => {
-            // Intercept the request to set the alarm to CRITICAL severity
-            await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL');
-            });
+        // Intercept the request to set the alarm to CRITICAL severity
+        await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL'));
 
+        await test.step('Shows fault with severity CRITICAL', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
+            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
         });
     });
@@ -122,21 +122,25 @@ test.describe("Fault Management @yamcs", () => {
     test('Faults may be shelved for a period of time', async ({ page }) => {
         await test.step('Set the alarm to critical and mock the shelve request', async () => {
             // Intercept the response to set the alarm to critical
-            await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL');
-            });
+            await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL'));
 
             // Intercept the request to shelve the fault and set the duration to 1000ms so
             // we don't have to wait long for the fault to un-shelve
-            await page.route(/.*:shelve$/, async route => {
-                let requestBody = await route.request().postDataJSON();
-                requestBody.shelveDuration = 1000;
-                await route.continue({ postData: requestBody });
+            await page.route('**/api/**/*:shelve', async route => {
+                if (route.request().method() === 'POST') {
+                    let requestBody = await route.request().postDataJSON();
+                    requestBody.shelveDuration = 2000;
+                    await route.continue({ postData: requestBody });
+                } else {
+                    await route.continue();
+                }
             });
         });
 
         await test.step('Shelve the fault', async () => {
+            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
             await expect(page.getByLabel(/Fault triggered at.*CRITICAL.*/)).toBeVisible();
             await page.getByLabel('Select fault: Latitude in /myproject').check();
             await page.getByLabel('Shelve selected faults').click();
@@ -160,13 +164,14 @@ test.describe("Fault Management @yamcs", () => {
     test('Faults may be acknowledged', async ({ page }) => {
         await test.step('Set the alarm to critical', async () => {
             // Intercept the response to set the alarm to critical
-            await page.route('**/api/**/alarms', async route => {
-                await modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL');
-            });
+            await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL'));
+
         });
 
         await test.step('Acknowledge the fault', async () => {
+            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
             await page.getByLabel('Select fault: Latitude in /myproject').check();
             await page.getByLabel('Acknowledge selected faults').click();
@@ -199,12 +204,12 @@ test.describe("Fault Management @yamcs", () => {
 /**
  * Set default alarms for a parameter.
  * @param {string} parameter - The parameter to set alarms for.
- * @param {AlarmRange[]} staticAlarmRange - The static alarm range configuration.
+ * @param {AlarmRange[]} staticAlarmRanges - The static alarm ranges to set.
  * @param {string} [instance='myproject'] - The instance name.
  * @param {string} [processor='realtime'] - The processor name.
  */
 // eslint-disable-next-line require-await
-async function setDefaultAlarms(parameter, staticAlarmRange = [], instance = 'myproject', processor = 'realtime') {
+async function setDefaultAlarms(parameter, staticAlarmRanges = [], instance = 'myproject', processor = 'realtime') {
     return fetch(`${YAMCS_API_URL}mdb-overrides/${instance}/${processor}/parameters/${instance}/${parameter}`, {
         method: 'PATCH',
         headers: {
@@ -213,7 +218,7 @@ async function setDefaultAlarms(parameter, staticAlarmRange = [], instance = 'my
         body: JSON.stringify({
             action: 'SET_DEFAULT_ALARMS',
             defaultAlarm: {
-                staticAlarmRange
+                staticAlarmRange: staticAlarmRanges
             }
         })
     });
@@ -256,23 +261,28 @@ async function getAlarms(instance = 'myproject') {
     return fetch(`${YAMCS_API_URL}archive/${instance}/alarms`);
 }
 
+/**
+ * @param {import('@playwright/test').Route} route
+ * @param {string} alarmName
+ * @param {string} newSeverity
+ */
 async function modifyAlarmSeverity(route, alarmName, newSeverity) {
     const response = await route.fetch();
     let body = await response.json();
+    const newBody = { ...body };
 
     // Modify the rawValue.floatValue to trigger a specific alarm
-    body.alarms.forEach(alarm => {
+    body.alarms.forEach((alarm, index) => {
         if (alarm.id.name === alarmName) {
-            alarm.severity = newSeverity;
+            newBody.alarms[index].severity = newSeverity;
         }
     });
 
-    await route.fulfill({
+    return route.fulfill({
         response,
-        body: JSON.stringify(body),
+        json: newBody,
         headers: {
-            ...response.headers(),
-            'content-type': 'application/json'
+            ...response.headers()
         }
     });
 }
