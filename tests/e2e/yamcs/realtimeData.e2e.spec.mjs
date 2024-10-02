@@ -385,6 +385,123 @@ test.describe('Realtime telemetry displays', () => {
         });
     });
 
+    test('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds 60 messages', async ({ page }) => {
+        const PARAMETER_VALUES_COUNT = 60;
+        /**
+       * A failure mode of the previous implementation of batching was when bursts of telemetry from a parameter arrived all at once.
+       * A burst of 60 messages will overwhelm a per-parameter telemetry buffer of 50, but will not overwhelm a larger shared buffer.
+       */
+
+        // Disable real playback. We are going to inject our own batch of messages
+        await disableLink(yamcsURL);
+
+        /**
+       * Yamcs tracks subscriptions by "call number". The call number is assigned by Yamcs,
+       * so we don't know it ahead of time. We have to retrieve it at runtime after the subscription
+       * has been established.
+       *
+       * We need to know the call number, because it's how the receiver (Open MCT) ties a parameter
+       * value that is received over a WebSocket back to the correct subscription.
+       */
+        const batteryTempParameterCallNumber = await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const objectIdentifier = {
+                namespace: 'taxonomy',
+                key: '~myproject~Battery1_Temp'
+            };
+            const telemetryObject = await openmct.objects.get(objectIdentifier);
+            const yamcsRealtimeProvider = await openmct.telemetry.findSubscriptionProvider(telemetryObject);
+
+            return yamcsRealtimeProvider.getSubscriptionByObjectIdentifier(objectIdentifier).call;
+
+        });
+
+        websocketWorker.evaluate(({call, COUNT}) => {
+            const messageEvents = [];
+            /**
+           * Inject a burst of 60 messages.
+           */
+            for (let messageCount = 0; messageCount < COUNT; messageCount++) {
+                const message = {
+                    "type": "parameters",
+                    //This is where we use the call number retrieved previously
+                    "call": call,
+                    "seq": messageCount,
+                    "data": {
+                        "@type": "/yamcs.protobuf.processing.SubscribeParametersData",
+                        "values": [
+                            {
+                                "rawValue": {
+                                    "type": "FLOAT",
+                                    "floatValue": 10.204108
+                                },
+                                "engValue": {
+                                    "type": "FLOAT",
+                                    "floatValue": 10.204108
+                                },
+                                "acquisitionTime": new Date(Date.now() + messageCount).toISOString(),
+                                "generationTime": new Date(Date.now() + messageCount).toISOString(),
+                                "acquisitionStatus": "ACQUIRED",
+                                "numericId": 1
+                            }
+                        ]
+                    }
+                };
+                /**
+              * We are building an array of Event objects of type 'message'. Dispatching an event of this
+              * type on a WebSocket will cause all listeners subscribed to 'message' events to receive it.
+              * The receiving code will not know the difference between an Event that is dispatched from
+              * code vs. one that caused by the arrival of data over the wire.
+              * @see https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/message_event
+              */
+                const event = new Event('message');
+                event.data = JSON.stringify(message);
+                messageEvents.push(event);
+            }
+
+            /**
+           * Dispatch the 60 WebSocket message events we just created
+           */
+            messageEvents.forEach(event => {
+                self.currentWebSocket.dispatchEvent(event);
+            });
+
+        }, {
+            call: batteryTempParameterCallNumber,
+            COUNT: PARAMETER_VALUES_COUNT
+        });
+
+        // Subscribe to Battery1_Temp so we can confirm that the injected parameter values were received,
+        const telemetryValues = await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const objectIdentifier = {
+                namespace: 'taxonomy',
+                key: '~myproject~Battery1_Temp'
+            };
+            const telemetryObject = await openmct.objects.get(objectIdentifier);
+
+            return new Promise((resolveWithTelemetry) => {
+                openmct.telemetry.subscribe(telemetryObject, (telemetry) => {
+                    resolveWithTelemetry(telemetry);
+                }, {strategy: 'batch'});
+            });
+        });
+        // To avoid test flake use >= instead of =. Because yamcs is also flowing data immediately prior to this test there
+        // can be some real data still in the buffer or in-transit. It's inherently stochastic because the Yamcs instance is not
+        // isolated between tests, but it doesn't invalidate the test in this case.
+        expect(telemetryValues.length).toBeGreaterThanOrEqual(PARAMETER_VALUES_COUNT);
+
+        const notification = page.getByRole('alert');
+        const count = await notification.count();
+
+        if (count > 0) {
+            const text = await notification.innerText();
+            expect(text).not.toBe('Telemetry dropped due to client rate limiting.');
+        } else {
+            expect(notification).toHaveCount(0);
+        }
+    });
+
     function sortOpenMctTelemetryAscending(telemetry) {
         return telemetry.sort((a, b) => {
             if (a.timestamp < b.timestamp) {
