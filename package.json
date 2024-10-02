@@ -1,24 +1,37 @@
 {
   "name": "openmct-yamcs",
-  "version": "3.1.0-next",
+  "version": "4.0.0-next",
   "description": "An adapter for connecting Open MCT with YAMCS",
   "main": "dist/openmct-yamcs.js",
+  "module": "dist/openmct-yamcs.js",
+  "exports": {
+    ".": {
+      "import": "./dist/openmct-yamcs.js",
+      "require": "./dist/openmct-yamcs.js"
+    }
+  },
+  "workspaces": [
+    "tests/e2e/opensource"
+  ],
   "scripts": {
     "clean": "rm -rf ./dist ./node_modules ./package-lock.json ./coverage ./test-results ./tests/html-test-results ./tests/e2e/test-results ./.nyc_output ./tests/e2e/opensource",
     "test": "npm run test:getopensource && npm run test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
-    "build:dist": "webpack --config ./.webpack/webpack.prod.js",
+    "build:dist": "webpack --config ./.webpack/webpack.prod.mjs",
     "build:example": "npm install openmct@unstable --no-save",
     "build:example:master": "npm install nasa/openmct#master --no-save",
-    "postbuild:example": "node check-optional-dependencies.js",
-    "start": "npx webpack serve --config ./.webpack/webpack.dev.js",
-    "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.js",
+    "build:example:currentbranch": "npm install nasa/openmct#$(git rev-parse --abbrev-ref HEAD) --no-save --verbose",
+    "postbuild:example": "node check-optional-dependencies.mjs",
+    "start": "npx webpack serve --config ./.webpack/webpack.dev.mjs",
+    "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.mjs",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
-    "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
-    "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
-    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "posttest:getopensource": "npm install",
+    "test:e2e:smoke": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium quickstartSmoke",
+    "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
+    "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
     "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
   "keywords": [
@@ -28,29 +41,28 @@
   "author": "National Aeronautics and Space Administration",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=16.19.1"
+    "node": ">=18.14.2 <22"
   },
   "optionalDependencies": {
-    "openmct": ">= 2.2.5"
+    "openmct": ">= 3.9.9"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
-    "@babel/eslint-parser": "7.19.1",
-    "@deploysentinel/playwright": "0.3.4",
-    "@playwright/test": "1.36.2",
+    "@babel/eslint-parser": "7.23.3",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
-    "eslint": "8.38.0",
+    "eslint": "8.56.0",
+    "eslint-plugin-import": "2.29.1",
     "eventemitter3": "4.0.7",
     "file-saver": "2.0.5",
     "semver": "7.5.2",
     "sinon": "14.0.0",
     "source-map-loader": "4.0.1",
-    "uuid": "9.0.0",
+    "uuid": "9.0.1",
     "wait-on": "7.0.1",
-    "webpack": "5.75.0",
-    "webpack-cli": "5.0.1",
-    "webpack-dev-server": "4.11.1",
-    "webpack-merge": "5.8.0"
+    "webpack": "5.90.3",
+    "webpack-cli": "5.1.1",
+    "webpack-dev-server": "5.0.2",
+    "webpack-merge": "5.10.0"
   }
 }

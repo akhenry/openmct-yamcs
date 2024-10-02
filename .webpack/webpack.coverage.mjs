@@ -20,37 +20,24 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const path = require('path');
-const projectRootDir = path.resolve(__dirname, '..');
+import config from './webpack.dev.mjs';
 
-// eslint-disable no-undef
-const WEBPACK_COMMON_CONFIG = {
-    performance: {
-        hints: false
-    },
-    resolve: {
-        alias: {
-            saveAs: "file-saver/src/FileSaver.js",
+config.devtool = 'source-map';
+
+config.devServer.hot = false;
+
+config.module.rules.push({
+    test: /\.(mjs|js)$/,
+    exclude: /(node_modules)/,
+    use: {
+        loader: 'babel-loader',
+        options: {
+            retainLines: true,
+            plugins: [['babel-plugin-istanbul', {
+                extension: ['.js']
+            }]]
         }
-    },
-    module: {
-        rules: [
-            {
-                test: /\.js$/,
-                enforce: "pre",
-                use: ["source-map-loader"]
-            }
-        ]
-    },
-    output: {
-        globalObject: "this",
-        filename: '[name].js',
-        // eslint-disable-next-line no-undef
-        path: path.resolve(projectRootDir, 'dist'),
-        libraryTarget: 'umd',
-        library: 'openmctYamcs'
     }
-};
+});
 
-// eslint-disable-next-line no-undef
-module.exports = WEBPACK_COMMON_CONFIG;
+export default config;

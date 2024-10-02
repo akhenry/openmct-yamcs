@@ -1,20 +1,20 @@
-import HistoricalFaultProvider from './historical-fault-provider';
-import RealtimeFaultProvider from './realtime-fault-provider';
-import FaultActionProvider from './fault-action-provider';
+import HistoricalFaultProvider from './historical-fault-provider.js';
+import RealtimeFaultProvider from './realtime-fault-provider.js';
+import FaultActionProvider from './fault-action-provider.js';
+
+const DEFAULT_PROCESSOR = 'realtime';
 
 export default class YamcsFaultProvider {
-    constructor({ faultModelConvertor, historicalEndpoint, yamcsInstance, yamcsProcessor, realtimeTelemetryProvider } = {}) {
+    constructor(openmct, { historicalEndpoint, yamcsInstance, yamcsProcessor = DEFAULT_PROCESSOR } = {}) {
         this.historicalFaultProvider = new HistoricalFaultProvider(
-            faultModelConvertor,
             historicalEndpoint,
             yamcsInstance,
             yamcsProcessor
         );
 
         this.realtimeFaultProvider = new RealtimeFaultProvider(
-            faultModelConvertor,
-            yamcsInstance,
-            realtimeTelemetryProvider
+            openmct,
+            yamcsInstance
         );
 
         this.faultActionProvider = new FaultActionProvider(
@@ -29,5 +29,6 @@ export default class YamcsFaultProvider {
         this.supportsSubscribe = this.realtimeFaultProvider.supportsSubscribe.bind(this.realtimeFaultProvider);
         this.acknowledgeFault = this.faultActionProvider.acknowledgeFault.bind(this.faultActionProvider);
         this.shelveFault = this.faultActionProvider.shelveFault.bind(this.faultActionProvider);
+        this.getShelveDurations = this.faultActionProvider.getShelveDurations.bind(this.faultActionProvider);
     }
 }

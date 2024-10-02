@@ -12,3 +12,6 @@ test-results
 
 # Misc
 .DS_Store
+.vscode/settings.json
+
+quickstart/

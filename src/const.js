@@ -28,6 +28,7 @@ export const OBJECT_TYPES = {
     STRING_OBJECT_TYPE: 'yamcs.string',
     AGGREGATE_TELEMETRY_TYPE: 'yamcs.aggregate',
     OPERATOR_STATUS_TYPE: 'yamcs.operatorStatus',
+    MISSION_STATUS_TYPE: 'yamcs.missionStatus',
     POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
     ALARMS_TYPE: 'yamcs.alarms',
     GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
@@ -65,3 +66,5 @@ export const MDB_OBJECT = Object.freeze({
     },
     type: MDB_TYPE
 });
+
+export const MDB_CHANGES_PARAMETER_TYPE = 'PARAMETER';

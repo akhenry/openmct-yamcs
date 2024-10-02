@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# This script can clone/checkout a single folder from git repository 
+# This script can clone/checkout a single folder from git repository
 # - Might be used for checking out micro-services from monolithic git repository
 #
 # - You can even do checkout into home directory, for example
@@ -8,7 +8,7 @@
 #
 
 SCRIPT_PATH=${0%/*} # Get the relative path to the script dir from the cwd
-if [ "$0" != "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "" ]; then 
+if [ "$0" != "$SCRIPT_PATH" ] && [ "$SCRIPT_PATH" != "" ]; then
     cd "$SCRIPT_PATH"
 fi
 
@@ -21,6 +21,7 @@ REPO_URL=https://github.com/nasa/openmct.git
 REPO_PATH=e2e
 LOCAL_REPO_ROOT="e2e/opensource"
 
+# remove the branch later
 git clone --no-checkout --depth 1 $REPO_URL "$LOCAL_REPO_ROOT"
 cd "$LOCAL_REPO_ROOT"
 git config core.sparsecheckout true
@@ -30,12 +31,16 @@ git read-tree -m -u HEAD
 # moving back to /tests/ dir
 cd ..
 
+# Move index.js to root
+mv opensource/e2e/index.js ./opensource
+# Move package.json, package-lock.json
+mv opensource/e2e/package*.json ./opensource
 # Move fixtures and appActions
 mv opensource/e2e/*Fixtures.js ./opensource
 mv opensource/e2e/appActions.js ./opensource
 # Move subfolders
 mv opensource/e2e/*/ ./opensource
 # Move eslint config
-mv opensource/e2e/.eslintrc.js ./opensource
+mv opensource/e2e/.eslintrc.*js ./opensource
 # Cleanup
 rm -rf opensource/e2e

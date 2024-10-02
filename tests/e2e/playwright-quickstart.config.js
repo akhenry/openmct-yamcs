@@ -5,7 +5,7 @@
 const config = {
     retries: 1,
     testDir: '.',
-    testMatch: '**/*.e2e.spec.js',
+    testMatch: /.*\.e2e\.spec\.(mjs|js)$/,
     timeout: 30 * 1000,
     use: {
         headless: false,
@@ -18,6 +18,7 @@ const config = {
         failOnConsoleError: false
     },
     webServer: {
+        cwd: '../',
         command: 'npm run start:coverage',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
@@ -64,11 +65,8 @@ const config = {
             open: 'never',
             outputFolder: '../html-test-results' //Must be in different location due to https://github.com/microsoft/playwright/issues/12840
         }],
-        ['junit', { outputFile: 'test-results/results.xml' }],
-        ['@deploysentinel/playwright']
-    ]
+        ['junit', { outputFile: 'test-results/results.xml' }]]
 };
 
-// eslint-disable-next-line no-undef
-module.exports = config;
+export default config;
 

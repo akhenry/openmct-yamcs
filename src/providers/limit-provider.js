@@ -97,10 +97,8 @@ export default class LimitProvider {
     }
 
     getLimits(domainObject) {
-        const limits = domainObject.configuration.limits;
-
         return {
-            limits: async () => limits
+            limits: () => Promise.resolve(domainObject.configuration.limits)
         };
     }
 

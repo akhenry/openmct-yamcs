@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Open MCT, Copyright (c) 2014-2020, United States Government
+ * Open MCT, Copyright (c) 2014-2024, United States Government
  * as represented by the Administrator of the National Aeronautics and Space
  * Administration. All rights reserved.
  *
@@ -20,17 +20,25 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const path = require('path');
-const { merge } = require('webpack-merge');
-const common = require('./webpack.common');
+/*
+Staleness Specific Tests
+*/
 
-const projectRootDir = path.resolve(__dirname, '..');
-// eslint-disable-next-line no-undef
-module.exports = merge(common, {
-    context: projectRootDir,
-    mode: 'production',
-    entry: {
-        'openmct-yamcs': path.resolve(projectRootDir, 'src/plugin.js')
-    },
-    devtool: 'source-map'
+import { pluginFixtures } from 'openmct-e2e';
+const { test } = pluginFixtures;
+
+test.describe.fixme("Staleness tests @yamcs", () => {
+    // eslint-disable-next-line require-await
+    test('Staleness ', async ({ page }) => {
+        test.step('Indicator is displayed for historic data', () => {
+            // Create a plot
+            // Add a telemetry endpoint that has stale data to this plot
+            // Expect that there is indication of staleness for the plot
+        });
+
+        test.step('Indicator is removed when new data arrives in real time', () => {
+            // Wait for new data
+            // Expect that stale indication is removed
+        });
+    });
 });

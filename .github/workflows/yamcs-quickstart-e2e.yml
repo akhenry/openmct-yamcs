@@ -21,32 +21,37 @@ jobs:
       matrix:
         yamcs-version:
           - default
-          - 5.8.3 #viper
+          - 5.9.8 #viper
           ## disabling until we get confirmation- 5.3.2 #ab
         openmct-version:
           - latest
           - stable
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: "18"
       - uses: actions/checkout@v3
         with:
           repository: yamcs/quickstart
-          ref: master
           path: 'quickstart'
       - name: replace yamcsVersion with matrix param
         if: matrix.yamcs-version != 'default'
         run: |
-          cd quickstart
           mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
+        working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          cd quickstart/docker
           touch makeout.txt
-          make all &> makeout.txt &
+          make all-10hz &> makeout.txt &
+        working-directory: quickstart/docker
       - run: npm install
+      - name: Get Open MCT e2e tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm run test:getopensource
       - name: Run build:example based on openmct-version
         run: |
           if [ "${{ matrix.openmct-version }}" = "latest" ]; then
@@ -54,13 +59,7 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npx playwright@1.36.2 install chromium
-      - name: Get Open MCT e2e tests
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: npm run test:getopensource
+      - run: npx playwright@1.47.2 install chromium
       - name: Check that yamcs is available
         run: |
           docker ps -a
@@ -74,9 +73,7 @@ jobs:
             echo "Error: Unable to fetch Yamcs version. HTTP status code: $response"
             exit 1
           fi
-      - name: Run Quickstart tests and publish to deploysentinel
-        env:
-          DEPLOYSENTINEL_API_KEY: ${{ secrets.DEPLOYSENTINEL_API_KEY }} 
+      - name: Run Quickstart tests
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()

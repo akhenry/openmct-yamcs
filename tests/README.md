@@ -3,6 +3,15 @@
 This project is using Open MCT's e2e-as-a-dependency model. To learn more, please see the official documentation on the [Official README](https://github.com/nasa/openmct/blob/master/e2e/README.md)
 
 ## How to Run Locally
+
+** Note: if you are running the tests to match a specific branch of openmct, you will need to run `npm run build:example:currentbranch` **
+
+### Makefile
+
+1. `make test-all`
+
+### Manually
+
 To run the tests, we recommend the following workflow which bridges two separate github repos:
 yamcs/quickstart and openmct-yamcs (this one).
 
@@ -11,8 +20,7 @@ yamcs/quickstart and openmct-yamcs (this one).
 3. `make all` in yamcs/quickstart
 4. `cd openmct-yamcs` to move out of yamcs/quickstart
 5. `npm install` in openmct-yamcs
-6. `npx playwright@1.36.2 install chromium` in openmct-yamcs
-7. Sanity test that yamcs is up with `npm run wait-for-yamcs` in openmct-yamcs
-8. `npm run build:example`
-9. `npm run test:getopensource`
-10. `npm run test:e2e:quickstart:local`
+6. Sanity test that yamcs is up with `npm run wait-for-yamcs` in openmct-yamcs
+7. `npm run test:getopensource`
+8. `npm run build:example` or `npm run build:example:master` or `npm run build:example:currentbranch`
+9. `npm run test:e2e:watch`

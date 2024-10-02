@@ -20,29 +20,36 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import * as MESSAGES from './messages';
+import { SUBSCRIBE, UNSUBSCRIBE } from './messages.js';
 import {
     OBJECT_TYPES,
     DATA_TYPES,
-    AGGREGATE_TYPE,
     METADATA_TIME_KEY,
     STALENESS_STATUS_MAP,
-    MDB_OBJECT
-} from '../const';
+    MDB_OBJECT,
+    MDB_CHANGES_PARAMETER_TYPE
+} from '../const.js';
 import {
     buildStalenessResponseObject,
     idToQualifiedName,
-    qualifiedNameToId,
-    getValue,
     addLimitInformation,
-    getLimitFromAlarmRange
+    getLimitFromAlarmRange,
+    convertYamcsToOpenMctDatum
 } from '../utils.js';
-import { commandToTelemetryDatum } from './commands';
-import { eventToTelemetryDatum, eventShouldBeFiltered } from './events';
+import { commandToTelemetryDatum } from './commands.js';
+import { eventToTelemetryDatum, eventShouldBeFiltered } from './events.js';
 
-const FALLBACK_AND_WAIT_MS = [1000, 5000, 5000, 10000, 10000, 30000];
+const ONE_SECOND = 1000;
+const ONE_MILLION_CHARACTERS = 1000000;
+
+//Everything except parameter messages are housekeeping and if they're dropped bad things can happen.
+const PARAMETER_MESSAGES = '^{[\\s]*"type":\\s"parameters';
+
 export default class RealtimeProvider {
-    constructor(url, instance, processor = 'realtime') {
+    #socketWorker = null;
+    #openmct;
+
+    constructor(openmct, url, instance, processor = 'realtime', throttleRate = ONE_SECOND, maxBufferSize = ONE_MILLION_CHARACTERS) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
@@ -57,9 +64,31 @@ export default class RealtimeProvider {
         this.lastSubscriptionId = 1;
         this.subscriptionsByCall = new Map();
         this.subscriptionsById = {};
+        this.#socketWorker = new openmct.telemetry.BatchingWebSocket(openmct);
+        this.#socketWorker.setThrottleMessagePattern(PARAMETER_MESSAGES);
+        this.#openmct = openmct;
+        this.#socketWorker.setThrottleRate(throttleRate);
+        this.#socketWorker.setMaxBufferSize(maxBufferSize);
 
         this.addSupportedObjectTypes(Object.values(OBJECT_TYPES));
         this.addSupportedDataTypes(Object.values(DATA_TYPES));
+        const setCallFromClockIfNecessary = this.#setCallFromClockIfNecessary.bind(this);
+
+        openmct.time.on('clock', setCallFromClockIfNecessary);
+
+        openmct.once('destroy', () => {
+            openmct.time.off('clock', setCallFromClockIfNecessary);
+        });
+    }
+
+    #setCallFromClockIfNecessary(clock) {
+        if (clock === undefined) {
+            this.unsetCall();
+        }
+
+        if (clock.key === 'remote-clock') {
+            this.#setCallFromClock(clock);
+        }
     }
 
     addSupportedObjectTypes(types) {
@@ -69,7 +98,6 @@ export default class RealtimeProvider {
     addSupportedDataTypes(dataTypes) {
         dataTypes.forEach(dataType => this.supportedDataTypes[dataType] = dataType);
     }
-
     supportsSubscribe(domainObject) {
         return this.isSupportedObjectType(domainObject.type);
     }
@@ -142,6 +170,10 @@ export default class RealtimeProvider {
         };
     }
 
+    getSubscriptionByObjectIdentifier(identifier) {
+        return Object.values(this.subscriptionsById).find(subscription => this.#openmct.objects.areIdsEqual(subscription.domainObject.identifier, identifier));
+    }
+
     buildSubscriptionDetails(domainObject, callback, options) {
         let subscriptionId = this.lastSubscriptionId++;
         let subscriptionDetails = {
@@ -160,47 +192,93 @@ export default class RealtimeProvider {
 
     sendSubscribeMessage(subscriptionDetails) {
         const domainObject = subscriptionDetails.domainObject;
-        const message = MESSAGES.SUBSCRIBE[domainObject.type](subscriptionDetails);
+        const message = SUBSCRIBE[domainObject.type](subscriptionDetails);
 
-        this.sendOrQueueMessage(message);
+        this.sendMessage(message);
     }
 
     sendUnsubscribeMessage(subscriptionDetails) {
-        let message = MESSAGES.UNSUBSCRIBE(subscriptionDetails);
+        let message = UNSUBSCRIBE(subscriptionDetails);
 
-        this.sendOrQueueMessage(message);
+        this.sendMessage(message);
     }
 
-    reconnect() {
-        this.subscriptionsByCall.clear();
+    #setCallFromClock(clock) {
+        const correspondingSubscription = Object.values(this.subscriptionsById).find(subscription => {
+            return subscription.domainObject.identifier.key === clock.identifier.key;
+        });
 
-        if (this.reconnectTimeout) {
-            return;
-        }
-
-        this.reconnectTimeout = setTimeout(() => {
-            this.connect();
-            delete this.reconnectTimeout;
-        }, FALLBACK_AND_WAIT_MS[this.currentWaitIndex]);
-
-        if (this.currentWaitIndex < FALLBACK_AND_WAIT_MS.length - 1) {
-            this.currentWaitIndex++;
-        }
-    }
-
-    sendOrQueueMessage(request) {
-        if (this.connected) {
-            try {
-                this.sendMessage(request);
-            } catch (error) {
-                this.connected = false;
-                this.requests.push(request);
-                console.error("🚨 Error while attempting to send to websocket, closing websocket", error);
-                this.socket.close();
-            }
+        if (correspondingSubscription !== undefined) {
+            this.remoteClockCallNumber = correspondingSubscription.call;
         } else {
-            this.requests.push(request);
+            delete this.remoteClockCallNumber;
         }
+    }
+
+    #processParameterUpdates(parameterValuesByCall) {
+        //If remote clock active, process its value before any telemetry values to ensure the bounds are always up to date.
+        if (this.remoteClockCallNumber !== undefined) {
+            const remoteClockValues = parameterValuesByCall.get(this.remoteClockCallNumber);
+            const subscriptionDetails = this.subscriptionsByCall.get(this.remoteClockCallNumber);
+
+            if (remoteClockValues !== undefined && remoteClockValues.length > 0) {
+                const allClockValues = [];
+
+                remoteClockValues.forEach((parameterValue) => {
+                    this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allClockValues);
+                });
+
+                if (allClockValues.length > 0) {
+                    subscriptionDetails.callback(allClockValues);
+                }
+
+                // Delete so we don't process it twice.
+                parameterValuesByCall.delete(this.remoteClockCallNumber);
+            }
+        }
+
+        // Now process all non-clock parameter updates
+        for (const [call, parameterValues] of parameterValuesByCall.entries()) {
+            const allTelemetryData = [];
+            const subscriptionDetails = this.subscriptionsByCall.get(call);
+
+            // possibly cancelled
+            if (!subscriptionDetails) {
+                continue;
+            }
+
+            parameterValues.forEach((parameterValue) => {
+                this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allTelemetryData);
+            });
+
+            if (allTelemetryData.length > 0) {
+                subscriptionDetails.callback(allTelemetryData);
+            }
+        }
+    }
+
+    #convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allTelemetryData) {
+        const values = parameterValue.data.values || [];
+        const parentName = subscriptionDetails.domainObject.name;
+        values.forEach(parameter => {
+            const datum = convertYamcsToOpenMctDatum(parameter, parentName);
+
+            if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
+                const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
+
+                if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
+                    const stalenesResponseObject = buildStalenessResponseObject(
+                        status,
+                        parameter[METADATA_TIME_KEY]
+                    );
+                    this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
+                    this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
+                }
+            }
+
+            addLimitInformation(parameter, datum);
+            allTelemetryData.push(datum);
+        });
     }
 
     connect() {
@@ -211,117 +289,95 @@ export default class RealtimeProvider {
         let wsUrl = `${this.url}`;
         this.lastSubscriptionId = 1;
         this.connected = false;
-        this.socket = new WebSocket(wsUrl);
 
-        this.socket.onopen = () => {
-            clearTimeout(this.reconnectTimeout);
-
-            this.connected = true;
-            console.debug(`🔌 Established websocket connection to ${wsUrl}`);
-
-            this.currentWaitIndex = 0;
+        this.#socketWorker.connect(wsUrl);
+        this.#socketWorker.addEventListener('reconnected', () => {
             this.resubscribeToAll();
-            this.flushQueue();
-        };
+        });
 
-        this.socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-
-            if (!this.isSupportedDataType(message.type)) {
-                return;
-            }
-
-            const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
-            let subscriptionDetails;
-
-            if (isReply) {
-                const id = message.data.replyTo;
+        this.#socketWorker.addEventListener('batch', (batchEvent) => {
+            const newBatch = batchEvent.detail;
+            const parametersByCall = new Map();
+            newBatch.forEach(messageString => {
+                const message = JSON.parse(messageString);
                 const call = message.call;
-                subscriptionDetails = this.subscriptionsById[id];
-                subscriptionDetails.call = call;
-                this.subscriptionsByCall.set(call, subscriptionDetails);
-            } else {
-                subscriptionDetails = this.subscriptionsByCall.get(message.call);
+                if (message.type === 'parameters') {
+                    // First, group parameter updates by call
+                    let arrayOfParametersForCall = parametersByCall.get(call);
 
-                // possibly cancelled
-                if (!subscriptionDetails) {
-                    return;
-                }
-
-                if (this.isTelemetryMessage(message)) {
-                    let values = message.data.values || [];
-                    let parentName = subscriptionDetails.domainObject.name;
-
-                    values.forEach(parameter => {
-                        let datum = {
-                            id: qualifiedNameToId(subscriptionDetails.name),
-                            timestamp: parameter[METADATA_TIME_KEY]
-                        };
-                        let value = getValue(parameter, parentName);
-
-                        if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
-                            const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
-
-                            if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
-                                const stalenesResponseObject = buildStalenessResponseObject(
-                                    status,
-                                    parameter[METADATA_TIME_KEY]
-                                );
-                                this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
-                                this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
-                            }
-                        }
-
-                        if (parameter.engValue.type !== AGGREGATE_TYPE) {
-                            datum.value = value;
-                        } else {
-                            datum = {
-                                ...datum,
-                                ...value
-                            };
-                        }
-
-                        addLimitInformation(parameter, datum);
-                        subscriptionDetails.callback(datum);
-                    });
-                } else if (this.isCommandMessage(message)) {
-                    const datum = commandToTelemetryDatum(message.data);
-                    subscriptionDetails.callback(datum);
-                } else if (this.isEventMessage(message)) {
-                    if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
-                        // ignore event
-                    } else {
-                        const datum = eventToTelemetryDatum(message.data);
-                        subscriptionDetails.callback(datum);
-                    }
-                } else if (this.isMdbChangesMessage(message)) {
-                    const parameterName = message.data.parameterOverride.parameter;
-                    if (this.observingLimitChanges[parameterName] !== undefined) {
-                        const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
-                        this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
+                    if (arrayOfParametersForCall === undefined) {
+                        arrayOfParametersForCall = [];
+                        parametersByCall.set(call, arrayOfParametersForCall);
                     }
 
-                    if (subscriptionDetails.callback) {
-                        subscriptionDetails.callback(message.data);
-                    }
+                    arrayOfParametersForCall.push(message);
                 } else {
-                    subscriptionDetails.callback(message.data);
+                    if (!this.isSupportedDataType(message.type)) {
+                        return;
+                    }
+
+                    const isReply = message.type === DATA_TYPES.DATA_TYPE_REPLY;
+                    let subscriptionDetails;
+
+                    if (isReply) {
+                        const id = message.data.replyTo;
+                        subscriptionDetails = this.subscriptionsById[id];
+
+                        // Susbcriptions can be cancelled before we even get to this stage during tests due to rapid navigation.
+                        if (!subscriptionDetails) {
+                            return;
+                        }
+
+                        subscriptionDetails.call = call;
+                        // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
+                        this.subscriptionsByCall.set(call, subscriptionDetails);
+
+                        const remoteClockIdentifier = this.#openmct.time.getClock()?.identifier;
+                        const isRemoteClockActive = remoteClockIdentifier !== undefined;
+
+                        if (isRemoteClockActive && subscriptionDetails.domainObject.identifier.key === remoteClockIdentifier.key) {
+                            this.remoteClockCallNumber = call;
+                        }
+                    } else {
+                        subscriptionDetails = this.subscriptionsByCall.get(message.call);
+
+                        // possibly cancelled
+                        if (!subscriptionDetails) {
+                            return;
+                        }
+
+                        if (this.isCommandMessage(message)) {
+                            const datum = commandToTelemetryDatum(message.data);
+                            subscriptionDetails.callback(datum);
+                        } else if (this.isEventMessage(message)) {
+                            if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
+                            // ignore event
+                            } else {
+                                const datum = eventToTelemetryDatum(message.data);
+                                subscriptionDetails.callback(datum);
+                            }
+                        } else if (this.isMdbChangesMessage(message)) {
+                            if (!this.isParameterType(message)) {
+                                return;
+                            }
+
+                            const parameterName = message.data.parameterOverride.parameter;
+                            if (this.observingLimitChanges[parameterName] !== undefined) {
+                                const alarmRange = message.data.parameterOverride.defaultAlarm?.staticAlarmRange ?? [];
+                                this.observingLimitChanges[parameterName].callback(getLimitFromAlarmRange(alarmRange));
+                            }
+
+                            if (subscriptionDetails.callback) {
+                                subscriptionDetails.callback(message.data);
+                            }
+                        } else {
+                            subscriptionDetails.callback(message.data);
+                        }
+                    }
                 }
-            }
-        };
-
-        this.socket.onerror = (error) => {
-            console.error(`🚨 Websocket error, closing websocket`, error);
-            this.socket.close();
-        };
-
-        this.socket.onclose = () => {
-            console.warn('🚪 Websocket closed. Attempting to reconnect...');
-            this.connected = false;
-            this.socket = null;
-
-            this.reconnect();
-        };
+            });
+            this.#processParameterUpdates(parametersByCall);
+        });
     }
 
     resubscribeToAll() {
@@ -330,30 +386,8 @@ export default class RealtimeProvider {
         });
     }
 
-    flushQueue() {
-        let shouldCloseWebsocket = false;
-        this.requests = this.requests.filter((request) => {
-            try {
-                this.sendMessage(request);
-            } catch (error) {
-                this.connected = false;
-                console.error('🚨 Error while attempting to send to websocket, closing websocket', error);
-
-                shouldCloseWebsocket = true;
-
-                return true;
-            }
-
-            return false;
-        });
-
-        if (shouldCloseWebsocket) {
-            this.socket.close();
-        }
-    }
-
     sendMessage(message) {
-        this.socket.send(message);
+        this.#socketWorker.sendMessage(message);
     }
 
     isTelemetryMessage(message) {
@@ -370,5 +404,9 @@ export default class RealtimeProvider {
 
     isMdbChangesMessage(message) {
         return message.type === DATA_TYPES.DATA_TYPE_MDB_CHANGES;
+    }
+
+    isParameterType(message) {
+        return message.data?.type === MDB_CHANGES_PARAMETER_TYPE;
     }
 }

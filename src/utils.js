@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { AGGREGATE_TYPE, UNSUPPORTED_TYPE } from './const';
+import {AGGREGATE_TYPE, UNSUPPORTED_TYPE, METADATA_TIME_KEY, MDB_CHANGES_PARAMETER_TYPE} from './const.js';
 import limitConfig from "./limits-config.json";
 
 function idToQualifiedName(id) {
@@ -211,12 +211,14 @@ async function getLimitOverrides(url) {
     const overrides = await requestLimitOverrides(url);
 
     overrides.forEach((override) => {
-        const parameterOverride = override.parameterOverride;
-        const parameter = parameterOverride.parameter;
-        const alarmRange = parameterOverride?.defaultAlarm?.staticAlarmRange ?? [];
+        if (override.type === MDB_CHANGES_PARAMETER_TYPE) {
+            const parameter = override?.parameterOverride?.parameter;
+            const alarmRange = override?.parameterOverride?.defaultAlarm?.staticAlarmRange ?? [];
 
-        limitOverrides[parameter] = getLimitFromAlarmRange(alarmRange);
-
+            if (parameter && alarmRange) {
+                limitOverrides[parameter] = getLimitFromAlarmRange(alarmRange);
+            }
+        }
     });
 
     return limitOverrides;
@@ -362,6 +364,24 @@ function flattenObjectArray(array, baseObj = {}) {
     }, baseObj);
 }
 
+function convertYamcsToOpenMctDatum(parameter, parentName) {
+    let datum = {
+        timestamp: parameter[METADATA_TIME_KEY]
+    };
+    const value = getValue(parameter, parentName);
+
+    if (parameter.engValue.type !== AGGREGATE_TYPE) {
+        datum.value = value;
+    } else {
+        datum = {
+            ...datum,
+            ...value
+        };
+    }
+
+    return datum;
+}
+
 export {
     buildStalenessResponseObject,
     getLimitFromAlarmRange,
@@ -373,5 +393,6 @@ export {
     accumulateResults,
     addLimitInformation,
     yieldResults,
-    getLimitOverrides
+    getLimitOverrides,
+    convertYamcsToOpenMctDatum
 };

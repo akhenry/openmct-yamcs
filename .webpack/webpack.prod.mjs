@@ -20,28 +20,12 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-const config = require('./webpack.dev');
-// eslint-disable-next-line no-undef
-const CI = process.env.CI === 'true';
+import { merge } from 'webpack-merge';
+import common from './webpack.common.mjs';
 
-config.devtool = CI ? false : undefined;
-
-config.devServer.hot = false;
-
-config.module.rules.push({
-    test: /\.js$/,
-    exclude: /(node_modules)/,
-    use: {
-        loader: 'babel-loader',
-        options: {
-            retainLines: true,
-            // eslint-disable-next-line no-undef
-            plugins: [['babel-plugin-istanbul', {
-                extension: ['.js']
-            }]]
-        }
-    }
-});
-
-// eslint-disable-next-line no-undef
-module.exports = config;
+/** @type {import('webpack').Configuration} */
+const prodConfig = {
+    mode: 'production',
+    devtool: 'source-map'
+}
+export default merge(common, prodConfig);
