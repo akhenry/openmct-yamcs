@@ -24,8 +24,9 @@
 Telemetry Table Specific Tests
 */
 
-import { pluginFixtures } from 'openmct-e2e';
+import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
+const { setRealTimeMode } = appActions;
 
 test.describe("Telemetry Tables tests @yamcs", () => {
 
@@ -76,5 +77,59 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         // Assert that the 'SHOW LIMITED' button is now visible
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
+
+    test('Telemetry tables are sorted in desc order correctly', async ({ page }) => {
+        await setRealTimeMode(page);
+
+        //navigate to CCSDS_Packet_Length with a specified realtime window
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~CCSDS_Packet_Length?tc.mode=local&tc.startDelta=5000&tc.endDelta=5000&tc.timeSystem=utc&view=table', {waitUntil: 'domcontentloaded'});
+
+        // wait 5 seconds for the table to fill
+        await page.waitForTimeout(5*1000);
+        // pause the table
+        await page.getByLabel('Pause').click();
+        const telemTableDesc = await page.getByLabel("CCSDS_Packet_Length table content");
+
+        // assert that they're in desc order
+        expect(await assertTableRowsInOrder(telemTableDesc, 'desc')).toBe(true);
+
+        // Unpause
+        await page.getByLabel('Play').click();
+
+        // flip sort order
+        await page.locator('thead div').filter({ hasText: 'Timestamp' }).click();
+
+        // wait for x seconds
+        await page.waitForTimeout(5*1000);
+
+        // pause the table
+        await page.getByLabel('Pause').click();
+        const telemTableAsc = await page.getByLabel("CCSDS_Packet_Length table content");
+        // assert that they're in asc order
+        expect(await assertTableRowsInOrder(telemTableAsc, 'asc')).toBe(true);
+    });
+
+    async function assertTableRowsInOrder(telemTable, order) {
+        let rowsAreInOrder = false;
+        const allRows = await (await telemTable.getByLabel('Table Row')).all();
+        const arrayOfTimestamps = await Promise.all(allRows.map(async (row) => {
+            const timestamp = await row.getByLabel(/utc table cell.*/).innerText();
+            return new Date(timestamp).getTime();
+        }));
+        // check that they're in order
+        // arrayOfTimestamps
+        if (order === 'desc') {
+            rowsAreInOrder = arrayOfTimestamps.every((timestamp, index) => {
+                return index === 0 || timestamp <= arrayOfTimestamps[index - 1];
+            });
+        } else {
+            //order === 'asc'
+            rowsAreInOrder = arrayOfTimestamps.every((timestamp, index) => {
+                return index === 0 || timestamp >= arrayOfTimestamps[index - 1];
+            });
+        }
+
+        return rowsAreInOrder;
+    }
 
 });
