@@ -27,6 +27,7 @@ Telemetry Table Specific Tests
 import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 const { setRealTimeMode } = appActions;
+const FIVE_SECONDS = 5*1000;
 
 test.describe("Telemetry Tables tests @yamcs", () => {
 
@@ -85,7 +86,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~CCSDS_Packet_Length?tc.mode=local&tc.startDelta=5000&tc.endDelta=5000&tc.timeSystem=utc&view=table', {waitUntil: 'domcontentloaded'});
 
         // wait 5 seconds for the table to fill
-        await page.waitForTimeout(5*1000);
+        await page.waitForTimeout(FIVE_SECONDS);
         // pause the table
         await page.getByLabel('Pause').click();
         const telemTableDesc = await page.getByLabel("CCSDS_Packet_Length table content");
@@ -100,7 +101,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await page.locator('thead div').filter({ hasText: 'Timestamp' }).click();
 
         // wait for x seconds
-        await page.waitForTimeout(5*1000);
+        await page.waitForTimeout(FIVE_SECONDS);
 
         // pause the table
         await page.getByLabel('Pause').click();
