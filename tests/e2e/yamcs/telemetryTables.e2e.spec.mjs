@@ -110,6 +110,12 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         expect(await assertTableRowsInOrder(telemTableAsc, 'asc')).toBe(true);
     });
 
+    /**
+     * Returns whether a list of timestamp based rows are in asc or desc order
+     * @param { Node } telemTable Node for telemetry table
+     * @param { string } order 'asc' or 'desc'
+     * @returns {Boolean} All table rows are in order
+     */
     async function assertTableRowsInOrder(telemTable, order) {
         let rowsAreInOrder = false;
         const allRows = await (await telemTable.getByLabel('Table Row')).all();
