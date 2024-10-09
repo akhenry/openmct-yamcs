@@ -15,20 +15,20 @@ const config = {
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
-        failOnConsoleError: false
+        failOnConsoleError: true
     },
     webServer: {
         cwd: '../',
         command: 'npm run start:coverage',
         url: 'http://localhost:9000/#',
         timeout: 120 * 1000,
-        reuseExistingServer: false
+        reuseExistingServer: true
     },
     workers: 1,
     projects: [
         {
             name: "chromium",
-            grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
+            grepInvert: /@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
                 headless: true,
@@ -40,7 +40,7 @@ const config = {
         // -- Local Browsers --
         {
             name: "local-chrome",
-            grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
+            grepInvert: /@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
                 channel: 'chrome'
