@@ -27,7 +27,7 @@
 import { pluginFixtures, appActions } from 'openmct-e2e';
 import { searchAndLinkTelemetryToObject } from '../yamcsAppActions.mjs';
 const { test, expect } = pluginFixtures;
-const { createDomainObjectWithDefaults } = appActions;
+const { createDomainObjectWithDefaults, setFixedTimeMode } = appActions;
 
 test.describe('Bar Graph @yamcs', () => {
   let barGraph;
@@ -36,7 +36,7 @@ test.describe('Bar Graph @yamcs', () => {
   test.beforeEach(async ({ page }) => {
     // Open a browser, navigate to the main page, and wait until all networkevents to resolve
     await page.goto('./', { waitUntil: 'networkidle' });
-
+    await setFixedTimeMode(page);
     // Create the Bar Graph
     barGraph = await createDomainObjectWithDefaults(page, { type: 'Graph', name: 'Bar Graph' });
     // Enter edit mode for the overlay plot
