@@ -1,7 +1,7 @@
-import { FAULT_MANAGEMENT_ALARMS, FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } from './fault-mgmt-constants.js';
+import { FAULT_MGMT_ALARMS, FAULT_MGMT_ACTIONS } from './fault-mgmt-constants.js';
 
 export default class FaultActionProvider {
-    constructor(url, instance, processor = 'realtime') {
+    constructor(url, instance, processor) {
         this.url = url;
         this.instance = instance;
         this.processor = processor;
@@ -9,52 +9,92 @@ export default class FaultActionProvider {
 
     acknowledgeFault(fault, { comment = '' } = {}) {
         const payload = {
-            comment,
-            state: 'acknowledged'
+            comment
         };
-        const options = this._getOptions(payload);
-        const url = this._getUrl(fault);
+        const options = this.#getOptions(payload);
+        const url = this.#getUrl(fault, FAULT_MGMT_ACTIONS.ACKNOWLEDGE);
 
-        return this._sendRequest(url, options);
+        return this.#sendRequest(url, options);
     }
 
-    shelveFault(fault, { shelved = true, comment = '', shelveDuration = FAULT_MANAGEMENT_DEFAULT_SHELVE_DURATION } = {}) {
-        let payload = {};
+    /**
+     * Shelves or unshelves a fault.
+     * @param {FaultModel} fault the fault to perform the action on
+     * @param {Object} options the options to perform the action with
+     * @param {boolean} options.shelved whether to shelve or unshelve the fault
+     * @param {string} options.comment the comment to add to the fault
+     * @param {number} options.shelveDuration the duration to shelve the fault for
+     * @returns {Promise<Response>} the response from the server
+     */
+    shelveFault(fault, { shelved = true, comment = '', shelveDuration } = {}) {
+        const payload = {};
+        const action = shelved ? FAULT_MGMT_ACTIONS.SHELVE : FAULT_MGMT_ACTIONS.UNSHELVE;
+
         if (shelved) {
             payload.comment = comment;
             payload.shelveDuration = shelveDuration;
-            payload.state = 'shelved';
-        } else {
-            payload.state = 'unshelved';
         }
 
-        const options = this._getOptions(payload);
-        let url = this._getUrl(fault);
+        const options = this.#getOptions(payload);
+        const url = this.#getUrl(fault, action);
 
-        return this._sendRequest(url, options);
+        return this.#sendRequest(url, options);
     }
 
-    _getOptions(payload) {
+    /**
+     * @typedef {Object} ShelveDuration
+     * @property {string} name - The name of the shelve duration
+     * @property {number|null} value - The value of the shelve duration in milliseconds, or null for indefinite
+     */
+
+    /**
+     * @returns {ShelveDuration[]} the list of shelve durations
+     */
+    getShelveDurations() {
+        return [
+            {
+                name: '5 Minutes',
+                value: 300000
+            },
+            {
+                name: '10 Minutes',
+                value: 600000
+            },
+            {
+                name: '15 Minutes',
+                value: 900000
+            },
+            {
+                name: 'Indefinite',
+                value: null
+            }
+        ];
+    }
+
+    #getOptions(payload) {
         return {
             body: JSON.stringify(payload),
-            // credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json'
             },
-            method: 'PATCH',
+            method: 'POST',
             mode: 'cors'
         };
     }
 
-    _getUrl(fault) {
-        let url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MANAGEMENT_ALARMS}`;
-        url += `${fault.namespace}/${fault.name}`;
-        url += `/${fault.seqNum}`;
-
-        return url;
+    /**
+     * @param {FaultModel} fault the fault to perform the action on
+     * @param {'acknowledge' | 'shelve' | 'unshelve' | 'clear'} action the action to perform on the fault
+     * @returns {string} the URL to perform the action on the fault
+     */
+    #getUrl(fault, action) {
+        return `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MGMT_ALARMS}`
+               + `${fault.namespace}/${fault.name}/${fault.seqNum}:${action}`;
     }
 
-    _sendRequest(url, options) {
+    #sendRequest(url, options) {
         return fetch(url, options);
     }
 }
+
+/** @typedef {import('./utils.js').FaultModel} FaultModel */
