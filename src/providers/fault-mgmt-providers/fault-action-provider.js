@@ -44,7 +44,7 @@ export default class FaultActionProvider {
     /**
      * @typedef {Object} ShelveDuration
      * @property {string} name - The name of the shelve duration
-     * @property {number|null} value - The value of the shelve duration in milliseconds, or null for indefinite
+     * @property {number|null} value - The value of the shelve duration in milliseconds, or null for unlimited
      */
 
     /**
@@ -65,7 +65,7 @@ export default class FaultActionProvider {
                 value: 900000
             },
             {
-                name: 'Indefinite',
+                name: 'Unlimited',
                 value: null
             }
         ];
