@@ -43,9 +43,6 @@
   "engines": {
     "node": ">=18.14.2 <22"
   },
-  "optionalDependencies": {
-    "openmct": ">= 3.9.9"
-  },
   "devDependencies": {
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.23.3",
