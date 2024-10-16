@@ -53,16 +53,24 @@ export default class FaultActionProvider {
     getShelveDurations() {
         return [
             {
-                name: '5 Minutes',
-                value: 300000
-            },
-            {
-                name: '10 Minutes',
-                value: 600000
-            },
-            {
                 name: '15 Minutes',
-                value: 900000
+                value: 1000 * 60 * 15
+            },
+            {
+                name: '30 Minutes',
+                value: 1000 * 60 * 30
+            },
+            {
+                name: '1 Hour',
+                value: 1000 * 60 * 60
+            },
+            {
+                name: '2 Hours',
+                value: 1000 * 60 * 60 * 2
+            },
+            {
+                name: '1 Day',
+                value: 1000 * 60 * 60 * 24
             },
             {
                 name: 'Unlimited',
