@@ -44,7 +44,7 @@ export default class FaultActionProvider {
     /**
      * @typedef {Object} ShelveDuration
      * @property {string} name - The name of the shelve duration
-     * @property {number|null} value - The value of the shelve duration in milliseconds, or null for indefinite
+     * @property {number|null} value - The value of the shelve duration in milliseconds, or null for unlimited
      */
 
     /**
@@ -53,19 +53,27 @@ export default class FaultActionProvider {
     getShelveDurations() {
         return [
             {
-                name: '5 Minutes',
-                value: 300000
-            },
-            {
-                name: '10 Minutes',
-                value: 600000
-            },
-            {
                 name: '15 Minutes',
-                value: 900000
+                value: 1000 * 60 * 15
             },
             {
-                name: 'Indefinite',
+                name: '30 Minutes',
+                value: 1000 * 60 * 30
+            },
+            {
+                name: '1 Hour',
+                value: 1000 * 60 * 60
+            },
+            {
+                name: '2 Hours',
+                value: 1000 * 60 * 60 * 2
+            },
+            {
+                name: '1 Day',
+                value: 1000 * 60 * 60 * 24
+            },
+            {
+                name: 'Unlimited',
                 value: null
             }
         ];
