@@ -80,24 +80,28 @@ jobs:
         run: docker logs yamcs > yamcs-docker-log.txt 2>&1
       - name: archive docker logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
           path: yamcs-docker-log.txt
       - name: Archive makeout.txt
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: /quickstart/docker/makeout.txt
+          name: makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: /quickstart/docker/makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: test-results
+          name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive html test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: tests/html-test-results
+          name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: tests/html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
         uses: actions/github-script@v6
@@ -115,3 +119,14 @@ jobs:
             } catch (error) {
               core.warning(`Failed to remove 'pr:e2e:quickstart' label: ${error.message}`);
             }
+  download:
+    needs: yamcs-quickstart-e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: html-test-results
+          pattern: html-test-results-*
+          merge-multiple: true
+      - run: ls -R html-test-results-*
