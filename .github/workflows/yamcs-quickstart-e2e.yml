@@ -95,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
-          path: test-results
+          path: tests/test-results
       - name: Archive html test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -141,6 +141,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: logs
-          pattern: yamcs-docker-log-*
+          pattern: |
+            yamcs-docker-log-*
+            makeout-*
           merge-multiple: true
       - run: ls -R logs
