@@ -89,13 +89,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
-          path: /quickstart/docker/makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
+          path: /quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
-          path: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: test-results
       - name: Archive html test results
         if: always()
         uses: actions/upload-artifact@v4
