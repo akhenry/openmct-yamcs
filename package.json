@@ -10,9 +10,6 @@
       "require": "./dist/openmct-yamcs.js"
     }
   },
-  "workspaces": [
-    "tests/e2e/opensource"
-  ],
   "scripts": {
     "clean": "rm -rf ./dist ./node_modules ./package-lock.json ./coverage ./test-results ./tests/html-test-results ./tests/e2e/test-results ./.nyc_output ./tests/e2e/opensource",
     "test": "npm run test:getopensource && npm run test:e2e:smoke",
@@ -27,11 +24,10 @@
     "start:coverage": "npx webpack serve --config ./.webpack/webpack.coverage.mjs",
     "prepare": "npm run build:dist",
     "test:getopensource": "sh ./tests/git-opensource-tests.sh",
-    "posttest:getopensource": "npm install",
-    "test:e2e:smoke": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium quickstartSmoke",
-    "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
-    "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
-    "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
+    "test:e2e:smoke": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium quickstartSmoke",
+    "test:e2e:quickstart": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
+    "test:e2e:quickstart:local": "npx playwright test --config=./tests/e2e/playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
+    "test:e2e:watch": "npx playwright test --ui --config=./tests/e2e/playwright-quickstart.config.js",
     "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
   },
   "keywords": [
@@ -49,6 +45,7 @@
   "devDependencies": {
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.23.3",
+    "@openmct/e2e": "4.1.0-alpha-2024-10-26.1",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
     "eslint": "8.56.0",
