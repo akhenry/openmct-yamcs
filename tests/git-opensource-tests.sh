@@ -31,14 +31,7 @@ git read-tree -m -u HEAD
 # moving back to /tests/ dir
 cd ..
 
-# Move index.js to root
-mv opensource/e2e/index.js ./opensource
-# Move package.json, package-lock.json
-mv opensource/e2e/package*.json ./opensource
-# Move fixtures and appActions
-mv opensource/e2e/*Fixtures.js ./opensource
-mv opensource/e2e/appActions.js ./opensource
-# Move subfolders
+# Move tests
 mv opensource/e2e/*/ ./opensource
 # Move eslint config
 mv opensource/e2e/.eslintrc.*js ./opensource
