@@ -24,7 +24,7 @@
 Telemetry Table Specific Tests
 */
 
-import { pluginFixtures, appActions } from 'openmct-e2e';
+import { pluginFixtures, appActions } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 const { setRealTimeMode } = appActions;
 const FIVE_SECONDS = 5*1000;

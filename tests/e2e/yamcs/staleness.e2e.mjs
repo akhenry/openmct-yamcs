@@ -24,7 +24,7 @@
 Staleness Specific Tests
 */
 
-import { pluginFixtures } from 'openmct-e2e';
+import { pluginFixtures } from '@openmct/e2e';
 const { test } = pluginFixtures;
 
 test.describe.fixme("Staleness tests @yamcs", () => {

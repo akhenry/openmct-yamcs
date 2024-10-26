@@ -24,7 +24,7 @@
 Staleness Specific Tests
 */
 
-import { pluginFixtures } from 'openmct-e2e';
+import { pluginFixtures } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 
 const YAMCS_API_URL = "http://localhost:8090/api/";
