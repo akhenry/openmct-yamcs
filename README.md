@@ -36,7 +36,7 @@ default it is configured to connect to the "myproject" instance provided in the 
 
 ### Testing
 
-This project is using the openmct-e2e-as-a-dependency model. For getting started with our tests, please see [our README](./tests/README.md)
+This project utilizes the Open MCT end-to-end testing framework package `@openmct/e2e`. To get started with our tests, please refer to [our README](./tests/README.md).
 
 Each PR is tested for compatibility with YAMCS QuickStart as well as the latest version of Open MCT using GitHub Actions.
 
