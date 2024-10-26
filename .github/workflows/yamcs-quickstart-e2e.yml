@@ -123,23 +123,8 @@ jobs:
     needs: yamcs-quickstart-e2e
     runs-on: ubuntu-latest
     steps:
-      - name: Download html test results
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: html-test-results
-          pattern: html-test-results-*
-          merge-multiple: true
-      - name: Download test results
-        uses: actions/download-artifact@v4
-        with:
-          path: test-results
-          pattern: test-results-*
-          merge-multiple: true
-      - name: Download logs
-        uses: actions/download-artifact@v4
-        with:
-          path: logs
-          pattern: |
-            yamcs-docker-log-*
-            makeout-*
+          path: artifacts
           merge-multiple: true
