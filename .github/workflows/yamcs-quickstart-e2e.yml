@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
-          path: tests/html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: tests/html-test-results
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
         uses: actions/github-script@v6
@@ -119,14 +119,28 @@ jobs:
             } catch (error) {
               core.warning(`Failed to remove 'pr:e2e:quickstart' label: ${error.message}`);
             }
-  download:
+  download-artifacts:
     needs: yamcs-quickstart-e2e
     runs-on: ubuntu-latest
     steps:
-      - name: Download All Artifacts
+      - name: Download html test results
         uses: actions/download-artifact@v4
         with:
           path: html-test-results
           pattern: html-test-results-*
           merge-multiple: true
-      - run: ls -R html-test-results-*
+      - run: ls -R html-test-results
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results
+          pattern: test-results-*
+          merge-multiple: true
+      - run: ls -R test-results
+      - name: Download logs
+        uses: actions/download-artifact@v4
+        with:
+          path: logs
+          pattern: yamcs-docker-log-*
+          merge-multiple: true
+      - run: ls -R logs
