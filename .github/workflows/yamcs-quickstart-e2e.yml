@@ -129,14 +129,12 @@ jobs:
           path: html-test-results
           pattern: html-test-results-*
           merge-multiple: true
-      - run: ls -R html-test-results
       - name: Download test results
         uses: actions/download-artifact@v4
         with:
           path: test-results
           pattern: test-results-*
           merge-multiple: true
-      - run: ls -R test-results
       - name: Download logs
         uses: actions/download-artifact@v4
         with:
@@ -145,4 +143,3 @@ jobs:
             yamcs-docker-log-*
             makeout-*
           merge-multiple: true
-      - run: ls -R logs
