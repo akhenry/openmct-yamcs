@@ -59,7 +59,7 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npx playwright@1.47.2 install chromium
+      - run: npx playwright install chromium
       - name: Check that yamcs is available
         run: |
           docker ps -a
@@ -80,23 +80,27 @@ jobs:
         run: docker logs yamcs > yamcs-docker-log.txt 2>&1
       - name: archive docker logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
           path: yamcs-docker-log.txt
       - name: Archive makeout.txt
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
           path: /quickstart/docker/makeout.txt
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: test-results
+          name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: tests/test-results
       - name: Archive html test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
           path: tests/html-test-results
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
@@ -115,3 +119,12 @@ jobs:
             } catch (error) {
               core.warning(`Failed to remove 'pr:e2e:quickstart' label: ${error.message}`);
             }
+  download-artifacts:
+    needs: yamcs-quickstart-e2e
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true

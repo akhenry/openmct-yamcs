@@ -27,7 +27,7 @@ import {
     latestParameterValues,
     parameterArchive
 } from './quickstartTools.mjs';
-import { pluginFixtures } from 'openmct-e2e';
+import { pluginFixtures } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 
 test.describe('Quickstart library functions', () => {

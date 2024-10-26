@@ -24,7 +24,7 @@
 Network Specific Tests
 */
 
-import { pluginFixtures, appActions } from 'openmct-e2e';
+import { pluginFixtures, appActions } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 const { setFixedTimeMode } = appActions;
 

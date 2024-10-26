@@ -24,7 +24,7 @@
  * This suite verifies the network requests made by the application to ensure correct interaction with YAMCS.
  */
 
-import { pluginFixtures, appActions } from 'openmct-e2e';
+import { pluginFixtures, appActions } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 const { setFixedTimeMode } = appActions;
 

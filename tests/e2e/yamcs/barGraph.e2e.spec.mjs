@@ -24,7 +24,7 @@
  * This test suite is dedicated to testing the Bar Graph component.
  */
 
-import { pluginFixtures, appActions } from 'openmct-e2e';
+import { pluginFixtures, appActions } from '@openmct/e2e';
 import { searchAndLinkTelemetryToObject } from '../yamcsAppActions.mjs';
 const { test, expect } = pluginFixtures;
 const { createDomainObjectWithDefaults, setFixedTimeMode } = appActions;

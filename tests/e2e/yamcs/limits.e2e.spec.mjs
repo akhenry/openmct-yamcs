@@ -24,7 +24,7 @@
 MDB Limits Specific Tests
 */
 
-import { pluginFixtures, appActions } from 'openmct-e2e';
+import { pluginFixtures, appActions } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 const { createDomainObjectWithDefaults, waitForPlotsToRender } = appActions;
 const YAMCS_URL = 'http://localhost:8090/';

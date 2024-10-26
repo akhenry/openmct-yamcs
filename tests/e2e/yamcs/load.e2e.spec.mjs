@@ -24,7 +24,7 @@
 Open MCT load Specific Tests
 */
 
-import { pluginFixtures } from 'openmct-e2e';
+import { pluginFixtures } from '@openmct/e2e';
 const { test, expect } = pluginFixtures;
 const YAMCS_URL = 'http://localhost:8090/';
 
