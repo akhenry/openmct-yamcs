@@ -1,20 +1,23 @@
 # YAMCS Plugin for Open MCT
+
 This project provides a plugin for connecting Open MCT to a YAMCS backend.
 
 ## Running the example
 
 An example is provided in this repository that can be configured to run against any YAMCS installation. This is designed
- to get you up and running quickly, and should work with no configuration changes if you are running the 
+ to get you up and running quickly, and should work with no configuration changes if you are running the
  [YAMCS QuickStart](https://github.com/yamcs/quickstart) server.
 
 ### Prerequisites
-* The YAMCS Quickstart example is assumed to have been installed and to be running successfully. See 
-  https://github.com/yamcs/quickstart
+
+* The YAMCS Quickstart example is assumed to have been installed and to be running successfully. See
+  <https://github.com/yamcs/quickstart>
 * [A git client](https://git-scm.com/)
 * [NodeJS](https://nodejs.org/)
 
 ### Compatibility
-This is a fast moving project and we do our best to support and test what we test and support. 
+
+This is a fast moving project and we do our best to support and test what we test and support.
 
 * Supported NodeJS available in our package.json's `engine` key.
 * Minimum Supported Open MCT version in our package.json's `optionalDependencies` key.
@@ -23,6 +26,7 @@ This is a fast moving project and we do our best to support and test what we tes
 If you encounter an issue with our documented compatibility, please file a [GitHub issue](https://github.com/akhenry/openmct-yamcs/issues/new/choose)
 
 ### Installation
+
 ```
 git clone https://github.com/akhenry/openmct-yamcs.git
 cd openmct-yamcs
@@ -31,7 +35,7 @@ npm run build:example
 npm start
 ```
 
-This should build the example, and launch a web browser with Open MCT connected to a locally running YAMCS server. By 
+This should build the example, and launch a web browser with Open MCT connected to a locally running YAMCS server. By
 default it is configured to connect to the "myproject" instance provided in the [YAMCS QuickStart](https://github.com/yamcs/quickstart) server.
 
 ### Testing
@@ -42,12 +46,13 @@ Each PR is tested for compatibility with YAMCS QuickStart as well as the latest 
 
 ## Using the Open MCT-YAMCS plugin in your own project
 
-When building an application with Open MCT, we strongly advise building with Open MCT as a dependency, rather than 
-building your project from the Open MCT source. Please refer to 
+When building an application with Open MCT, we strongly advise building with Open MCT as a dependency, rather than
+building your project from the Open MCT source. Please refer to
 [our guidance on this](https://github.com/nasa/openmct/blob/master/API.md#starting-an-open-mct-application).
 
 ### Fetching the dependency
-These instructions assume you are using Node Package Manager. You should be able to adapt them for Yarn, but this has 
+
+These instructions assume you are using Node Package Manager. You should be able to adapt them for Yarn, but this has
 not been tested.
 
 ```
@@ -56,23 +61,26 @@ npm install --save akhenry/openmct-yamcs
 
 ### Installing the plugin
 
-The Open MCT - YAMCS adapter can be included as an ES6 module using an import statement. If you are using Webpack it 
+The Open MCT - YAMCS adapter can be included as an ES6 module using an import statement. If you are using Webpack it
 can be imported using only the package name, otherwise the full path to the dependency should be used.
 
 eg.
 
 #### Using Webpack
-```
+
+```js
 import installYamcsPlugin from 'openmct-yamcs';
 ```
 
-#### Using native ES6 imports:
-```
+#### Using native ES6 imports
+
+```js
 import installYamcsPlugin from 'node_modules/openmct-yamcs/dist/openmct-yamcs.js'
 ```
 
 The plugin can then be installed and configured like so:
-```
+
+```js
 openmct.install(installYamcsPlugin({
     "yamcsDictionaryEndpoint": "http://localhost:8090/",
     "yamcsHistoricalEndpoint": "http://localhost:8090/",
@@ -83,17 +91,20 @@ openmct.install(installYamcsPlugin({
 ```
 
 ## Configuration
+
 | Configuration Item      | Notes                                                 | Example Value                      |
 |-------------------------|-------------------------------------------------------|------------------------------------|
-| yamcsDictionaryEndpoint | This is the root path to the YAMCS installation. The adapter will use this to fetch all of the parameters adapter will use this to fetch all of the parameters and containers defined for the configured instance. | http://localhost:8090/              |
-| yamcsHistoricalEndpoint | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical data for the selected parameter, in the configured instance. | http://localhost:8090/             |
+| yamcsDictionaryEndpoint | This is the root path to the YAMCS installation. The adapter will use this to fetch all of the parameters adapter will use this to fetch all of the parameters and containers defined for the configured instance. | <http://localhost:8090/>              |
+| yamcsHistoricalEndpoint | As above, this is the root path to the YAMCS installation. This will be automatically appended with the necessary path to retrieve historical data for the selected parameter, in the configured instance. | <http://localhost:8090/>             |
 | yamcsWebsocketEndpoint   | The path to the new (post v5) WebSocket interface.  *It must always start with `ws` or `wss`, and must contain the complete path (unlike config above) | ws://localhost:8090/api/websocket               |
 | yamcsInstance           | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 | yamcsFolder             | The name of the instance configured in YAMCS that you wish to connect to. | myproject                          |
 
 ## getDictionaryRequestOptions
+
 installYamcsPlugin also accepts an optional function argument `getDictionaryRequestOptions`. Use this function to return request options when requesting the YAMCS dictionary. An example of how to make use of this is below.
-```
+
+```js
 openmct.install(installYamcsPlugin(
   configuration,
   getDictionaryRequestOptions
@@ -135,4 +146,5 @@ Examples:
     </xtce:Parameter>
 
 ## Limitations
+
 Right now the Open MCT - YAMCS adapter can only be configued for a single YAMCS instance at a time. We hope to address this in a future release.
