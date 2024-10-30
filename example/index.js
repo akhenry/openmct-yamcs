@@ -150,21 +150,23 @@ const openmct = window.openmct;
                 function mctItemExists() {
                     return new Promise((resolve, reject) => {
                         const startTime = Date.now();
-                        
+
                         function checkItem() {
                             if (localStorage.getItem('mct') !== null) {
                                 resolve(true);
+
                                 return;
                             }
-                            
+
                             if (Date.now() - startTime > MAX_POLL_TIME) {
                                 reject(new Error('Timeout waiting for mct localStorage item'));
+
                                 return;
                             }
-                            
+
                             setTimeout(checkItem, POLL_INTERVAL);
                         }
-                        
+
                         checkItem();
                     });
                 }
@@ -193,7 +195,7 @@ const openmct = window.openmct;
                 while (compositionLength === 0 && retryCount < MAX_COMPOSITION_RETRIES) {
                     composition = await compositionCollection.load();
                     compositionLength = composition.length;
-                    
+
                     if (compositionLength === 0) {
                         retryCount++;
                         await new Promise(resolve => setTimeout(resolve, COMPOSITION_RETRY_DELAY));
