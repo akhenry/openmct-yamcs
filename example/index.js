@@ -45,6 +45,10 @@ const STATUS_STYLES = {
 const openmct = window.openmct;
 
 (() => {
+    const POLL_INTERVAL = 100; // ms
+    const MAX_POLL_TIME = 10000; // 10 seconds
+    const COMPOSITION_RETRY_DELAY = 250; // ms
+    const MAX_COMPOSITION_RETRIES = 20; // 5 seconds total with 250ms intervals
     const ONE_SECOND = 1000;
     const ONE_MINUTE = ONE_SECOND * 60;
     const THIRTY_MINUTES = ONE_MINUTE * 30;
@@ -144,15 +148,23 @@ const openmct = window.openmct;
 
                 // poll for the localStorage item
                 function mctItemExists() {
-                    return new Promise((resolve) => {
+                    return new Promise((resolve, reject) => {
+                        const startTime = Date.now();
+                        
                         function checkItem() {
                             if (localStorage.getItem('mct') !== null) {
                                 resolve(true);
-                            } else {
-                                setTimeout(checkItem, 100);
+                                return;
                             }
+                            
+                            if (Date.now() - startTime > MAX_POLL_TIME) {
+                                reject(new Error('Timeout waiting for mct localStorage item'));
+                                return;
+                            }
+                            
+                            setTimeout(checkItem, POLL_INTERVAL);
                         }
-
+                        
                         checkItem();
                     });
                 }
@@ -177,9 +189,19 @@ const openmct = window.openmct;
                 let compositionLength = 0;
                 let composition;
 
-                while (compositionLength === 0) {
+                let retryCount = 0;
+                while (compositionLength === 0 && retryCount < MAX_COMPOSITION_RETRIES) {
                     composition = await compositionCollection.load();
                     compositionLength = composition.length;
+                    
+                    if (compositionLength === 0) {
+                        retryCount++;
+                        await new Promise(resolve => setTimeout(resolve, COMPOSITION_RETRY_DELAY));
+                    }
+                }
+
+                if (compositionLength === 0) {
+                    throw new Error('Failed to load composition after maximum retries');
                 }
 
                 const exampleLayoutPath = await getExampleLayoutPath();
@@ -195,7 +217,8 @@ const openmct = window.openmct;
                 // set the localStorage item to prevent this from running again
                 localStorage.setItem('exampleLayout', 'true');
             } catch (error) {
-                console.warn('Issue setting up example display layout:', error);
+                console.error('Failed to set up example display layout:', error);
+                openmct.notifications.error('Failed to load example display layout: ' + error.message);
             }
         });
     }
