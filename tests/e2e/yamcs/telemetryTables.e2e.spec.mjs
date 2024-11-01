@@ -27,7 +27,7 @@ Telemetry Table Specific Tests
 import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 const { setRealTimeMode } = appActions;
-const FIVE_SECONDS = 5*1000;
+const FIVE_SECONDS = 5 * 1000;
 
 test.describe("Telemetry Tables tests @yamcs", () => {
 
@@ -46,7 +46,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
 
     test('Telemetry Tables viewing an unpersistable object, will not modify the configuration on mode change', async ({ page }) => {
         // Navigat to the Events table
-        await page.getByLabel('Navigate to Events yamcs.').click();
+        await page.goto('./events', { waitUntil: 'networkidle' });
 
         // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
@@ -60,7 +60,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.getByLabel('Navigate to Events yamcs.').click();
+        await page.goto('./events', { waitUntil: 'networkidle' });
         await page.waitForLoadState('networkidle');
 
         // Wait for the descending events request
@@ -84,7 +84,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.getByLabel('Navigate to Events yamcs.').click();
+        await page.goto('./events', { waitUntil: 'networkidle' });
         await page.waitForLoadState('networkidle');
 
         // Wait for and verify that the request was made
@@ -145,6 +145,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const allRows = await (await telemTable.getByLabel('Table Row')).all();
         const arrayOfTimestamps = await Promise.all(allRows.map(async (row) => {
             const timestamp = await row.getByLabel(/utc table cell.*/).innerText();
+
             return new Date(timestamp).getTime();
         }));
         // check that they're in order
