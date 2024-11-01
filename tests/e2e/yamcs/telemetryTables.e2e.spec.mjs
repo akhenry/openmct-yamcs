@@ -79,9 +79,9 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
 
-    test.only('Changing sort order in limited mode triggers a new request', async ({ page }) => {
+    test('Changing sort order in limited mode triggers a new request', async ({ page }) => {
         // Set up request promise for an events request in descending order
-        let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
+        const eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
         await page.getByLabel('Navigate to Events yamcs.').click();
@@ -97,7 +97,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const eventRequestOrderAscending = page.waitForRequest(/.*\/api\/.*\/events.*order=asc$/);
 
         // flip sort order
-        await page.locator('thead div').filter({ hasText: 'Timestamp' }).click();
+        await page.locator('thead div').filter({ hasText: 'Generation Time' }).click();
 
         // Wait for and verify that the request was made
         await expect(eventRequestOrderAscending).resolves.toBeTruthy();
