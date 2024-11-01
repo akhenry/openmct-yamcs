@@ -79,6 +79,30 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
     });
 
+    test.only('Changing sort order in limited mode triggers a new request', async ({ page }) => {
+        // Set up request promise for an events request in descending order
+        let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
+
+        // Navigate to the Events table
+        await page.getByLabel('Navigate to Events yamcs.').click();
+        await page.waitForLoadState('networkidle');
+
+        // Wait for and verify that the request was made
+        await expect(eventRequestOrderDescending).resolves.toBeTruthy();
+
+        // Assert that the 'SHOW UNLIMITED' button is visible (we are in limited mode)
+        await expect(page.getByRole('button', { name: 'SHOW UNLIMITED' })).toBeVisible();
+
+        // Set up request promise before clicking to change sort order
+        const eventRequestOrderAscending = page.waitForRequest(/.*\/api\/.*\/events.*order=asc$/);
+
+        // flip sort order
+        await page.locator('thead div').filter({ hasText: 'Timestamp' }).click();
+
+        // Wait for and verify that the request was made
+        await expect(eventRequestOrderAscending).resolves.toBeTruthy();
+    });
+
     test('Telemetry tables are sorted in desc order correctly', async ({ page }) => {
         await setRealTimeMode(page);
 
