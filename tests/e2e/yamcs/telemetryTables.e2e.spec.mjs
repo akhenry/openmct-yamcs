@@ -85,7 +85,6 @@ test.describe("Telemetry Tables tests @yamcs", () => {
 
         // Navigate to the Events table
         await page.goto('./events', { waitUntil: 'networkidle' });
-        await page.waitForLoadState('networkidle');
 
         // Wait for and verify that the request was made
         await expect(eventRequestOrderDescending).resolves.toBeTruthy();
