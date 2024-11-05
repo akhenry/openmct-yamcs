@@ -37,10 +37,12 @@ import { baseFixtures } from 'openmct-e2e';
 const { test, expect } = baseFixtures;
 
 test.describe("Quickstart smoke tests @yamcs", () => {
-    test('Verify that the create button appears and that the Folder Domain Object is available for selection', async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
         //Go to baseURL
         await page.goto('./', { waitUntil: 'networkidle' });
+    });
 
+    test('Verify that the create button appears and that the Folder Domain Object is available for selection', async ({ page }) => {
         //Click the Create button
         await page.getByRole('button', { name: 'Create' }).click();
 
@@ -56,5 +58,19 @@ test.describe("Quickstart smoke tests @yamcs", () => {
         await expect(page.locator('.c-tree__item :text-is("Fault Management")')).toBeEnabled();
         await expect(page.locator('.c-tree__item :text-is("myproject")')).toBeEnabled();
         await expect(page.locator('.c-tree__item :text-is("My Items")')).toBeEnabled();
+    });
+
+    test('Verify that the default display is generated and navigated to without error', async ({ page }) => {
+        await expect(page.getByRole('main').getByText('Example Flexible Layout')).toBeVisible();
+        await expect(page.getByLabel('Health tab')).toBeVisible();
+        await expect(page.getByLabel('Position tab')).toBeVisible();
+        await expect(page.getByLabel('Velocity tab')).toBeVisible();
+        await expect(page.getByLabel('All Current Values tab')).toBeVisible();
+        await expect(page.getByText('SUBSYS')).toBeVisible();
+        await expect(page.getByText('ADCS', { exact: true })).toBeVisible();
+        await expect(page.getByText('CDHS', { exact: true })).toBeVisible();
+        await expect(page.getByText('COMMS', { exact: true })).toBeVisible();
+        await expect(page.getByText('EPS', { exact: true })).toBeVisible();
+        await expect(page.getByLabel('CW PYLD Status Object View').getByText('PAYLOAD')).toBeVisible();
     });
 });
