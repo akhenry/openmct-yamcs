@@ -39,14 +39,11 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "domcontentloaded" });
         await expect(page.getByText('Loading...')).toBeHidden();
-
-        // Expand myproject
-        await page.getByLabel('Expand myproject').click();
     });
 
     test('Telemetry Tables viewing an unpersistable object, will not modify the configuration on mode change', async ({ page }) => {
-        // Navigat to the Events table
-        await page.goto('./events', { waitUntil: 'networkidle' });
+        // Navigate to the Events table
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
 
         // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
@@ -60,8 +57,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.goto('./events', { waitUntil: 'networkidle' });
-        await page.waitForLoadState('networkidle');
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
 
         // Wait for the descending events request
         await eventRequestOrderDescending;
@@ -84,7 +80,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.goto('./events', { waitUntil: 'networkidle' });
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
 
         // Wait for and verify that the request was made
         await expect(eventRequestOrderDescending).resolves.toBeTruthy();
