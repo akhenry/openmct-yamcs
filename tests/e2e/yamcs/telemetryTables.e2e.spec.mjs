@@ -27,7 +27,7 @@ Telemetry Table Specific Tests
 import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 const { setRealTimeMode } = appActions;
-const FIVE_SECONDS = 5*1000;
+const FIVE_SECONDS = 5 * 1000;
 
 test.describe("Telemetry Tables tests @yamcs", () => {
 
@@ -39,14 +39,11 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "domcontentloaded" });
         await expect(page.getByText('Loading...')).toBeHidden();
-
-        // Expand myproject
-        await page.getByLabel('Expand myproject').click();
     });
 
     test('Telemetry Tables viewing an unpersistable object, will not modify the configuration on mode change', async ({ page }) => {
-        // Navigat to the Events table
-        await page.getByLabel('Navigate to Events yamcs.').click();
+        // Navigate to the Events table
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
 
         // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
@@ -60,8 +57,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.getByLabel('Navigate to Events yamcs.').click();
-        await page.waitForLoadState('networkidle');
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
 
         // Wait for the descending events request
         await eventRequestOrderDescending;
@@ -77,6 +73,29 @@ test.describe("Telemetry Tables tests @yamcs", () => {
 
         // Assert that the 'SHOW LIMITED' button is now visible
         await expect(page.getByRole('button', { name: 'SHOW LIMITED' })).toBeVisible();
+    });
+
+    test('Changing sort order in limited mode triggers a new request', async ({ page }) => {
+        // Set up request promise for an events request in descending order
+        const eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
+
+        // Navigate to the Events table
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
+
+        // Wait for and verify that the request was made
+        await expect(eventRequestOrderDescending).resolves.toBeTruthy();
+
+        // Assert that the 'SHOW UNLIMITED' button is visible (we are in limited mode)
+        await expect(page.getByRole('button', { name: 'SHOW UNLIMITED' })).toBeVisible();
+
+        // Set up request promise before clicking to change sort order
+        const eventRequestOrderAscending = page.waitForRequest(/.*\/api\/.*\/events.*order=asc$/);
+
+        // flip sort order
+        await page.locator('thead div').filter({ hasText: 'Generation Time' }).click();
+
+        // Wait for and verify that the request was made
+        await expect(eventRequestOrderAscending).resolves.toBeTruthy();
     });
 
     test('Telemetry tables are sorted in desc order correctly', async ({ page }) => {
@@ -121,6 +140,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const allRows = await (await telemTable.getByLabel('Table Row')).all();
         const arrayOfTimestamps = await Promise.all(allRows.map(async (row) => {
             const timestamp = await row.getByLabel(/utc table cell.*/).innerText();
+
             return new Date(timestamp).getTime();
         }));
         // check that they're in order
