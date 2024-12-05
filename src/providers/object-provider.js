@@ -28,7 +28,7 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
-import { createCommandsObject } from './commands.js';
+import { createCommandObject, getCommandQueues, createRootCommandsObject } from './commands.js';
 import { createRootEventsObject, createEventObject, getEventSources } from './events.js';
 import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
 import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
@@ -63,12 +63,6 @@ export default class YamcsObjectProvider {
 
     #initialize() {
         this.#createRootObject();
-        const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
-        this.#addObject(commandsObject);
-        this.rootObject.composition.push(
-            commandsObject.identifier
-        );
-
         this.openmct.on('destroy', this.#unsubscribeFromAll);
     }
 
@@ -219,11 +213,34 @@ export default class YamcsObjectProvider {
             this.#addParameterObject(parameter);
         });
 
-        // fetch underlying events
-        await this.#createEvents(this.openmct, this.rootObject, this.key, this.namespace);
+        await this.#createCommands();
+
+        await this.#createEvents();
 
         return this.dictionary;
     }
+
+    async #createCommands() {
+        const rootCommandsObject = createRootCommandsObject(this.openmct, this.key, this.namespace);
+        this.#addObject(rootCommandsObject);
+        this.rootObject.composition.push(
+            rootCommandsObject.identifier
+        );
+        const commandQueues = await getCommandQueues(this.url, this.instance);
+        commandQueues.forEach(commandQueueName => {
+            const queueKey = qualifiedNameToId(`${OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE}.${commandQueueName}`);
+            const queueIdentifier = {
+                key: queueKey,
+                namespace: this.namespace
+            };
+            const commandQueueObject = createCommandObject(this.openmct, rootCommandsObject.identifier.key, this.namespace, queueIdentifier, commandQueueName, OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE);
+
+            this.#addObject(commandQueueObject);
+
+            rootCommandsObject.composition.push(commandQueueObject.identifier);
+        });
+    }
+
     async #createEvents() {
         const rootEventsObject = createRootEventsObject(this.openmct, this.key, this.namespace);
         this.#addObject(rootEventsObject);
@@ -231,7 +248,6 @@ export default class YamcsObjectProvider {
 
         // Fetch child event names
         const eventSourceNames = await getEventSources(this.openmct, this.url, this.instance, rootEventsObject, this.namespace);
-        console.debug('👶 Child events', eventSourceNames);
         eventSourceNames.forEach(eventSourceName => {
             const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.${eventSourceName}`);
             const childEventIdentifier = {

@@ -109,6 +109,12 @@ export function createEventObject(openmct, parentKey, namespace, identifier, nam
 export async function getEventSources(openmct, url, instance, rootEventObject, namespace) {
     const eventSourceURL = `${url}/api/archive/${instance}/events/sources`;
     const eventSourcesReply = await fetch(eventSourceURL);
+    if (!eventSourcesReply.ok) {
+        console.error(`🛑 Failed to fetch event sources: ${eventSourcesReply.statusText}`);
+
+        return [];
+    }
+
     const eventSourcesJson = await eventSourcesReply.json();
 
     return eventSourcesJson.sources;

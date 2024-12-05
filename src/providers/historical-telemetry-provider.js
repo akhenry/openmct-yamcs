@@ -72,6 +72,12 @@ export default class YamcsHistoricalTelemetryProvider {
             options.eventSource = eventSourceName;
         }
 
+        if (domainObject.type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE) {
+            const prefix = `${OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE}.`;
+            const commandQueueName = domainObject.identifier.key.replace(prefix, '');
+            options.commandQueue = commandQueueName;
+        }
+
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax';
@@ -175,9 +181,12 @@ export default class YamcsHistoricalTelemetryProvider {
             urlWithQueryParameters.searchParams.append('useRawValue', "true");
         }
 
-
         if (options.eventSource) {
             urlWithQueryParameters.searchParams.append('source', options.eventSource);
+        }
+
+        if (options.commandQueue) {
+            urlWithQueryParameters.searchParams.append('queue', options.commandQueue);
         }
 
         if (options.filters?.severity?.equals?.length) {
@@ -215,7 +224,11 @@ export default class YamcsHistoricalTelemetryProvider {
             return 'events';
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE) {
+            return 'commands';
+        }
+
+        if (id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return 'commands';
         }
 
@@ -231,7 +244,11 @@ export default class YamcsHistoricalTelemetryProvider {
             return 'event';
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE) {
+            return 'entry';
+        }
+
+        if (id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return 'entry';
         }
 
@@ -247,7 +264,7 @@ export default class YamcsHistoricalTelemetryProvider {
             return results.map(event => eventToTelemetryDatum(event));
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE || id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return results.map(command => commandToTelemetryDatum(command));
         }
 

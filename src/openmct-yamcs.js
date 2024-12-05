@@ -198,9 +198,15 @@ export default function install(
             cssClass: "icon-generator-events"
         });
 
-        openmct.types.addType(OBJECT_TYPES.COMMANDS_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE, {
+            name: "Command Queue",
+            description: "To view command history in a specific queue",
+            cssClass: "icon-generator-events" // TODO: replace
+        });
+
+        openmct.types.addType(OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE, {
             name: "Commands",
-            description: "To view command history",
+            description: "To view the whole command history",
             cssClass: "icon-generator-events" // TODO: replace
         });
 
