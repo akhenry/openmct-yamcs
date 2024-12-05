@@ -29,7 +29,7 @@ import {
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
 import { createCommandsObject } from './commands.js';
-import { createEventsObject } from './events.js';
+import { createRootEventsObject, createEventObject, getEventSources } from './events.js';
 import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
 import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
@@ -63,12 +63,9 @@ export default class YamcsObjectProvider {
 
     #initialize() {
         this.#createRootObject();
-        const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
         const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
         this.#addObject(commandsObject);
-        this.#addObject(eventsObject);
         this.rootObject.composition.push(
-            eventsObject.identifier,
             commandsObject.identifier
         );
 
@@ -222,7 +219,31 @@ export default class YamcsObjectProvider {
             this.#addParameterObject(parameter);
         });
 
+        // fetch underlying events
+        await this.#createEvents(this.openmct, this.rootObject, this.key, this.namespace);
+
         return this.dictionary;
+    }
+    async #createEvents() {
+        const rootEventsObject = createRootEventsObject(this.openmct, this.key, this.namespace);
+        this.#addObject(rootEventsObject);
+        this.rootObject.composition.push(rootEventsObject.identifier);
+
+        // Fetch child event names
+        const eventSourceNames = await getEventSources(this.openmct, this.url, this.instance, rootEventsObject, this.namespace);
+        console.debug('👶 Child events', eventSourceNames);
+        eventSourceNames.forEach(eventSourceName => {
+            const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.${eventSourceName}`);
+            const childEventIdentifier = {
+                key: childEventKey,
+                namespace: this.namespace
+            };
+            const childEventObject = createEventObject(this.openmct, rootEventsObject.identifier.key, this.namespace, childEventIdentifier, eventSourceName, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE);
+
+            this.#addObject(childEventObject);
+
+            rootEventsObject.composition.push(childEventObject.identifier);
+        });
     }
 
     #getMdbUrl(operation, name = '') {

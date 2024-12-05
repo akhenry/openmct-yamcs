@@ -196,7 +196,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getLinkParamsSpecificToId(id) {
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE || id === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE) {
             return 'events';
         }
 
@@ -208,7 +208,7 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getResponseKeyById(id) {
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE || id === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE) {
             return 'event';
         }
 
@@ -224,7 +224,7 @@ export default class YamcsHistoricalTelemetryProvider {
             return [];
         }
 
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE || id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE) {
             return results.map(event => eventToTelemetryDatum(event));
         }
 

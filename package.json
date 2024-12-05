@@ -32,7 +32,8 @@
     "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
     "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
-    "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v"
+    "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v",
+    "make-example-events": "node ./example/make-example-events.js"
   },
   "keywords": [
     "openmct",
