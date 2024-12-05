@@ -93,6 +93,10 @@ export default class LimitProvider {
     }
 
     supportsLimits(domainObject) {
+        if (domainObject.type.startsWith('yamcs.commands')) {
+            return false;
+        }
+
         return domainObject.type.startsWith('yamcs.');
     }
 
