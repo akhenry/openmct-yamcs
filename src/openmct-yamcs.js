@@ -186,7 +186,7 @@ export default function install(
             cssClass: 'icon-telemetry'
         });
 
-        openmct.types.addType(OBJECT_TYPES.ROOT_EVENTS_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE, {
             name: "Events",
             description: "To view all events",
             cssClass: "icon-generator-events"

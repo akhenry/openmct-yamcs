@@ -66,6 +66,12 @@ export default class YamcsHistoricalTelemetryProvider {
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
 
+        if (domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE) {
+            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
+            const eventSourceName = domainObject.identifier.key.replace(prefix, '');
+            options.eventSource = eventSourceName;
+        }
+
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax';
@@ -169,6 +175,11 @@ export default class YamcsHistoricalTelemetryProvider {
             urlWithQueryParameters.searchParams.append('useRawValue', "true");
         }
 
+
+        if (options.eventSource) {
+            urlWithQueryParameters.searchParams.append('source', options.eventSource);
+        }
+
         if (options.filters?.severity?.equals?.length) {
             // add a single minimum severity threshold filter
             // see https://docs.yamcs.org/yamcs-http-api/events/list-events/
@@ -196,7 +207,11 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getLinkParamsSpecificToId(id) {
-        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE || id === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE) {
+            return 'events';
+        }
+
+        if (id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)) {
             return 'events';
         }
 
@@ -208,7 +223,11 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getResponseKeyById(id) {
-        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE || id === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE) {
+            return 'event';
+        }
+
+        if (id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)) {
             return 'event';
         }
 
@@ -224,7 +243,7 @@ export default class YamcsHistoricalTelemetryProvider {
             return [];
         }
 
-        if (id === OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE || id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)) {
             return results.map(event => eventToTelemetryDatum(event));
         }
 
