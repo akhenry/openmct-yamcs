@@ -117,7 +117,7 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.BarChart());
         const timeLinePlugin = openmct.plugins.Timeline();
         openmct.install(timeLinePlugin);
-        openmct.install(openmct.plugins.EventTimestripPlugin(timeLinePlugin.eventBus));
+        openmct.install(openmct.plugins.EventTimestripPlugin(timeLinePlugin.extendedLinesBus));
 
         // setup example display layout
         openmct.on('start', async () => {
