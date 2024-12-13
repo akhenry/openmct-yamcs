@@ -55,7 +55,10 @@ export function createCommandObject(openmct, parentKey, namespace, identifier, q
                 {
                     key: 'commandName',
                     name: 'Command',
-                    format: 'string'
+                    format: 'string',
+                    hints: {
+                        label: 0
+                    }
                 },
                 {
                     key: 'utc',

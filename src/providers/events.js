@@ -82,7 +82,10 @@ export function createEventObject(openmct, parentKey, namespace, identifier, nam
                 {
                     key: 'message',
                     name: 'Message',
-                    format: 'string'
+                    format: 'string',
+                    hints: {
+                        label: 0
+                    }
                 },
                 {
                     key: 'type',
