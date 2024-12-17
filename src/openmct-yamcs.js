@@ -198,6 +198,12 @@ export default function install(
             cssClass: "icon-generator-events"
         });
 
+        openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE, {
+            name: "Event",
+            description: "To view events from a specific source with a specific severity or greater",
+            cssClass: "icon-generator-events"
+        });
+
         openmct.types.addType(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE, {
             name: "Command Queue",
             description: "To view command history in a specific queue",

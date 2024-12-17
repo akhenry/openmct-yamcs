@@ -29,7 +29,7 @@ import {
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
 import { createCommandObject, getCommandQueues, createRootCommandsObject } from './commands.js';
-import { createRootEventsObject, createEventObject, getEventSources } from './events.js';
+import { createRootEventsObject, createEventObject, getEventSources, createEventSeverityObjects } from './events.js';
 import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
 import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
@@ -247,7 +247,7 @@ export default class YamcsObjectProvider {
         this.rootObject.composition.push(rootEventsObject.identifier);
 
         // Fetch child event names
-        const eventSourceNames = await getEventSources(this.openmct, this.url, this.instance, rootEventsObject, this.namespace);
+        const eventSourceNames = await getEventSources(this.url, this.instance);
         eventSourceNames.forEach(eventSourceName => {
             const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.${eventSourceName}`);
             const childEventIdentifier = {
@@ -257,6 +257,17 @@ export default class YamcsObjectProvider {
             const childEventObject = createEventObject(this.openmct, rootEventsObject.identifier.key, this.namespace, childEventIdentifier, eventSourceName, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE);
 
             this.#addObject(childEventObject);
+
+            const childSeverityObjects = [];
+            //const childSeverityObjects = createEventSeverityObjects(this.openmct, childEventObject, this.namespace);
+            childSeverityObjects.forEach(severityObject => {
+                this.#addObject(severityObject);
+                if (!childEventObject.composition) {
+                    childEventObject.composition = [];
+                }
+
+                childEventObject.composition.push(severityObject.identifier);
+            });
 
             rootEventsObject.composition.push(childEventObject.identifier);
         });

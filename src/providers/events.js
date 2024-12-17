@@ -109,7 +109,32 @@ export function createEventObject(openmct, parentKey, namespace, identifier, nam
     return baseEventObject;
 }
 
-export async function getEventSources(openmct, url, instance, rootEventObject, namespace) {
+export function createEventSeverityObjects(openmct, parentEventObject, namespace) {
+    const childSeverityObjects = [];
+    for (const severity of SEVERITY_LEVELS) {
+        const severityIdentifier = {
+            key: `${parentEventObject.identifier.key}.${severity}`,
+            namespace
+        };
+
+        const severityName = `${parentEventObject.name}: ${severity}`;
+
+        const severityEventObject = createEventObject(
+            openmct,
+            parentEventObject.identifier.key,
+            namespace,
+            severityIdentifier,
+            severityName,
+            OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
+        );
+
+        childSeverityObjects.push(severityEventObject);
+    }
+
+    return childSeverityObjects;
+}
+
+export async function getEventSources(url, instance) {
     const eventSourceURL = `${url}/api/archive/${instance}/events/sources`;
     const eventSourcesReply = await fetch(eventSourceURL);
     if (!eventSourcesReply.ok) {
