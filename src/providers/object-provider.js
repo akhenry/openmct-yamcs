@@ -258,8 +258,7 @@ export default class YamcsObjectProvider {
 
             this.#addObject(childEventObject);
 
-            const childSeverityObjects = [];
-            //const childSeverityObjects = createEventSeverityObjects(this.openmct, childEventObject, this.namespace);
+            const childSeverityObjects = createEventSeverityObjects(this.openmct, childEventObject, this.namespace);
             childSeverityObjects.forEach(severityObject => {
                 this.#addObject(severityObject);
                 if (!childEventObject.composition) {

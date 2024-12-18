@@ -67,14 +67,26 @@ export default class YamcsHistoricalTelemetryProvider {
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
 
-        if ([OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE].includes(domainObject.type)) {
+        if ([OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE].includes(domainObject.type)) {
             const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
             const eventSourceName = domainObject.identifier.key.replace(prefix, '');
             options.eventSource = eventSourceName;
         }
 
         if (domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
-            options.filters.severity = domainObject.identifier.key.split('.')[1];
+            if (!options.filters) {
+                options.filters = {
+                    severity: {
+                        equals: []
+                    }
+                };
+            }
+
+            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
+            const prefixRemoved = domainObject.identifier.key.replace(prefix, '');
+            const [eventSourceName, severity] = prefixRemoved.split('.');
+            options.eventSource = eventSourceName;
+            options.filters.severity.equals = [severity];
         }
 
         if (domainObject.type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE) {
