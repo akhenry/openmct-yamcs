@@ -74,19 +74,11 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         if (domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
-            if (!options.filters) {
-                options.filters = {
-                    severity: {
-                        equals: []
-                    }
-                };
-            }
-
             const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
             const prefixRemoved = domainObject.identifier.key.replace(prefix, '');
             const [eventSourceName, severity] = prefixRemoved.split('.');
             options.eventSource = eventSourceName;
-            options.filters.severity.equals = [severity];
+            options.minimumSeverity = severity;
         }
 
         if (domainObject.type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE) {
@@ -200,6 +192,10 @@ export default class YamcsHistoricalTelemetryProvider {
 
         if (options.eventSource) {
             urlWithQueryParameters.searchParams.append('source', options.eventSource);
+        }
+
+        if (options.minimumSeverity) {
+            urlWithQueryParameters.searchParams.append('severity', options.minimumSeverity);
         }
 
         if (options.commandQueue) {

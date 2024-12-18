@@ -2,7 +2,6 @@ const INSTANCE = "myproject";
 const URL = `http://localhost:8090/api/archive/${INSTANCE}/events`;
 
 const events = [
-    // Pressure Events
     {
         type: "PRESSURE_ALERT",
         message: "Pressure threshold exceeded",
@@ -18,7 +17,7 @@ const events = [
         type: "PRESSURE_WARNING",
         message: "Pressure nearing critical level",
         severity: "WARNING",
-        source: "PressureMonitor",
+        source: "PressureModule",
         sequenceNumber: 2,
         extra: {
             pressure: "140 PSI",
@@ -29,14 +28,13 @@ const events = [
         type: "PRESSURE_INFO",
         message: "Pressure system check completed",
         severity: "INFO",
-        source: "MaintenanceModule",
+        source: "PressureModule",
         sequenceNumber: 3,
         extra: {
             checkType: "Routine Inspection",
             duration: "10m"
         }
     },
-    // Temperature Events
     {
         type: "TEMPERATURE_ALERT",
         message: "Temperature threshold exceeded",
@@ -52,7 +50,7 @@ const events = [
         type: "TEMPERATURE_WARNING",
         message: "Temperature nearing critical level",
         severity: "WARNING",
-        source: "TemperatureMonitor",
+        source: "TemperatureModule",
         sequenceNumber: 5,
         extra: {
             temperature: "95°C",
@@ -61,13 +59,35 @@ const events = [
     },
     {
         type: "TEMPERATURE_INFO",
-        message: "Temperature system check completed",
+        message: "Temperature nominal",
         severity: "INFO",
-        source: "MaintenanceModule",
+        source: "TemperatureModule",
         sequenceNumber: 6,
         extra: {
-            checkType: "Routine Inspection",
-            duration: "15m"
+            temperature: "35°C",
+            location: "Life Support"
+        }
+    },
+    {
+        type: "TEMPERATURE_INFO",
+        message: "Temperature nominal",
+        severity: "INFO",
+        source: "TemperatureModule",
+        sequenceNumber: 7,
+        extra: {
+            temperature: "30°C",
+            location: "Life Support"
+        }
+    },
+    {
+        type: "TEMPERATURE_SEVERE",
+        message: "Temperature nominal",
+        severity: "SEVERE",
+        source: "TemperatureModule",
+        sequenceNumber: 8,
+        extra: {
+            temperature: "200°C",
+            location: "Engine Room"
         }
     }
 ];
