@@ -1,5 +1,7 @@
 /* CSS classes for Yamcs parameter monitoring result values. */
 
+import { OBJECT_TYPES } from "../const";
+
 const SEVERITY_CSS = {
     'WATCH': 'is-event--yellow',
     'WARNING': 'is-event--yellow',
@@ -65,6 +67,6 @@ export default class EventLimitProvider {
     }
 
     supportsLimits(domainObject) {
-        return domainObject.type.startsWith('yamcs.events');
+        return [OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE].includes(domainObject.type);
     }
 }

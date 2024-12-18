@@ -21,21 +21,28 @@
  *****************************************************************************/
 import { OBJECT_TYPES, METADATA_TIME_KEY, SEVERITY_LEVELS } from "../const.js";
 
-export function createEventsObject(openmct, parentKey, namespace) {
+export function createRootEventsObject(openmct, parentKey, namespace) {
+    const rootEventIdentifier = {
+        key: OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE,
+        namespace
+    };
+    const rootEventObject = createEventObject(openmct, parentKey, namespace, rootEventIdentifier);
+    rootEventObject.composition = [];
+
+    return rootEventObject;
+}
+
+export function createEventObject(openmct, parentKey, namespace, identifier, name = 'Events', type = OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE) {
     const location = openmct.objects.makeKeyString({
         key: parentKey,
         namespace
     });
 
-    const identifier = {
-        key: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
-        namespace
-    };
-    const eventsObject = {
+    const baseEventObject = {
         identifier,
         location,
-        name: 'Events',
-        type: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
+        name,
+        type,
         telemetry: {
             values: [
                 {
@@ -75,7 +82,10 @@ export function createEventsObject(openmct, parentKey, namespace) {
                 {
                     key: 'message',
                     name: 'Message',
-                    format: 'string'
+                    format: 'string',
+                    hints: {
+                        label: 0
+                    }
                 },
                 {
                     key: 'type',
@@ -96,7 +106,46 @@ export function createEventsObject(openmct, parentKey, namespace) {
         }
     };
 
-    return eventsObject;
+    return baseEventObject;
+}
+
+export function createEventSeverityObjects(openmct, parentEventObject, namespace) {
+    const childSeverityObjects = [];
+    for (const severity of SEVERITY_LEVELS) {
+        const severityIdentifier = {
+            key: `${parentEventObject.identifier.key}.${severity}`,
+            namespace
+        };
+
+        const severityName = `${parentEventObject.name}: ${severity}`;
+
+        const severityEventObject = createEventObject(
+            openmct,
+            parentEventObject.identifier.key,
+            namespace,
+            severityIdentifier,
+            severityName,
+            OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
+        );
+
+        childSeverityObjects.push(severityEventObject);
+    }
+
+    return childSeverityObjects;
+}
+
+export async function getEventSources(url, instance) {
+    const eventSourceURL = `${url}/api/archive/${instance}/events/sources`;
+    const eventSourcesReply = await fetch(eventSourceURL);
+    if (!eventSourcesReply.ok) {
+        console.error(`🛑 Failed to fetch event sources: ${eventSourcesReply.statusText}`);
+
+        return [];
+    }
+
+    const eventSourcesJson = await eventSourcesReply.json();
+
+    return eventSourcesJson.sources;
 }
 
 export function eventShouldBeFiltered(event, options) {
@@ -128,7 +177,7 @@ export function eventToTelemetryDatum(event) {
     } = event;
 
     return {
-        id: OBJECT_TYPES.EVENTS_OBJECT_TYPE,
+        id: OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
         severity,
         generationTime,
         receptionTime,
