@@ -244,10 +244,10 @@ export default class YamcsHistoricalTelemetryProvider {
 
     getResponseKeyById(id) {
 
-        if (id === (OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
+        if (id === (OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE)
             || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
             || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
-            return 'event';
+            return 'events';
         }
 
         if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE) {
