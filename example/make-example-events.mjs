@@ -1,3 +1,5 @@
+import process from 'process';
+
 const INSTANCE = "myproject";
 const URL = `http://localhost:8090/api/archive/${INSTANCE}/events`;
 
@@ -113,10 +115,13 @@ async function postEvent(event, delaySeconds) {
     }
 }
 
-async function main() {
+export async function postAllEvents() {
     for (let i = 0; i < events.length; i++) {
         await postEvent(events[i], i * 5);
     }
 }
 
-main();
+// If you still want to run it standalone
+if (import.meta.url === `file://${process.argv[1]}`) {
+    postAllEvents();
+}
