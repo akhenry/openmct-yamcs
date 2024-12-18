@@ -23,21 +23,21 @@
 import { pluginFixtures, appActions } from 'openmct-e2e';
 import { postAllEvents } from '../../../example/make-example-events.mjs'; // Updated path and extension
 const { test, expect } = pluginFixtures;
-const { createDomainObjectWithDefaults, setStartOffset, setFixedTimeMode } = appActions;
+const { createDomainObjectWithDefaults, setStartOffset, setEndOffset, setFixedTimeMode } = appActions;
 
 test.describe("Timeline Events in @yamcs", () => {
-    test.only('Can create a timeline with YAMCS events', async ({ page }) => {
+    test('Can create a timeline with YAMCS events', async ({ page }) => {
         // Go to baseURL
         await page.goto("./", { waitUntil: "networkidle" });
         await page.getByLabel('Expand myproject folder').click();
         const eventsTreeItem = page.getByRole('treeitem', { name: /Events/ });
         const eventTimelineView = await createDomainObjectWithDefaults(page, { type: 'Time Strip' });
-
-        let objectPane = page.locator('.c-object-view');
+        const objectPane = page.getByLabel(`${eventTimelineView.name} Object View`);
         await eventsTreeItem.dragTo(objectPane);
         await postAllEvents();
 
-        await setStartOffset(page, { startMins: '05' });
+        await setStartOffset(page, { startMins: '02' });
+        await setEndOffset(page, { endMins: '02' });
         await setFixedTimeMode(page);
 
         await page
@@ -50,12 +50,41 @@ test.describe("Timeline Events in @yamcs", () => {
         // ensure the event inspector has the the same event
         await expect(page.getByText(/Pressure threshold exceeded/)).toBeVisible();
 
-        // await page.getByLabel('Expand Events yamcs.events').click();
-        // await page.getByLabel('Expand PressureModule yamcs.').click();
-        // const pressureModuleInfoTreeItem = page.getByRole('treeitem', { name: /PressureModule: info/ });
-        // objectPane = page.locator('.c-object-view');
-        // await pressureModuleInfoTreeItem.dragTo(objectPane);
+        await page.getByLabel('Expand Events yamcs.events').click();
+        await page.getByLabel('Expand PressureModule yamcs.').click();
+        const pressureModuleInfoTreeItem = page.getByRole('treeitem', { name: /PressureModule: info/ });
+        await pressureModuleInfoTreeItem.dragTo(objectPane);
 
-        // await page.pause();
+        const pressureModuleCriticalTreeItem = page.getByRole('treeitem', { name: /PressureModule: critical/ });
+        await pressureModuleCriticalTreeItem.dragTo(objectPane);
+
+        // click on the event inspector tab
+        await page.getByRole('tab', { name: 'Event' }).click();
+
+        await expect(page.getByLabel('PressureModule: info Object').getByLabel(/Pressure system check completed/).first()).toBeVisible();
+        await page.getByLabel('PressureModule: info Object').getByLabel(/Pressure system check completed/).first().click();
+        // ensure the tooltip shows up
+        await expect(
+            page.getByRole('tooltip').getByText(/Pressure system check completed/)
+        ).toBeVisible();
+
+        // and that event appears in the inspector
+        await expect(
+            page.getByLabel('Inspector Views').getByText(/Pressure system check completed/)
+        ).toBeVisible();
+
+        // info statements should be hidden in critical severity
+        await expect(page.getByLabel('PressureModule: critical Object View').getByLabel(/Pressure system check/).first()).toBeHidden();
+        await expect(page.getByLabel('PressureModule: critical Object View').getByLabel(/Pressure threshold exceeded/).first()).toBeVisible();
+        await page.getByLabel('PressureModule: critical Object View').getByLabel(/Pressure threshold exceeded/).first().click();
+        await expect(page.getByLabel('Inspector Views').getByText('Pressure threshold exceeded')).toBeVisible();
+        await expect(
+            page.getByRole('tooltip').getByText(/Pressure threshold exceeded/)
+        ).toBeVisible();
+
+        // turn on extended lines
+        await page.getByLabel('Toggle extended event lines overlay for PressureModule: critical').click();
+        const overlayLinesContainer = page.locator('.c-timeline__overlay-lines');
+        await expect(overlayLinesContainer.locator('.c-timeline__event-line--extended').last()).toBeVisible();
     });
 });
