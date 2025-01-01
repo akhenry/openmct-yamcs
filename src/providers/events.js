@@ -136,7 +136,11 @@ export function createEventSeverityObjects(openmct, parentEventObject, namespace
 
 export async function getEventSources(url, instance) {
     const eventSourceURL = `${url}/api/archive/${instance}/events/sources`;
+    console.log('getEventSources');
+    console.log(eventSourceURL);
     const eventSourcesReply = await fetch(eventSourceURL);
+    console.log('eventSourcesReply');
+    console.log(eventSourcesReply);
     if (!eventSourcesReply.ok) {
         console.error(`🛑 Failed to fetch event sources: ${eventSourcesReply.statusText}`);
 

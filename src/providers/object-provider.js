@@ -187,6 +187,7 @@ export default class YamcsObjectProvider {
         const operation = 'parameters?details=yes&limit=1000';
         const parameterUrl = this.url + 'api/mdb/' + this.instance + '/' + operation;
         const url = this.#getMdbUrl('space-systems');
+        console.log('loadTelemetryDictionary');
 
         const requestOptions = await this.getDictionaryRequestOptions();
 
@@ -215,7 +216,7 @@ export default class YamcsObjectProvider {
 
         await this.#createCommands();
 
-        // await this.#createEvents();
+        await this.#createEvents();
 
         return this.dictionary;
     }
@@ -248,6 +249,8 @@ export default class YamcsObjectProvider {
 
         // Fetch child event names
         const eventSourceNames = await getEventSources(this.url, this.instance);
+        console.log('eventSourceNames');
+        console.log(eventSourceNames);
         eventSourceNames.forEach(eventSourceName => {
             const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.${eventSourceName}`);
             const childEventIdentifier = {
@@ -277,8 +280,10 @@ export default class YamcsObjectProvider {
     }
 
     async #fetchMdbApi(operation, property, abortSignal) {
+        console.log('fetchMdbApi');
         const mdbURL = `${this.url}api/mdb/${this.instance}/${operation}`;
         const response = await accumulateResults(mdbURL, { signal: abortSignal }, property, []);
+        console.log(response);
 
         return response;
     }
