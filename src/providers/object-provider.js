@@ -213,7 +213,7 @@ export default class YamcsObjectProvider {
             this.#addParameterObject(parameter);
         });
 
-        // await this.#createCommands();
+        await this.#createCommands();
 
         // await this.#createEvents();
 
