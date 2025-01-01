@@ -148,6 +148,7 @@ export async function getEventSources(url, instance) {
     }
 
     const eventSourcesJson = await eventSourcesReply.json();
+    console.log(eventSourcesJson);
 
     return eventSourcesJson.sources;
 }
