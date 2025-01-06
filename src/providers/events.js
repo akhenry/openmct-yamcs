@@ -145,7 +145,14 @@ export async function getEventSources(url, instance) {
 
     const eventSourcesJson = await eventSourcesReply.json();
 
-    return eventSourcesJson.sources;
+    if (eventSourcesJson.sources) {
+        return eventSourcesJson.sources;
+    } else if (eventSourcesJson.source) {
+        // backwards compatibility with older YAMCS versions that only have `source` key
+        return eventSourcesJson.source;
+    } else {
+        return [];
+    }
 }
 
 export function eventShouldBeFiltered(event, options) {
