@@ -57,6 +57,7 @@ export function createCommandObject(openmct, parentKey, namespace, identifier, q
                     name: 'Command',
                     format: 'string',
                     hints: {
+                        // this is to ensure that the commandName is displayed as a label
                         label: 0
                     }
                 },

@@ -193,13 +193,13 @@ export default function install(
         });
 
         openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, {
-            name: "Event",
+            name: "Specific Event from Source",
             description: "To view events from a specific source",
             cssClass: "icon-generator-events"
         });
 
         openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE, {
-            name: "Event",
+            name: "Specific Event from Source with Severity",
             description: "To view events from a specific source with a specific severity or greater",
             cssClass: "icon-generator-events"
         });

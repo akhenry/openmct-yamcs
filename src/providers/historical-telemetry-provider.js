@@ -67,6 +67,8 @@ export default class YamcsHistoricalTelemetryProvider {
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
 
+        // we use the eventSource, the minimumSeverity, and the commandQueue
+        // to narrow the search for events and commands
         if ([OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE].includes(domainObject.type)) {
             const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
             const eventSourceName = domainObject.identifier.key.replace(prefix, '');
@@ -229,21 +231,14 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getLinkParamsSpecificToId(id) {
-        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE) {
-            return 'events';
-        }
-
         if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
             || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
             || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
             return 'events';
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE) {
-            return 'commands';
-        }
-
-        if (id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE
+            || id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return 'commands';
         }
 
