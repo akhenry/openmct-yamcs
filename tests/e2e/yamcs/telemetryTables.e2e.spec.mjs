@@ -26,7 +26,7 @@ Telemetry Table Specific Tests
 
 import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
-const { setRealTimeMode } = appActions;
+const { createDomainObjectWithDefaults, setRealTimeMode } = appActions;
 const FIVE_SECONDS = 5 * 1000;
 
 test.describe("Telemetry Tables tests @yamcs", () => {
@@ -36,8 +36,16 @@ test.describe("Telemetry Tables tests @yamcs", () => {
     test.use({ failOnConsoleError: true });
 
     test.beforeEach(async ({ page }) => {
-        // Go to baseURL
+        // Go to baseURL first
         await page.goto("./", { waitUntil: "domcontentloaded" });
+
+        // Set localStorage value after navigation
+        await page.evaluate(() => {
+            window.localStorage.setItem('exampleLayout', 'true');
+        });
+
+        // Reload the page to apply the localStorage setting
+        await page.reload({ waitUntil: "domcontentloaded" });
         await expect(page.getByText('Loading...')).toBeHidden();
     });
 
@@ -127,6 +135,44 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const telemTableAsc = await page.getByLabel("CCSDS_Packet_Length table content");
         // assert that they're in asc order
         expect(await assertTableRowsInOrder(telemTableAsc, 'asc')).toBe(true);
+    });
+
+    test('Telemetry tables allow manually added name column to be hidden', async ({ page }) => {
+        // Create a table with a manually added name column
+        const table = await createDomainObjectWithDefaults(page, {
+            type: 'Telemetry Table',
+            name: 'Hide Name Column Test'
+        });
+        await page.goto(table.url, { waitUntil: 'domcontentloaded' });
+
+        // add a telemetry endpoint to the table
+        await page.getByLabel('Expand myproject folder').click();
+        await page.getByLabel('Expand myproject folder').click();
+        const objectPane = page.locator('.c-object-view');
+        const telemetryEndpoint = page.getByLabel('Navigate to A yamcs.telemetry');
+        await telemetryEndpoint.dragTo(objectPane);
+
+        // select the config tab
+        await page.getByRole('tab', { name: 'Config' }).click();
+
+        // verify that the name column is visible
+        await expect(page.getByRole('cell', {
+            name: 'Name',
+            exact: true
+        })).toBeVisible();
+
+        // hide the name column
+        await page.getByLabel('Name', { exact: true }).click();
+
+        // Save (exit edit mode)
+        await page.getByLabel('Save').click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
+
+        // verify that the name column is hidden
+        await expect(page.getByRole('cell', {
+            name: 'Name',
+            exact: true
+        })).toBeHidden();
     });
 
     /**
