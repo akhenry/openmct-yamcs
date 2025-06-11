@@ -116,112 +116,118 @@ const openmct = window.openmct;
         openmct.install(openmct.plugins.FaultManagement());
         openmct.install(openmct.plugins.BarChart());
 
-        // setup example display layout
-        openmct.on('start', async () => {
-            if (localStorage.getItem('exampleLayout') !== null) {
-                return;
-            }
+        const params = new URLSearchParams(window.location.search);
+        const bypassExampleDisplayParameter = params.get("bypassExampleDisplay") || '';
+        const shouldBypassExampleDisplay = bypassExampleDisplayParameter.toLowerCase() === 'true';
 
-            // try to import the example display layout, fail gracefully
-            try {
-                // Function to fetch JSON content as text
-                async function fetchJsonText(url) {
-                    const response = await fetch(url);
-                    const text = await response.text();
-
-                    return text;
+        if (!shouldBypassExampleDisplay) {
+            // setup example display layout
+            openmct.on('start', async () => {
+                if (localStorage.getItem('exampleLayout') !== null) {
+                    return;
                 }
 
-                async function getExampleLayoutPath() {
-                    const objects = Object.values(JSON.parse(localStorage.getItem('mct')));
-                    const exampleLayout = objects.find(object => object.name === 'Example Flexible Layout');
-                    let path = await openmct.objects.getOriginalPath(exampleLayout.identifier);
+                // try to import the example display layout, fail gracefully
+                try {
+                    // Function to fetch JSON content as text
+                    async function fetchJsonText(url) {
+                        const response = await fetch(url);
+                        const text = await response.text();
 
-                    path.pop();
-                    path = path.reverse();
-                    path = path.reduce((prev, curr) => {
-                        return prev + '/' + openmct.objects.makeKeyString(curr.identifier);
-                    }, '#/browse');
+                        return text;
+                    }
 
-                    return path;
-                }
+                    async function getExampleLayoutPath() {
+                        const objects = Object.values(JSON.parse(localStorage.getItem('mct')));
+                        const exampleLayout = objects.find(object => object.name === 'Example Flexible Layout');
+                        let path = await openmct.objects.getOriginalPath(exampleLayout.identifier);
 
-                // poll for the localStorage item
-                function mctItemExists() {
-                    return new Promise((resolve, reject) => {
-                        const startTime = Date.now();
+                        path.pop();
+                        path = path.reverse();
+                        path = path.reduce((prev, curr) => {
+                            return prev + '/' + openmct.objects.makeKeyString(curr.identifier);
+                        }, '#/browse');
 
-                        function checkItem() {
-                            if (localStorage.getItem('mct') !== null) {
-                                resolve(true);
+                        return path;
+                    }
 
-                                return;
+                    // poll for the localStorage item
+                    function mctItemExists() {
+                        return new Promise((resolve, reject) => {
+                            const startTime = Date.now();
+
+                            function checkItem() {
+                                if (localStorage.getItem('mct') !== null) {
+                                    resolve(true);
+
+                                    return;
+                                }
+
+                                if (Date.now() - startTime > MAX_POLL_TIME) {
+                                    reject(new Error('Timeout waiting for mct localStorage item'));
+
+                                    return;
+                                }
+
+                                setTimeout(checkItem, POLL_INTERVAL);
                             }
 
-                            if (Date.now() - startTime > MAX_POLL_TIME) {
-                                reject(new Error('Timeout waiting for mct localStorage item'));
+                            checkItem();
+                        });
+                    }
 
-                                return;
-                            }
+                    // wait for the 'mct' item to exist
+                    await mctItemExists();
 
-                            setTimeout(checkItem, POLL_INTERVAL);
+                    // setup to use import as JSON action
+                    const importAction = openmct.actions.getAction('import.JSON');
+                    const myItems = await openmct.objects.get('mine');
+                    const exampleDisplayText = await fetchJsonText('./example-display.json');
+                    const selectFile = {
+                        body: exampleDisplayText
+                    };
+
+                    // import the example display layout
+                    importAction.onSave(myItems, { selectFile });
+
+                    // the importAction has asynchronous code, so we will need to check
+                    // the composition of My Items to confirm the import was successful
+                    const compositionCollection = openmct.composition.get(myItems);
+                    let compositionLength = 0;
+                    let composition;
+
+                    let retryCount = 0;
+                    while (compositionLength === 0 && retryCount < MAX_COMPOSITION_RETRIES) {
+                        composition = await compositionCollection.load();
+                        compositionLength = composition.length;
+
+                        if (compositionLength === 0) {
+                            retryCount++;
+                            await new Promise(resolve => setTimeout(resolve, COMPOSITION_RETRY_DELAY));
                         }
-
-                        checkItem();
-                    });
-                }
-
-                // wait for the 'mct' item to exist
-                await mctItemExists();
-
-                // setup to use import as JSON action
-                const importAction = openmct.actions.getAction('import.JSON');
-                const myItems = await openmct.objects.get('mine');
-                const exampleDisplayText = await fetchJsonText('./example-display.json');
-                const selectFile = {
-                    body: exampleDisplayText
-                };
-
-                // import the example display layout
-                importAction.onSave(myItems, { selectFile });
-
-                // the importAction has asynchronous code, so we will need to check
-                // the composition of My Items to confirm the import was successful
-                const compositionCollection = openmct.composition.get(myItems);
-                let compositionLength = 0;
-                let composition;
-
-                let retryCount = 0;
-                while (compositionLength === 0 && retryCount < MAX_COMPOSITION_RETRIES) {
-                    composition = await compositionCollection.load();
-                    compositionLength = composition.length;
+                    }
 
                     if (compositionLength === 0) {
-                        retryCount++;
-                        await new Promise(resolve => setTimeout(resolve, COMPOSITION_RETRY_DELAY));
+                        throw new Error('Failed to load composition after maximum retries');
                     }
+
+                    const exampleLayoutPath = await getExampleLayoutPath();
+
+                    // give everything time to initialize
+                    await new Promise(resolve => setTimeout(resolve, 250));
+
+                    openmct.notifications.info('Navigated to Example Display Layout');
+
+                    // navigate to the "Example Display Layout"
+                    openmct.router.navigate(exampleLayoutPath);
+
+                    // set the localStorage item to prevent this from running again
+                    localStorage.setItem('exampleLayout', 'true');
+                } catch (error) {
+                    console.error('Failed to set up example display layout:', error);
+                    openmct.notifications.error('Failed to load example display layout: ' + error.message);
                 }
-
-                if (compositionLength === 0) {
-                    throw new Error('Failed to load composition after maximum retries');
-                }
-
-                const exampleLayoutPath = await getExampleLayoutPath();
-
-                // give everything time to initialize
-                await new Promise(resolve => setTimeout(resolve, 250));
-
-                openmct.notifications.info('Navigated to Example Display Layout');
-
-                // navigate to the "Example Display Layout"
-                openmct.router.navigate(exampleLayoutPath);
-
-                // set the localStorage item to prevent this from running again
-                localStorage.setItem('exampleLayout', 'true');
-            } catch (error) {
-                console.error('Failed to set up example display layout:', error);
-                openmct.notifications.error('Failed to load example display layout: ' + error.message);
-            }
-        });
+            });
+        }
     }
 })();
