@@ -46,7 +46,7 @@ test.describe('Bar Graph @yamcs', () => {
   test('Requests a single historical datum', async ({ page }) => {
 
     //http://localhost:9000/yamcs-proxy/api/archive/myproject/parameters/myproject/Magnetometer?start=2024-09-25T14%3A08%3A46.244Z&stop=2024-09-25T14%3A38%3A46.245Z&limit=1&order=desc
-    historicalGet = page.waitForRequest(/.*\/api\/.*\/parameters.*limit=1&order=desc$/);
+    historicalGet = page.waitForResponse(/.*\/api\/.*\/parameters.*limit=1&order=desc$/);
 
     await page.goto(barGraph.url, { waitUntil: 'networkidle' });
 

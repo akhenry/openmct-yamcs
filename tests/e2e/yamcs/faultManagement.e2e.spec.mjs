@@ -88,7 +88,7 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Shows fault with severity WATCH', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeVisible();
@@ -100,7 +100,7 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Shows fault with severity WARNING', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'WARNING')).toBeVisible();
@@ -112,7 +112,7 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Shows fault with severity CRITICAL', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
@@ -138,7 +138,7 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Shelve the fault', async () => {
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(page.getByLabel(/Fault triggered at.*CRITICAL.*/)).toBeVisible();
@@ -170,7 +170,7 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Acknowledge the fault', async () => {
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
