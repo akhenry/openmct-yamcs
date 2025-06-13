@@ -15,8 +15,8 @@ jobs:
   yamcs-quickstart-e2e:
     if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
     timeout-minutes: 10
-    runs-on: ubuntu-latest
-    continue-on-error: true
+    runs-on: ubuntu-20.04
+    continue-on-error: false
     strategy:
       matrix:
         yamcs-version:
@@ -83,21 +83,25 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
+          name: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive makeout.txt
         if: always()
         uses: actions/upload-artifact@v4
         with:
           path: quickstart/docker/makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
+          name: makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           path: test-results
+          name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive html test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           path: tests/html-test-results
+          name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
         uses: actions/github-script@v6
