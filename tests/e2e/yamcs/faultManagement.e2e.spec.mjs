@@ -166,7 +166,6 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Set the alarm to critical', async () => {
             // Intercept the response to set the alarm to critical
             await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL'));
-
         });
 
         await test.step('Acknowledge the fault', async () => {
@@ -211,7 +210,9 @@ test.describe("Fault Management @yamcs", () => {
  */
 // eslint-disable-next-line require-await
 async function setDefaultAlarms(parameter, staticAlarmRanges = [], instance = 'myproject', processor = 'realtime') {
-    return fetch(`${YAMCS_API_URL}mdb-overrides/${instance}/${processor}/parameters/${instance}/${parameter}`, {
+    const requestUrl = `${YAMCS_API_URL}mdb-overrides/${instance}/${processor}/parameters/${instance}/${parameter}`;
+
+    return fetch(requestUrl, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -270,10 +271,10 @@ async function getAlarms(instance = 'myproject') {
 async function modifyAlarmSeverity(route, alarmName, newSeverity) {
     const response = await route.fetch();
     let body = await response.json();
-    const newBody = { ...body };
+    const newBody = JSON.parse(JSON.stringify(body));
 
     // Modify the rawValue.floatValue to trigger a specific alarm
-    body.alarms.forEach((alarm, index) => {
+    newBody.alarms.forEach((alarm, index) => {
         if (alarm.id.name === alarmName) {
             newBody.alarms[index].severity = newSeverity;
         }
