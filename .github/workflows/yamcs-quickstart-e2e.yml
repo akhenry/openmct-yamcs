@@ -15,7 +15,7 @@ jobs:
   yamcs-quickstart-e2e:
     if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
     timeout-minutes: 10
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     continue-on-error: false
     strategy:
       matrix:
