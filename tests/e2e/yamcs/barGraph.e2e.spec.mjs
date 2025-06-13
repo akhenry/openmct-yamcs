@@ -36,7 +36,9 @@ test.describe('Bar Graph @yamcs', () => {
   test.beforeEach(async ({ page }) => {
     // Open a browser, navigate to the main page, and wait until all networkevents to resolve
     await page.goto('./', { waitUntil: 'networkidle' });
-    await setFixedTimeMode(page);
+    // Set fixed time mode
+    await page.evaluate(() => openmct.time.setMode('fixed', {start: Date.now() - 30000, end: Date.now()}));
+    await page.waitForURL(/tc\.mode=fixed/);
     // Create the Bar Graph
     barGraph = await createDomainObjectWithDefaults(page, { type: 'Graph', name: 'Bar Graph' });
     // Enter edit mode for the overlay plot

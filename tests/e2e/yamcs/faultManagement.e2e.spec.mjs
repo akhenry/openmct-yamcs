@@ -235,7 +235,7 @@ async function setDefaultAlarms(parameter, staticAlarmRanges = [], instance = 'm
  */
 // eslint-disable-next-line require-await
 async function clearAlarms(parameter, instance = 'myproject', processor = 'realtime') {
-    await setDefaultAlarms(parameter, [], instance, processor);
+    await setDefaultAlarms(parameter, [], instance, processor); 
     const response = await getAlarms(instance);
     const alarms = await response.json();
     const alarmsToClear = Object.values(alarms).map(alarm => {
