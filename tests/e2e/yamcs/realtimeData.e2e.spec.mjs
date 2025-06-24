@@ -353,9 +353,11 @@ test.describe('Realtime telemetry displays', () => {
                 const displayLayout = openmct.router.path[0]
                 const children = await openmct.composition.get(displayLayout).load();
                 const conditionSet = children.find(child => child.type === 'conditionSet');
+
                 if (!conditionSet) {
                     return false;
                 }
+
                 const containsAnyOrAllRule = conditionSet.configuration.conditionCollection.some(condition => {
                     return condition.configuration.criteria.some(criterion => criterion.telemetry === 'any' || criterion.telemetry === 'all');
                 });
