@@ -39,12 +39,25 @@ import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
 import BinaryToHexFormatterPlugin from './plugins/binaryToHexFormatter/plugin.js';
+const REASONABLE_DEFAULTS = {
+    yamcsDictionaryEndpoint: "http://localhost:8090/",
+    yamcsHistoricalEndpoint: "http://localhost:8090/",
+    yamcsWebsocketEndpoint: "ws://localhost:8090/",
+    yamcsUserEndpoint: "http://localhost:8090/api/user/",
+    yamcsInstance: "myproject",
+    yamcsProcessor: "realtime",
+    yamcsFolder: "myproject",
+    throttleRate: 1000,
+    maxBufferSize: 1000000
+};
 
 export default function install(
     configuration,
     getDictionaryRequestOptions
 ) {
     return (openmct) => {
+        configuration = applyDefaults(configuration, REASONABLE_DEFAULTS);
+
         openmct.install(openmct.plugins.ISOTimeFormat());
         openmct.install(BinaryToHexFormatterPlugin());
 
@@ -233,5 +246,12 @@ export default function install(
             configuration.yamcsInstance));
 
         openmct.install(openmct.plugins.Filters(['telemetry.plot.overlay', 'table']));
+    };
+}
+
+function applyDefaults(config, defaults) {
+    return {
+        ...defaults,
+        ...config
     };
 }
