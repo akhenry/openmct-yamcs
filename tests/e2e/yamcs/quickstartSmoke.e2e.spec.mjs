@@ -37,6 +37,18 @@ import { baseFixtures } from 'openmct-e2e';
 const { test, expect } = baseFixtures;
 
 test.describe("Quickstart smoke tests @yamcs", () => {
+    test.use({
+        storageState: {
+        cookies: [],
+        origins: [
+            {
+                "origin": "http://localhost:9000",
+                "localStorage": []
+            }
+        ]
+        }
+    });
+
     test.beforeEach(async ({ page }) => {
         //Go to baseURL
         await page.goto('./', { waitUntil: 'networkidle' });
