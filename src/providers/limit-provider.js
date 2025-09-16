@@ -53,7 +53,7 @@ export default class LimitProvider {
                 if (valueMetadata && datum.monitoringResult
                         && datum.monitoringResult in MONITORING_RESULT_CSS) {
 
-                    const evaluationResult = self.getLimitRange(datum, datum.monitoringResult, valueMetadata);
+                    const evaluationResult = self.getLimitInfo(datum, datum.monitoringResult, valueMetadata);
 
                     return evaluationResult;
                 }
@@ -71,7 +71,7 @@ export default class LimitProvider {
      *
      * @returns {EvaluationResult} ({@link EvaluationResult})
      */
-    getLimitRange(datum, result, valueMetadata) {
+    getLimitInfo(datum, result, valueMetadata) {
         if (!valueMetadata) {
             return undefined;
         }
