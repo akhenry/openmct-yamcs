@@ -16,7 +16,7 @@ jobs:
     if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    continue-on-error: true
+    continue-on-error: false
     strategy:
       matrix:
         yamcs-version:
@@ -42,8 +42,8 @@ jobs:
         working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          touch makeout.txt
-          make all-10hz &> makeout.txt &
+          touch makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
+          make all-10hz &> makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt &
         working-directory: quickstart/docker
       - run: npm install
       - name: Get Open MCT e2e tests
@@ -77,27 +77,31 @@ jobs:
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
-        run: docker logs yamcs > yamcs-docker-log.txt 2>&1
+        run: docker logs yamcs > yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt 2>&1
       - name: archive docker logs
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: yamcs-docker-log.txt
+          path: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
+          name: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive makeout.txt
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          path: /quickstart/docker/makeout.txt
+          path: quickstart/docker/makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
+          name: makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: test-results
+          name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive html test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: tests/html-test-results
+          name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
         uses: actions/github-script@v6
