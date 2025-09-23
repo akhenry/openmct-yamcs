@@ -42,7 +42,7 @@ import BinaryToHexFormatterPlugin from './plugins/binaryToHexFormatter/plugin.js
 const REASONABLE_DEFAULTS = {
     yamcsDictionaryEndpoint: "http://localhost:8090/",
     yamcsHistoricalEndpoint: "http://localhost:8090/",
-    yamcsWebsocketEndpoint: "ws://localhost:8090/websocket",
+    yamcsWebsocketEndpoint: "ws://localhost:8090/api/websocket",
     yamcsUserEndpoint: "http://localhost:8090/api/user/",
     yamcsInstance: "myproject",
     yamcsProcessor: "realtime",
