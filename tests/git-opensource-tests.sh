@@ -38,6 +38,7 @@ mv opensource/e2e/package*.json ./opensource
 # Move fixtures and appActions
 mv opensource/e2e/*Fixtures.js ./opensource
 mv opensource/e2e/appActions.js ./opensource
+mv opensource/e2e/constants.js ./opensource
 # Move subfolders
 mv opensource/e2e/*/ ./opensource
 # Move eslint config

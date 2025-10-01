@@ -15,7 +15,21 @@ const config = {
         baseURL: 'http://localhost:9000/#',
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
-        failOnConsoleError: false
+        failOnConsoleError: false,
+        storageState: {
+            cookies: [],
+            origins: [
+                {
+                    "origin": "http://localhost:9000",
+                    "localStorage": [
+                        {
+                            "name": "exampleLayout",
+                            "value": "false"
+                        }
+                    ]
+                }
+            ]
+        }
     },
     webServer: {
         cwd: '../',
