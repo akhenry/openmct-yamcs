@@ -186,15 +186,33 @@ export default function install(
             cssClass: 'icon-telemetry'
         });
 
-        openmct.types.addType(OBJECT_TYPES.EVENTS_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE, {
             name: "Events",
-            description: "To view events",
+            description: "To view all events",
             cssClass: "icon-generator-events"
         });
 
-        openmct.types.addType(OBJECT_TYPES.COMMANDS_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, {
+            name: "Specific Event from Source",
+            description: "To view events from a specific source",
+            cssClass: "icon-generator-events"
+        });
+
+        openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE, {
+            name: "Specific Event from Source with Severity",
+            description: "To view events from a specific source with a specific severity or greater",
+            cssClass: "icon-generator-events"
+        });
+
+        openmct.types.addType(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE, {
+            name: "Command Queue",
+            description: "To view command history in a specific queue",
+            cssClass: "icon-generator-events" // TODO: replace
+        });
+
+        openmct.types.addType(OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE, {
             name: "Commands",
-            description: "To view command history",
+            description: "To view the whole command history",
             cssClass: "icon-generator-events" // TODO: replace
         });
 

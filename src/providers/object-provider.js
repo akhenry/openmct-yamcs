@@ -28,8 +28,8 @@ import {
 } from '../utils.js';
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
-import { createCommandsObject } from './commands.js';
-import { createEventsObject } from './events.js';
+import { createCommandObject, getCommandQueues, createRootCommandsObject } from './commands.js';
+import { createRootEventsObject, createEventObject, getEventSources, createEventSeverityObjects } from './events.js';
 import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
 import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
@@ -63,15 +63,6 @@ export default class YamcsObjectProvider {
 
     #initialize() {
         this.#createRootObject();
-        const eventsObject = createEventsObject(this.openmct, this.key, this.namespace);
-        const commandsObject = createCommandsObject(this.openmct, this.key, this.namespace);
-        this.#addObject(commandsObject);
-        this.#addObject(eventsObject);
-        this.rootObject.composition.push(
-            eventsObject.identifier,
-            commandsObject.identifier
-        );
-
         this.openmct.on('destroy', this.#unsubscribeFromAll);
     }
 
@@ -222,7 +213,63 @@ export default class YamcsObjectProvider {
             this.#addParameterObject(parameter);
         });
 
+        await this.#createCommands();
+
+        await this.#createEvents();
+
         return this.dictionary;
+    }
+
+    async #createCommands() {
+        const rootCommandsObject = createRootCommandsObject(this.openmct, this.key, this.namespace);
+        this.#addObject(rootCommandsObject);
+        this.rootObject.composition.push(
+            rootCommandsObject.identifier
+        );
+        const commandQueues = await getCommandQueues(this.url, this.instance);
+        commandQueues.forEach(commandQueueName => {
+            const queueKey = qualifiedNameToId(`${OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE}.${commandQueueName}`);
+            const queueIdentifier = {
+                key: queueKey,
+                namespace: this.namespace
+            };
+            const commandQueueObject = createCommandObject(this.openmct, rootCommandsObject.identifier.key, this.namespace, queueIdentifier, commandQueueName, OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE);
+
+            this.#addObject(commandQueueObject);
+
+            rootCommandsObject.composition.push(commandQueueObject.identifier);
+        });
+    }
+
+    async #createEvents() {
+        const rootEventsObject = createRootEventsObject(this.openmct, this.key, this.namespace);
+        this.#addObject(rootEventsObject);
+        this.rootObject.composition.push(rootEventsObject.identifier);
+
+        // Fetch child event names
+        const eventSourceNames = await getEventSources(this.url, this.instance);
+        eventSourceNames.forEach(eventSourceName => {
+            const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.${eventSourceName}`);
+            const childEventIdentifier = {
+                key: childEventKey,
+                namespace: this.namespace
+            };
+            const childEventObject = createEventObject(this.openmct, rootEventsObject.identifier.key, this.namespace, childEventIdentifier, eventSourceName, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE);
+
+            this.#addObject(childEventObject);
+
+            const childSeverityObjects = createEventSeverityObjects(this.openmct, childEventObject, this.namespace);
+            childSeverityObjects.forEach(severityObject => {
+                this.#addObject(severityObject);
+                if (!childEventObject.composition) {
+                    childEventObject.composition = [];
+                }
+
+                childEventObject.composition.push(severityObject.identifier);
+            });
+
+            rootEventsObject.composition.push(childEventObject.identifier);
+        });
     }
 
     #getMdbUrl(operation, name = '') {
