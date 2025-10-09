@@ -1,0 +1,109 @@
+# https://taskfile.dev/docs/installation
+
+version: '3'
+
+dotenv:
+  - ./.env
+
+env:
+  CONTAINER_BIN: docker
+  CONTAINER_COMPOSE_BIN: " {{.CONTAINER_BIN}} compose "
+
+  DEPLOYMENT_ENVIRO: '{{.DEPLOYMENT_ENVIRO | default ""}}'
+  HTTP_PROXY: '{{.HTTP_PROXY | default ""}}'
+  HTTPS_PROXY: '{{.HTTPS_PROXY | default ""}}'
+  MAVEN_HTTPS_PROXY: '{{.MAVEN_HTTPS_PROXY | default ""}}'
+
+  TM_SIMULATOR_RATE: 5
+
+tasks:
+
+  default:
+    desc: Shows this help message
+    cmds:
+      - task --list-all
+    silent: true
+
+  all-build:
+    desc: Build all images
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build"
+
+  all-up:
+    desc: Bring up all containers
+    deps:
+      - all-build
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d --remove-orphans"
+      - sleep 15
+      - task yamcs-simulator
+
+  all-down:
+    desc: Bring down all containers
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down --remove-orphans"
+      - "{{.CONTAINER_BIN}} rm yamcs openmct"
+
+  yamcs-build:
+    desc: Build yamcs
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build yamcs"
+
+  yamcs-up:
+    desc: Bring up yamcs
+    deps:
+      - yamcs-build
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d --build yamcs --remove-orphans"
+
+  yamcs-simulator:
+    desc: Run yamcs simulator
+    deps:
+      - yamcs-up
+    cmds:
+      - '{{.CONTAINER_BIN}} exec -it yamcs bash -c "cd /opt/yamcs/quickstart && ./simulator.py --rate={{.TM_SIMULATOR_RATE}}"'
+
+  yamcs-down:
+    desc: Bring down yamcs
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down yamcs --remove-orphans"
+
+  yamcs-expunge:
+    desc: Expunge yamcs image, container, volumes, etc
+    deps:
+      - yamcs-down
+    cmds:
+      - ls
+
+  openmct-build:
+    desc: Build openmct
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build openmct"
+
+  openmct-up:
+    desc: Bring up openmct
+    deps:
+      - openmct-build
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d openmct --remove-orphans"
+
+  openmct-down:
+    desc: Bring down openmct
+    cmds:
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down openmct --remove-orphans"
+
+  openmct-expunge:
+    desc: Expunge openmct image, container, volumes, etc
+    deps:
+      - openmct-down
+    cmds:
+      - ls
+
+  purge-containers:
+    desc: purge docker/podman images, cache, volumes, and networks
+    cmds:
+      - task all-down || true
+      - yes | ${CONTAINER_BIN} image prune --filter "dangling=true"
+      - yes | ${CONTAINER_BIN} system prune -a
+      - yes | ${CONTAINER_BIN} volume prune
+      - yes | ${CONTAINER_BIN} network prune
