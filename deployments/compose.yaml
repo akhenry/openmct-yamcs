@@ -14,7 +14,7 @@ services:
         GIT_COMMIT: master
     attach: true
     hostname: yamcs
-    container_name: yamcs
+    container_name: deployments-yamcs
     working_dir: "/opt/yamcs/quickstart"
     volumes:
       - ${PWD}/yamcs/entrypoint.sh:/opt/yamcs/quickstart/entrypoint.sh
@@ -46,7 +46,7 @@ services:
         GIT_URL: https://github.com/akhenry/openmct-yamcs.git
         GIT_COMMIT: master
     attach: true
-    container_name: openmct
+    container_name: deployments-openmct
     hostname: openmct
     working_dir: "/opt/openmct"
     volumes:

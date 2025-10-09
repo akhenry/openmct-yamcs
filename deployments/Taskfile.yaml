@@ -8,13 +8,14 @@ dotenv:
 vars:
   CONTAINER_BIN: docker
   CONTAINER_COMPOSE_BIN: " {{.CONTAINER_BIN}} compose "
-  TM_SIMULATOR_RATE: 5
+  TM_SIMULATOR_RATE: 1
 
 env:
   DEPLOYMENT_ENVIRO: '{{.DEPLOYMENT_ENVIRO | default ""}}'
   HTTP_PROXY: '{{.HTTP_PROXY | default ""}}'
   HTTPS_PROXY: '{{.HTTPS_PROXY | default ""}}'
-  MAVEN_HTTPS_PROXY: '{{.MAVEN_HTTPS_PROXY | default ""}}'
+  NO_PROXY: '{{.NO_PROXY | default ""}}'
+  MAVEN_HTTPS_PROXY: '{{.MAVEN_HTTPS_PROXY | default "-s./settings.xml"}}'
 
 tasks:
   default:
@@ -25,6 +26,8 @@ tasks:
 
   all-build:
     desc: Build all images
+    deps:
+      - setup-maven
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build"
 
@@ -33,8 +36,8 @@ tasks:
     deps:
       - all-build
     cmds:
-      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d --remove-orphans"
-      - sleep 15
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d --remove-orphans --build --force-recreate"
+      - echo "Starting yamcs-simulator in 15 seconds...";sleep 15
       - task yamcs-simulator
 
   all-down:
@@ -62,7 +65,7 @@ tasks:
     deps:
       - yamcs-up
     cmds:
-      - '{{.CONTAINER_BIN}} exec -it yamcs bash -c "cd /opt/yamcs/quickstart && ./simulator.py --rate={{.TM_SIMULATOR_RATE}}"'
+      - '{{.CONTAINER_BIN}} exec -it deployments-yamcs bash -c "cd /opt/yamcs/quickstart && ./simulator.py --rate={{.TM_SIMULATOR_RATE}}"'
 
   yamcs-down:
     desc: Bring down yamcs
