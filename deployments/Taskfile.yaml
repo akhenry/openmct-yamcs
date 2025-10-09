@@ -5,19 +5,18 @@ version: '3'
 dotenv:
   - ./.env
 
-env:
+vars:
   CONTAINER_BIN: docker
   CONTAINER_COMPOSE_BIN: " {{.CONTAINER_BIN}} compose "
+  TM_SIMULATOR_RATE: 5
 
+env:
   DEPLOYMENT_ENVIRO: '{{.DEPLOYMENT_ENVIRO | default ""}}'
   HTTP_PROXY: '{{.HTTP_PROXY | default ""}}'
   HTTPS_PROXY: '{{.HTTPS_PROXY | default ""}}'
   MAVEN_HTTPS_PROXY: '{{.MAVEN_HTTPS_PROXY | default ""}}'
 
-  TM_SIMULATOR_RATE: 5
-
 tasks:
-
   default:
     desc: Shows this help message
     cmds:
@@ -46,6 +45,8 @@ tasks:
 
   yamcs-build:
     desc: Build yamcs
+    deps:
+      - setup-maven
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build yamcs"
 
@@ -68,13 +69,6 @@ tasks:
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down yamcs --remove-orphans"
 
-  yamcs-expunge:
-    desc: Expunge yamcs image, container, volumes, etc
-    deps:
-      - yamcs-down
-    cmds:
-      - ls
-
   openmct-build:
     desc: Build openmct
     cmds:
@@ -85,25 +79,28 @@ tasks:
     deps:
       - openmct-build
     cmds:
-      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d openmct --remove-orphans"
+      - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d --build openmct --remove-orphans"
 
   openmct-down:
     desc: Bring down openmct
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down openmct --remove-orphans"
 
-  openmct-expunge:
-    desc: Expunge openmct image, container, volumes, etc
-    deps:
-      - openmct-down
-    cmds:
-      - ls
-
   purge-containers:
-    desc: purge docker/podman images, cache, volumes, and networks
+    desc: "WARNING: purge docker/podman images, cache, volumes, and networks"
     cmds:
       - task all-down || true
       - yes | ${CONTAINER_BIN} image prune --filter "dangling=true"
       - yes | ${CONTAINER_BIN} system prune -a
       - yes | ${CONTAINER_BIN} volume prune
       - yes | ${CONTAINER_BIN} network prune
+
+  env-create:
+    desc: Create .env file 
+    cmds:
+      - ./env.sh > ./.env
+
+  setup-maven:
+    desc: Setup maven repository
+    cmds:
+      - echo "<settings><proxies></proxies></settings>" > ./yamcs/settings.xml

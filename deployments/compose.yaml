@@ -1,7 +1,6 @@
 
 services:
   yamcs:
-    image: yamcs:latest
     build:
       context: ./yamcs
       dockerfile: Containerfile
@@ -35,7 +34,6 @@ services:
           - yamcs
 
   openmct:
-    image: openmct:latest
     build:
       context: ./openmct
       dockerfile: Containerfile
