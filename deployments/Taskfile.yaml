@@ -25,18 +25,18 @@ tasks:
       - task --list-all
     silent: true
 
+  all-pull:
+    desc: Pre-pull images for openmct and yamcs, because in proxied enviro dockerfile cannot find docker.io!
+    cmds:
+      - task yamcs-pull
+      - task openmct-pull
+
   all-build:
     desc: Build all images
     deps:
       - setup-maven
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build"
-
-  all-pull:
-    desc: Pre-pull images for openmct and yamcs, because in proxied enviro dockerfile cannot find docker.io!
-    cmds:
-      - task yamcs-pull
-      - task openmct-pull
 
   all-up:
     desc: Bring up all containers

@@ -32,6 +32,10 @@ ifdef (${MAVEN_SETTINGS_FILE})
 export MAVEN_SETTINGS_FILE := ${MAVEN_SETTINGS_FILE}
 endif
 
+all-pull: ## Pre-pull images for openmct and yamcs, because in proxied enviro dockerfile cannot find docker.io!
+	$(MAKE) yamcs-pull
+	$(MAKE) openmct-pull
+
 all-build: | setup-maven ## build essentials
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml build
 
@@ -44,6 +48,9 @@ all-down: ## Bring down all containers
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml down --remove-orphans
 	${CONTAINER_BIN} rm yamcs openmct"
 
+yamcs-pull: ## Pull maven image for yamcs, because in proxied enviro dockerfile cannot find docker.io!
+	${CONTAINER_BIN} pull maven:3.9.9-eclipse-temurin-17
+
 yamcs-build: ## Build yamcs
 	${CONTAINER_COMPOSE_BIN}  -f ./compose.yaml build yamcs 
 
@@ -55,6 +62,9 @@ yamcs-simulator: | yamcs-up ## Run yamcs simulator
 
 yamcs-down: ## Bring down yamcs
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml down yamcs --remove-orphans
+
+openmct-pull: ## Pull ubuntu image for openmct, because in proxied enviro dockerfile cannot find docker.io!
+	${CONTAINER_BIN} pull ubuntu:25.04
 
 openmct-build: ## Build openmct
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml build openmct
