@@ -32,6 +32,12 @@ tasks:
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build"
 
+  all-pull:
+    desc: Pre-pull images for openmct and yamcs, because in proxied enviro dockerfile cannot find docker.io!
+    cmds:
+      - task yamcs-pull
+      - task openmct-pull
+
   all-up:
     desc: Bring up all containers
     deps:
@@ -47,10 +53,16 @@ tasks:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down --remove-orphans"
       - "{{.CONTAINER_BIN}} rm yamcs openmct"
 
+  yamcs-pull:
+    desc: Pull maven image for yamcs, because in proxied enviro dockerfile cannot find docker.io!
+    cmds:
+      - "{{.CONTAINER_BIN}} pull maven:3.9.9-eclipse-temurin-17"
+
   yamcs-build:
     desc: Build yamcs
     deps:
       - setup-maven
+      - yamcs-pull
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build yamcs"
 
@@ -73,8 +85,15 @@ tasks:
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down yamcs --remove-orphans"
 
+  openmct-pull:
+    desc: Pull ubuntu image for openmct, because in proxied enviro dockerfile cannot find docker.io!
+    cmds:
+      - "{{.CONTAINER_BIN}} pull ubuntu:25.04"
+
   openmct-build:
     desc: Build openmct
+    deps:
+      - openmct-pull
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build openmct"
 
