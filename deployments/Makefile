@@ -36,7 +36,7 @@ all-pull: ## Pre-pull images for openmct and yamcs, because in proxied enviro do
 	$(MAKE) yamcs-pull
 	$(MAKE) openmct-pull
 
-all-build: | setup-maven ## build essentials
+all-build: | setup-maven all-pull ## build essentials
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml build
 
 all-up: | all-build ## Bring up essentials in detached state (attached state doesn't work for some reason)

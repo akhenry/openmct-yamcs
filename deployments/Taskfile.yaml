@@ -35,6 +35,7 @@ tasks:
     desc: Build all images
     deps:
       - setup-maven
+      - all-pull
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml build"
 
