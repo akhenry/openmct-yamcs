@@ -13,13 +13,6 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV NO_PROXY=${NO_PROXY}
 ENV DEPLOYMENT_ENVIRO=${DEPLOYMENT_ENVIRO}
 
-#--- GIT CONFIGs
-ARG GIT_URL
-ARG GIT_COMMIT
-
-ENV GIT_URL=${GIT_URL}
-ENV GIT_COMMIT=${GIT_COMMIT}
-
 # Install tools and utils
 RUN apt-get update && \
     apt-get -y install \
@@ -27,7 +20,13 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# 
+# Clone yamcs/quickstart repo
+ARG GIT_URL
+ARG GIT_COMMIT
+
+ENV GIT_URL=${GIT_URL}
+ENV GIT_COMMIT=${GIT_COMMIT}
+
 WORKDIR /opt/yamcs
 RUN git clone --recurse-submodules -b ${GIT_COMMIT} -j2 ${GIT_URL}
 
