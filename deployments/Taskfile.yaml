@@ -45,14 +45,11 @@ tasks:
       - all-build
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml up -d --remove-orphans --build --force-recreate"
-      - echo "Starting yamcs-simulator in 15 seconds...";sleep 15
-      - task yamcs-simulator
 
   all-down:
     desc: Bring down all containers
     cmds:
       - "{{.CONTAINER_COMPOSE_BIN}} -f ./compose.yaml down --remove-orphans"
-      - "{{.CONTAINER_BIN}} rm yamcs openmct"
 
   yamcs-pull:
     desc: Pull maven image for yamcs, because in proxied enviro dockerfile cannot find docker.io!
@@ -79,6 +76,7 @@ tasks:
     deps:
       - yamcs-up
     cmds:
+      -  echo "Starting yamcs-simulator in 15 seconds...";sleep 15
       - '{{.CONTAINER_BIN}} exec -it deployments-yamcs bash -c "cd /opt/yamcs/quickstart && ./simulator.py --rate={{.TM_SIMULATOR_RATE}}"'
 
   yamcs-down:

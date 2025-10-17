@@ -40,13 +40,10 @@ all-build: | setup-maven all-pull ## build essentials
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml build
 
 all-up: | all-build ## Bring up essentials in detached state (attached state doesn't work for some reason)
-	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml up -d --remove-orphans
-	@echo "Starting yamcs-simulator in 15 seconds...";sleep 15
-	$(MAKE) yamcs-simulator
+	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml up -d --remove-orphans --build --force-recreate
 
 all-down: ## Bring down all containers
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml down --remove-orphans
-	${CONTAINER_BIN} rm yamcs openmct"
 
 yamcs-pull: ## Pull maven image for yamcs, because in proxied enviro dockerfile cannot find docker.io!
 	${CONTAINER_BIN} pull maven:3.9.9-eclipse-temurin-17
@@ -58,6 +55,7 @@ yamcs-up: | yamcs-build ## Bring up yamcs
 	${CONTAINER_COMPOSE_BIN} -f ./compose.yaml up -d yamcs --remove-orphans
 
 yamcs-simulator: | yamcs-up ## Run yamcs simulator
+	@echo "Starting yamcs-simulator in 15 seconds...";sleep 15
 	${CONTAINER_BIN} exec -it deployments-yamcs bash -c "cd /opt/yamcs/quickstart && ./simulator.py --rate=${TM_SIMULATOR_RATE}"
 
 yamcs-down: ## Bring down yamcs
