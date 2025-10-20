@@ -34,23 +34,26 @@ ifdef (${MAVEN_SETTINGS_FILE})
 export MAVEN_SETTINGS_FILE := ${MAVEN_SETTINGS_FILE}
 endif
 
-all-pull: ## Pre-pull images for openmct and yamcs, because in proxied enviro dockerfile cannot find docker.io!
+MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-17
+
+all-pull: ## Pre-pull images for openmct and yamcs, because in proxied enviro dockerfile cannot connect to docker.io!
 	@$(MAKE) yamcs-pull
 	@$(MAKE) openmct-pull
 
-all-build: | setup-maven all-pull ## build essentials
+all-build: | setup-maven all-pull ## Build all images
 	${CONTAINER_COMPOSE_BIN} -f ${CONTAINER_FILE} build
 
-all-up: | all-build ## Bring up essentials in detached state (attached state doesn't work for some reason)
-	${CONTAINER_COMPOSE_BIN} -f ${CONTAINER_FILE} up -d --remove-orphans --build --force-recreate
+all-up: | all-build ## Bring up all containers + yamcs simulator
+	${CONTAINER_COMPOSE_BIN} -f ${CONTAINER_FILE} up -d --remove-orphans
+	$(MAKE) yamcs-simulator
 
 all-down: ## Bring down all containers
 	${CONTAINER_COMPOSE_BIN} -f ${CONTAINER_FILE} down --remove-orphans
 
 yamcs-pull: ## Pull maven image for yamcs, because in proxied enviro dockerfile cannot find docker.io!
-	${CONTAINER_BIN} pull maven:3.9.9-eclipse-temurin-17
+	${CONTAINER_BIN} pull ${MAVEN_IMAGE}
 
-yamcs-build: ## Build yamcs
+yamcs-build: | setup-maven yamcs-pull ## Build yamcs
 	${CONTAINER_COMPOSE_BIN} -f ${CONTAINER_FILE} build yamcs 
 
 yamcs-up: | yamcs-build ## Bring up yamcs
@@ -86,7 +89,7 @@ purge-containers: ## WARNING: purge docker/podman images, cache, volumes, and ne
 env-create: ## Create .env file 
 	@./env.sh > ./.env
 
-setup-maven:
+setup-maven: ## Setup maven
 	@echo "<settings><proxies></proxies></settings>" > ./yamcs/settings.xml
 	@if [ "${DEPLOYMENT_ENVIRO}" == "vmmoc" ]; then cp ${MAVEN_SETTINGS_FILE} ./yamcs/ || true; fi
 
