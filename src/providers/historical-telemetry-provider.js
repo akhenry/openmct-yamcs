@@ -124,7 +124,7 @@ export default class YamcsHistoricalTelemetryProvider {
         options.isSamples = false;
         options.totalRequestSize = options.size ?? 1000000;
 
-        options.size = this.getAppropriateSize(options.size);
+        // options.size = this.getAppropriateSize(options.size);
 
         if (options.strategy) {
             options.strategy = options.strategy.toLowerCase();
