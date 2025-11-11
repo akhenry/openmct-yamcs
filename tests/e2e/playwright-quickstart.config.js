@@ -6,6 +6,7 @@ const config = {
     retries: 1,
     testDir: '.',
     testMatch: /.*\.e2e\.spec\.(mjs|js)$/,
+    testIgnore: /.*\.perf\.spec\.(mjs|js)$/,
     timeout: 30 * 1000,
     use: {
         headless: false,
