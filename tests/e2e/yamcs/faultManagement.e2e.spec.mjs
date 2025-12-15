@@ -88,7 +88,7 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Shows fault with severity WATCH', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeVisible();
@@ -100,7 +100,7 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Shows fault with severity WARNING', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'WARNING')).toBeVisible();
@@ -112,7 +112,7 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Shows fault with severity CRITICAL', async () => {
             await page.goto('./', { waitUntil: 'domcontentloaded' });
 
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
@@ -138,7 +138,7 @@ test.describe("Fault Management @yamcs", () => {
         });
 
         await test.step('Shelve the fault', async () => {
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(page.getByLabel(/Fault triggered at.*CRITICAL.*/)).toBeVisible();
@@ -166,11 +166,10 @@ test.describe("Fault Management @yamcs", () => {
         await test.step('Set the alarm to critical', async () => {
             // Intercept the response to set the alarm to critical
             await page.route('**/api/**/alarms', route => modifyAlarmSeverity(route, FAULT_PARAMETER, 'CRITICAL'));
-
         });
 
         await test.step('Acknowledge the fault', async () => {
-            const alarmsRequest = page.waitForRequest('**/api/**/alarms');
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
             await alarmsRequest;
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible();
@@ -211,7 +210,9 @@ test.describe("Fault Management @yamcs", () => {
  */
 // eslint-disable-next-line require-await
 async function setDefaultAlarms(parameter, staticAlarmRanges = [], instance = 'myproject', processor = 'realtime') {
-    return fetch(`${YAMCS_API_URL}mdb-overrides/${instance}/${processor}/parameters/${instance}/${parameter}`, {
+    const requestUrl = `${YAMCS_API_URL}mdb-overrides/${instance}/${processor}/parameters/${instance}/${parameter}`;
+
+    return fetch(requestUrl, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -234,7 +235,7 @@ async function setDefaultAlarms(parameter, staticAlarmRanges = [], instance = 'm
  */
 // eslint-disable-next-line require-await
 async function clearAlarms(parameter, instance = 'myproject', processor = 'realtime') {
-    await setDefaultAlarms(parameter, [], instance, processor);
+    await setDefaultAlarms(parameter, [], instance, processor); 
     const response = await getAlarms(instance);
     const alarms = await response.json();
     const alarmsToClear = Object.values(alarms).map(alarm => {
@@ -270,10 +271,10 @@ async function getAlarms(instance = 'myproject') {
 async function modifyAlarmSeverity(route, alarmName, newSeverity) {
     const response = await route.fetch();
     let body = await response.json();
-    const newBody = { ...body };
+    const newBody = JSON.parse(JSON.stringify(body));
 
     // Modify the rawValue.floatValue to trigger a specific alarm
-    body.alarms.forEach((alarm, index) => {
+    newBody.alarms.forEach((alarm, index) => {
         if (alarm.id.name === alarmName) {
             newBody.alarms[index].severity = newSeverity;
         }

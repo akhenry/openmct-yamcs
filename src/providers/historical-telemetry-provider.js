@@ -54,8 +54,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async request(domainObject, options) {
         options = { ...options };
+        const isEvent = ([OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE].includes(domainObject.type));
         this.standardizeOptions(options, domainObject);
-        if ((options.strategy === 'latest') && options.timeContext?.isRealTime()) {
+        if ((options.strategy === 'latest') && options.timeContext?.isRealTime() && !isEvent) {
             // Latest requested in realtime, use latest telemetry provider instead
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
@@ -65,6 +66,28 @@ export default class YamcsHistoricalTelemetryProvider {
 
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
+
+        // we use the eventSource, the minimumSeverity, and the commandQueue
+        // to narrow the search for events and commands
+        if ([OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE].includes(domainObject.type)) {
+            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
+            const eventSourceName = domainObject.identifier.key.replace(prefix, '');
+            options.eventSource = eventSourceName;
+        }
+
+        if (domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
+            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
+            const prefixRemoved = domainObject.identifier.key.replace(prefix, '');
+            const [eventSourceName, severity] = prefixRemoved.split('.');
+            options.eventSource = eventSourceName;
+            options.minimumSeverity = severity;
+        }
+
+        if (domainObject.type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE) {
+            const prefix = `${OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE}.`;
+            const commandQueueName = domainObject.identifier.key.replace(prefix, '');
+            options.commandQueue = commandQueueName;
+        }
 
         options.isSamples = !this.isImagery(domainObject)
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
@@ -169,6 +192,18 @@ export default class YamcsHistoricalTelemetryProvider {
             urlWithQueryParameters.searchParams.append('useRawValue', "true");
         }
 
+        if (options.eventSource) {
+            urlWithQueryParameters.searchParams.append('source', options.eventSource);
+        }
+
+        if (options.minimumSeverity) {
+            urlWithQueryParameters.searchParams.append('severity', options.minimumSeverity);
+        }
+
+        if (options.commandQueue) {
+            urlWithQueryParameters.searchParams.append('queue', options.commandQueue);
+        }
+
         if (options.filters?.severity?.equals?.length) {
             // add a single minimum severity threshold filter
             // see https://docs.yamcs.org/yamcs-http-api/events/list-events/
@@ -196,11 +231,14 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getLinkParamsSpecificToId(id) {
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
+            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
             return 'events';
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE
+            || id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return 'commands';
         }
 
@@ -208,11 +246,18 @@ export default class YamcsHistoricalTelemetryProvider {
     }
 
     getResponseKeyById(id) {
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+
+        if (id === (OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
             return 'event';
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE) {
+            return 'entry';
+        }
+
+        if (id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return 'entry';
         }
 
@@ -224,11 +269,13 @@ export default class YamcsHistoricalTelemetryProvider {
             return [];
         }
 
-        if (id === OBJECT_TYPES.EVENTS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
+            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
             return results.map(event => eventToTelemetryDatum(event));
         }
 
-        if (id === OBJECT_TYPES.COMMANDS_OBJECT_TYPE) {
+        if (id === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE || id.startsWith(OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE)) {
             return results.map(command => commandToTelemetryDatum(command));
         }
 
