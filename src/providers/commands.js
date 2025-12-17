@@ -23,27 +23,43 @@
 import { OBJECT_TYPES, METADATA_TIME_KEY } from "../const.js";
 import { flattenObjectArray } from "../utils.js";
 
-export function createCommandsObject(openmct, parentKey, namespace) {
+export function createRootCommandsObject(openmct, parentKey, namespace) {
+    const rootCommandsIdentifier = {
+        key: OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE,
+        namespace
+    };
+    const rootCommandsObject = createCommandObject(openmct, parentKey, namespace, rootCommandsIdentifier);
+
+    return rootCommandsObject;
+}
+
+export function createCommandObject(openmct, parentKey, namespace, identifier, queueName = null) {
+    const isRoot = queueName === null;
     const location = openmct.objects.makeKeyString({
         key: parentKey,
         namespace
     });
 
-    const identifier = {
-        key: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
-        namespace: namespace
-    };
+    const name = isRoot ? 'Commands' : queueName;
+    const type = isRoot
+        ? OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE
+        : OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE;
+
     const commandObject = {
         identifier,
         location,
-        name: 'Commands',
-        type: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
+        name,
+        type,
         telemetry: {
             values: [
                 {
                     key: 'commandName',
                     name: 'Command',
-                    format: 'string'
+                    format: 'string',
+                    hints: {
+                        // this is to ensure that the commandName is displayed as a label
+                        label: 0
+                    }
                 },
                 {
                     key: 'utc',
@@ -164,7 +180,33 @@ export function createCommandsObject(openmct, parentKey, namespace) {
         }
     };
 
+    if (isRoot) {
+        commandObject.composition = [];
+    }
+
     return commandObject;
+}
+
+export async function getCommandQueues(url, instance, processor = 'realtime') {
+    const commandQueuesURL = `${url}api/processors/${instance}/${processor}/queues`;
+    const response = await fetch(commandQueuesURL, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        console.error(`🛑 Error fetching command queues: ${response.statusText}`);
+
+        return [];
+    }
+
+    const commandQueueJson = await response.json();
+    const { queues } = commandQueueJson;
+    const queueNames = queues.map(queue => queue.name);
+
+    return queueNames;
 }
 
 /**
@@ -177,7 +219,7 @@ export function commandToTelemetryDatum(command) {
     const { generationTime, commandId, attr, assignments, id } = command;
     const { origin, sequenceNumber, commandName } = commandId;
     let datum = {
-        id: OBJECT_TYPES.COMMANDS_OBJECT_TYPE,
+        id: OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE,
         generationTime,
         origin,
         sequenceNumber,

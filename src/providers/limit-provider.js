@@ -52,12 +52,8 @@ export default class LimitProvider {
             evaluate: function (datum, valueMetadata) {
                 if (valueMetadata && datum.monitoringResult
                         && datum.monitoringResult in MONITORING_RESULT_CSS) {
-                    let evaluationResult;
 
-                    if (datum.rangeCondition
-                            && datum.rangeCondition in RANGE_CONDITION_CSS) {
-                        evaluationResult = self.getLimitRange(datum, datum.monitoringResult, valueMetadata);
-                    }
+                    const evaluationResult = self.getLimitInfo(datum, datum.monitoringResult, valueMetadata);
 
                     return evaluationResult;
                 }
@@ -75,15 +71,24 @@ export default class LimitProvider {
      *
      * @returns {EvaluationResult} ({@link EvaluationResult})
      */
-    getLimitRange(datum, result, valueMetadata) {
+    getLimitInfo(datum, result, valueMetadata) {
         if (!valueMetadata) {
             return undefined;
         }
 
         if (valueMetadata.key === 'value') {
+            let cssClass = MONITORING_RESULT_CSS[result];
+
+            // Include the rangeCondition that's being violated if it is available.
+            // Example: For enums the rangeCondition (upper or lower) does not make sense. So we skip it.
+            if (datum.rangeCondition
+                && datum.rangeCondition in RANGE_CONDITION_CSS) {
+                cssClass = ' ' + RANGE_CONDITION_CSS[datum.rangeCondition];
+            }
+
             return {
-                cssClass: MONITORING_RESULT_CSS[datum.monitoringResult] + ' ' + RANGE_CONDITION_CSS[datum.rangeCondition],
-                name: datum.monitoringResult,
+                cssClass,
+                name: result,
                 low: Number.NEGATIVE_INFINITY,
                 high: Number.POSITIVE_INFINITY
             };
@@ -93,6 +98,10 @@ export default class LimitProvider {
     }
 
     supportsLimits(domainObject) {
+        if (domainObject.type.startsWith('yamcs.commands')) {
+            return false;
+        }
+
         return domainObject.type.startsWith('yamcs.');
     }
 
