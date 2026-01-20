@@ -22,7 +22,9 @@ export default class HistoricalFaultProvider {
     async request() {
         const url = `${this.url}api/processors/${this.instance}/${this.processor}/${FAULT_MGMT_ALARMS}`;
 
-        const res = await fetch(url);
+        const res = await fetch(url, {
+            priority: 'low'
+        });
         const faultsData = await res.json();
 
         return faultsData.alarms?.map(convertDataToFaultModel);
