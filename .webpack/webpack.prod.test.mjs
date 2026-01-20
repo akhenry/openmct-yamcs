@@ -19,19 +19,18 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { merge } from "webpack-merge";
-import commonConfig from "./webpack.common.mjs";
+
+import { merge } from 'webpack-merge';
+import prod from './webpack.prod.mjs';
 import { fileURLToPath } from 'node:url';
 
 const projectRootDir = fileURLToPath(new URL('../', import.meta.url));
 
 /** @type {import('webpack').Configuration} */
-const devConfig = {
+const prodTestConfig = {
     context: projectRootDir,
-    mode: 'development',
-    devtool: 'eval-source-map',
     entry: {
         'openmct-yamcs-example': './example/index.js'
     },
 }
-export default merge(commonConfig, devConfig);
+export default merge(prod, prodTestConfig);
