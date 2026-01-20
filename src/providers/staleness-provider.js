@@ -37,8 +37,8 @@ export default class YamcsStalenessProvider {
         return this.realtimeTelemetryProvider.subscribeToStaleness(domainObject, callback);
     }
 
-    async isStale(domainObject) {
-        const response = await this.latestTelemetryProvider.requestLatest(domainObject);
+    async isStale(domainObject, options) {
+        const response = await this.latestTelemetryProvider.requestLatest(domainObject, options);
 
         if (!response?.acquisitionStatus) {
             return;
