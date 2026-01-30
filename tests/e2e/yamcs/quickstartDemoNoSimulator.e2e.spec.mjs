@@ -56,6 +56,42 @@ test.describe('Quickstart demo layout without simulator @yamcs', () => {
             }
         });
 
+        function isLatestBatchGet(request) {
+            return request.url().includes('/parameters:batchGet');
+        }
+
+        // Track "network idle", but ONLY for the latest-telemetry batch endpoint.
+        // This avoids the flakiness of Playwright's global `networkidle` on SPAs.
+        let latestBatchGetInFlight = 0;
+        let latestBatchGetTotal = 0;
+        let latestBatchGetLastFinishedAt = Date.now();
+
+        page.on('request', (request) => {
+            if (!isLatestBatchGet(request)) {
+                return;
+            }
+
+            latestBatchGetTotal += 1;
+            latestBatchGetInFlight += 1;
+        });
+
+        function onLatestBatchGetDone(request) {
+            if (!isLatestBatchGet(request)) {
+                return;
+            }
+
+            // Be defensive; we don't want a transient tracking mismatch to break the test.
+            latestBatchGetInFlight = Math.max(0, latestBatchGetInFlight - 1);
+            latestBatchGetLastFinishedAt = Date.now();
+        }
+
+        page.on('requestfinished', onLatestBatchGetDone);
+        page.on('requestfailed', onLatestBatchGetDone);
+
+        // We'll use this to deterministically wait until Open MCT actually attempted
+        // to fetch "latest telemetry" at least once (the call we stub below).
+        const firstLatestBatchGet = page.waitForResponse('**/api/processors/*/*/parameters:batchGet');
+
         // Simulate "no simulator" by returning no latest parameter values.
         await page.route('**/api/processors/*/*/parameters:batchGet', async (route) => {
             await route.fulfill({
@@ -73,8 +109,36 @@ test.describe('Quickstart demo layout without simulator @yamcs', () => {
         // The demo bootstrap imports and navigates to the example flexible layout.
         await expect(page.getByRole('main').getByText('Example Flexible Layout')).toBeVisible();
 
-        // Give the UI a beat to process any async telemetry updates that could throw.
-        await page.waitForTimeout(1000);
+        // Deterministic "settled" signals:
+        // - demo bootstrap finished (it sets this flag after navigating)
+        // - at least one latest-telemetry request completed (stubbed above)
+        await page.waitForFunction(() => localStorage.getItem('exampleLayout') === 'true');
+        await firstLatestBatchGet;
+
+        // Wait until latest-telemetry batch requests go quiet for a bit.
+        // This gives the UI time to process any async updates that could throw,
+        // without relying on fixed sleeps.
+        const QUIET_WINDOW_MS = 750;
+        const MAX_WAIT_MS = 15_000;
+        const start = Date.now();
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const now = Date.now();
+            const quietForMs = now - latestBatchGetLastFinishedAt;
+
+            if (latestBatchGetTotal > 0 && latestBatchGetInFlight === 0 && quietForMs >= QUIET_WINDOW_MS) {
+                break;
+            }
+
+            if (now - start > MAX_WAIT_MS) {
+                throw new Error(
+                    `Timed out waiting for parameters:batchGet to go quiet. `
+                    + `total=${latestBatchGetTotal} inFlight=${latestBatchGetInFlight} quietForMs=${quietForMs}`
+                );
+            }
+
+            await page.waitForTimeout(50);
+        }
 
         expect(pageErrors, `Uncaught page errors:\n${pageErrors.join('\n')}`).toEqual([]);
         expect(consoleErrors, `Console errors:\n${consoleErrors.join('\n')}`).toEqual([]);
