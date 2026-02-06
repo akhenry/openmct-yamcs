@@ -112,7 +112,29 @@ export function createEventObject(openmct, parentKey, namespace, identifier, nam
 }
 
 export function createEventSeverityObjects(openmct, parentEventObject, namespace) {
-    const childSeverityObjects = [];
+    const eventSeverityObjects = SEVERITY_LEVELS.map((severity) => {
+        const identifier = {
+            key: `${OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE}.${severity}`,
+            namespace
+        };
+
+        const name = `${parentEventObject.name}: ${severity}`;
+
+        return createEventObject(
+            openmct,
+            parentEventObject.identifier.key,
+            namespace,
+            identifier,
+            name,
+            OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE
+        );
+    });
+
+    return eventSeverityObjects;
+}
+
+export function createEventSpecificSeverityObjects(openmct, parentEventObject, namespace) {
+    const eventSpecificSeverityObjects = [];
     for (const severity of SEVERITY_LEVELS) {
         const severityIdentifier = {
             key: `${parentEventObject.identifier.key}.${severity}`,
@@ -121,7 +143,7 @@ export function createEventSeverityObjects(openmct, parentEventObject, namespace
 
         const severityName = `${parentEventObject.name}: ${severity}`;
 
-        const severityEventObject = createEventObject(
+        const eventSpecificSeverityObject = createEventObject(
             openmct,
             parentEventObject.identifier.key,
             namespace,
@@ -130,10 +152,10 @@ export function createEventSeverityObjects(openmct, parentEventObject, namespace
             OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
         );
 
-        childSeverityObjects.push(severityEventObject);
+        eventSpecificSeverityObjects.push(eventSpecificSeverityObject);
     }
 
-    return childSeverityObjects;
+    return eventSpecificSeverityObjects;
 }
 
 export async function getEventSources(url, instance) {

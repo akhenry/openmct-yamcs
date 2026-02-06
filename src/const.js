@@ -24,6 +24,7 @@ export const OBJECT_TYPES = {
     COMMANDS_ROOT_OBJECT_TYPE: 'yamcs.commands',
     COMMANDS_QUEUE_OBJECT_TYPE: 'yamcs.commands.queue',
     EVENTS_ROOT_OBJECT_TYPE: 'yamcs.events',
+    EVENTS_SEVERITY_OBJECT_TYPE: 'yamcs.events.severity',
     EVENT_SPECIFIC_OBJECT_TYPE: 'yamcs.event.specific',
     EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE: 'yamcs.event.specific.severity',
     TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
