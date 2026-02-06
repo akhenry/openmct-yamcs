@@ -179,14 +179,23 @@ export async function getEventSources(url, instance) {
     }
 }
 
-export function eventShouldBeFiltered(event, options) {
-    const { severity } = event;
-    const incomingEventSeverity = severity?.toLowerCase();
-    const severityLevelToFilter = options?.filters?.severity?.equals?.[0];
-    const severityLevelToFilterIndex = SEVERITY_LEVELS.indexOf(severityLevelToFilter);
-    const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
+export function eventShouldBeFiltered(event, subscriptionDetails) {
+    const { severity, source } = event;
+    const { domainObject, options } = subscriptionDetails;
 
-    return incomingEventSeverityIndex < severityLevelToFilterIndex;
+    const domainObjectSource = getEventSource(domainObject);
+    const shouldFilterBySource = domainObjectSource && domainObjectSource !== source;
+
+    const incomingEventSeverity = severity?.toLowerCase();
+    const filterSeverity = options?.filters?.severity?.equals?.[0];
+    const domainObjectSeverity = getEventSeverity(domainObject);
+    const severityLevelToFilterIndex = Math.max(
+        SEVERITY_LEVELS.indexOf(domainObjectSeverity),
+        SEVERITY_LEVELS.indexOf(filterSeverity));
+    const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
+    const shouldFilterBySeverity = incomingEventSeverityIndex < severityLevelToFilterIndex;
+
+    return shouldFilterBySource || shouldFilterBySeverity;
 }
 
 export function getEventSource(domainObject) {
