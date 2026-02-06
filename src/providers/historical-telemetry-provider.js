@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES } from '../const.js';
+import { OBJECT_TYPES, isEventType } from '../const.js';
 import {
     idToQualifiedName,
     addLimitInformation,
@@ -28,7 +28,11 @@ import {
     convertYamcsToOpenMctDatum
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands.js';
-import { eventToTelemetryDatum } from './events.js';
+import {
+    eventToTelemetryDatum,
+    getEventSource,
+    getEventSeverity
+} from './events.js';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance, latestTelemetryProvider) {
@@ -54,14 +58,12 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async request(domainObject, options) {
         options = { ...options };
-        const isEvent = ([
-            OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE,
-            OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE,
-            OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
-            OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
-        ].includes(domainObject.type));
+
         this.standardizeOptions(options, domainObject);
-        if ((options.strategy === 'latest') && options.timeContext?.isRealTime() && !isEvent) {
+        if (options.strategy === 'latest'
+            && options.timeContext?.isRealTime()
+            && !isEventType(domainObject.type)
+        ) {
             // Latest requested in realtime, use latest telemetry provider instead
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
@@ -72,28 +74,21 @@ export default class YamcsHistoricalTelemetryProvider {
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
 
-        // we use the eventSource, the minimumSeverity, and the commandQueue
-        // to narrow the search for events and commands
-        if (domainObject.type === OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE) {
-            const prefix = `${OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE}.`;
-            const severity = domainObject.identifier.key.replace(prefix, '');
-            options.minimumSeverity = severity;
+        // limit events search by source and severity
+        if (isEventType(domainObject.type)) {
+            const source = getEventSource(domainObject);
+            const severity = getEventSeverity(domainObject);
+
+            if (source !== undefined) {
+                options.eventSource = source;
+            }
+
+            if (severity !== undefined) {
+                options.minimumSeverity = severity;
+            }
         }
 
-        if ([OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE].includes(domainObject.type)) {
-            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
-            const eventSourceName = domainObject.identifier.key.replace(prefix, '');
-            options.eventSource = eventSourceName;
-        }
-
-        if (domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
-            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
-            const prefixRemoved = domainObject.identifier.key.replace(prefix, '');
-            const [eventSourceName, severity] = prefixRemoved.split('.');
-            options.eventSource = eventSourceName;
-            options.minimumSeverity = severity;
-        }
-
+        // limit commands search by command queue
         if (domainObject.type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE) {
             const prefix = `${OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE}.`;
             const commandQueueName = domainObject.identifier.key.replace(prefix, '');

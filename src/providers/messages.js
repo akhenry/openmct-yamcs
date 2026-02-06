@@ -1,4 +1,12 @@
-import {OBJECT_TYPES, DATA_TYPES, MDB_TYPE} from '../const.js';
+import {
+    OBJECT_TYPES,
+    DATA_TYPES,
+    MDB_TYPE,
+    isEventType,
+    isAlarmType,
+    isCommandType,
+    isMdbChangesType
+} from '../const.js';
 
 const typeMap = {
     [OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE]: DATA_TYPES.DATA_TYPE_COMMANDS,
@@ -77,26 +85,4 @@ function buildSubscribeMessages() {
     }
 
     return subscriptionMessages;
-}
-
-function isEventType(type) {
-    return [
-        OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE,
-        OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE,
-        OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
-        OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
-    ].includes(type);
-}
-
-function isAlarmType(type) {
-    return type === OBJECT_TYPES.ALARMS_TYPE
-        || type === OBJECT_TYPES.GLOBAL_STATUS_TYPE;
-}
-
-function isCommandType(type) {
-    return type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE || type === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE;
-}
-
-function isMdbChangesType(type) {
-    return type === MDB_TYPE;
 }

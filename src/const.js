@@ -37,6 +37,7 @@ export const OBJECT_TYPES = {
     ALARMS_TYPE: 'yamcs.alarms',
     GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
 };
+
 export const MDB_TYPE = 'yamcs.mdbchanges';
 
 export const DATA_TYPES = {
@@ -72,3 +73,25 @@ export const MDB_OBJECT = Object.freeze({
 });
 
 export const MDB_CHANGES_PARAMETER_TYPE = 'PARAMETER';
+
+export function isEventType(type) {
+    return [
+        OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE,
+        OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE,
+        OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
+        OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
+    ].includes(type);
+}
+
+export function isAlarmType(type) {
+    return type === OBJECT_TYPES.ALARMS_TYPE
+        || type === OBJECT_TYPES.GLOBAL_STATUS_TYPE;
+}
+
+export function isCommandType(type) {
+    return type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE || type === OBJECT_TYPES.COMMANDS_ROOT_OBJECT_TYPE;
+}
+
+export function isMdbChangesType(type) {
+    return type === MDB_TYPE;
+}

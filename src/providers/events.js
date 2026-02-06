@@ -189,6 +189,27 @@ export function eventShouldBeFiltered(event, options) {
     return incomingEventSeverityIndex < severityLevelToFilterIndex;
 }
 
+export function getEventSource(domainObject) {
+    const name = domainObject.identifier.key;
+
+    if (name.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)) {
+        const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
+        const nameWithoutPrefix = name.replace(prefix, '');
+        const [sourceName] = nameWithoutPrefix.split('.');
+
+        return sourceName;
+    }
+}
+
+export function getEventSeverity(domainObject) {
+    if (domainObject.type === OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE || domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
+        const keyAsArray = domainObject.identifier.key.split('.');
+        const severity = keyAsArray[keyAsArray.length - 1];
+
+        return severity;
+    }
+}
+
 /**
  * Convert raw event data from YAMCS to a format which
  * can be consumed by Open MCT as telemetry.
