@@ -25,8 +25,8 @@ export const OBJECT_TYPES = {
     COMMANDS_QUEUE_OBJECT_TYPE: 'yamcs.commands.queue',
     EVENTS_ROOT_OBJECT_TYPE: 'yamcs.events',
     EVENTS_SEVERITY_OBJECT_TYPE: 'yamcs.events.severity',
-    EVENT_SPECIFIC_OBJECT_TYPE: 'yamcs.event.specific',
-    EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE: 'yamcs.event.specific.severity',
+    EVENTS_SOURCE_OBJECT_TYPE: 'yamcs.events.source',
+    EVENTS_SOURCE_SEVERITY_OBJECT_TYPE: 'yamcs.events.source.severity',
     TELEMETRY_OBJECT_TYPE: 'yamcs.telemetry',
     IMAGE_OBJECT_TYPE: 'yamcs.image',
     STRING_OBJECT_TYPE: 'yamcs.string',
@@ -78,8 +78,8 @@ export function isEventType(type) {
     return [
         OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE,
         OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE,
-        OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
-        OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
+        OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE,
+        OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE
     ].includes(type);
 }
 

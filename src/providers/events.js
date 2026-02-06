@@ -111,18 +111,18 @@ export function createEventObject(openmct, parentKey, namespace, identifier, nam
     return baseEventObject;
 }
 
-export function createEventSeverityObjects(openmct, parentEventObject, namespace) {
-    const eventSeverityObjects = SEVERITY_LEVELS.map((severity) => {
+export function createEventsSeverityObjects(openmct, parentEventsObject, namespace) {
+    const eventsSeverityObjects = SEVERITY_LEVELS.map((severity) => {
         const identifier = {
             key: `${OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE}.${severity}`,
             namespace
         };
 
-        const name = `${parentEventObject.name}: ${severity}`;
+        const name = `${parentEventsObject.name}: ${severity}`;
 
         return createEventObject(
             openmct,
-            parentEventObject.identifier.key,
+            parentEventsObject.identifier.key,
             namespace,
             identifier,
             name,
@@ -130,32 +130,32 @@ export function createEventSeverityObjects(openmct, parentEventObject, namespace
         );
     });
 
-    return eventSeverityObjects;
+    return eventsSeverityObjects;
 }
 
-export function createEventSpecificSeverityObjects(openmct, parentEventObject, namespace) {
-    const eventSpecificSeverityObjects = [];
+export function createEventsSourceSeverityObjects(openmct, parentEventsObject, namespace) {
+    const eventsSourceSeverityObjects = [];
     for (const severity of SEVERITY_LEVELS) {
         const severityIdentifier = {
-            key: `${parentEventObject.identifier.key}.${severity}`,
+            key: `${parentEventsObject.identifier.key}.${severity}`,
             namespace
         };
 
-        const severityName = `${parentEventObject.name}: ${severity}`;
+        const severityName = `${parentEventsObject.name}: ${severity}`;
 
-        const eventSpecificSeverityObject = createEventObject(
+        const eventsSourceSeverityObject = createEventObject(
             openmct,
-            parentEventObject.identifier.key,
+            parentEventsObject.identifier.key,
             namespace,
             severityIdentifier,
             severityName,
-            OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
+            OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE
         );
 
-        eventSpecificSeverityObjects.push(eventSpecificSeverityObject);
+        eventsSourceSeverityObjects.push(eventsSourceSeverityObject);
     }
 
-    return eventSpecificSeverityObjects;
+    return eventsSourceSeverityObjects;
 }
 
 export async function getEventSources(url, instance) {
@@ -192,8 +192,8 @@ export function eventShouldBeFiltered(event, options) {
 export function getEventSource(domainObject) {
     const name = domainObject.identifier.key;
 
-    if (name.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)) {
-        const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
+    if (name.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)) {
+        const prefix = `${OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE}.`;
         const nameWithoutPrefix = name.replace(prefix, '');
         const [sourceName] = nameWithoutPrefix.split('.');
 
@@ -202,7 +202,7 @@ export function getEventSource(domainObject) {
 }
 
 export function getEventSeverity(domainObject) {
-    if (domainObject.type === OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE || domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
+    if (domainObject.type === OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE || domainObject.type === OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE) {
         const keyAsArray = domainObject.identifier.key.split('.');
         const severity = keyAsArray[keyAsArray.length - 1];
 
@@ -229,7 +229,7 @@ export function eventToTelemetryDatum(event) {
     } = event;
 
     return {
-        id: OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
+        id: OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE,
         severity,
         generationTime,
         receptionTime,

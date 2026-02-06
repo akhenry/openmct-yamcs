@@ -29,7 +29,7 @@ import {
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
 import { createCommandObject, getCommandQueues, createRootCommandsObject } from './commands.js';
-import { createRootEventsObject, createEventObject, getEventSources, createEventSeverityObjects, createEventSpecificSeverityObjects } from './events.js';
+import { createRootEventsObject, createEventObject, getEventSources, createEventsSeverityObjects, createEventsSourceSeverityObjects } from './events.js';
 import { getPossibleStatusesFromParameter, getRoleFromParameter, isOperatorStatusParameter } from './user/operator-status-parameter.js';
 import { getMissionActionFromParameter, getPossibleMissionActionStatusesFromParameter, isMissionStatusParameter } from './mission-status/mission-status-parameter.js';
 
@@ -248,7 +248,7 @@ export default class YamcsObjectProvider {
         this.rootObject.composition.push(rootEventsObject.identifier);
 
         // Create events by severity objects
-        const eventSeverityObjects = createEventSeverityObjects(this.openmct, rootEventsObject, this.namespace);
+        const eventSeverityObjects = createEventsSeverityObjects(this.openmct, rootEventsObject, this.namespace);
         eventSeverityObjects.forEach(eventSeverityObject => {
             this.#addObject(eventSeverityObject);
             rootEventsObject.composition.push(eventSeverityObject.identifier);
@@ -257,18 +257,18 @@ export default class YamcsObjectProvider {
         // Create events by source objects
         const eventSourceNames = await getEventSources(this.url, this.instance);
         eventSourceNames.forEach(eventSourceName => {
-            const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.${eventSourceName}`);
+            const childEventKey = qualifiedNameToId(`${OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE}.${eventSourceName}`);
             const childEventIdentifier = {
                 key: childEventKey,
                 namespace: this.namespace
             };
-            const childEventObject = createEventObject(this.openmct, rootEventsObject.identifier.key, this.namespace, childEventIdentifier, eventSourceName, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE);
+            const childEventObject = createEventObject(this.openmct, rootEventsObject.identifier.key, this.namespace, childEventIdentifier, eventSourceName, OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE);
 
             this.#addObject(childEventObject);
 
             // Create events by severity objects for each event source object
-            const eventSpecificSeverityObjects = createEventSpecificSeverityObjects(this.openmct, childEventObject, this.namespace);
-            eventSpecificSeverityObjects.forEach(severityObject => {
+            const eventsSourceSeverityObjects = createEventsSourceSeverityObjects(this.openmct, childEventObject, this.namespace);
+            eventsSourceSeverityObjects.forEach(severityObject => {
                 this.#addObject(severityObject);
                 if (!childEventObject.composition) {
                     childEventObject.composition = [];

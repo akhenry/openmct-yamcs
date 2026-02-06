@@ -239,8 +239,8 @@ export default class YamcsHistoricalTelemetryProvider {
     getLinkParamsSpecificToId(id) {
         if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
             || id.startsWith(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE)) {
             return 'events';
         }
 
@@ -256,8 +256,8 @@ export default class YamcsHistoricalTelemetryProvider {
 
         if (id === (OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE)
             || id.startsWith(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE)) {
             return 'event';
         }
 
@@ -279,8 +279,8 @@ export default class YamcsHistoricalTelemetryProvider {
 
         if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
             || id.startsWith(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE)) {
             return results.map(event => eventToTelemetryDatum(event));
         }
 
