@@ -59,7 +59,7 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npx playwright@1.57.0 install chromium
+      - run: npx playwright@1.57.0 install chromium --with-deps
       - name: Check that yamcs is available
         run: |
           docker ps -a
