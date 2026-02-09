@@ -16,6 +16,7 @@ jobs:
     if: ${{ github.event.label.name == 'pr:e2e:quickstart' || github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.57.0-jammy 
     continue-on-error: false
     strategy:
       matrix:
@@ -59,7 +60,7 @@ jobs:
           elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
             npm run build:example
           fi
-      - run: npx playwright@1.48.1 install chromium
+      - run: npx playwright@1.57.0 install chromium
       - name: Check that yamcs is available
         run: |
           docker ps -a
