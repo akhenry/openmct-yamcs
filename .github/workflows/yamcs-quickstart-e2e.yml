@@ -16,7 +16,6 @@ jobs:
     if: ${{ github.event.label.name == 'pr:e2e:quickstart' || github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    container: mcr.microsoft.com/playwright:v1.57.0-jammy 
     continue-on-error: false
     strategy:
       matrix:
@@ -28,11 +27,6 @@ jobs:
           - latest
           - stable
     steps:
-      - run: |
-          sudo apt-get install software-properties-common
-          sudo apt-add-repository universe
-          sudo apt-get update
-          sudo apt-get install maven
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
         with:
