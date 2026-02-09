@@ -28,6 +28,7 @@ jobs:
           - latest
           - stable
     steps:
+      - run: apt install maven
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
         with:
