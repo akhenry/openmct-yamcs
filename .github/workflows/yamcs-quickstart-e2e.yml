@@ -13,7 +13,7 @@ on:
 
 jobs:
   yamcs-quickstart-e2e:
-    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
+    if: ${{ github.event.label.name == 'pr:e2e:quickstart' || github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
     continue-on-error: false
@@ -94,14 +94,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
           path: test-results
           name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Archive html test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: html-test-results
           path: tests/html-test-results
           name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
       - name: Remove pr:e2e:quickstart label (if present)
