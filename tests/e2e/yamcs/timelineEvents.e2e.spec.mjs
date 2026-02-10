@@ -100,8 +100,13 @@ test.describe("Timeline Events in @yamcs", () => {
         await setEndOffset(page, { endMins: '02' });
         await setFixedTimeMode(page);
 
-        await page.getByLabel('Toggle extended event lines overlay for Pressure threshold exceeded').click();
-        const overlayLinesContainer = page.locator('.c-timeline__overlay-lines');
-        await expect(overlayLinesContainer.locator('.c-timeline__event-line--extended').last()).toBeVisible();
+        const eventsContainer = page.locator('.c-events-tsv__container');
+        const eventLines = eventsContainer.locator('.c-events-tsv__event-line');
+        const eventLinesCount = await eventLines.count();
+        const overlayLinesContainer = page.locator('.c-timeline__overlay-lines__extended-line-container');
+        const overlayLines = overlayLinesContainer.locator('.c-timeline__event-line--extended');
+        await expect(overlayLines).toHaveCount(0);
+        await page.getByLabel('Toggle extended event lines overlay for Events').click();
+        await expect(overlayLines).toHaveCount(eventLinesCount);
     });
 });
