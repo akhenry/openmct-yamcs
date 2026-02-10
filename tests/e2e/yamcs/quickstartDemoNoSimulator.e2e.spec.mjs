@@ -137,7 +137,7 @@ test.describe('Quickstart demo layout without simulator @yamcs', () => {
                 );
             }
 
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(0);
         }
 
         expect(pageErrors, `Uncaught page errors:\n${pageErrors.join('\n')}`).toEqual([]);
