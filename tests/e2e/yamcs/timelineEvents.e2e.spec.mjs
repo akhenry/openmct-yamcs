@@ -29,7 +29,7 @@ test.describe("Timeline Events in @yamcs", () => {
     let eventsTreeItem;
     let eventTimelineView;
     let objectPane;
-    let dropTarget;
+    let timelineAxis;
 
     test.beforeEach(async ({ page }) => {
         await page.goto("./", { waitUntil: "domcontentloaded" });
@@ -39,7 +39,7 @@ test.describe("Timeline Events in @yamcs", () => {
         eventTimelineView = await createDomainObjectWithDefaults(page, { type: 'Time Strip' });
 
         objectPane = page.getByLabel(`${eventTimelineView.name} Object View`);
-        dropTarget = objectPane.getByLabel('Time Axis');
+        timelineAxis = objectPane.getByLabel('Time Axis');
     });
 
     test('Can create a timeline with YAMCS events', async ({ page }) => {
@@ -84,5 +84,24 @@ test.describe("Timeline Events in @yamcs", () => {
                     .getByText(/Pressure threshold exceeded/)
             ).toBeVisible();
         });
+    });
+
+    test('YAMCS event lines can extend over other telemetry in the timeline', async ({ page }) => {
+        const plot = await createDomainObjectWithDefaults(page, { type: 'Overlay Plot' });
+        const plotTreeItem = page.getByRole('treeitem', { name: plot.name });
+        await page.goto(eventTimelineView.url);
+        await page.getByLabel('Expand My Items folder').click();
+        await plotTreeItem.dragTo(objectPane);
+        await eventsTreeItem.dragTo(timelineAxis);
+
+        await postAllEvents();
+
+        await setStartOffset(page, { startMins: '02' });
+        await setEndOffset(page, { endMins: '02' });
+        await setFixedTimeMode(page);
+
+        await page.getByLabel('Toggle extended event lines overlay for Pressure threshold exceeded').click();
+        const overlayLinesContainer = page.locator('.c-timeline__overlay-lines');
+        await expect(overlayLinesContainer.locator('.c-timeline__event-line--extended').last()).toBeVisible();
     });
 });
