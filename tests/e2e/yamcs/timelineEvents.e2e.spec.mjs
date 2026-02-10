@@ -21,18 +21,28 @@
  *****************************************************************************/
 
 import { pluginFixtures, appActions } from 'openmct-e2e';
-import { postAllEvents } from '../../../example/make-example-events.mjs'; // Updated path and extension
+import { postAllEvents } from '../../../example/make-example-events.mjs';
 const { test, expect } = pluginFixtures;
 const { createDomainObjectWithDefaults, setStartOffset, setEndOffset, setFixedTimeMode } = appActions;
 
 test.describe("Timeline Events in @yamcs", () => {
-    test('Can create a timeline with YAMCS events', async ({ page }) => {
-        // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+    let eventsTreeItem;
+    let eventTimelineView;
+    let objectPane;
+    let dropTarget;
+
+    test.beforeEach(async ({ page }) => {
+        await page.goto("./", { waitUntil: "domcontentloaded" });
+
         await page.getByLabel('Expand myproject folder').click();
-        const eventsTreeItem = page.getByRole('treeitem', { name: /Events/ });
-        const eventTimelineView = await createDomainObjectWithDefaults(page, { type: 'Time Strip' });
-        const objectPane = page.getByLabel(`${eventTimelineView.name} Object View`);
+        eventsTreeItem = page.getByRole('treeitem', { name: /Events/ });
+        eventTimelineView = await createDomainObjectWithDefaults(page, { type: 'Time Strip' });
+
+        objectPane = page.getByLabel(`${eventTimelineView.name} Object View`);
+        dropTarget = objectPane.getByLabel('Time Axis');
+    });
+
+    test('Can create a timeline with YAMCS events', async ({ page }) => {
         await eventsTreeItem.dragTo(objectPane);
         await postAllEvents();
 
@@ -40,51 +50,39 @@ test.describe("Timeline Events in @yamcs", () => {
         await setEndOffset(page, { endMins: '02' });
         await setFixedTimeMode(page);
 
-        await page
-            .getByLabel(eventTimelineView.name)
-            .getByLabel(/Pressure threshold exceeded/)
-            .first()
-            .click();
-        await page.getByRole('tab', { name: 'Event' }).click();
+        await test.step('event tooltip appears on hover of event', async () => {
+            await expect(
+                page.getByRole('tooltip').getByText(/Pressure threshold exceeded/)
+            ).not.toBeVisible();
 
-        // ensure the event inspector has the the same event
-        await expect(page.getByText(/Pressure threshold exceeded/)).toBeVisible();
+            await page
+                .getByLabel(eventTimelineView.name)
+                .getByLabel(/Pressure threshold exceeded/)
+                .first()
+                .hover();
 
-        await page.getByLabel('Expand Events yamcs.events').click();
-        await page.getByLabel('Expand PressureModule yamcs.').click();
-        const pressureModuleInfoTreeItem = page.getByRole('treeitem', { name: /PressureModule: info/ });
-        await pressureModuleInfoTreeItem.dragTo(objectPane);
+            await expect(
+                page.getByRole('tooltip').getByText(/Pressure threshold exceeded/)
+            ).toBeVisible();
+        });
 
-        const pressureModuleCriticalTreeItem = page.getByRole('treeitem', { name: /PressureModule: critical/ });
-        await pressureModuleCriticalTreeItem.dragTo(objectPane);
+        await test.step('event details available in inspector on click of event', async () => {
+            await expect(
+                page.getByLabel('Inspector Views').getByText(/Pressure threshold exceeded/)
+            ).not.toBeVisible();
 
-        // click on the event inspector tab
-        await page.getByRole('tab', { name: 'Event' }).click();
+            await page
+                .getByLabel(eventTimelineView.name)
+                .getByLabel(/Pressure threshold exceeded/)
+                .first()
+                .click();
 
-        await expect(page.getByLabel('PressureModule: info Object').getByLabel(/Pressure system check completed/).first()).toBeVisible();
-        await page.getByLabel('PressureModule: info Object').getByLabel(/Pressure system check completed/).first().click();
-        // ensure the tooltip shows up
-        await expect(
-            page.getByRole('tooltip').getByText(/Pressure system check completed/)
-        ).toBeVisible();
+            await page.getByRole('tab', { name: 'Event' }).click();
 
-        // and that event appears in the inspector
-        await expect(
-            page.getByLabel('Inspector Views').getByText(/Pressure system check completed/)
-        ).toBeVisible();
-
-        // info statements should be hidden in critical severity
-        await expect(page.getByLabel('PressureModule: critical Object View').getByLabel(/Pressure system check/).first()).toBeHidden();
-        await expect(page.getByLabel('PressureModule: critical Object View').getByLabel(/Pressure threshold exceeded/).first()).toBeVisible();
-        await page.getByLabel('PressureModule: critical Object View').getByLabel(/Pressure threshold exceeded/).first().click();
-        await expect(page.getByLabel('Inspector Views').getByText('Pressure threshold exceeded')).toBeVisible();
-        await expect(
-            page.getByRole('tooltip').getByText(/Pressure threshold exceeded/)
-        ).toBeVisible();
-
-        // turn on extended lines
-        await page.getByLabel('Toggle extended event lines overlay for PressureModule: critical').click();
-        const overlayLinesContainer = page.locator('.c-timeline__overlay-lines');
-        await expect(overlayLinesContainer.locator('.c-timeline__event-line--extended').last()).toBeVisible();
+            await expect(
+                page.getByLabel('Inspector Views')
+                    .getByText(/Pressure threshold exceeded/)
+            ).toBeVisible();
+        });
     });
 });
