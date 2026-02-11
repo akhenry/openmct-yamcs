@@ -35,7 +35,7 @@ test.describe('Quickstart library functions', () => {
 
     test.beforeEach(async ({page}) => {
         // Go to baseURL so we can get relative URL
-        await page.goto('./', { waitUntil: 'domcontentloaded' });
+        await page.goto('./');
         yamcsURL = new URL('/yamcs-proxy/', page.url()).toString();
         await enableLink(yamcsURL);
     });

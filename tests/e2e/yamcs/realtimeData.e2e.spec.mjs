@@ -52,7 +52,10 @@ test.describe('Realtime telemetry displays', () => {
         });
 
         // Go to baseURL
-        await page.goto('./', { waitUntil: 'networkidle' });
+        await page.goto('./');
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
+
         await page.evaluate((thirtyMinutes) => {
             return new Promise((resolve) => {
                 const openmct = window.openmct;
