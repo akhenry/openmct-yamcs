@@ -31,11 +31,14 @@ const { createDomainObjectWithDefaults, setFixedTimeMode } = appActions;
 
 test.describe('Bar Graph @yamcs', () => {
     let barGraph;
-    let historicalGet;
 
     test.beforeEach(async ({ page }) => {
     // Open a browser, navigate to the main page, and wait until all networkevents to resolve
-        await page.goto('./', { waitUntil: 'networkidle' });
+        await page.goto('./');
+
+        //Wait for Yamcs dictionary to load.
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+
         // Set fixed time mode
         await page.evaluate(() => openmct.time.setMode('fixed', {
             start: Date.now() - 30000,
@@ -52,9 +55,6 @@ test.describe('Bar Graph @yamcs', () => {
     });
 
     test('Requests a single historical datum', async ({ page }) => {
-
-        //http://localhost:9000/yamcs-proxy/api/archive/myproject/parameters/myproject/Magnetometer?start=2024-09-25T14%3A08%3A46.244Z&stop=2024-09-25T14%3A38%3A46.245Z&limit=1&order=desc
-
         page.goto(barGraph.url);
 
         await page.waitForResponse(/.*\/api\/.*\/parameters.*limit=1&order=desc$/);
