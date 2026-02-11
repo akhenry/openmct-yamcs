@@ -42,10 +42,11 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
     test('Can show mdb limits when changed', async ({ page }) => {
         // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./");
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
 
         // Create an Overlay Plot
-        const overlayPlot = await createDomainObjectWithDefaults(page, {
+        await createDomainObjectWithDefaults(page, {
             type: 'Overlay Plot'
         });
 
@@ -114,7 +115,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
 
     test('Can show changed mdb limits when you navigate away from the view and back and no new requests are made on resize', async ({ page }) => {
         // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./");
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
 
         // Reset the limits for the Detector_Temp parameter using the yamcs API
         const runTimeLimitResetResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
@@ -160,7 +162,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         //navigate away from the overlay plot
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./");
+        await expect(page.getByLabel('Browse bar object name', {name: 'My Items'})).toBeVisible();
 
         // Change the limits for the Detector_Temp parameter using the yamcs API
         const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Detector_Temp`, {
@@ -182,7 +185,8 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await expect(runTimeLimitChangeResponse).toBeOK();
 
         //navigate back to the overlay plot
-        await page.goto(overlayPlot.url, { waitUntil: "networkidle" });
+        await page.goto(overlayPlot.url);
+        await expect(page.getByLabel('Browse bar object name', {name: overlayPlot.name})).toBeVisible();
 
         // Ensure that the changed limits are now displayed without a reload
         await assertLimitLinesExistAndAreVisible(page);
@@ -192,22 +196,24 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
             minInclusive: -0.8,
             maxInclusive: 0.5
         });
-
-        // Setting up checks for the absence of specific network responses after networkidle.
-        const responsesChecks = [
-            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb/myproject/space-systems'),
-            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb/myproject/parameters?details=yes&limit=1000'),
-            checkForNoResponseAfterNetworkIdle(page, '**/api/user/'),
-            checkForNoResponseAfterNetworkIdle(page, '**/api/mdb-overrides/myproject/realtime')
+        const urlPatterns = [
+            '**/api/mdb/myproject/space-systems',
+            '**/api/mdb/myproject/parameters?details=yes&limit=1000',
+            '**/api/user/',
+            '**/api/mdb-overrides/myproject/realtime'
         ];
+        const requestsIssued = [];
+
+        page.on('request', (request) => {
+            if (urlPatterns.some(pattern => request.url().includes(pattern))) {
+                requestsIssued.push(request.url());
+            }
+        });
 
         // Resize the chart container by showing the snapshot pane.
         await page.getByLabel('Show Snapshots').click();
-        // Wait for all checks to complete
-        const responsesNotFound = await Promise.all(responsesChecks);
-        // Ensure no network responses were found
-        const noResponsesFound = responsesNotFound.every(notFound => notFound);
-        expect(noResponsesFound).toBe(true);
+
+        expect(requestsIssued.length).toBe(0);
 
         test.info().annotations.push({
             type: 'issue',
@@ -278,22 +284,6 @@ async function assertLimitLinesExistAndAreVisible(page) {
 async function assertExpectedLimitsValues(limitLine, { minInclusive, maxInclusive }) {
     await expect(limitLine.first()).toContainText(`${maxInclusive}`);
     await expect(limitLine.nth(1)).toContainText(`${minInclusive}`);
-}
-
-// Function to check for the absence of a network response after networkidle
-async function checkForNoResponseAfterNetworkIdle(page, urlPattern) {
-    let responseReceived = false;
-    // Listen for the network response before navigating to ensure we catch early requests
-    page.on('response', response => {
-        if (response.url().match(urlPattern)) {
-            responseReceived = true;
-        }
-    });
-    // Wait for the network to be idle
-    await page.waitForLoadState('networkidle');
-
-    // Return the inverse of responseReceived to indicate absence of response
-    return !responseReceived;
 }
 
 async function clearLimitsForParameter(page) {
