@@ -267,7 +267,7 @@ test.describe('Realtime telemetry displays', () => {
                 return new Promise((resolveBlockingLoop) => {
                     let start = Date.now();
                     let now = Date.now();
-                    // Block the UI thread for 6s
+                    // Block the UI thread for 10s
                     while (now - start < 10000) {
                         now = Date.now();
                     }
