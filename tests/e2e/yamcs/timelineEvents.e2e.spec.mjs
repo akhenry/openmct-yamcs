@@ -129,9 +129,9 @@ test.describe("Timeline Events in @yamcs", () => {
         await page.getByRole('treeitem', { name: /Events: info/ })
             .dragTo(objectPane);
         await page.getByRole('treeitem', { name: /Events: distress/ })
-            .dragTo(objectPane);
+            .dragTo(timelineAxis);
         await page.getByRole('treeitem', { name: /Events: severe/ })
-            .dragTo(objectPane);
+            .dragTo(timelineAxis);
         await page.getByRole('treeitem', { name: /PressureModule/ })
             .dragTo(timelineAxis);
         await page.getByLabel('Expand PressureModule yamcs.').click();
@@ -210,97 +210,99 @@ test.describe("Timeline Events in @yamcs", () => {
         }
     });
 
-    test('Event subscriptions are filtered in real time', async ({ page }) => {
+    test('Event subscriptions are filtered by severity in real time', async ({ page }) => {
         await setRealTimeMode(page);
-        await page.getByLabel('Expand Events yamcs.events').click();
+        await setStartOffset(page, { startMins: '02' });
+        await setEndOffset(page, { endMins: '02' });
 
+        await page.getByRole('treeitem', { name: /Events/ })
+            .dragTo(objectPane);
+        await page.getByLabel('Expand Events yamcs.events').click();
         await page.getByRole('treeitem', { name: /Events: info/ })
-            .dragTo(objectPane);
+            .dragTo(timelineAxis);
+        await page.getByRole('treeitem', { name: /Events: watch/ })
+            .dragTo(timelineAxis);
+        await page.getByRole('treeitem', { name: /Events: warning/ })
+            .dragTo(timelineAxis);
         await page.getByRole('treeitem', { name: /Events: distress/ })
-            .dragTo(objectPane);
+            .dragTo(timelineAxis);
+        await page.getByRole('treeitem', { name: /Events: critical/ })
+            .dragTo(timelineAxis);
         await page.getByRole('treeitem', { name: /Events: severe/ })
-            .dragTo(objectPane);
-        await page.getByRole('treeitem', { name: /PressureModule/ })
-            .dragTo(timelineAxis);
-        await page.getByLabel('Expand PressureModule yamcs.').click();
-        await page.getByRole('treeitem', { name: /PressureModule: critical/ })
-            .dragTo(timelineAxis);
-        await page.getByLabel('Expand TemperatureModule yamcs.').click();
-        await page.getByRole('treeitem', { name: /TemperatureModule: critical/ })
             .dragTo(timelineAxis);
 
         await page.getByLabel('Save').click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
-        const eventsInfoContainer = page.getByLabel('Events: info Object View').locator('.c-events-tsv__container');
-        const eventsDistressContainer = page.getByLabel('Events: distress Object View').locator('.c-events-tsv__container');
-        const eventsSevereContainer = page.getByLabel('Events: severe Object View').locator('.c-events-tsv__container');
-        const pressureModuleContainer = page.getByLabel('PressureModule Object View').locator('.c-events-tsv__container');
-        const pressureModuleCriticalContainer = page.getByLabel('PressureModule: critical Object View').locator('.c-events-tsv__container');
-        const temperatureModuleCriticalContainer = page.getByLabel('TemperatureModule: critical Object View').locator('.c-events-tsv__container');
+        const eventsAll = page.getByLabel('Events Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const eventsInfo = page.getByLabel('Events: info Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const eventsWatch = page.getByLabel('Events: watch Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const eventsWarning = page.getByLabel('Events: warning Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const eventsDistress = page.getByLabel('Events: distress Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const eventsCritical = page.getByLabel('Events: critical Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const eventsSevere = page.getByLabel('Events: severe Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
 
-        const eventsFilterArray = [
-            {
-                severity: 'INFO',
-                container: eventsInfoContainer
-            },
-            {
-                severity: 'DISTRESS',
-                container: eventsDistressContainer
-            },
-            {
-                severity: 'SEVERE',
-                container: eventsSevereContainer
-            },
-            {
-                source: 'PressureModule',
-                container: pressureModuleContainer
-            },
-            {
-                source: 'PressureModule',
-                severity: 'CRITICAL',
-                container: pressureModuleCriticalContainer
-            },
-            {
-                source: 'TemperatureModule',
-                severity: 'CRITICAL',
-                container: temperatureModuleCriticalContainer
-            }
-        ];
+        const eventsAllCount = await eventsAll.count();
+        const eventsInfoCount = await eventsInfo.count();
+        const eventsWatchCount = await eventsWatch.count();
+        const eventsWarningCount = await eventsWarning.count();
+        const eventsDistressCount = await eventsDistress.count();
+        const eventsCriticalCount = await eventsCritical.count();
+        const eventsSevereCount = await eventsSevere.count();
 
         await postEventWithParams('TestSource', 'DISTRESS', 1);
-        await postEventWithParams('TemperatureModule', 'INFO', 2);
-        await postEventWithParams('PressureModule', 'WARNING', 3);
-        await postEventWithParams('PressureModule', 'CRITICAL', 4);
+        await postEventWithParams('TestSource', 'INFO', 2);
+        await postEventWithParams('TestSource', 'WARNING', 3);
+        await postEventWithParams('TestSource', 'CRITICAL', 4);
+        await postEventWithParams('TestSource', 'SEVERE', 5);
 
-        for (const eventsFilter of eventsFilterArray) {
-            const eventLines = await eventsFilter.container.locator('.c-events-tsv__event-line').all();
+        await expect(eventsAll).toHaveCount(eventsAllCount + 5);
+        await expect(eventsInfo).toHaveCount(eventsInfoCount + 5);
+        await expect(eventsWatch).toHaveCount(eventsWatchCount + 4);
+        await expect(eventsWarning).toHaveCount(eventsWarningCount + 4);
+        await expect(eventsDistress).toHaveCount(eventsDistressCount + 3);
+        await expect(eventsCritical).toHaveCount(eventsCriticalCount + 2);
+        await expect(eventsSevere).toHaveCount(eventsSevereCount + 1);
+    });
 
-            for (const eventLine of eventLines) {
-                await eventLine.click();
+    test('Event subscriptions are filtered by source and severity in real time', async ({ page }) => {
+        await setRealTimeMode(page);
+        await setStartOffset(page, { startMins: '02' });
+        await setEndOffset(page, { endMins: '02' });
 
-                const rows = page.getByLabel('Inspector Views').locator('.c-inspect-properties__row');
+        await page.getByRole('treeitem', { name: /Events/ })
+            .dragTo(objectPane);
+        await page.getByLabel('Expand Events yamcs.events').click();
+        await page.getByRole('treeitem', { name: /PressureModule/ })
+            .dragTo(timelineAxis);
+        await page.getByLabel('Expand TemperatureModule yamcs.').click();
+        await page.getByRole('treeitem', { name: /TemperatureModule: critical/ })
+            .dragTo(timelineAxis);
+        await page.getByRole('treeitem', { name: /TemperatureModule: severe/ })
+            .dragTo(timelineAxis);
+        await page.getByLabel('Save').click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
-                if (eventsFilter.source) {
-                    const sourceRow = rows.filter({
-                        has: page.locator('.c-inspect-properties__label', { hasText: 'source' })
-                    });
-                    const source = await sourceRow.locator('.c-inspect-properties__value').textContent();
+        const events = page.getByLabel('Events Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const pressureModuleAll = page.getByLabel('PressureModule Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const temperatureModuleCritical = page.getByLabel('TemperatureModule: critical Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
+        const temperatureModuleSevere = page.getByLabel('TemperatureModule: severe Object View').locator('.c-events-tsv__container').locator('.c-events-tsv__event-line');
 
-                    await expect(source).toBe(eventsFilter.source);
-                }
+        const eventsCount = await events.count();
+        const pressureModuleAllCount = await pressureModuleAll.count();
+        const temperatureModuleCriticalCount = await temperatureModuleCritical.count();
+        const temperatureModuleSevereCount = await temperatureModuleSevere.count();
 
-                if (eventsFilter.severity) {
-                    const severityRow = rows.filter({
-                        has: page.locator('.c-inspect-properties__label', { hasText: 'severity' })
-                    });
-                    const severity = await severityRow.locator('.c-inspect-properties__value').textContent();
-                    const shouldDisplaySeverity = hasSeverityLevel(severity, eventsFilter.severity);
+        await postEventWithParams('PressureModule', 'INFO', 1);
+        await postEventWithParams('PressureModule', 'SEVERE', 2);
+        await postEventWithParams('TemperatureModule', 'INFO', 3);
+        await postEventWithParams('TemperatureModule', 'WARNING', 4);
+        await postEventWithParams('TemperatureModule', 'SEVERE', 5);
 
-                    await expect(shouldDisplaySeverity).toBe(true);
-                }
-            }
-        }
+        await expect(events).toHaveCount(eventsCount + 5);
+        await expect(pressureModuleAll).toHaveCount(pressureModuleAllCount + 2);
+        await expect(temperatureModuleCritical).toHaveCount(temperatureModuleCriticalCount + 1);
+        await expect(temperatureModuleSevere).toHaveCount(temperatureModuleSevereCount + 1);
     });
 
     function hasSeverityLevel(target, level) {
