@@ -25,6 +25,8 @@ import { postAllEvents } from '../../../example/make-example-events.mjs';
 const { test, expect } = pluginFixtures;
 const { createDomainObjectWithDefaults, setStartOffset, setEndOffset, setFixedTimeMode } = appActions;
 
+const SEVERITIES = ['INFO', 'WATCH', 'WARNING', 'DISTRESS', 'CRITICAL', 'SEVERE'];
+
 test.describe("Timeline Events in @yamcs", () => {
     let eventsTreeItem;
     let eventTimelineView;
@@ -109,4 +111,105 @@ test.describe("Timeline Events in @yamcs", () => {
         await page.getByLabel('Toggle extended event lines overlay for Events').click();
         await expect(overlayLines).toHaveCount(eventLinesCount);
     });
+
+    test('Event subscriptions are filtered in fixed time', async ({ page }) => {
+        await postAllEvents();
+
+        await setStartOffset(page, { startMins: '02' });
+        await setEndOffset(page, { endMins: '02' });
+        await setFixedTimeMode(page);
+        await page.getByLabel('Expand Events yamcs.events').click();
+
+        await page.getByRole('treeitem', { name: /Events: info/ })
+            .dragTo(objectPane);
+        await page.getByRole('treeitem', { name: /Events: distress/ })
+            .dragTo(objectPane);
+        await page.getByRole('treeitem', { name: /Events: severe/ })
+            .dragTo(objectPane);
+        await page.getByRole('treeitem', { name: /PressureModule/ })
+            .dragTo(timelineAxis);
+        await page.getByLabel('Expand PressureModule yamcs.').click();
+        await page.getByRole('treeitem', { name: /PressureModule: critical/ })
+            .dragTo(timelineAxis);
+        await page.getByLabel('Expand TemperatureModule yamcs.').click();
+        await page.getByRole('treeitem', { name: /TemperatureModule: critical/ })
+            .dragTo(timelineAxis);
+
+        await page.getByLabel('Save').click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
+
+        const eventsInfoContainer = page.getByLabel('Events: info Object View').locator('.c-events-tsv__container');
+        const eventsDistressContainer = page.getByLabel('Events: distress Object View').locator('.c-events-tsv__container');
+        const eventsSevereContainer = page.getByLabel('Events: severe Object View').locator('.c-events-tsv__container');
+        const pressureModuleContainer = page.getByLabel('PressureModule Object View').locator('.c-events-tsv__container');
+        const pressureModuleCriticalContainer = page.getByLabel('PressureModule: critical Object View').locator('.c-events-tsv__container');
+        const temperatureModuleCriticalContainer = page.getByLabel('TemperatureModule: critical Object View').locator('.c-events-tsv__container');
+
+        const eventsFilterArray = [
+            {
+                severity: 'INFO',
+                container: eventsInfoContainer
+            },
+            {
+                severity: 'DISTRESS',
+                container: eventsDistressContainer
+            },
+            {
+                severity: 'SEVERE',
+                container: eventsSevereContainer
+            },
+            {
+                source: 'PressureModule',
+                container: pressureModuleContainer
+            },
+            {
+                source: 'PressureModule',
+                severity: 'CRITICAL',
+                container: pressureModuleCriticalContainer
+            },
+            {
+                source: 'TemperatureModule',
+                severity: 'CRITICAL',
+                container: temperatureModuleCriticalContainer
+            }
+        ];
+
+        for (const eventsFilter of eventsFilterArray) {
+            const eventLines = await eventsFilter.container.locator('.c-events-tsv__event-line').all();
+
+            for (const eventLine of eventLines) {
+                await eventLine.click();
+
+                const rows = page.getByLabel('Inspector Views').locator('.c-inspect-properties__row');
+
+                if (eventsFilter.source) {
+                    const sourceRow = rows.filter({
+                        has: page.locator('.c-inspect-properties__label', { hasText: 'source' })
+                    });
+                    const source = await sourceRow.locator('.c-inspect-properties__value').textContent();
+
+                    await expect(source).toBe(eventsFilter.source);
+                }
+
+                if (eventsFilter.severity) {
+                    const severityRow = rows.filter({
+                        has: page.locator('.c-inspect-properties__label', { hasText: 'severity' })
+                    });
+                    const severity = await severityRow.locator('.c-inspect-properties__value').textContent();
+                    const shouldDisplaySeverity = hasSeverityLevel(severity, eventsFilter.severity);
+
+                    await expect(shouldDisplaySeverity).toBe(true);
+                }
+
+            }
+
+        }
+    });
+
+    function hasSeverityLevel(target, level) {
+        const levelIndex = SEVERITIES.indexOf(level);
+        const targetIndex = SEVERITIES.indexOf(target, levelIndex);
+
+        return targetIndex >= 0;
+    }
 });
