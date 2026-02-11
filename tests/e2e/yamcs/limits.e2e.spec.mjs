@@ -232,10 +232,9 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
     test('Can show limits on telemetry for parameters with no rangeCondition (like enums)', async ({ page }) => {
         //navigate to Enum_Para_1 with a specified realtime window
         await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~Enum_Para_1?tc.mode=local&tc.startDelta=1800000&tc.endDelta=0&tc.timeSystem=utc&view=table', {waitUntil: 'domcontentloaded'});
-        await expect(page.getByText('Loading...')).toBeHidden();
 
-        // wait 5 seconds for the table to fill
-        await page.waitForTimeout(FIVE_SECONDS);
+        // Wait for some value rows to be visible
+        await expect(page.getByLabel('name table cell Enum_Para_1')).not.toHaveCount(0);
 
         // Change the limits for the Enum_Para_1 parameter using the yamcs API
         const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Enum_Para_1`, {
@@ -250,11 +249,9 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
                 }
             }
         });
-
         await expect(runTimeLimitChangeResponse).toBeOK();
 
-        const telemTableDesc = await page.getByLabel("Enum_Para_1 table content");
-        expect(await assertTableHasSomeLimitViolations(telemTableDesc)).toBe(true);
+        await expect(page.locator('.is-limit--red').first()).toBeVisible();
     });
 
 });
@@ -292,15 +289,4 @@ async function clearLimitsForParameter(page) {
         data: {}
     });
     await expect(runTimeLimitChangeResponse).toBeOK();
-}
-
-/**
-     * Returns whether the table has at least some violations
-     * @param { Node } telemTable Node for telemetry table
-     * @returns {Boolean} At least some rows have a limit violation
-     */
-async function assertTableHasSomeLimitViolations(telemTable) {
-    const allRedCells = await telemTable.locator('.is-limit--red').count();
-
-    return allRedCells > 0;
 }
