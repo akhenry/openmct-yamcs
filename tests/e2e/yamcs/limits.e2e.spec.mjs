@@ -28,7 +28,6 @@ import { pluginFixtures, appActions } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 const { createDomainObjectWithDefaults, waitForPlotsToRender } = appActions;
 const YAMCS_URL = 'http://localhost:8090/';
-const FIVE_SECONDS = 5 * 1000;
 
 test.describe("Mdb runtime limits tests @yamcs", () => {
 
