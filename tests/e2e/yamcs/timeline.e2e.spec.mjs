@@ -28,7 +28,7 @@ const { createDomainObjectWithDefaults, setStartOffset, setEndOffset, setFixedTi
 test.describe("Timeline Events in @yamcs", () => {
     test('Can create a timeline with YAMCS events', async ({ page }) => {
         // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./");
         await page.getByLabel('Expand myproject folder').click();
         const eventsTreeItem = page.getByRole('treeitem', { name: /Events/ });
         const eventTimelineView = await createDomainObjectWithDefaults(page, { type: 'Time Strip' });
@@ -51,7 +51,7 @@ test.describe("Timeline Events in @yamcs", () => {
         await expect(page.getByText(/Pressure threshold exceeded/)).toBeVisible();
 
         await page.getByLabel('Expand Events yamcs.events').click();
-        await page.getByLabel('Expand PressureModule yamcs.').click();
+        await page.getByLabel('Expand PressureModule yamcs.event.specific').click();
         const pressureModuleInfoTreeItem = page.getByRole('treeitem', { name: /PressureModule: info/ });
         await pressureModuleInfoTreeItem.dragTo(objectPane);
 

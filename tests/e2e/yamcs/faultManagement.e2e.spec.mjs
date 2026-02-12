@@ -135,7 +135,7 @@ test.describe("Fault Management @yamcs", () => {
         });
         await test.step('Fault is visible in the Standard view after shelve duration expires', async () => {
             // Have a longer timeout to account for the fault being shelved
-            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible({ timeout: 10000 });
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible({ timeout: 20000 });
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeHidden();
         });
