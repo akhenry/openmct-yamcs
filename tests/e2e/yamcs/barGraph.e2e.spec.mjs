@@ -27,13 +27,13 @@
 import { pluginFixtures, appActions } from 'openmct-e2e';
 import { searchAndLinkTelemetryToObject } from '../yamcsAppActions.mjs';
 const { test, expect } = pluginFixtures;
-const { createDomainObjectWithDefaults, setFixedTimeMode } = appActions;
+const { createDomainObjectWithDefaults } = appActions;
 
 test.describe('Bar Graph @yamcs', () => {
     let barGraph;
 
     test.beforeEach(async ({ page }) => {
-    // Open a browser, navigate to the main page, and wait until all networkevents to resolve
+        // Open a browser, navigate to the main page, and wait until the Yamcs dictionary is available in the tree.
         await page.goto('./');
 
         //Wait for Yamcs dictionary to load.
