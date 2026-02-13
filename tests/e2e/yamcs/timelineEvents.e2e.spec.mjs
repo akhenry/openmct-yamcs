@@ -40,7 +40,8 @@ test.describe("Timeline Events in @yamcs", () => {
     let timelineAxis;
 
     test.beforeEach(async ({ page }) => {
-        await page.goto("./", { waitUntil: "domcontentloaded" });
+        await page.goto("./");
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
 
         await page.getByLabel('Expand myproject folder').click();
         eventsTreeItem = page.getByRole('treeitem', { name: /Events/ });
@@ -184,7 +185,8 @@ test.describe("Timeline Events in @yamcs", () => {
             const eventLines = await eventsFilter.container.locator('.c-events-tsv__event-line').all();
 
             for (const eventLine of eventLines) {
-                await eventLine.click();
+                // because stacked events cannot be clicked directly
+                await eventLine.dispatchEvent('click');
 
                 const rows = page.getByLabel('Inspector Views').locator('.c-inspect-properties__row');
 
