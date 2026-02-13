@@ -43,7 +43,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
 
     test('Telemetry Tables viewing an unpersistable object, will not modify the configuration on mode change', async ({ page }) => {
         // Navigate to the Events table
-        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events?view=table');
 
         // Find the mode switch button and click it, this will trigger a mutation on mutable objects configuration
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
@@ -57,7 +57,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         let eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events?view=table');
 
         // Wait for the descending events request
         await eventRequestOrderDescending;
@@ -67,7 +67,6 @@ test.describe("Telemetry Tables tests @yamcs", () => {
 
         // Find the mode switch button and click it, this will trigger another events request
         await page.getByRole('button', { name: 'SHOW UNLIMITED' }).click();
-        await page.waitForLoadState('networkidle');
 
         await eventRequestOrderDescending;
 
@@ -80,7 +79,7 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         const eventRequestOrderDescending = page.waitForRequest(/.*\/api\/.*\/events.*order=desc$/);
 
         // Navigate to the Events table
-        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events', { waitUntil: 'networkidle' });
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:yamcs.events?view=table');
 
         // Wait for and verify that the request was made
         await expect(eventRequestOrderDescending).resolves.toBeTruthy();
@@ -102,28 +101,33 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         await setRealTimeMode(page);
 
         //navigate to CCSDS_Packet_Length with a specified realtime window
-        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~CCSDS_Packet_Length?tc.mode=local&tc.startDelta=5000&tc.endDelta=5000&tc.timeSystem=utc&view=table', {waitUntil: 'domcontentloaded'});
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~CCSDS_Packet_Length?tc.mode=local&tc.startDelta=5000&tc.endDelta=5000&tc.timeSystem=utc&view=table');
 
-        // wait 5 seconds for the table to fill
-        await page.waitForTimeout(FIVE_SECONDS);
+        // Wait for at least 10 value rows to be visible so we have a decent number of rows to sort
+        await expect(page.getByLabel('name table cell CCSDS_Packet_Length').nth(10)).toBeVisible();
+
         // pause the table
         await page.getByLabel('Pause').click();
+        await expect(page.getByLabel('Play', { exact: true })).toBeVisible();
         const telemTableDesc = await page.getByLabel("CCSDS_Packet_Length table content");
 
         // assert that they're in desc order
         expect(await assertTableRowsInOrder(telemTableDesc, 'desc')).toBe(true);
 
         // Unpause
-        await page.getByLabel('Play').click();
+        await page.getByLabel('Play', { exact: true }).click();
+        await expect(page.getByLabel('Pause')).toBeVisible();
 
+        const firstTimestamp = await page.getByLabel('utc table cell').first().textContent();
         // flip sort order
         await page.locator('thead div').filter({ hasText: 'Timestamp' }).click();
-
-        // wait for x seconds
-        await page.waitForTimeout(FIVE_SECONDS);
+        // Wait for the timestamp of the first row to change signifying that the sort is complete and the newly sorted 
+        // rows have been rendered, as rendering is throttled.
+        await expect(page.getByLabel('utc table cell').first()).not.toHaveText(firstTimestamp);
 
         // pause the table
-        await page.getByLabel('Pause').click();
+        await page.getByLabel('Pause', { exact: true }).click();
+        await expect(page.getByLabel('Play', { exact: true })).toBeVisible();
         const telemTableAsc = await page.getByLabel("CCSDS_Packet_Length table content");
         // assert that they're in asc order
         expect(await assertTableRowsInOrder(telemTableAsc, 'asc')).toBe(true);
