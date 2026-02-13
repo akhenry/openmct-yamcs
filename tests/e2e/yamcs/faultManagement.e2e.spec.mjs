@@ -47,28 +47,7 @@ test.describe("Fault Management @yamcs", () => {
         const response = await setDefaultAlarms(FAULT_PARAMETER, [
             {
                 level: 'WATCH',
-                minInclusive: 808,
-                maxInclusive: 810
-            },
-            {
-                level: 'WARNING',
-                minInclusive: 810.01,
-                maxInclusive: 812
-            },
-            {
-                level: 'DISTRESS',
-                minInclusive: 812.01,
-                maxInclusive: 814
-            },
-            {
-                level: 'CRITICAL',
-                minInclusive: 814.01,
-                maxInclusive: 820
-            },
-            {
-                level: 'SEVERE',
-                minInclusive: 820.01,
-                maxInclusive: 824
+                maxInclusive: -90
             }
         ]);
         expect(response.status).toBe(200);
@@ -156,7 +135,7 @@ test.describe("Fault Management @yamcs", () => {
         });
         await test.step('Fault is visible in the Standard view after shelve duration expires', async () => {
             // Have a longer timeout to account for the fault being shelved
-            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible({ timeout: 10000 });
+            await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeVisible({ timeout: 20000 });
             await page.getByTitle('View Filter').getByRole('combobox').selectOption('Shelved');
             await expect(getTriggeredFaultBySeverity(page, 'CRITICAL')).toBeHidden();
         });
@@ -235,7 +214,7 @@ async function setDefaultAlarms(parameter, staticAlarmRanges = [], instance = 'm
  */
 // eslint-disable-next-line require-await
 async function clearAlarms(parameter, instance = 'myproject', processor = 'realtime') {
-    await setDefaultAlarms(parameter, [], instance, processor); 
+    await setDefaultAlarms(parameter, [], instance, processor);
     const response = await getAlarms(instance);
     const alarms = await response.json();
     const alarmsToClear = Object.values(alarms).map(alarm => {

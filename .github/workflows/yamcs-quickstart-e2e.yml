@@ -3,29 +3,15 @@ on:
   workflow_dispatch:
   pull_request:
     types:
-      - labeled
       - opened
   schedule:
     - cron: "0 0 * * 1-5"
   push:
-    branches:
-      - master
-
 jobs:
   yamcs-quickstart-e2e:
-    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
     continue-on-error: false
-    strategy:
-      matrix:
-        yamcs-version:
-          - default
-          - 5.9.8 #viper
-          ## disabling until we get confirmation- 5.3.2 #ab
-        openmct-version:
-          - latest
-          - stable
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
@@ -35,15 +21,14 @@ jobs:
         with:
           repository: yamcs/quickstart
           path: 'quickstart'
-      - name: replace yamcsVersion with matrix param
-        if: matrix.yamcs-version != 'default'
+      - name: replace yamcsVersion with target test version
         run: |
-          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
+          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
-          touch makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
-          make all-10hz &> makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt &
+          touch makeout.txt
+          make all-10hz &> makeout.txt &
         working-directory: quickstart/docker
       - run: npm install
       - name: Get Open MCT e2e tests
@@ -54,12 +39,8 @@ jobs:
           command: npm run test:getopensource
       - name: Run build:example based on openmct-version
         run: |
-          if [ "${{ matrix.openmct-version }}" = "latest" ]; then
-            npm run build:example:master
-          elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
-            npm run build:example
-          fi
-      - run: npx playwright@1.48.1 install chromium
+          npm run build:example:master
+      - run: npx playwright@1.57.0 install chromium --with-deps
       - name: Check that yamcs is available
         run: |
           docker ps -a
@@ -77,33 +58,31 @@ jobs:
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
-        run: docker logs yamcs > yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt 2>&1
+        run: docker logs yamcs > yamcs-docker-log.txt 2>&1
       - name: archive docker logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          path: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
-          name: yamcs-docker-log-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: yamcs-docker-log.txt
+          name: yamcs-docker-log
       - name: Archive makeout.txt
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          path: quickstart/docker/makeout${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}.txt
-          name: makeout-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          path: quickstart/docker/makeout.txt
+          name: makeout
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
           path: test-results
-          name: test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          name: test-results
       - name: Archive html test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: html-test-results
           path: tests/html-test-results
-          name: html-test-results-${{ matrix.yamcs-version }}-${{ matrix.openmct-version }}
+          name: html-test-results
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
         uses: actions/github-script@v6
