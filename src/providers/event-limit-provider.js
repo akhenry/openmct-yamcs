@@ -67,6 +67,11 @@ export default class EventLimitProvider {
     }
 
     supportsLimits(domainObject) {
-        return [OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE].includes(domainObject.type);
+        return [
+            OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE,
+            OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE,
+            OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE,
+            OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE
+        ].includes(domainObject.type);
     }
 }

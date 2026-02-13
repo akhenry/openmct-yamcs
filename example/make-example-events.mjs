@@ -94,7 +94,7 @@ const events = [
     }
 ];
 
-async function postEvent(event, delaySeconds) {
+export async function postEvent(event, delaySeconds) {
     const eventTime = new Date(Date.now() + delaySeconds * 1000).toISOString();
     event.time = eventTime;
 
