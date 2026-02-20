@@ -1,6 +1,6 @@
 import { FAULT_MGMT_TYPE } from './fault-mgmt-constants.js';
 import { DATA_TYPES, NAMESPACE, OBJECT_TYPES } from '../../const.js';
-import { convertDataToFaultModel } from './utils.js';
+import { convertDataToFaultModel, isTriggered } from './utils.js';
 
 export default class RealtimeFaultProvider {
     #openmct;
@@ -53,6 +53,8 @@ export default class RealtimeFaultProvider {
     }
 
     handleResponse(type, response, callback) {
-        callback(convertDataToFaultModel(response, type));
+        if (isTriggered(response)) {
+            callback(convertDataToFaultModel(response, type));
+        }
     }
 }

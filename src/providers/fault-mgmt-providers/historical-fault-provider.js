@@ -1,5 +1,5 @@
 import { FAULT_MGMT_ALARMS, FAULT_MGMT_TYPE } from './fault-mgmt-constants.js';
-import { convertDataToFaultModel } from './utils.js';
+import { convertDataToFaultModel, isTriggered } from './utils.js';
 
 export default class HistoricalFaultProvider {
     constructor(url, instance, processor) {
@@ -25,7 +25,7 @@ export default class HistoricalFaultProvider {
         const res = await fetch(url);
         const faultsData = await res.json();
 
-        return faultsData.alarms?.map(convertDataToFaultModel);
+        return faultsData.alarms?.filter(isTriggered).map(convertDataToFaultModel);
     }
 }
 

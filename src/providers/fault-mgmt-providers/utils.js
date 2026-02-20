@@ -29,7 +29,7 @@ import { getValue } from '../../utils.js';
  * @param {string} [type]
  * @returns {FaultModel}
  */
-const convertDataToFaultModel = (faultData, type) => {
+function convertDataToFaultModel(faultData, type) {
     const parameterDetail = faultData?.parameterDetail;
     const currentValueDetail = parameterDetail?.currentValue;
     const triggerValueDetail = parameterDetail?.triggerValue;
@@ -61,9 +61,13 @@ const convertDataToFaultModel = (faultData, type) => {
             }
         }
     };
-};
+}
 
-export { convertDataToFaultModel };
+function isTriggered(fault) {
+    return fault?.pending !== true;
+}
+
+export { convertDataToFaultModel, isTriggered };
 
 /**
  * @typedef {Object} FaultModel
