@@ -60,16 +60,11 @@ export default class YamcsHistoricalTelemetryProvider {
         options = { ...options };
 
         this.standardizeOptions(options, domainObject);
-        if (options.strategy === 'latest'
-            && options.timeContext?.isRealTime()
-            && !isEventType(domainObject.type)
-        ) {
-            // Latest requested in realtime, use latest telemetry provider instead
+        if (options.strategy === 'latest' && !isEventType(domainObject.type)) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
         }
-        // otherwise we're in fixed time mode or historical
 
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
