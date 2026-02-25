@@ -165,6 +165,30 @@ test.describe("Fault Management @yamcs", () => {
         });
     });
 
+    test('Pending faults are not shown', async ({ page }) => {
+        await test.step('Set the alarm to pending', async () => {
+            // Intercept the response to set the alarm to pending
+            await page.route('**/api/**/alarms', route => modifyAlarmPendingStatus(route, FAULT_PARAMETER, true));
+        });
+
+        await test.step('Navigate to Fault Management', async () => {
+            await page.getByLabel('Navigate to Fault Management').click();
+        });
+
+        await test.step('Pending faults are not shown', async () => {
+            await expect(getTriggeredFaultByName(page, FAULT_PARAMETER)).toBeHidden();
+        });
+
+        await test.step('Set the alarm to not pending', async () => {
+            // Intercept the response to set the alarm to not pending
+            await page.route('**/api/**/alarms', route => modifyAlarmPendingStatus(route, FAULT_PARAMETER, false));
+        });
+
+        await test.step('Fault is now shown', async () => {
+            await expect(getTriggeredFaultByName(page, FAULT_PARAMETER)).toBeVisible();
+        });
+    });
+
     test.afterAll("remove alarms from the telemetry point", async () => {
         const responses = await clearAlarms(FAULT_PARAMETER);
         for (const res of responses) {
@@ -256,6 +280,32 @@ async function modifyAlarmSeverity(route, alarmName, newSeverity) {
     newBody.alarms.forEach((alarm, index) => {
         if (alarm.id.name === alarmName) {
             newBody.alarms[index].severity = newSeverity;
+        }
+    });
+
+    return route.fulfill({
+        response,
+        json: newBody,
+        headers: {
+            ...response.headers()
+        }
+    });
+}
+
+/**
+ * @param {import('@playwright/test').Route} route
+ * @param {string} alarmName
+ * @param {boolean} pending
+ */
+async function modifyAlarmPendingStatus(route, alarmName, pending) {
+    const response = await route.fetch();
+    let body = await response.json();
+    const newBody = JSON.parse(JSON.stringify(body));
+
+    // Modify the rawValue.floatValue to trigger a specific alarm
+    newBody.alarms.forEach((alarm, index) => {
+        if (alarm.id.name === alarmName) {
+            newBody.alarms[index].pending = pending;
         }
     });
 
