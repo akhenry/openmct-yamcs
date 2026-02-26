@@ -58,9 +58,17 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async request(domainObject, options) {
         options = { ...options };
-
         this.standardizeOptions(options, domainObject);
-        if (options.strategy === 'latest' && !isEventType(domainObject.type)) {
+        const timeContext = options.timeContext ?? this.openmct.time;
+
+        // assumes no future data exists
+        const isNotPast = options.end >= timeContext.now();
+
+        if (
+            options.strategy === 'latest'
+            && isNotPast
+            && !isEventType(domainObject.type)
+        ) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
