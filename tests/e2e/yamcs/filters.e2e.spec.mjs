@@ -31,8 +31,9 @@ const { createDomainObjectWithDefaults } = appActions;
 test.describe("Filter tests @yamcs", () => {
     test('Can filter events by severity', async ({ page }) => {
         // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./");
         const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject'});
+        await expect(myProjectTreeItem).toBeVisible();
         const firstMyProjectTriangle = myProjectTreeItem.first().locator('span.c-disclosure-triangle');
         await firstMyProjectTriangle.click();
         const eventsTreeItem = page.getByRole('treeitem', { name: /Events/ });

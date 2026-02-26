@@ -39,12 +39,25 @@ import PollQuestionTelemetry from './providers/user/poll-question-telemetry.js';
 import ExportToCSVActionPlugin from './actions/exportToCSV/plugin.js';
 
 import BinaryToHexFormatterPlugin from './plugins/binaryToHexFormatter/plugin.js';
+const REASONABLE_DEFAULTS = {
+    yamcsDictionaryEndpoint: "http://localhost:8090/",
+    yamcsHistoricalEndpoint: "http://localhost:8090/",
+    yamcsWebsocketEndpoint: "ws://localhost:8090/api/websocket",
+    yamcsUserEndpoint: "http://localhost:8090/api/user/",
+    yamcsInstance: "myproject",
+    yamcsProcessor: "realtime",
+    yamcsFolder: "myproject",
+    throttleRate: 1000,
+    maxBufferSize: 1000000
+};
 
 export default function install(
     configuration,
     getDictionaryRequestOptions
 ) {
     return (openmct) => {
+        configuration = applyDefaults(configuration, REASONABLE_DEFAULTS);
+
         openmct.install(openmct.plugins.ISOTimeFormat());
         openmct.install(BinaryToHexFormatterPlugin());
 
@@ -192,13 +205,19 @@ export default function install(
             cssClass: "icon-generator-events"
         });
 
-        openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE, {
+            name: "All Events with Severity",
+            description: "To view events with a specific severity or greater",
+            cssClass: "icon-generator-events"
+        });
+
+        openmct.types.addType(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE, {
             name: "Specific Event from Source",
             description: "To view events from a specific source",
             cssClass: "icon-generator-events"
         });
 
-        openmct.types.addType(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE, {
+        openmct.types.addType(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE, {
             name: "Specific Event from Source with Severity",
             description: "To view events from a specific source with a specific severity or greater",
             cssClass: "icon-generator-events"
@@ -251,5 +270,12 @@ export default function install(
             configuration.yamcsInstance));
 
         openmct.install(openmct.plugins.Filters(['telemetry.plot.overlay', 'table']));
+    };
+}
+
+function applyDefaults(config, defaults) {
+    return {
+        ...defaults,
+        ...config
     };
 }

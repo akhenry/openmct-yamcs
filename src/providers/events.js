@@ -111,29 +111,51 @@ export function createEventObject(openmct, parentKey, namespace, identifier, nam
     return baseEventObject;
 }
 
-export function createEventSeverityObjects(openmct, parentEventObject, namespace) {
-    const childSeverityObjects = [];
-    for (const severity of SEVERITY_LEVELS) {
-        const severityIdentifier = {
-            key: `${parentEventObject.identifier.key}.${severity}`,
+export function createEventsSeverityObjects(openmct, parentEventsObject, namespace) {
+    const eventsSeverityObjects = SEVERITY_LEVELS.map((severity) => {
+        const identifier = {
+            key: `${OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE}.${severity}`,
             namespace
         };
 
-        const severityName = `${parentEventObject.name}: ${severity}`;
+        const name = `${parentEventsObject.name}: ${severity}`;
 
-        const severityEventObject = createEventObject(
+        return createEventObject(
             openmct,
-            parentEventObject.identifier.key,
+            parentEventsObject.identifier.key,
+            namespace,
+            identifier,
+            name,
+            OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE
+        );
+    });
+
+    return eventsSeverityObjects;
+}
+
+export function createEventsSourceSeverityObjects(openmct, parentEventsObject, namespace) {
+    const eventsSourceSeverityObjects = [];
+    for (const severity of SEVERITY_LEVELS) {
+        const severityIdentifier = {
+            key: `${parentEventsObject.identifier.key}.${severity}`,
+            namespace
+        };
+
+        const severityName = `${parentEventsObject.name}: ${severity}`;
+
+        const eventsSourceSeverityObject = createEventObject(
+            openmct,
+            parentEventsObject.identifier.key,
             namespace,
             severityIdentifier,
             severityName,
-            OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE
+            OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE
         );
 
-        childSeverityObjects.push(severityEventObject);
+        eventsSourceSeverityObjects.push(eventsSourceSeverityObject);
     }
 
-    return childSeverityObjects;
+    return eventsSourceSeverityObjects;
 }
 
 export async function getEventSources(url, instance) {
@@ -157,14 +179,44 @@ export async function getEventSources(url, instance) {
     }
 }
 
-export function eventShouldBeFiltered(event, options) {
-    const { severity } = event;
-    const incomingEventSeverity = severity?.toLowerCase();
-    const severityLevelToFilter = options?.filters?.severity?.equals?.[0];
-    const severityLevelToFilterIndex = SEVERITY_LEVELS.indexOf(severityLevelToFilter);
-    const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
+export function eventShouldBeFiltered(event, subscriptionDetails) {
+    const { severity, source } = event;
+    const { domainObject, options } = subscriptionDetails;
 
-    return incomingEventSeverityIndex < severityLevelToFilterIndex;
+    const domainObjectSource = getEventSource(domainObject);
+    const shouldFilterBySource = domainObjectSource && domainObjectSource !== source;
+
+    const incomingEventSeverity = severity?.toLowerCase();
+    const filterSeverity = options?.filters?.severity?.equals?.[0];
+    const domainObjectSeverity = getEventSeverity(domainObject);
+    const severityLevelToFilterIndex = Math.max(
+        SEVERITY_LEVELS.indexOf(domainObjectSeverity),
+        SEVERITY_LEVELS.indexOf(filterSeverity));
+    const incomingEventSeverityIndex = SEVERITY_LEVELS.indexOf(incomingEventSeverity);
+    const shouldFilterBySeverity = incomingEventSeverityIndex < severityLevelToFilterIndex;
+
+    return shouldFilterBySource || shouldFilterBySeverity;
+}
+
+export function getEventSource(domainObject) {
+    const name = domainObject.identifier.key;
+
+    if (name.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)) {
+        const prefix = `${OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE}.`;
+        const nameWithoutPrefix = name.replace(prefix, '');
+        const [sourceName] = nameWithoutPrefix.split('.');
+
+        return sourceName;
+    }
+}
+
+export function getEventSeverity(domainObject) {
+    if (domainObject.type === OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE || domainObject.type === OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE) {
+        const keyAsArray = domainObject.identifier.key.split('.');
+        const severity = keyAsArray[keyAsArray.length - 1];
+
+        return severity;
+    }
 }
 
 /**
@@ -186,7 +238,7 @@ export function eventToTelemetryDatum(event) {
     } = event;
 
     return {
-        id: OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE,
+        id: OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE,
         severity,
         generationTime,
         receptionTime,

@@ -52,7 +52,10 @@ test.describe('Realtime telemetry displays', () => {
         });
 
         // Go to baseURL
-        await page.goto('./', { waitUntil: 'networkidle' });
+        await page.goto('./');
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
+
         await page.evaluate((thirtyMinutes) => {
             return new Promise((resolve) => {
                 const openmct = window.openmct;
@@ -264,7 +267,7 @@ test.describe('Realtime telemetry displays', () => {
                 return new Promise((resolveBlockingLoop) => {
                     let start = Date.now();
                     let now = Date.now();
-                    // Block the UI thread for 6s
+                    // Block the UI thread for 10s
                     while (now - start < 10000) {
                         now = Date.now();
                     }
