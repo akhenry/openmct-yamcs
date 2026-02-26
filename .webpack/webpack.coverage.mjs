@@ -25,6 +25,12 @@ import config from './webpack.dev.mjs';
 config.devtool = 'source-map';
 
 config.devServer.hot = false;
+config.devServer.client = {
+    overlay: {
+        //We have a mechanism for asserting test failures based on console errors. The overlay interferes with it.
+        runtimeErrors: false
+    }
+}
 
 config.module.rules.push({
     test: /\.(mjs|js)$/,

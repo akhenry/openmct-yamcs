@@ -27,33 +27,38 @@
 import { pluginFixtures, appActions } from 'openmct-e2e';
 import { searchAndLinkTelemetryToObject } from '../yamcsAppActions.mjs';
 const { test, expect } = pluginFixtures;
-const { createDomainObjectWithDefaults, setFixedTimeMode } = appActions;
+const { createDomainObjectWithDefaults } = appActions;
 
 test.describe('Bar Graph @yamcs', () => {
-  let barGraph;
-  let historicalGet;
+    let barGraph;
 
-  test.beforeEach(async ({ page }) => {
-    // Open a browser, navigate to the main page, and wait until all networkevents to resolve
-    await page.goto('./', { waitUntil: 'networkidle' });
-    // Set fixed time mode
-    await page.evaluate(() => openmct.time.setMode('fixed', {start: Date.now() - 30000, end: Date.now()}));
-    await page.waitForURL(/tc\.mode=fixed/);
-    // Create the Bar Graph
-    barGraph = await createDomainObjectWithDefaults(page, { type: 'Graph', name: 'Bar Graph' });
-    // Enter edit mode for the overlay plot
-    await searchAndLinkTelemetryToObject(page, 'Magnetometer', barGraph.name);
-  });
+    test.beforeEach(async ({ page }) => {
+        // Open a browser, navigate to the main page, and wait until the Yamcs dictionary is available in the tree.
+        await page.goto('./');
 
-  test('Requests a single historical datum', async ({ page }) => {
+        //Wait for Yamcs dictionary to load.
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
 
-    //http://localhost:9000/yamcs-proxy/api/archive/myproject/parameters/myproject/Magnetometer?start=2024-09-25T14%3A08%3A46.244Z&stop=2024-09-25T14%3A38%3A46.245Z&limit=1&order=desc
-    historicalGet = page.waitForResponse(/.*\/api\/.*\/parameters.*limit=1&order=desc$/);
+        // Set fixed time mode
+        await page.evaluate(() => openmct.time.setMode('fixed', {
+            start: Date.now() - 30000,
+            end: Date.now()
+        }));
+        await page.waitForURL(/tc\.mode=fixed/);
+        // Create the Bar Graph
+        barGraph = await createDomainObjectWithDefaults(page, {
+            type: 'Graph',
+            name: 'Bar Graph'
+        });
+        // Enter edit mode for the overlay plot
+        await searchAndLinkTelemetryToObject(page, 'Magnetometer', barGraph.name);
+    });
 
-    await page.goto(barGraph.url, { waitUntil: 'networkidle' });
+    test('Requests a single historical datum', async ({ page }) => {
+        page.goto(barGraph.url);
 
-    await historicalGet;
+        await page.waitForResponse(/.*\/api\/.*\/parameters.*limit=1&order=desc$/);
 
-    await expect(page.getByRole('main').getByText(barGraph.name)).toBeVisible();
-  });
+        await expect(page.getByRole('main').getByText(barGraph.name)).toBeVisible();
+    });
 });

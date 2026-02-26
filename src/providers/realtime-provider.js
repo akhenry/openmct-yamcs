@@ -350,9 +350,7 @@ export default class RealtimeProvider {
                             const datum = commandToTelemetryDatum(message.data);
                             subscriptionDetails.callback(datum);
                         } else if (this.isEventMessage(message)) {
-                            if (eventShouldBeFiltered(message.data, subscriptionDetails.options)) {
-                            // ignore event
-                            } else {
+                            if (!eventShouldBeFiltered(message.data, subscriptionDetails)) {
                                 const datum = eventToTelemetryDatum(message.data);
                                 subscriptionDetails.callback(datum);
                             }
