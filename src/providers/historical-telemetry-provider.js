@@ -61,14 +61,10 @@ export default class YamcsHistoricalTelemetryProvider {
         this.standardizeOptions(options, domainObject);
         const timeContext = options.timeContext ?? this.openmct.time;
 
-        // assumes no future data exists
+        const supportsLatest = options.strategy === 'latest' && !isEventType(domainObject.type);
         const isNotPast = options.end >= timeContext.now();
 
-        if (
-            options.strategy === 'latest'
-            && isNotPast
-            && !isEventType(domainObject.type)
-        ) {
+        if (supportsLatest && isNotPast) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
@@ -112,6 +108,12 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         const history = await this.getHistory(...requestArguments);
+
+        if (!history.length && supportsLatest) {
+            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+            return [mctDatum];
+        }
 
         return history;
     }
