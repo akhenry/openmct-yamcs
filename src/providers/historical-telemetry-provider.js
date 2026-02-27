@@ -109,6 +109,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
         const history = await this.getHistory(...requestArguments);
 
+        // this will return latest telemetry regardless of time range
+        // if historical query for the given time range returns no data
+        // but request strategy is 'latest'
         if (!history.length && supportsLatest) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
