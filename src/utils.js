@@ -250,7 +250,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
             const formattedDatum = formatter(datum);
             onPartialResponse(formattedDatum);
 
-            data.push(formattedDatum);
+            data.push(...formattedDatum);
 
             if (token) {
                 newUrl = formatUrl(url, token);
