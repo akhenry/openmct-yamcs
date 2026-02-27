@@ -107,15 +107,15 @@ export default class YamcsHistoricalTelemetryProvider {
             return minMaxHistory;
         }
 
-        await this.getHistory(...requestArguments);
+        const history = await this.getHistory(...requestArguments);
 
-        // if (!history.length && supportsLatest) {
-        //     const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+        if (!history.length && supportsLatest) {
+            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
-        //     return [mctDatum];
-        // }
+            return [mctDatum];
+        }
 
-        return [];
+        return history;
     }
 
     hasEnumValue(domainObject) {
