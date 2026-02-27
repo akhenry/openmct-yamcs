@@ -236,17 +236,21 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
     let newUrl = formatUrl(url);
     let token;
     let result;
-    let data;
+    let datum;
+    const data = [];
 
     while (!stop) {
         result = await yieldRequestHistory.next(newUrl).value;
-        data = result[responseKeyName];
+        datum = result[responseKeyName];
 
-        if (data) {
-            count += data.length;
+        if (datum) {
+            count += datum.length;
             token = result.continuationToken;
 
-            onPartialResponse(formatter(data));
+            const formattedDatum = formatter(datum);
+            onPartialResponse(formattedDatum);
+
+            data.push(...formattedDatum);
 
             if (token) {
                 newUrl = formatUrl(url, token);
@@ -254,14 +258,14 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
             }
         }
 
-        if (aborted(signal) || count >= totalRequestSize || !token || !data) {
+        if (aborted(signal) || count >= totalRequestSize || !token || !datum) {
             stop = true;
         }
     }
 
     yieldRequestHistory.return();
 
-    return [];
+    return data;
 
 }
 
@@ -297,7 +301,7 @@ function getHistoryYieldRequest(signal) {
 
         while (url) {
             url = yield;
-            yield fetch(url, { signal})
+            yield fetch(url, { signal })
                 .then(res => res.json());
         }
     }
