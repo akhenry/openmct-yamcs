@@ -109,11 +109,11 @@ export default class YamcsHistoricalTelemetryProvider {
 
         const history = await this.getHistory(...requestArguments);
 
-        if (!history.length && supportsLatest) {
-            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+        // if (!history.length && supportsLatest) {
+        //     const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
-            return [mctDatum];
-        }
+        //     return [mctDatum];
+        // }
 
         return history;
     }
