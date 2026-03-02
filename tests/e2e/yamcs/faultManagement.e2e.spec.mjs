@@ -27,7 +27,8 @@ Staleness Specific Tests
 import { pluginFixtures } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 
-const YAMCS_API_URL = "http://localhost:8090/api/";
+const YAMCS_URL = "http://localhost:8090/";
+const YAMCS_API_URL = `${YAMCS_URL}api/`;
 const FAULT_PARAMETER = "Latitude";
 
 /**
@@ -166,26 +167,44 @@ test.describe("Fault Management @yamcs", () => {
     });
 
     test('Pending faults are not shown', async ({ page }) => {
+        await test.step('Set the alarm to non-pending', async () => {
+            // Intercept the response to set the alarm to pending
+            await page.route('**/api/**/alarms', route => modifyAlarmPendingStatus(route, FAULT_PARAMETER, false));
+        });
+
+        await test.step('Navigate to Fault Management', async () => {
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
+            await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
+        });
+
+        await test.step('Fault is shown', async () => {
+            await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeVisible();
+            await page.unroute('**/api/**/alarms');
+        });
+
+        await test.step('Navigate to my items', async () => {
+            await page.getByLabel('Navigate to My Items').click();
+        });
+
         await test.step('Set the alarm to pending', async () => {
             // Intercept the response to set the alarm to pending
             await page.route('**/api/**/alarms', route => modifyAlarmPendingStatus(route, FAULT_PARAMETER, true));
         });
 
         await test.step('Navigate to Fault Management', async () => {
+            // This ensures that we wait until _something_ is returned from the request
+            const alarmsRequest = page.waitForResponse('**/api/**/alarms');
             await page.getByLabel('Navigate to Fault Management').click();
+            await alarmsRequest;
         });
 
-        await test.step('Pending faults are not shown', async () => {
-            await expect(getTriggeredFaultByName(page, FAULT_PARAMETER)).toBeHidden();
-        });
-
-        await test.step('Set the alarm to not pending', async () => {
-            // Intercept the response to set the alarm to not pending
-            await page.route('**/api/**/alarms', route => modifyAlarmPendingStatus(route, FAULT_PARAMETER, false));
-        });
-
-        await test.step('Fault is now shown', async () => {
-            await expect(getTriggeredFaultByName(page, FAULT_PARAMETER)).toBeVisible();
+        await test.step('Pending fault is not shown', async () => {
+            // Because we waited to receive a response from the alarms request, we
+            // know that the fault is pending, so we can test that it is not shown.
+            // This test would not be valid without first knowing that the alarm
+            // has been returned.
+            await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeHidden();
         });
     });
 
