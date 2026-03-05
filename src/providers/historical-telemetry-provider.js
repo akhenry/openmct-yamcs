@@ -58,18 +58,17 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async request(domainObject, options) {
         options = { ...options };
-
         this.standardizeOptions(options, domainObject);
-        if (options.strategy === 'latest'
-            && options.timeContext?.isRealTime()
-            && !isEventType(domainObject.type)
-        ) {
-            // Latest requested in realtime, use latest telemetry provider instead
+        const timeContext = options.timeContext ?? this.openmct.time;
+
+        const supportsLatest = options.strategy === 'latest' && !isEventType(domainObject.type);
+        const isNotPast = options.end >= timeContext.now();
+
+        if (supportsLatest && isNotPast) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
         }
-        // otherwise we're in fixed time mode or historical
 
         const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
@@ -109,6 +108,15 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         const history = await this.getHistory(...requestArguments);
+
+        // this will return latest telemetry regardless of time range
+        // if historical query for the given time range returns no data
+        // but request strategy is 'latest'
+        if (!history.length && supportsLatest) {
+            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+            return [mctDatum];
+        }
 
         return history;
     }
