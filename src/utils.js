@@ -224,10 +224,45 @@ async function getLimitOverrides(url) {
     return limitOverrides;
 }
 
-async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
+/**
+ * Uses a generator provided by getHistoryYieldRequest
+ * to yield and process results as available
+ * rather than waiting for the historical query to complete.
+ * 
+ * Return is an object with the results and yielded flag,
+ * results will always be an empty array because of on the fly processing
+ * yielded is true if the generator yielded any results
+ * 
+ * @param {string} url
+ * @param {{
+ *  signal: AbortSignal,
+ *  responseKeyName: string,
+ *  totalRequestSize: number,
+ *  onPartialResponse: (data: any) => void,
+ *  formatter: (data: any) => any
+ * }} options 
+ * @returns {{
+ *  results: any[],
+ *  yielded: boolean
+ * }}
+ */
+async function yieldResults(
+    url,
+    {
+        signal,
+        responseKeyName,
+        totalRequestSize,
+        onPartialResponse,
+        formatter
+    }
+) {
+    const yieldedResults = {
+        results: [],
+        yielded: false
+    };
 
     if (aborted(signal)) {
-        return [];
+        return yieldedResults;
     }
 
     const yieldRequestHistory = getHistoryYieldRequest(signal);
@@ -236,21 +271,18 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
     let newUrl = formatUrl(url);
     let token;
     let result;
-    let datum;
-    const data = [];
+    let data;
 
     while (!stop) {
         result = await yieldRequestHistory.next(newUrl).value;
-        datum = result[responseKeyName];
+        data = result[responseKeyName];
 
-        if (datum) {
-            count += datum.length;
+        if (data) {
+            yieldedResults.yielded = true;
+            count += data.length;
             token = result.continuationToken;
 
-            const formattedDatum = formatter(datum);
-            onPartialResponse(formattedDatum);
-
-            data.push(...formattedDatum);
+            onPartialResponse(formatter(data));
 
             if (token) {
                 newUrl = formatUrl(url, token);
@@ -258,15 +290,14 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
             }
         }
 
-        if (aborted(signal) || count >= totalRequestSize || !token || !datum) {
+        if (aborted(signal) || count >= totalRequestSize || !token || !data) {
             stop = true;
         }
     }
 
     yieldRequestHistory.return();
 
-    return data;
-
+    return yieldedResults;
 }
 
 function buildStalenessResponseObject(isStale, timestamp) {
