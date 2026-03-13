@@ -104,7 +104,7 @@ export default class YamcsHistoricalTelemetryProvider {
         if (options.isSamples) {
             if (options.onPartialResponse) {
                 const minMaxHistoryYieldedResults = await this.yieldAndProcessMinMaxHistory(...requestArguments);
-                
+
                 return minMaxHistoryYieldedResults.results;
             } else {
                 const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
@@ -142,7 +142,7 @@ export default class YamcsHistoricalTelemetryProvider {
                 return [mctDatum];
             }
         }
-        
+
         return history;
     }
 
@@ -169,7 +169,9 @@ export default class YamcsHistoricalTelemetryProvider {
         options.responseKeyName = this.getResponseKeyById(id);
         options.formatter = (res) => this.convertDataHistory(id, res);
 
-        return yieldResults(url, options);
+        const yieldedResults = await yieldResults(url, options);
+
+        return yieldedResults;
     }
 
     async getMinMaxHistory(id, url, options) {
@@ -185,12 +187,13 @@ export default class YamcsHistoricalTelemetryProvider {
         return this.convertSampleHistory(id, results);
     }
 
-
     async yieldAndProcessMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
         options.formatter = (res) => this.convertSampleHistory(id, res);
 
-        return yieldResults(url, options);
+        const yieldedResults = await yieldResults(url, options);
+
+        return yieldedResults;
     }
 
     standardizeOptions(options, domainObject) {

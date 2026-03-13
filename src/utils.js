@@ -228,11 +228,11 @@ async function getLimitOverrides(url) {
  * Uses a generator provided by getHistoryYieldRequest
  * to yield and process results as available
  * rather than waiting for the historical query to complete.
- * 
+ *
  * Return is an object with the results and yielded flag,
  * results will always be an empty array because of on the fly processing
  * yielded is true if the generator yielded any results
- * 
+ *
  * @param {string} url
  * @param {{
  *  signal: AbortSignal,
@@ -240,7 +240,7 @@ async function getLimitOverrides(url) {
  *  totalRequestSize: number,
  *  onPartialResponse: (data: any) => void,
  *  formatter: (data: any) => any
- * }} options 
+ * }} options
  * @returns {{
  *  results: any[],
  *  yielded: boolean
