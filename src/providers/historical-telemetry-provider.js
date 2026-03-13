@@ -192,7 +192,6 @@ export default class YamcsHistoricalTelemetryProvider {
 
         return yieldResults(url, options);
     }
-}
 
     standardizeOptions(options, domainObject) {
         options.sizeType = 'limit';
