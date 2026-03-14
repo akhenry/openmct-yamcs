@@ -251,6 +251,58 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         expect(await assertTableHasSomeLimitViolations(telemTableDesc)).toBe(true);
     });
 
+    test('Can show limits on telemetry for parameters with no rangeCondition (like enums) as alpha numeric values in a display layout', async ({ page }) => {
+        //navigate to Enum_Para_1 with a specified realtime window
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~Enum_Para_1?tc.mode=local&tc.startDelta=1800000&tc.endDelta=0&tc.timeSystem=utc&view=table', {waitUntil: 'domcontentloaded'});
+        await expect(page.getByText('Loading...')).toBeHidden();
+        // Create a display layout with the Enum_Para_1 parameter
+        const displayLayout = await createDomainObjectWithDefaults(page, {
+            type: 'Display Layout'
+        });
+
+        console.log(displayLayout.url);
+
+        // Navigate to display Layout
+        await page.goto(displayLayout.url);
+
+        // Expand the myproject folder (/myproject)
+        await page.getByLabel('Expand myproject').click();
+        // Expand the myproject under the previous folder (/myproject/myproject)
+        await page.getByLabel('Expand myproject').click();
+
+        // Find the Enum_Para_1 parameter (/myproject/myproject/Enum_Para_1)
+        const enumTreeItem = page.getByRole('treeitem', { name: /Enum_Para_1/ });
+        await page.getByLabel('Edit Object').click();
+
+        // Drag and drop the Enum_Para_1 telemetry endpoint into this display layout
+        await enumTreeItem.dragTo(page.locator('.c-object-view'));
+
+        // Save (exit edit mode)
+        await page.getByLabel('Save').click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
+
+        // wait 5 seconds for the alpha numeric to show values
+        await page.waitForTimeout(FIVE_SECONDS);
+
+        // Change the limits for the Enum_Para_1 parameter using the yamcs API
+        const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Enum_Para_1`, {
+            data: {
+                action: 'SET_DEFAULT_ALARMS',
+                defaultAlarm: {
+                    minViolations: 1,
+                    enumerationAlarm: [{
+                        "level": "CRITICAL",
+                        "label": "ENUM_VALUE_0"
+                    }]
+                }
+            }
+        });
+
+        await expect(runTimeLimitChangeResponse).toBeOK();
+
+        expect(await assertAlphaNumericHasSomeLimitViolations(page, 10)).toBe(true);
+    });
+
 });
 
 /**
@@ -302,6 +354,10 @@ async function clearLimitsForParameter(page) {
         data: {}
     });
     await expect(runTimeLimitChangeResponse).toBeOK();
+    const runTimeLimitChangeResponse2 = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Enum_Para_1`, {
+        data: {}
+    });
+    await expect(runTimeLimitChangeResponse2).toBeOK();
 }
 
 /**
@@ -313,4 +369,33 @@ async function assertTableHasSomeLimitViolations(telemTable) {
     const allRedCells = await telemTable.locator('.is-limit--red').count();
 
     return allRedCells > 0;
+}
+
+/**
+ * Monitors the Alpha-numeric telemetry element over several samples
+ * to see if it ever enters a violation state.
+ * @param {import('@playwright/test').Page} page
+ * @param {number} maxSamples - Number of times to check (default 10)
+ * @returns {boolean} - True if a violation was detected, false otherwise
+ */
+async function assertAlphaNumericHasSomeLimitViolations(page, maxSamples = 10) {
+    const alphaNumericEl = page.getByLabel("Alpha-numeric telemetry");
+    const redCellLocator = alphaNumericEl.locator('.is-limit--red');
+
+    for (let i = 0; i < maxSamples; i++) {
+        const allRedCells = await redCellLocator.count();
+
+        if (allRedCells > 0) {
+            console.log(`Violation detected on sample #${i + 1}`);
+
+            return true;
+        }
+
+        // Wait 1 second between samples to allow new telemetry to flow in
+        await page.waitForTimeout(1000);
+    }
+
+    console.error(`Failed to detect violation after ${maxSamples} samples.`);
+
+    return false;
 }
