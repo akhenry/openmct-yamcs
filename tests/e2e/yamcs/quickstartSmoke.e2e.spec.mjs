@@ -39,19 +39,22 @@ const { test, expect } = baseFixtures;
 test.describe("Quickstart smoke tests @yamcs", () => {
     test.use({
         storageState: {
-        cookies: [],
-        origins: [
-            {
-                "origin": "http://localhost:9000",
-                "localStorage": []
-            }
-        ]
+            cookies: [],
+            origins: [
+                {
+                    "origin": "http://localhost:9000",
+                    "localStorage": []
+                }
+            ]
         }
     });
 
     test.beforeEach(async ({ page }) => {
         //Go to baseURL
-        await page.goto('./', { waitUntil: 'networkidle' });
+        await page.goto('./');
+        // Wait for telemetry dictionary to load.
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
     });
 
     test('Verify that the create button appears and that the Folder Domain Object is available for selection', async ({ page }) => {
@@ -64,7 +67,9 @@ test.describe("Quickstart smoke tests @yamcs", () => {
 
     test('Verify that the default yamcs items appear in the tree', async ({ page }) => {
         //Go to baseURL
-        await page.goto('./', { waitUntil: 'networkidle' });
+        await page.goto('./');
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
 
         // Check for existence of all default YAMCS tree objects
         await expect(page.locator('.c-tree__item :text-is("Fault Management")')).toBeEnabled();

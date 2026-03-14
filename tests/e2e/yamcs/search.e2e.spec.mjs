@@ -30,7 +30,9 @@ const { test, expect } = pluginFixtures;
 test.describe("Quickstart search tests @yamcs", () => {
     test('Validate aggregate in search result', async ({ page }) => {
         // Go to baseURL
-        await page.goto("./", { waitUntil: "networkidle" });
+        await page.goto("./");
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
 
         await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').click();
         // Search for Sequence

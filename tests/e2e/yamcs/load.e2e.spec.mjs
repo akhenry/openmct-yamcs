@@ -39,12 +39,15 @@ test.describe("Tests to ensure that open mct loads correctly @yamcs", () => {
 
     test('Can load correctly when mdb algorithms are changed at runtime', async ({ page }) => {
         // Go to baseURL
-        await page.goto("./", {waitUntil: "networkidle"});
+        await page.goto("./");
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+
         await expect(page.getByLabel('Navigate to myproject folder')).toBeVisible();
 
         await updateCustomAlgorithm(page);
 
-        await page.reload({waitUntil: "networkidle"});
+        await page.reload();
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
 
         await expect(page.getByLabel('Navigate to myproject folder')).toBeVisible();
     });

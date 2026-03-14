@@ -91,8 +91,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
         networkRequests = [];
         await page.getByLabel('Open the View Switcher Menu').click();
         await page.getByRole('menuitem', { name: /Telemetry Table/ }).click();
-        await page.waitForLoadState('networkidle');
-
+        await page.waitForURL(/view=table/);
         // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
         // FIXME: can we use waitForRequest?
         await page.waitForTimeout(500);
@@ -111,40 +110,33 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
         expect(nonSampleRequests.length).toBe(filteredRequests.length);
     });
 
-    test('When in table view and in unlimited mode, requests contain the "order=desc" parameter', async ({ page }) => {
+    test('When in table view and in limited mode, requests contain the "order=desc" parameter', async ({ page }) => {
         await page.getByLabel('Navigate to Enum_Para_1 yamcs').click();
 
         //switch to table view
         networkRequests = [];
         await page.getByLabel('Open the View Switcher Menu').click();
+        const viewAndRequestPromises = Promise.all([
+            page.waitForURL(/view=table/),
+            page.waitForResponse(/.*\/api\/archive.*order=desc.*$/)
+        ]);
         await page.getByRole('menuitem', { name: /Telemetry Table/ }).click();
-        await page.waitForLoadState('networkidle');
 
-        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        // FIXME: can we use waitForRequest?
-        await page.waitForTimeout(500);
-
-        filteredRequests = filterNonFetchRequests(networkRequests);
+        // Wait for the table view to load and for the order=desc parameter to be included in the request
+        await viewAndRequestPromises;
         // Verify we are in "Limited" mode
         await expect(page.getByRole('button', { name: 'SHOW UNLIMITED' })).toBeVisible();
-
-        // Check if any request URL contains the 'order=desc' parameter
-        const hasOrderDesc = filteredRequests.some(request => request.url().includes('order=desc'));
-        expect(hasOrderDesc).toBe(true);
     });
 
-    test('When in table view, samples endpoint and useRawValue are not used for enum type parameters', async ({ page }) => {
+    test('When in table view, samples endpoint is not used for enum type parameters', async ({ page }) => {
         await page.getByLabel('Navigate to Enum_Para_1 yamcs').click();
 
         //switch to table view
         networkRequests = [];
         await page.getByLabel('Open the View Switcher Menu').click();
         await page.getByRole('menuitem', { name: /Telemetry Table/ }).click();
-        await page.waitForLoadState('networkidle');
 
-        // wait for debounced requests in YAMCS Latest Telemetry Provider to finish
-        // FIXME: can we use waitForRequest?
-        await page.waitForTimeout(500);
+        await page.waitForResponse(/.*\/api\/.*\/parameters.*$/);
 
         filteredRequests = filterNonFetchRequests(networkRequests);
 
@@ -158,6 +150,7 @@ test.describe("Samples endpoint with useRawValue search param @yamcs", () => {
         const nonSampleRequests = filteredRequests.filter(request => request.url().indexOf('/samples') < 0);
         expect(samplesRequests.length).toBe(0);
         expect(nonSampleRequests.length).toBe(filteredRequests.length);
+        expect(filteredRequests.length).toBeGreaterThan(0);
     });
 
     // Try to reduce indeterminism of browser requests by only returning fetch requests.
