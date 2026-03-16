@@ -52,7 +52,37 @@ const commonConfig = {
             export: 'default',
             name: 'openmctYamcs'
         }
-    }
+    },
+    devServer: {
+        compress: true,
+        port: 9000,
+        static: [
+          {
+            directory: path.resolve(projectRootDir, './example'),
+          },
+          {
+            directory: path.resolve(projectRootDir, './node_modules/openmct/dist'),
+            publicPath: '/node_modules/openmct/dist'
+          },
+        ],
+        proxy: [
+          {
+            context: ["/yamcs-proxy/"],
+            target: "http://0.0.0.0:8090/",
+            secure: false,
+            changeOrigin: true,
+            pathRewrite: { "^/yamcs-proxy/": "" },
+          },
+          {
+            context: ["/yamcs-proxy-ws/"],
+            target: "ws://0.0.0.0:8090/api/websocket",
+            secure: false,
+            changeOrigin: true,
+            ws: true,
+            pathRewrite: { "^/yamcs-proxy-ws/": "" },
+          },
+        ],
+      }
 };
 
 export default commonConfig;
