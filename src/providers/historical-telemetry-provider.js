@@ -65,7 +65,7 @@ export default class YamcsHistoricalTelemetryProvider {
             && !isEventType(domainObject.type)
         ) {
             // Latest requested in realtime, use latest telemetry provider instead
-            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+            const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject, options);
 
             return [mctDatum];
         }
