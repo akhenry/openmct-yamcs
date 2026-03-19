@@ -58,20 +58,18 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async request(domainObject, options) {
         options = { ...options };
-
         this.standardizeOptions(options, domainObject);
-        if (options.strategy === 'latest'
-            && options.timeContext?.isRealTime()
-            && !isEventType(domainObject.type)
-        ) {
-            // Latest requested in realtime, use latest telemetry provider instead
+        const timeContext = options.timeContext ?? this.openmct.time;
+
+        const supportsLatest = options.strategy === 'latest' && !isEventType(domainObject.type);
+        const isNotPast = options.end >= timeContext.now();
+
+        if (supportsLatest && isNotPast) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
         }
-        // otherwise we're in fixed time mode or historical
 
-        const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
 
         // limit events search by source and severity
@@ -99,16 +97,51 @@ export default class YamcsHistoricalTelemetryProvider {
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax';
 
+        const id = domainObject.identifier.key;
         const url = this.buildUrl(id, options);
         const requestArguments = [id, url, options];
 
         if (options.isSamples) {
-            const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
+            if (options.onPartialResponse) {
+                const minMaxHistoryYieldedResults = await this.yieldAndProcessMinMaxHistory(...requestArguments);
 
-            return minMaxHistory;
+                return minMaxHistoryYieldedResults.results;
+            } else {
+                const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
+
+                return minMaxHistory;
+            }
         }
 
-        const history = await this.getHistory(...requestArguments);
+        let history;
+        if (options.onPartialResponse) {
+            const historyYieldedResults = await this.yieldAndProcessHistory(...requestArguments);
+            const { results, yielded } = historyYieldedResults;
+
+            // if request strategy is 'latest'
+            // and historical query is in the past
+            // and does not return any data
+            // fallback to latestTelemetryProvider
+            if (!yielded && supportsLatest) {
+                const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+                return [mctDatum];
+            }
+
+            history = results;
+        } else {
+            history = await this.getHistory(...requestArguments);
+
+            // if request strategy is 'latest'
+            // and historical query is in the past
+            // and does not return any data
+            // fallback to latestTelemetryProvider
+            if (!history.length && supportsLatest) {
+                const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+                return [mctDatum];
+            }
+        }
 
         return history;
     }
@@ -121,30 +154,46 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async getHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
+        const results = await accumulateResults(
+            url,
+            { signal: options.signal },
+            options.responseKeyName,
+            [],
+            options.totalRequestSize
+        );
 
-        if (!options.onPartialResponse) {
-            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+        return this.convertDataHistory(id, results);
+    }
 
-            return this.convertDataHistory(id, results);
-        } else {
-            options.formatter = (res) => this.convertDataHistory(id, res);
+    async yieldAndProcessHistory(id, url, options) {
+        options.responseKeyName = this.getResponseKeyById(id);
+        options.formatter = (res) => this.convertDataHistory(id, res);
 
-            return yieldResults(url, options);
-        }
+        const yieldedResults = await yieldResults(url, options);
+
+        return yieldedResults;
     }
 
     async getMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
+        const results = await accumulateResults(
+            url,
+            { signal: options.signal },
+            options.responseKeyName,
+            [],
+            options.totalRequestSize
+        );
 
-        if (!options.onPartialResponse) {
-            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+        return this.convertSampleHistory(id, results);
+    }
 
-            return this.convertSampleHistory(id, results);
-        } else {
-            options.formatter = (res) => this.convertSampleHistory(id, res);
+    async yieldAndProcessMinMaxHistory(id, url, options) {
+        options.responseKeyName = 'sample';
+        options.formatter = (res) => this.convertSampleHistory(id, res);
 
-            return yieldResults(url, options);
-        }
+        const yieldedResults = await yieldResults(url, options);
+
+        return yieldedResults;
     }
 
     standardizeOptions(options, domainObject) {
