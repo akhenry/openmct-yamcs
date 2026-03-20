@@ -141,7 +141,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await detectorTreeItem.dragTo(page.locator('.c-object-view'));
 
         // Save (exit edit mode)
-        await page.getByLabel('Save').click();
+        await page.getByLabel({ name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
@@ -280,7 +280,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await enumTreeItem.dragTo(page.locator('.c-object-view'));
 
         // Save (exit edit mode)
-        await page.getByLabel('Save').click();
+        await page.getByLabel({ name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Change the limits for the EpochUSNO parameter using the yamcs API
