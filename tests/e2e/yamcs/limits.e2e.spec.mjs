@@ -70,7 +70,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await detectorTreeItem.dragTo(objectPane);
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
@@ -86,7 +86,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Change the limits for the Detector_Temp parameter using the yamcs API
@@ -157,7 +157,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         //navigate away from the overlay plot
