@@ -224,10 +224,45 @@ async function getLimitOverrides(url) {
     return limitOverrides;
 }
 
-async function yieldResults(url, { signal, responseKeyName, totalRequestSize, onPartialResponse, formatter }) {
+/**
+ * Uses a generator provided by getHistoryYieldRequest
+ * to yield and process results as available
+ * rather than waiting for the historical query to complete.
+ *
+ * Return is an object with the results and yielded flag,
+ * results will always be an empty array because of on the fly processing
+ * yielded is true if the generator yielded any results
+ *
+ * @param {string} url
+ * @param {{
+ *  signal: AbortSignal,
+ *  responseKeyName: string,
+ *  totalRequestSize: number,
+ *  onPartialResponse: (data: any) => void,
+ *  formatter: (data: any) => any
+ * }} options
+ * @returns {{
+ *  results: any[],
+ *  yielded: boolean
+ * }}
+ */
+async function yieldResults(
+    url,
+    {
+        signal,
+        responseKeyName,
+        totalRequestSize,
+        onPartialResponse,
+        formatter
+    }
+) {
+    const yieldedResults = {
+        results: [],
+        yielded: false
+    };
 
     if (aborted(signal)) {
-        return [];
+        return yieldedResults;
     }
 
     const yieldRequestHistory = getHistoryYieldRequest(signal);
@@ -243,6 +278,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
         data = result[responseKeyName];
 
         if (data) {
+            yieldedResults.yielded = true;
             count += data.length;
             token = result.continuationToken;
 
@@ -261,8 +297,7 @@ async function yieldResults(url, { signal, responseKeyName, totalRequestSize, on
 
     yieldRequestHistory.return();
 
-    return [];
-
+    return yieldedResults;
 }
 
 function buildStalenessResponseObject(isStale, timestamp) {
@@ -297,7 +332,7 @@ function getHistoryYieldRequest(signal) {
 
         while (url) {
             url = yield;
-            yield fetch(url, { signal})
+            yield fetch(url, { signal })
                 .then(res => res.json());
         }
     }
