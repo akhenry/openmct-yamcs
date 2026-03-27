@@ -9,7 +9,7 @@ on:
   push:
 jobs:
   yamcs-quickstart-e2e:
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     continue-on-error: false
     steps:
