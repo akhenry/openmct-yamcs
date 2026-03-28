@@ -1,0 +1,75 @@
+
+services:
+  yamcs:
+    build:
+      context: ./yamcs
+      dockerfile: Containerfile
+      args:
+        DEPLOYMENT_ENVIRO: ${DEPLOYMENT_ENVIRO}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        HTTP_PROXY: ${HTTP_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        MAVEN_HTTPS_PROXY: ${MAVEN_HTTPS_PROXY}
+        GIT_URL: https://github.com/yamcs/quickstart.git
+        GIT_COMMIT: master
+    attach: true
+    hostname: yamcs
+    container_name: deployments-yamcs
+    working_dir: "/opt/yamcs/quickstart"
+    volumes:
+      - ${PWD}/yamcs/entrypoint.sh:/opt/yamcs/quickstart/entrypoint.sh
+    command: "/opt/yamcs/quickstart/entrypoint.sh"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    ports:
+      - "127.0.0.1:8090:8090"
+      - "127.0.0.1:10015:10015/udp"
+    networks:
+      openmct-yamcs:
+        aliases:
+          - yamcs
+
+  openmct:
+    build:
+      context: ./openmct
+      dockerfile: Containerfile
+      args:
+        DEPLOYMENT_ENVIRO: ${DEPLOYMENT_ENVIRO}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        HTTP_PROXY: ${HTTP_PROXY}
+        NO_PROXY: ${NO_PROXY}
+        MAVEN_HTTPS_PROXY: ${MAVEN_HTTPS_PROXY}
+        GIT_URL: https://github.com/akhenry/openmct-yamcs.git
+        GIT_COMMIT: master
+    attach: true
+    container_name: deployments-openmct
+    hostname: openmct
+    working_dir: "/opt/openmct"
+    volumes:
+      - "${PWD}/openmct/entrypoint.sh:/opt/openmct/entrypoint.sh"
+      - "${PWD}/openmct/webpack.dev.mjs:/opt/openmct/.webpack/webpack.dev.mjs"
+    command: '/opt/openmct/entrypoint.sh'
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:9000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    depends_on:
+      yamcs:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:8080:8080"
+    networks:
+      openmct-yamcs:
+        aliases:
+          - openmct
+
+networks:
+  openmct-yamcs:
+    external: false
