@@ -11,7 +11,6 @@ jobs:
   yamcs-quickstart-e2e:
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    container: mcr.microsoft.com/playwright:v1.57.0-jammy 
     continue-on-error: false
     steps:
       - uses: actions/checkout@v3
@@ -26,8 +25,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Install Maven
-        run: apt-get update -y && apt-get install -y maven
       - name: replace yamcsVersion with target test version
         run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
@@ -43,6 +40,8 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: npm run test:getopensource
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
       - name: Run build:example based on openmct-version
         run: |
           npm run build:example:master
