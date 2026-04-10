@@ -11,6 +11,7 @@ jobs:
   yamcs-quickstart-e2e:
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.57.0-jammy 
     continue-on-error: false
     steps:
       - uses: actions/checkout@v3
@@ -40,7 +41,6 @@ jobs:
       - name: Run build:example based on openmct-version
         run: |
           npm run build:example:master
-      - run: npx playwright@1.57.0 install chromium --with-deps
       - name: Check that yamcs is available
         run: |
           docker ps -a
