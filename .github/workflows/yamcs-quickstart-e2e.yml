@@ -28,8 +28,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Install Docker CLI and Maven
-        run: apt-get update -y && apt-get install -y docker.io maven
+      - name: Install dependencies
+        run: apt-get update -y && apt-get install -y docker.io docker-compose make maven
       - name: replace yamcsVersion with target test version
         run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
