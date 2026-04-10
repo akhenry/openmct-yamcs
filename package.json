@@ -32,7 +32,7 @@
     "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
     "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
-    "wait-for-yamcs": "wait-on http-get://localhost:8090/ -v",
+    "wait-for-yamcs": "node ./wait-for-yamcs.mjs http://localhost:8090/",
     "make-example-events": "node ./example/make-example-events.mjs"
   },
   "keywords": [
@@ -47,9 +47,6 @@
   "optionalDependencies": {
     "openmct": ">= 4.1.0"
   },
-  "overrides": {
-    "lodash": "4.18.1"
-  },
   "devDependencies": {
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.23.3",
@@ -63,7 +60,6 @@
     "sinon": "14.0.0",
     "source-map-loader": "4.0.1",
     "uuid": "9.0.1",
-    "wait-on": "7.2.0",
     "webpack": "5.105.4",
     "webpack-cli": "5.1.1",
     "webpack-dev-server": "5.2.3",
