@@ -24,6 +24,9 @@ jobs:
           path: 'quickstart'
       - name: replace yamcsVersion with target test version
         uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       - run: |
           mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
