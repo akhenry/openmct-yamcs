@@ -22,13 +22,12 @@ jobs:
         with:
           repository: yamcs/quickstart
           path: 'quickstart'
-      - name: replace yamcsVersion with target test version
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - run: |
-          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
+      - name: replace yamcsVersion with target test version
+        run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
