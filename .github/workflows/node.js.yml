@@ -14,7 +14,6 @@ jobs:
         node-version: [24.14.1]
         openmct-version:
           - latest
-          - stable
     timeout-minutes: 10
     continue-on-error: true
     steps:
