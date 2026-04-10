@@ -26,6 +26,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+      - name: Install Maven
+        run: apt-get update -y && apt-get install -y maven
       - name: replace yamcsVersion with target test version
         run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
