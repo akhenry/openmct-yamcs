@@ -20,7 +20,7 @@
     "lint:fix": "eslint src example --fix",
     "build:dist": "webpack --config ./.webpack/webpack.prod.mjs",
     "build:example": "npm install openmct@unstable --no-save",
-    "build:example:master": "rm -rf ./node_modules/openmct && git clone https://github.com/nasa/openmct.git --branch npm-updates --depth 1 ./node_modules/openmct && (cd ./node_modules/openmct && npm ci) && npm --prefix ./node_modules/openmct run build:prod",
+    "build:example:master": "rm -rf ./node_modules/openmct && git clone https://github.com/nasa/openmct.git --branch master --depth 1 ./node_modules/openmct && (cd ./node_modules/openmct && npm ci) && npm --prefix ./node_modules/openmct run build:prod",
     "build:example:currentbranch": "rm -rf ./node_modules/openmct && git clone https://github.com/nasa/openmct.git --branch $(git rev-parse --abbrev-ref HEAD) --depth 1 ./node_modules/openmct && (cd ./node_modules/openmct && npm ci) && npm --prefix ./node_modules/openmct run build:prod",
     "postbuild:example": "node check-optional-dependencies.mjs",
     "start": "npx webpack serve --config ./.webpack/webpack.dev.mjs",
