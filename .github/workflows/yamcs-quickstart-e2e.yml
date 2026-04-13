@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-jammy
-      options: --user root --network host -v /var/run/docker.sock:/var/run/docker.sock
+      options: --user root -v /var/run/docker.sock:/var/run/docker.sock
     continue-on-error: false
     steps:
       - uses: actions/checkout@v3
@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -y
-          apt-get install -y docker.io make maven jq python3
+          apt-get install -y docker.io make maven jq python3 socat
           mkdir -p /usr/local/lib/docker/cli-plugins
           curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
@@ -47,6 +47,10 @@ jobs:
           touch makeout.txt
           nohup make all-10hz > makeout.txt 2>&1 &
         working-directory: quickstart/docker
+      - name: Map localhost to Docker Host
+        run: |
+          HOST_IP=$(ip route | awk '/default/ {print $3}')
+          socat TCP-LISTEN:8090,fork,reuseaddr TCP:$HOST_IP:8090 &
       - run: npm install
       - name: Get Open MCT e2e tests
         uses: nick-fields/retry@v3
