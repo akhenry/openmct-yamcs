@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -y
-          apt-get install -y docker.io make maven
+          apt-get install -y docker.io make maven jq python3
           mkdir -p /usr/local/lib/docker/cli-plugins
           curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
@@ -54,6 +54,8 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: npm run test:getopensource
+      - name: Install workspace dependencies (ignore-scripts suppresses posttest hook)
+        run: npm install
       - name: Run build:example based on openmct-version
         run: |
           npm run build:example:master
