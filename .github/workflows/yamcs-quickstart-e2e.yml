@@ -38,9 +38,8 @@ jobs:
       - name: replace yamcsVersion with target test version
         run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
-      - name: add extensions=true to yamcs-maven-plugin so mvn yamcs:run resolves
-        run: |
-          sed -i 's|<artifactId>yamcs-maven-plugin</artifactId>|<artifactId>yamcs-maven-plugin</artifactId>\n        <extensions>true</extensions>|' pom.xml
+      - name: use fully-qualified maven goal to avoid plugin group prefix lookup
+        run: sed -i 's|mvn yamcs:run|mvn org.yamcs:yamcs-maven-plugin:run|' docker/docker-compose.yml
         working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
