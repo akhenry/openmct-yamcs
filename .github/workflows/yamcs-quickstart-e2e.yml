@@ -38,8 +38,9 @@ jobs:
       - name: replace yamcsVersion with target test version
         run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
         working-directory: quickstart
-      - name: use fully-qualified maven goal to avoid plugin group prefix lookup
-        run: sed -i 's|mvn yamcs:run|mvn org.yamcs:yamcs-maven-plugin:run|' docker/docker-compose.yml
+      - name: fix DIND volume path translation issue
+        run: |
+          sed -i 's|- \.\./:/yamcs|- /home/runner/work/openmct-yamcs/openmct-yamcs/quickstart:/yamcs|' docker/docker-compose.yml
         working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
@@ -76,7 +77,7 @@ jobs:
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
-        run: docker compose logs yamcs > ../yamcs-docker-log.txt 2>&1
+        run: docker compose logs yamcs > ../../yamcs-docker-log.txt 2>&1
         working-directory: quickstart/docker
       - name: archive docker logs
         if: always()
