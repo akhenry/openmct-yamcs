@@ -51,6 +51,7 @@ jobs:
         run: |
           HOST_IP=$(ip route | awk '/default/ {print $3}')
           socat TCP-LISTEN:8090,fork,reuseaddr TCP:$HOST_IP:8090 &
+          socat UDP4-RECVFROM:10015,fork UDP4:$HOST_IP:10015 &
       - run: npm install
       - name: Get Open MCT e2e tests
         uses: nick-fields/retry@v3
