@@ -44,7 +44,7 @@ jobs:
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
           touch makeout.txt
-          make all-10hz &> makeout.txt &
+          nohup make all-10hz > makeout.txt 2>&1 &
         working-directory: quickstart/docker
       - run: npm install
       - name: Get Open MCT e2e tests
@@ -60,6 +60,7 @@ jobs:
           npm run build:example:master
       - name: Check that yamcs is available
         run: |
+          docker compose -f quickstart/docker/docker-compose.yml ps
           docker ps -a
           npm run wait-for-yamcs
       - name: Check Yamcs installed version
@@ -75,7 +76,8 @@ jobs:
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
-        run: docker logs yamcs > yamcs-docker-log.txt 2>&1
+        run: docker compose logs yamcs > ../yamcs-docker-log.txt 2>&1
+        working-directory: quickstart/docker
       - name: archive docker logs
         if: always()
         uses: actions/upload-artifact@v4
