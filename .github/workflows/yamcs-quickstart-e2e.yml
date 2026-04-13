@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-jammy
-      options: --user root -v /var/run/docker.sock:/var/run/docker.sock
+      options: --user root --network host -v /var/run/docker.sock:/var/run/docker.sock
     continue-on-error: false
     steps:
       - uses: actions/checkout@v3
