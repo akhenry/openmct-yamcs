@@ -3,48 +3,56 @@ on:
   workflow_dispatch:
   pull_request:
     types:
-      - labeled
       - opened
   schedule:
     - cron: "0 0 * * 1-5"
   push:
-    branches:
-      - master
-
 jobs:
   yamcs-quickstart-e2e:
-    if: ${{ github.event.label.name == 'pr:e2e:quickstart' }} || ${{ github.event.action == 'opened' }}
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    continue-on-error: true
-    strategy:
-      matrix:
-        yamcs-version:
-          - default
-          - 5.9.8 #viper
-          ## disabling until we get confirmation- 5.3.2 #ab
-        openmct-version:
-          - latest
-          - stable
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-jammy
+      options: --user root -v /var/run/docker.sock:/var/run/docker.sock
+    continue-on-error: false
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "24.14.1"
       - uses: actions/checkout@v3
         with:
           repository: yamcs/quickstart
           path: 'quickstart'
-      - name: replace yamcsVersion with matrix param
-        if: matrix.yamcs-version != 'default'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Install dependencies
         run: |
-          mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=${{ matrix.yamcs-version }}
+          apt-get update -y
+          apt-get install -y docker.io make maven jq python3 socat
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+      - name: replace yamcsVersion with target test version
+        run: mvn -B versions:set-property -Dproperty=yamcsVersion -DnewVersion=5.9.8
+        working-directory: quickstart
+      - name: fix DIND volume path translation issue
+        run: |
+          sed -i 's|- \.\./:/yamcs|- /home/runner/work/openmct-yamcs/openmct-yamcs/quickstart:/yamcs|' docker/docker-compose.yml
         working-directory: quickstart
       - name: trigger make all from docker dir. Orphan and redirect output to docker/makeout.txt
         run: |
+          HOST_IP=$(ip route | awk '/default/ {print $3}')
+          sed -i "s|--rate=10|--rate=10 --tm_host=$HOST_IP|g" Makefile
           touch makeout.txt
-          make all-10hz &> makeout.txt &
+          nohup make all-10hz > makeout.txt 2>&1 &
         working-directory: quickstart/docker
+      - name: Map localhost to Docker Host
+        run: |
+          HOST_IP=$(ip route | awk '/default/ {print $3}')
+          socat TCP-LISTEN:8090,fork,reuseaddr TCP:$HOST_IP:8090 &
       - run: npm install
       - name: Get Open MCT e2e tests
         uses: nick-fields/retry@v3
@@ -52,16 +60,14 @@ jobs:
           timeout_minutes: 10
           max_attempts: 3
           command: npm run test:getopensource
+      - name: Install workspace dependencies (ignore-scripts suppresses posttest hook)
+        run: npm install
       - name: Run build:example based on openmct-version
         run: |
-          if [ "${{ matrix.openmct-version }}" = "latest" ]; then
-            npm run build:example:master
-          elif [ "${{ matrix.openmct-version }}" = "stable" ]; then
-            npm run build:example
-          fi
-      - run: npx playwright@1.47.2 install chromium
+          npm run build:example:master
       - name: Check that yamcs is available
         run: |
+          docker compose -f quickstart/docker/docker-compose.yml ps
           docker ps -a
           npm run wait-for-yamcs
       - name: Check Yamcs installed version
@@ -77,27 +83,32 @@ jobs:
         run: npm run test:e2e:quickstart
       - name: Capture docker logs to file
         if: always()
-        run: docker logs yamcs > yamcs-docker-log.txt 2>&1
+        run: docker compose logs yamcs > ../../yamcs-docker-log.txt 2>&1
+        working-directory: quickstart/docker
       - name: archive docker logs
         if: always()
         uses: actions/upload-artifact@v3
         with:
           path: yamcs-docker-log.txt
+          name: yamcs-docker-log
       - name: Archive makeout.txt
         if: always()
         uses: actions/upload-artifact@v3
         with:
           path: /quickstart/docker/makeout.txt
+          name: makeout
       - name: Archive test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           path: test-results
+          name: test-results
       - name: Archive html test results
         if: always()
         uses: actions/upload-artifact@v3
         with:
           path: tests/html-test-results
+          name: html-test-results
       - name: Remove pr:e2e:quickstart label (if present)
         if: ${{ contains(github.event.pull_request.labels.*.name, 'pr:e2e:quickstart') }}
         uses: actions/github-script@v6
