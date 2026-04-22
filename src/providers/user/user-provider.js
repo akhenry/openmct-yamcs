@@ -74,9 +74,6 @@ export default class UserProvider extends EventEmitter {
     }
 
     async canProvideStatusForRole(role) {
-        // eslint-disable-next-line func-style
-        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        await sleep(5000);
         const statusRoles = await this.roleStatus.getAllStatusRoles();
 
         return statusRoles.includes(role);
