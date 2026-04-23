@@ -90,7 +90,9 @@ export default class OperatorStatusTelemetry {
     async getAllStatusRoles() {
         await this.#readyPromise;
 
-        return Array.from(this.#statusRoles);
+        const allStatusRoles = Array.from(this.#statusRoles);
+
+        return allStatusRoles;
     }
     async getDefaultStatusForRole() {
         const possibleStatuses = await this.getPossibleStatuses();
