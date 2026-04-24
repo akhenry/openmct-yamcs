@@ -69,7 +69,7 @@ export default function createYamcsUser(UserClass) {
                 return [];
             }
 
-            const writeParameters = this.objectPrivileges.find(entry => entry.type === 'WriteParameter')?.object || [];
+            const writeParameters = this.objectPrivileges.find(entry => entry.type === 'WriteParameter')?.objects || [];
 
             return writeParameters;
         }
