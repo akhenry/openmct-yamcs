@@ -45,7 +45,8 @@
     "node": ">=24.14.1"
   },
   "optionalDependencies": {
-    "openmct": "github:nasa/openmct#master"
+    "openmct": "github:nasa/openmct#master",
+    "fsevents": "2.3.2"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
