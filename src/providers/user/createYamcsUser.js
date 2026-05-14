@@ -51,7 +51,7 @@ export default function createYamcsUser(UserClass) {
             confirmationTime,
             lastLoginTime,
             roles = [],
-            objectPrivilege
+            objectPrivileges
         }) {
             super(name, name); // id, name (yamcs doesn't provide an id)
 
@@ -61,7 +61,7 @@ export default function createYamcsUser(UserClass) {
             this.confirmationTime = confirmationTime;
             this.lastLoginTime = lastLoginTime;
             this.roles = roles.map(role => role.name);
-            this.objectPrivileges = objectPrivilege;
+            this.objectPrivileges = objectPrivileges;
         }
 
         getWriteParameters() {
@@ -69,7 +69,7 @@ export default function createYamcsUser(UserClass) {
                 return [];
             }
 
-            const writeParameters = this.objectPrivileges.find(entry => entry.type === 'WriteParameter')?.object || [];
+            const writeParameters = this.objectPrivileges.find(entry => entry.type === 'WriteParameter')?.objects || [];
 
             return writeParameters;
         }
