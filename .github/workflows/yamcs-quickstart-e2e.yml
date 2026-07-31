@@ -81,6 +81,15 @@ jobs:
           fi
       - name: Run Quickstart tests
         run: npm run test:e2e:quickstart
+      - name: Generate local coverage report
+        if: always()
+        run: npm run cov:e2e:report
+      - name: Archive coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          path: coverage/e2e
+          name: coverage-e2e
       - name: Capture docker logs to file
         if: always()
         run: docker compose logs yamcs > ../../yamcs-docker-log.txt 2>&1
