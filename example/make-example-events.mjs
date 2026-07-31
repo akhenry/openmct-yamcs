@@ -1,7 +1,10 @@
 import process from 'process';
 
 const INSTANCE = "myproject";
-const URL = `http://localhost:8090/api/archive/${INSTANCE}/events`;
+// Overridable so multiple worktree checkouts can post events against
+// non-conflicting YAMCS instances in parallel (see tests/patch-quickstart-ports.sh).
+const YAMCS_HTTP_PORT = Number(process.env.YAMCS_HTTP_PORT) || 8090;
+const URL = `http://localhost:${YAMCS_HTTP_PORT}/api/archive/${INSTANCE}/events`;
 
 const events = [
     {
