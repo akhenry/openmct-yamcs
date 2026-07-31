@@ -24,6 +24,12 @@ jobs:
         with:
           repository: yamcs/quickstart
           path: 'quickstart'
+          # Pinned so the patch-quickstart scripts' assumptions about
+          # quickstart's file layout/format (mdb/, yamcs.myproject.yaml,
+          # docker-compose.yml, etc.) can't silently break from upstream
+          # drift. Bump deliberately and re-verify the patch scripts when
+          # picking up a newer quickstart.
+          ref: 61e94169687f8729832c754e0813bf90271e4800
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
