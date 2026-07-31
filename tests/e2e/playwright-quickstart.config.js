@@ -1,12 +1,20 @@
 // playwright.config.js
 // @ts-check
+import path from 'path';
 
 // Overridable so multiple worktree checkouts can run the suite against
 // non-conflicting ports in parallel (see tests/patch-quickstart-ports.sh).
 const webpackPort = Number(process.env.WEBPACK_PORT) || 9000;
 const baseOrigin = `http://localhost:${webpackPort}`;
 
-/** @type {import('@playwright/test').PlaywrightTestConfig<{ failOnConsoleError: boolean, myItemsFolderName: string }>} */
+// Raw per-test coverage JSON is written here by e2e/baseFixtures.js's `context`
+// fixture; `npm run cov:e2e:report` (nyc) reads it from this same location.
+// (Avoid `import.meta.url` here: this config is loaded through Playwright's
+// CJS transform pipeline, and `import.meta` breaks that — use `__dirname`,
+// which is available in that context, instead.)
+const istanbulCLIOutput = path.join(__dirname, '../../.nyc_output');
+
+/** @type {import('@playwright/test').PlaywrightTestConfig<{ failOnConsoleError: boolean, myItemsFolderName: string, coveragePath: string }>} */
 const config = {
     retries: 1,
     testDir: '.',
@@ -21,6 +29,7 @@ const config = {
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
         failOnConsoleError: false,
+        coveragePath: istanbulCLIOutput,
         storageState: {
             cookies: [],
             origins: [
