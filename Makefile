@@ -1,8 +1,8 @@
-.PHONY: all clone-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
+.PHONY: all clone-quickstart patch-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
 
-test-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
+test-all: clone-quickstart patch-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
 
-start-all: clone-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
+start-all: clone-quickstart patch-quickstart install-quickstart install-openmct-yamcs sanity-test build-example start-openmct
 
 clone-quickstart:
 	@echo "Running target: clone-quickstart"
@@ -12,6 +12,12 @@ clone-quickstart:
 	else \
 		echo "Directory 'quickstart' already exists."; \
 	fi
+
+patch-quickstart:
+	@echo "Running target: patch-quickstart"
+	@for f in tests/patch-quickstart-*.sh; do \
+		if [ -f "$$f" ]; then echo "Applying $$f"; sh "$$f"; fi; \
+	done
 
 install-quickstart:
 	@echo "Running target: install-quickstart"
