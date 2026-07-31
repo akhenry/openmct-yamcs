@@ -1,10 +1,19 @@
 import installYamcsPlugins from '../src/openmct-yamcs.js';
 
+// Derived from window.location (rather than hardcoded to port 9000) so that
+// multiple worktree checkouts can run the dev server on non-conflicting
+// ports in parallel (see .webpack/webpack.dev.mjs and
+// tests/patch-quickstart-ports.sh).
+const { protocol, hostname, port } = window.location;
+const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
+const httpOrigin = `${protocol}//${hostname}:${port}`;
+const wsOrigin = `${wsProtocol}//${hostname}:${port}`;
+
 const config = {
-    yamcsDictionaryEndpoint: "http://localhost:9000/yamcs-proxy/",
-    yamcsHistoricalEndpoint: "http://localhost:9000/yamcs-proxy/",
-    yamcsWebsocketEndpoint: "ws://localhost:9000/yamcs-proxy-ws/",
-    yamcsUserEndpoint: "http://localhost:9000/yamcs-proxy/api/user/",
+    yamcsDictionaryEndpoint: `${httpOrigin}/yamcs-proxy/`,
+    yamcsHistoricalEndpoint: `${httpOrigin}/yamcs-proxy/`,
+    yamcsWebsocketEndpoint: `${wsOrigin}/yamcs-proxy-ws/`,
+    yamcsUserEndpoint: `${httpOrigin}/yamcs-proxy/api/user/`,
     yamcsInstance: "myproject",
     yamcsProcessor: "realtime",
     yamcsFolder: "myproject",
