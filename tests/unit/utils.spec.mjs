@@ -30,7 +30,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 
-import { getValue, flattenObjectArray } from '../../src/utils.js';
+import { getValue, flattenObjectArray, qualifiedNameFromParameterId, accumulateResults } from '../../src/utils.js';
 
 describe('getValue unsupported-type fallbacks', () => {
     it('returns the unsupported-type marker for an unrecognized scalar type', () => {
@@ -78,5 +78,59 @@ describe('flattenObjectArray', () => {
         ]);
 
         expect(result.foo).toBe('bar');
+    });
+});
+
+/*
+ * qualifiedNameFromParameterId's namespace-present branch: the only real call site
+ * (latest-telemetry-provider.js) passes whatever `id` shape Yamcs's batchGet response
+ * returns, which in practice is always a plain {name} with no `namespace` (namespace
+ * is for XTCE alias-based lookups, which this repo's REST calls never use) -- so the
+ * namespaced-object branch is only reachable by calling this directly with that shape.
+ */
+describe('qualifiedNameFromParameterId', () => {
+    it('joins namespace and name when namespace is present', () => {
+        expect(qualifiedNameFromParameterId({ namespace: 'MDB:OPS Name', name: 'Battery1_Temp' }))
+            .toBe('MDB:OPS Name/Battery1_Temp');
+    });
+
+    it('returns just the name when namespace is absent', () => {
+        expect(qualifiedNameFromParameterId({ name: '/myproject/Battery1_Temp' }))
+            .toBe('/myproject/Battery1_Temp');
+    });
+
+    it('passes a plain string through unmodified (idempotent)', () => {
+        expect(qualifiedNameFromParameterId('/myproject/Battery1_Temp')).toBe('/myproject/Battery1_Temp');
+    });
+
+    it('throws for a null/undefined identifier', () => {
+        expect(() => qualifiedNameFromParameterId(null)).toThrow('Cannot make string from null identifier');
+    });
+});
+
+/*
+ * accumulateResults' pagination-continuation branch (recursing when a response
+ * includes a continuationToken and the total limit hasn't been reached) needs a
+ * response large enough to require multiple pages -- QuickStart's demo dataset
+ * doesn't produce that within e2e test time bounds, so it's mocked directly here.
+ */
+describe('accumulateResults pagination', () => {
+    it('recurses to fetch the next page when a continuationToken is present', async () => {
+        const responses = [
+            { items: [1, 2], continuationToken: 'page-2' },
+            { items: [3, 4] }
+        ];
+        global.fetch = vi.fn(() => {
+            const body = responses.shift();
+
+            return Promise.resolve({ json: () => Promise.resolve(body) });
+        });
+
+        const result = await accumulateResults('http://localhost:8090/api/x', {}, 'items', [], Infinity);
+
+        expect(result).toEqual([1, 2, 3, 4]);
+        expect(global.fetch).toHaveBeenCalledTimes(2);
+
+        delete global.fetch;
     });
 });

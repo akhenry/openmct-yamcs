@@ -78,6 +78,10 @@ function createFetchMock(parameters) {
             return jsonResponse({ overrides: [] });
         }
 
+        if (urlString.includes('/queues')) {
+            return jsonResponse({ queues: [] });
+        }
+
         return jsonResponse({});
     });
 }
@@ -163,5 +167,54 @@ describe('YamcsObjectProvider malformed status parameters', () => {
             namespace: ''
         }))
             .rejects.toThrow('Mission Status Parameter "/myproject/MissionStatusA" does not specify a mission action');
+    });
+});
+
+/*
+ * openmct's real 'destroy' event only fires on full app teardown/page unload, which
+ * Playwright doesn't trigger cleanly mid-test -- so #unsubscribeFromAll (registered as
+ * the 'destroy' handler in the constructor) is exercised here by capturing that handler
+ * and invoking it with the provider instance as `this` (the registration itself doesn't
+ * bind `this`, so calling the captured reference completely bare -- as openmct's own
+ * event emitter would -- throws; that's a separate, pre-existing calling-convention
+ * quirk this test isn't trying to fix, just working around to exercise the method's
+ * own logic directly).
+ */
+describe('YamcsObjectProvider#unsubscribeFromAll (destroy handler)', () => {
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('unsubscribes from MDB changes when the destroy handler fires', async () => {
+        const parameter = {
+            name: 'Battery1_Temp',
+            qualifiedName: '/myproject/Battery1_Temp',
+            type: { engType: 'float' },
+            alias: []
+        };
+        const provider = createProvider([parameter]);
+
+        // Trigger a dictionary load so mdbChangesUnsubscribe gets set to a real mock function.
+        await provider.get({ key: '~myproject~Battery1_Temp', namespace: '' });
+        expect(provider.mdbChangesUnsubscribe).toBeDefined();
+        const mdbChangesUnsubscribe = provider.mdbChangesUnsubscribe;
+
+        const destroyCall = provider.openmct.on.mock.calls.find(([event]) => event === 'destroy');
+        expect(destroyCall).toBeDefined();
+        const [, destroyHandler] = destroyCall;
+
+        destroyHandler.call(provider);
+
+        expect(mdbChangesUnsubscribe).toHaveBeenCalled();
+        expect(provider.mdbChangesUnsubscribe).toBeUndefined();
+    });
+
+    it('is a no-op when there is nothing to unsubscribe from', async () => {
+        const provider = createProvider([]);
+
+        const destroyCall = provider.openmct.on.mock.calls.find(([event]) => event === 'destroy');
+        const [, destroyHandler] = destroyCall;
+
+        expect(() => destroyHandler.call(provider)).not.toThrow();
     });
 });

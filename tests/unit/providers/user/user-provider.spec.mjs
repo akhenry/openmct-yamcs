@@ -219,6 +219,40 @@ describe('UserProvider role-gated status paths', () => {
         });
     });
 
+    describe('getStatusRoleForCurrentUser', () => {
+        it('returns the first status role the current user holds', async () => {
+            const roleStatus = {
+                getAllStatusRoles: vi.fn(() => Promise.resolve(['FlightDirector', 'CapCom']))
+            };
+            const provider = createProvider({
+                userInfo: {
+                    name: 'operator',
+                    roles: [{ name: 'CapCom' }],
+                    objectPrivileges: []
+                },
+                roleStatus
+            });
+
+            await expect(provider.getStatusRoleForCurrentUser()).resolves.toBe('CapCom');
+        });
+
+        it('returns undefined when the current user holds none of the status roles', async () => {
+            const roleStatus = {
+                getAllStatusRoles: vi.fn(() => Promise.resolve(['FlightDirector', 'CapCom']))
+            };
+            const provider = createProvider({
+                userInfo: {
+                    name: 'guest',
+                    roles: [],
+                    objectPrivileges: []
+                },
+                roleStatus
+            });
+
+            await expect(provider.getStatusRoleForCurrentUser()).resolves.toBeUndefined();
+        });
+    });
+
     describe('getRolesInStatus', () => {
         it('returns only the roles whose latest status matches the requested status', async () => {
             const telemetryObjects = {
