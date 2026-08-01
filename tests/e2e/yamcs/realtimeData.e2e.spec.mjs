@@ -537,6 +537,75 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
         });
     });
 
+    /**
+     * Regression test for https://github.com/akhenry/openmct-yamcs/issues/271
+     * ("Potential for telemetry to be 'missed' by subscribers"), fixed in
+     * https://github.com/akhenry/openmct-yamcs/pull/277.
+     *
+     * Open MCT's TelemetryAPI#subscribe multiplexes multiple local subscriptions for
+     * the same parameter down to a single provider-level subscription (see
+     * TelemetryAPI's #subscribeCache): only the *first* subscribe() call for a given
+     * parameter actually invokes provider.subscribe(), which is what triggers Yamcs to
+     * push its initial/current value over the websocket. A "late" subscriber -- e.g. a
+     * second view opening for a parameter that's already subscribed elsewhere -- is
+     * simply added to the existing multiplexed callback list and does *not* itself
+     * receive a replay of that initial value; it only gets values pushed after it joins.
+     *
+     * To backfill an initial value for a late subscriber, Open MCT views instead call
+     * `openmct.telemetry.request(domainObject, {strategy: 'latest'})`, which -- in
+     * real-time mode -- routes through YamcsHistoricalTelemetryProvider#request here.
+     * Before the fix, that code path just returned `[]` on the assumption that the
+     * (single, multiplexed) websocket subscription would always deliver the value
+     * instead, so a late subscriber could be left with no data at all until the
+     * parameter's next update. The fix makes that request path actively fetch the
+     * current value via YAMCS's batch parameter-value endpoint
+     * (LatestTelemetryProvider#requestLatest) instead of assuming a websocket push.
+     */
+    test('Late subscriber receives the latest value via request(latest) in realtime mode (regression for #271)', async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const telemetryObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: '~myproject~Battery1_Temp'
+            });
+
+            // First subscriber -- e.g. the first view that opens for this parameter.
+            // This is the subscription that actually establishes the underlying Yamcs
+            // websocket subscription and receives Yamcs's initial push.
+            const firstSubscriberDatum = await new Promise((resolve) => {
+                const unsubscribe = openmct.telemetry.subscribe(telemetryObject, (datum) => {
+                    unsubscribe();
+                    resolve(datum);
+                });
+            });
+
+            // Late subscriber -- simulates a second view opening for the same parameter
+            // after the first subscription (and its initial push) already happened.
+            // TelemetryAPI multiplexes this down to the same provider-level subscription,
+            // so it will NOT itself get a replay of the initial value from the websocket --
+            // it relies entirely on this request() call to backfill its starting value.
+            const lateSubscriberResult = await openmct.telemetry.request(telemetryObject, {
+                strategy: 'latest'
+            });
+
+            return {
+                firstSubscriberDatum,
+                lateSubscriberResult
+            };
+        });
+
+        // Sanity check: the first subscriber's own websocket subscription really did
+        // receive a value (confirms the scenario is set up correctly).
+        expect(result.firstSubscriberDatum).toBeDefined();
+        expect(result.firstSubscriberDatum.value).not.toBeUndefined();
+
+        // The actual regression: the late subscriber's request for the latest value must
+        // not come back empty.
+        expect(result.lateSubscriberResult.length).toBe(1);
+        expect(result.lateSubscriberResult[0]).toBeDefined();
+        expect(result.lateSubscriberResult[0].value).not.toBeUndefined();
+    });
+
     test('Open MCT does not drop telemetry when a burst of telemetry arrives that exceeds 60 messages', async ({ page }) => {
         const PARAMETER_VALUES_COUNT = 60;
         /**
