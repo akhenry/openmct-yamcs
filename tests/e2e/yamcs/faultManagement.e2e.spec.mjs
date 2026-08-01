@@ -40,7 +40,7 @@ function getTriggeredFaultBySeverity(page, severity) {
     return page.getByLabel(new RegExp(`Fault triggered at.*${severity}.*`, 'i'));
 }
 
-test.describe("Fault Management @yamcs", () => {
+test.describe("Fault Management @yamcs @mutatesGlobalState", () => {
     test.beforeAll("activate alarms on the telemetry point", async () => {
         // Clear any fault instance left behind by a previous run that crashed/was
         // interrupted before its own afterAll ran (afterAll only clears the CURRENT
