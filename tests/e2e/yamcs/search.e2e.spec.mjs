@@ -74,4 +74,26 @@ test.describe("Quickstart search tests @yamcs", () => {
         await expect(page.getByLabel('Object Search Result').nth(3)).toContainText("CCSDS_Packet_ID.SecHdrFlag");
         await expect(page.getByLabel('Object Search Result').nth(4)).toContainText("CCSDS_Packet_ID.APID");
     });
+
+    test('Search matches a query that itself contains an underscore (regression for #215)', async ({ page }) => {
+        // #215: the adapter used '_' as both the aggregate-member-path
+        // delimiter and a literal character, so a query string that itself
+        // contained an underscore (as opposed to underscores only appearing
+        // in the result names, as in the tests above) could fail to match.
+        // Battery1_Temp is a plain (non-aggregate) parameter whose own name
+        // contains an underscore.
+        await page.goto("./");
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
+
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').click();
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('Battery1_Temp');
+
+        await expect(page.getByLabel('Object Search Result')).toHaveCount(1);
+        await expect(page.getByLabel('Object Search Result').nth(0)).toContainText("Battery1_Temp");
+
+        // A partial query that straddles the underscore should also match.
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('1_Temp');
+        await expect(page.getByLabel('Object Search Result').nth(0)).toContainText("Battery1_Temp");
+    });
 });

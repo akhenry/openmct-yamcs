@@ -133,6 +133,54 @@ test.describe("Telemetry Tables tests @yamcs", () => {
         expect(await assertTableRowsInOrder(telemTableAsc, 'asc')).toBe(true);
     });
 
+    test('Events and Commands expose sortable metadata (format) on non-time columns (regression for #442/#443)', async ({ page }) => {
+        // #442 reported that sorting Events/Command History tables by a
+        // non-time column (Message, Type, Command) silently did nothing.
+        // #443 traced this to events.js/commands.js telemetry metadata
+        // omitting `format` on those columns -- Open MCT's generic table
+        // sort depends on every sortable column having format metadata.
+        //
+        // Note: whether *clicking a column header actually reorders the
+        // table* is Open MCT core table-sort behavior (and, per the
+        // issue's own follow-up, a distinct core limitation tracked as
+        // nasa/openmct#7583 for non-persistable objects) -- not something
+        // this adapter controls or should assert on in its own suite. What
+        // this adapter *is* responsible for, and what #443 actually
+        // changed, is the metadata those columns carry. Assert that
+        // directly against the live dictionary.
+        const nonTimeColumnFormats = await page.evaluate(async () => {
+            const openmct = window.openmct;
+
+            const eventsObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: 'yamcs.events'
+            });
+            const eventsMetadata = openmct.telemetry.getMetadata(eventsObject);
+            const eventsValuesByKey = Object.fromEntries(
+                eventsMetadata.values().map((value) => [value.key, value.format])
+            );
+
+            const commandsObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: 'yamcs.commands'
+            });
+            const commandsMetadata = openmct.telemetry.getMetadata(commandsObject);
+            const commandsValuesByKey = Object.fromEntries(
+                commandsMetadata.values().map((value) => [value.key, value.format])
+            );
+
+            return {
+                eventsMessage: eventsValuesByKey.message,
+                eventsType: eventsValuesByKey.type,
+                commandsName: commandsValuesByKey.commandName
+            };
+        });
+
+        expect(nonTimeColumnFormats.eventsMessage).toBeTruthy();
+        expect(nonTimeColumnFormats.eventsType).toBeTruthy();
+        expect(nonTimeColumnFormats.commandsName).toBeTruthy();
+    });
+
     /**
      * Returns whether a list of timestamp based rows are in asc or desc order
      * @param { Node } telemTable Node for telemetry table
