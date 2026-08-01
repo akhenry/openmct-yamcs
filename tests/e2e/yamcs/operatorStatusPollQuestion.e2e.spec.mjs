@@ -106,7 +106,7 @@
 import { pluginFixtures } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 
-test.describe("Poll Question @yamcs", () => {
+test.describe("Poll Question @yamcs @mutatesGlobalState", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('./');
         // Wait for the dictionary-derived object tree to finish loading
@@ -240,7 +240,7 @@ test.describe("Operator Status classification @yamcs", () => {
     });
 });
 
-test.describe("Operator status set/get via active role @yamcs", () => {
+test.describe("Operator status set/get via active role @yamcs @mutatesGlobalState", () => {
     // openmct.user.status's setStatusForRole/canProvideStatusForRole gate on
     // openmct.user.getActiveRole() (sessionStorage, settable directly via
     // openmct.user.setActiveRole) and on whether the role is one of the
@@ -324,7 +324,7 @@ test.describe("Operator status set/get via active role @yamcs", () => {
     });
 });
 
-test.describe("Role-gated authorization checks via a faked user @yamcs", () => {
+test.describe("Role-gated authorization checks via a faked user @yamcs @mutatesGlobalState", () => {
     // canSetMissionStatus/canSetPollQuestion (WriteParameter-privilege based)
     // and hasRole/getPossibleRoles (roles based) are pure functions of the
     // JSON `src/providers/user/user-provider.js`'s `#getUserInfo` fetches
