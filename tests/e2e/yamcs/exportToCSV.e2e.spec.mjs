@@ -62,7 +62,11 @@ test.describe("Export to CSV action @yamcs", () => {
     });
 
     test('Shows an error notification when the export request fails', async ({ page }) => {
-        await page.route('**/*:exportParameterValues*', async (route) => {
+        // Playwright glob routes: a single `*` never matches `/`. The export URL's query
+        // string embeds the parameter's qualified name as `parameters=myproject/Name`, which
+        // contains a literal `/` -- a single trailing `*` can't span across it, so the route
+        // silently never matched and no request was ever intercepted. `**` matches across `/`.
+        await page.route('**:exportParameterValues**', async (route) => {
             await route.fulfill({
                 status: 500,
                 contentType: 'application/json',
