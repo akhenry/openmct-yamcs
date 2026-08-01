@@ -68,10 +68,39 @@
  *    ungated `openmct.user.status.getPollQuestion()` -- exercising
  *    `UserProvider.getPollQuestion` and
  *    `PollQuestionTelemetry.toPollQuestionObjectFromTelemetry` end-to-end.
- *  - Operator-status role-gated set/get (`setStatusForRole`,
- *    `getStatusForRole`, the "on duty"/"off duty" UI) is NOT e2e-testable
- *    here for the same root-cause reason and is intentionally out of scope
- *    for this spec -- see the classification-only test at the bottom.
+ *
+ * UPDATE: two more pieces of this ARE e2e-testable after all, and are
+ * covered further down in this file:
+ *
+ *  - Operator-status set/get for a role (`setStatusForRole`,
+ *    `getStatusForRole`, `getRolesInStatus`) turns out NOT to depend on the
+ *    current (guest) user's own roles at all. `openmct.user.status`'s
+ *    `setStatusForRole`/`canProvideStatusForRole` key off
+ *    `openmct.user.getActiveRole()` -- which is just sessionStorage, settable
+ *    directly via `openmct.user.setActiveRole(role)` -- and our own
+ *    `UserProvider#canProvideStatusForRole` (src/providers/user/user-provider.js)
+ *    only checks that the role is one of the MDB-registered status roles
+ *    (`OperatorStatusTelemetry#getAllStatusRoles`), not anything about the
+ *    logged-in user. So the real on-duty/off-duty round trip through YAMCS is
+ *    exercisable without any authentication or role faking whatsoever -- see
+ *    the "Operator status set/get via active role" describe block below.
+ *  - The privilege/role GATES themselves --
+ *    `canSetMissionStatus`/`canSetPollQuestion` (WriteParameter-privilege
+ *    based) and `hasRole`/`getPossibleRoles` (roles-based) -- are pure
+ *    functions of the JSON `src/providers/user/user-provider.js`'s
+ *    `#getUserInfo` fetches from `yamcsUserEndpoint`
+ *    (`GET .../api/user/`), via `src/providers/user/createYamcsUser.js`.
+ *    Nothing about that fetch is YAMCS-security-specific -- it's just an
+ *    HTTP response our own code parses -- so it's fakeable with Playwright's
+ *    `page.route`, the same technique Open MCT itself uses upstream to test
+ *    its own `OperatorStatus` plugin against synthetic roles
+ *    (`e2e/helper/addInitExampleUserMultipleRoles.js` in nasa/openmct, via a
+ *    fully client-side fake user provider). Faking the raw REST response
+ *    here is a better fit for openmct-yamcs specifically because it drives
+ *    our *actual* provider code end-to-end through the real UI, rather than
+ *    swapping in a generic fake provider that would bypass it entirely. See
+ *    the "Role-gated authorization checks via a faked user" describe block
+ *    below.
  */
 
 import { pluginFixtures } from 'openmct-e2e';
@@ -184,25 +213,15 @@ test.describe("Poll Question @yamcs", () => {
 });
 
 test.describe("Operator Status classification @yamcs", () => {
-    // Role-gated operator-status reads/writes (setStatusForRole,
-    // getStatusForRole, and the "on duty" / "off duty" UI) are NOT
-    // e2e-testable in this environment and are intentionally out of scope
-    // here: YAMCS QuickStart's anonymous/guest user (security disabled) has
-    // no roles mechanism at all, so `getStatusRoleForCurrentUser` in
-    // `src/providers/user/user-provider.js` can never resolve a role for the
-    // current user. This was confirmed by tracing YAMCS's
-    // `SecurityStore.java` in the prerequisite unit that added the overlay
-    // MDB used by this spec; it is a hard YAMCS limitation, not a gap in
-    // openmct-yamcs, and is expected residue for a later unit-test pass.
-    //
-    // What IS real, exercisable src/ code without needing roles is the
-    // alias-parsing/classification branch in object-provider.js: parameters
-    // carrying the `OpenMCT:type=yamcs.operatorStatus` alias must be
-    // recognized as operator-status telemetry (via
+    // The alias-parsing/classification branch in object-provider.js:
+    // parameters carrying the `OpenMCT:type=yamcs.operatorStatus` alias must
+    // be recognized as operator-status telemetry (via
     // `isOperatorStatusParameter`/`getRoleFromParameter` in
     // `src/providers/user/operator-status-parameter.js`) rather than falling
     // through to generic numeric/enumerated telemetry. That is what this
-    // test covers.
+    // test covers. The actual set/get round trip for a role, and the
+    // privilege gates that guard it, are covered by the two describe blocks
+    // further down in this file.
     test.beforeEach(async ({ page }) => {
         await page.goto('./');
         // See the note in the "Poll Question @yamcs" describe block above:
@@ -218,5 +237,220 @@ test.describe("Operator Status classification @yamcs", () => {
 
         await searchInput.fill('ScienceOperatorStatus');
         await expect(page.getByLabel('ScienceOperatorStatus yamcs.operatorStatus result')).toBeVisible({ timeout: 15000 });
+    });
+});
+
+test.describe("Operator status set/get via active role @yamcs", () => {
+    // openmct.user.status's setStatusForRole/canProvideStatusForRole gate on
+    // openmct.user.getActiveRole() (sessionStorage, settable directly via
+    // openmct.user.setActiveRole) and on whether the role is one of the
+    // MDB-registered status roles (OperatorStatusTelemetry#getAllStatusRoles,
+    // populated from the overlay MDB's FlightOperatorStatus/
+    // ScienceOperatorStatus OpenMCT:role aliases) -- neither check depends on
+    // the current (guest) user's own fetched roles. So this exercises the
+    // real on-duty/off-duty round trip through YAMCS with no authentication
+    // or user-info faking at all, unlike the describe block below.
+    test.beforeEach(async ({ page }) => {
+        await page.goto('./');
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+    });
+
+    test.afterEach(async ({ page }) => {
+        // The "set" test below mutates the real FlightOperatorStatus
+        // parameter, shared/persistent state. Reset it back to OFF DUTY and
+        // clear the active role so a later spec doesn't observe leftover state.
+        await page.evaluate(async () => {
+            const possibleStatuses = await window.openmct.user.status.getPossibleStatuses();
+            const offDuty = possibleStatuses.find((status) => status.label === 'OFF DUTY');
+            if (offDuty) {
+                await window.openmct.user.status.setStatusForRole(offDuty);
+            }
+
+            window.openmct.user.setActiveRole(null);
+        });
+    });
+
+    test('Operator status can be set and read back for an active role', async ({ page }) => {
+        await page.evaluate(() => window.openmct.user.setActiveRole('Flight'));
+
+        const activeRole = await page.evaluate(() => window.openmct.user.getActiveRole());
+        expect(activeRole).toBe('Flight');
+
+        // canProvideStatusForCurrentUser checks the active role against the
+        // MDB-registered status roles -- confirms `Flight` (from the overlay
+        // MDB) is recognized, independent of any user-privilege data.
+        const canProvideStatus = await page.evaluate(
+            () => window.openmct.user.status.canProvideStatusForCurrentUser()
+        );
+        expect(canProvideStatus).toBe(true);
+
+        const possibleStatuses = await page.evaluate(
+            () => window.openmct.user.status.getPossibleStatuses()
+        );
+        const onDuty = possibleStatuses.find((status) => status.label === 'ON DUTY');
+        expect(onDuty).toBeDefined();
+
+        // Real PUT against YAMCS via OperatorStatusTelemetry#setStatusForRole.
+        const setResult = await page.evaluate(
+            (status) => window.openmct.user.status.setStatusForRole(status),
+            onDuty
+        );
+        expect(setResult).toBe(true);
+
+        // Real read-back via OperatorStatusTelemetry#getTelemetryObjectForRole
+        // + LatestTelemetryProvider#requestLatest. The realtime websocket
+        // subscription populating the LAD cache can lag the REST PUT by a
+        // beat, so poll rather than asserting immediately.
+        await expect.poll(async () => {
+            const status = await page.evaluate(
+                (role) => window.openmct.user.status.getStatusForRole(role),
+                'Flight'
+            );
+
+            return status?.label;
+        }).toBe('ON DUTY');
+
+        // UserProvider#getRolesInStatus (src/providers/user/user-provider.js)
+        // has no equivalent in Open MCT's public StatusAPI/UserAPI, so it's
+        // reached via the provider instance directly rather than
+        // `window.openmct.user.status.*` -- still real src/ code exercised
+        // end-to-end (real telemetry objects, real LAD reads), just a
+        // different entry point since openmct core never calls this method.
+        const rolesInStatus = await page.evaluate(
+            (statusKey) => window.openmct.user.getProvider().getRolesInStatus(statusKey),
+            onDuty.key
+        );
+        expect(rolesInStatus).toContain('Flight');
+    });
+});
+
+test.describe("Role-gated authorization checks via a faked user @yamcs", () => {
+    // canSetMissionStatus/canSetPollQuestion (WriteParameter-privilege based)
+    // and hasRole/getPossibleRoles (roles based) are pure functions of the
+    // JSON `src/providers/user/user-provider.js`'s `#getUserInfo` fetches
+    // from `yamcsUserEndpoint` (GET .../api/user/), via
+    // `src/providers/user/createYamcsUser.js`. That fetch is a plain HTTP
+    // call our own code parses -- nothing YAMCS-security-specific about it --
+    // so it's fakeable with Playwright's `page.route`, exercising these gates
+    // for real without needing YAMCS auth enabled (which PR #533 found breaks
+    // ReadParameter access for every other spec if done naively).
+    //
+    // #getUserInfo caches its result for the lifetime of the page's JS
+    // context, so the route must be registered BEFORE the navigation that
+    // triggers the first fetch -- each test below sets up its route, then
+    // navigates, rather than relying on a shared beforeEach.
+    const POLL_QUESTION_PARAMETER = '/OpenMCTTest/PollQuestion';
+    const MISSION_STATUS_PARAMETER = '/OpenMCTTest/DrivingStatus';
+
+    function fakeUserInfo({ roles = [], writeParameters = [] } = {}) {
+        return {
+            name: 'guest',
+            active: true,
+            superuser: true,
+            roles: roles.map((name) => ({ name })),
+            objectPrivileges: writeParameters.length > 0
+                ? [{ type: 'WriteParameter', objects: writeParameters }]
+                : []
+        };
+    }
+
+    test('Default (unfaked) guest user has no privileges or roles', async ({ page }) => {
+        await page.goto('./');
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+
+        const [canSetMissionStatus, canSetPollQuestion, hasFlightRole, possibleRoles] = await page.evaluate(
+            () => Promise.all([
+                window.openmct.user.status.canSetMissionStatus(),
+                window.openmct.user.status.canSetPollQuestion(),
+                window.openmct.user.hasRole('Flight'),
+                window.openmct.user.getPossibleRoles()
+            ])
+        );
+
+        expect(canSetMissionStatus).toBe(false);
+        expect(canSetPollQuestion).toBe(false);
+        expect(hasFlightRole).toBe(false);
+        expect(possibleRoles).toEqual([]);
+    });
+
+    test('A user with a WriteParameter privilege on the poll question can set it via the real gated API', async ({ page }) => {
+        await page.route('**/yamcs-proxy/api/user/**', (route) => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(fakeUserInfo({
+                roles: ['Flight'],
+                writeParameters: [POLL_QUESTION_PARAMETER]
+            }))
+        }));
+
+        await page.goto('./');
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+
+        const [canSetPollQuestion, hasFlightRole, possibleRoles] = await page.evaluate(
+            () => Promise.all([
+                window.openmct.user.status.canSetPollQuestion(),
+                window.openmct.user.hasRole('Flight'),
+                window.openmct.user.getPossibleRoles()
+            ])
+        );
+        expect(canSetPollQuestion).toBe(true);
+        expect(hasFlightRole).toBe(true);
+        expect(possibleRoles).toContain('Flight');
+
+        // Unlike the "Poll question can be set" test above (which has to
+        // fall back to a raw REST PUT because the guest user is gated off),
+        // this user's fake WriteParameter privilege makes the real,
+        // fully-gated `openmct.user.status.setPollQuestion` succeed --
+        // exercising StatusAPI's `canSetPollQuestion` check,
+        // `UserProvider#setPollQuestion`, and
+        // `PollQuestionTelemetry#setPollQuestion` end-to-end.
+        const uniquePollQuestion = `Are the solar panels deployed? ${Date.now()}`;
+        const setResult = await page.evaluate(
+            (question) => window.openmct.user.status.setPollQuestion(question),
+            uniquePollQuestion
+        );
+        expect(setResult).toBe(true);
+
+        await expect.poll(async () => {
+            const pollQuestion = await page.evaluate(
+                () => window.openmct.user.status.getPollQuestion()
+            );
+
+            return pollQuestion?.question;
+        }).toBe(uniquePollQuestion);
+
+        // Clean up: this test mutates the real, shared PollQuestion parameter.
+        await page.evaluate(() => fetch('/yamcs-proxy/api/processors/myproject/realtime/parameters/OpenMCTTest/PollQuestion', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'STRING', stringValue: '' })
+        }).catch(() => {}));
+    });
+
+    test('A user with a WriteParameter privilege on a mission-status action can set mission status', async ({ page }) => {
+        await page.route('**/yamcs-proxy/api/user/**', (route) => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(fakeUserInfo({
+                writeParameters: [MISSION_STATUS_PARAMETER]
+            }))
+        }));
+
+        await page.goto('./');
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+
+        // Confirms the two gates discriminate by parameter, not just "any
+        // WriteParameter privilege unlocks everything": this user's
+        // objectPrivileges grant write on a mission-status parameter only,
+        // so canSetPollQuestion (checked against pollQuestionParameter's
+        // qualifiedName, not the mission-status one) must stay false.
+        const [canSetMissionStatus, canSetPollQuestion] = await page.evaluate(
+            () => Promise.all([
+                window.openmct.user.status.canSetMissionStatus(),
+                window.openmct.user.status.canSetPollQuestion()
+            ])
+        );
+        expect(canSetPollQuestion).toBe(false);
+        expect(canSetMissionStatus).toBe(true);
     });
 });
