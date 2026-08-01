@@ -45,7 +45,7 @@ const { test, expect } = pluginFixtures;
 const COMMANDS_TABLE_URL = './#/browse/taxonomy:spacecraft/taxonomy:yamcs.commands'
     + '?tc.mode=local&tc.startDelta=120000&tc.endDelta=30000&tc.timeSystem=utc&view=table';
 
-test.describe("Commands @yamcs", () => {
+test.describe("Commands @yamcs @mutatesGlobalState", () => {
     let yamcsURL;
 
     test.beforeEach(async ({ page }) => {
