@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Overlay SpaceSystem loaded alongside the stock YAMCS QuickStart MDB
+  (see tests/patch-quickstart-mdb.sh) so that e2e specs can exercise
+  openmct-yamcs features that key off `OpenMCT:*` XTCE aliases. None of
+  these parameters need the TM/TC simulator pipeline: they are all
+  dataSource="local", meaning they are set directly through the YAMCS
+  REST API (or by openmct-yamcs itself) rather than being derived from
+  telemetry packets.
+
+  The alias syntax below is based on the example in
+  src/providers/mission-status/README.md.
+-->
+<SpaceSystem name="OpenMCTTest" shortDescription="Open MCT Test Parameters"
+  xmlns="http://www.omg.org/spec/XTCE/20180204"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <LongDescription>
+    Parameters that are used for Open MCT e2e testing only. Covers mission
+    status, operator status, poll question, imagery, OpenMCT:omit, and a
+    plain OpenMCT:type override.
+  </LongDescription>
+
+  <Header validationStatus="Draft" classification="none" />
+  <TelemetryMetaData>
+    <ParameterTypeSet>
+      <!-- Defines the possible options for all mission actions -->
+      <EnumeratedParameterType name="MissionStatusType">
+        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+        <EnumerationList>
+          <Enumeration value="0" label="NO GO" shortDescription="No Go" />
+          <Enumeration value="1" label="GO" shortDescription="Go" />
+        </EnumerationList>
+      </EnumeratedParameterType>
+
+      <!-- Defines the possible options for all operator status roles -->
+      <EnumeratedParameterType name="OperatorStatusType">
+        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+        <EnumerationList>
+          <Enumeration value="0" label="OFF DUTY" shortDescription="Off Duty" />
+          <Enumeration value="1" label="ON DUTY" shortDescription="On Duty" />
+        </EnumerationList>
+      </EnumeratedParameterType>
+
+      <StringParameterType name="PollQuestionType">
+        <StringDataEncoding encoding="UTF-8">
+          <SizeInBits>
+            <Fixed>
+              <FixedValue>4096</FixedValue>
+            </Fixed>
+          </SizeInBits>
+        </StringDataEncoding>
+      </StringParameterType>
+
+      <BinaryParameterType name="ImageType">
+        <BinaryDataEncoding>
+          <SizeInBits>
+            <FixedValue>65536</FixedValue>
+          </SizeInBits>
+        </BinaryDataEncoding>
+      </BinaryParameterType>
+
+      <IntegerParameterType name="OmittedType" signed="false">
+        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+      </IntegerParameterType>
+
+      <IntegerParameterType name="OverriddenType" signed="false">
+        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+      </IntegerParameterType>
+    </ParameterTypeSet>
+
+    <ParameterSet>
+      <!-- Mission Status (mission actions) -->
+      <Parameter parameterTypeRef="MissionStatusType" name="DrivingStatus">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.missionStatus" />
+          <Alias nameSpace="OpenMCT:action" alias="drivingStatus" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+      <Parameter parameterTypeRef="MissionStatusType" name="DrillingStatus">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.missionStatus" />
+          <Alias nameSpace="OpenMCT:action" alias="drillingStatus" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+      <Parameter parameterTypeRef="MissionStatusType" name="ImageryStatus">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.missionStatus" />
+          <Alias nameSpace="OpenMCT:action" alias="imageryStatus" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Operator Status (roles) -->
+      <Parameter parameterTypeRef="OperatorStatusType" name="FlightOperatorStatus">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.operatorStatus" />
+          <Alias nameSpace="OpenMCT:role" alias="Flight" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+      <Parameter parameterTypeRef="OperatorStatusType" name="ScienceOperatorStatus">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.operatorStatus" />
+          <Alias nameSpace="OpenMCT:role" alias="Science" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Poll Question -->
+      <Parameter parameterTypeRef="PollQuestionType" name="PollQuestion">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.pollQuestion" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Imagery -->
+      <Parameter parameterTypeRef="ImageType" name="TestImage">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.image" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- OpenMCT:omit -->
+      <Parameter parameterTypeRef="OmittedType" name="OmittedParameter">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:omit" alias="true" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Plain OpenMCT:type override (not one of the special-cased types) -->
+      <Parameter parameterTypeRef="OverriddenType" name="OverriddenParameter">
+        <AliasSet>
+          <Alias nameSpace="OpenMCT:type" alias="yamcs.string" />
+        </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+    </ParameterSet>
+  </TelemetryMetaData>
+</SpaceSystem>
