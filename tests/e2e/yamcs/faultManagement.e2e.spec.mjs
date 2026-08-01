@@ -27,7 +27,12 @@ Staleness Specific Tests
 import { pluginFixtures } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 
-const YAMCS_API_URL = "http://localhost:8090/api/";
+// Port-parameterized so this file can run in an isolated worktree environment (see
+// COVERAGE_HANDOFF.md / the testing-openmct-yamcs skill) rather than always assuming the
+// default YAMCS_HTTP_PORT of 8090.
+// eslint-disable-next-line no-undef
+const YAMCS_HTTP_PORT = process.env.YAMCS_HTTP_PORT || 8090;
+const YAMCS_API_URL = `http://localhost:${YAMCS_HTTP_PORT}/api/`;
 const FAULT_PARAMETER = "Latitude";
 
 /**
@@ -179,6 +184,42 @@ test.describe("Fault Management @yamcs @mutatesGlobalState", () => {
             // in this view at all, not that its severity label still reads CRITICAL.
             await expect(page.getByLabel(/Select fault: Latitude in \/myproject/)).toBeVisible();
         });
+    });
+
+    // Regression test for https://github.com/akhenry/openmct-yamcs/issues/245: "[Fault
+    // Management] Duplicate requests on mount." The issue reported two separate requests firing
+    // for the same fault-listing data on mount -- one from Open MCT core's
+    // FaultManagementView.vue on mount, and (per the issue's own description of the code at the
+    // time) a second one triggered by this adapter's realtime provider on the first websocket
+    // message. As of the current source, RealtimeFaultProvider.subscribe()
+    // (src/providers/fault-mgmt-providers/realtime-fault-provider.js) only calls
+    // openmct.telemetry.subscribe() for the ALARMS/GLOBAL_STATUS objects -- it makes no direct
+    // fetch of its own, so the historical `.../alarms` REST fetch (from
+    // HistoricalFaultProvider.request(), driven by FaultManagementView's mount-time `request`
+    // call) should be the *only* request for that data. This test could not be tied to a
+    // specific historical fixing commit (git log/gh pr search around the issue's close date
+    // turned up nothing touching src/providers/fault-mgmt-providers or realtime-provider.js), so
+    // it asserts against current, empirically-observed behavior on master rather than reverting
+    // a known diff -- see the PR description for how it was mutation-tested instead.
+    test('Only one request is made for the fault list on mount (regression for #245)', async ({ page }) => {
+        const networkRequests = [];
+        page.on('request', (request) => networkRequests.push(request));
+
+        const alarmsRequest = page.waitForResponse('**/api/**/alarms');
+        await page.getByLabel('Navigate to Fault Management').click();
+        await alarmsRequest;
+        await expect(getTriggeredFaultBySeverity(page, 'WATCH')).toBeVisible();
+
+        // Give a hypothetical duplicate/delayed second request (e.g. one fired off the first
+        // realtime websocket message) a chance to show up before we count.
+        await page.waitForTimeout(1000);
+
+        const alarmsRequests = networkRequests.filter((request) => {
+            return request.resourceType() === 'fetch'
+                && /\/api\/processors\/[^/]+\/[^/]+\/alarms$/.test(new URL(request.url()).pathname);
+        });
+
+        expect(alarmsRequests.length).toBe(1);
     });
 
     test.afterAll("remove alarms from the telemetry point", async () => {
