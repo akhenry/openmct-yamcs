@@ -689,3 +689,106 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
         }, {});
     }
 });
+
+/**
+ * Regression test for https://github.com/akhenry/openmct-yamcs/issues/220.
+ *
+ * Root cause: messages.js's buildSubscribeMessages() has to pick, per object type subscribed
+ * on the single shared RealtimeProvider WebSocket, between the minimal "Events-shaped"
+ * subscribe message (just {type, id, options: {instance}}) and the parameter/telemetry-shaped
+ * one (which additionally requires options.id: [{name: <qualified parameter name>}]). If a
+ * non-parameter object type (Events, Alarms, etc.) is ever routed to the parameter-shaped
+ * branch, the resulting message asks YAMCS's parameter-subscription endpoint to subscribe to a
+ * bogus "parameter" (the object's own qualified name, e.g. "yamcs.events" -- not a real
+ * parameter), and the malformed/nonsensical subscribe frame can disrupt the shared socket for
+ * every other concurrently-active subscription, including ordinary parameter telemetry --
+ * matching the issue's reported symptom of Events subscriptions killing realtime data for
+ * everything else on the socket.
+ *
+ * const.js's isEventType() (consumed by messages.js) is what keeps Events routed to the
+ * minimal branch today. This test asserts the user-visible behavior that depends on that
+ * routing being correct: subscribing to Events concurrently with a parameter must not
+ * interrupt the parameter's realtime telemetry, and must not force the shared WebSocket to
+ * reconnect.
+ */
+test.describe('Concurrent Events and parameter subscriptions @yamcs', () => {
+    let pageErrors;
+    let websocketOpenCount;
+
+    test.beforeEach(async ({ page }) => {
+        // Attach listeners before navigating -- RealtimeProvider opens its single shared
+        // WebSocket as soon as the app boots, so a listener attached after `page.goto` would
+        // miss that first connection and under-count.
+        pageErrors = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+
+        // Only count the YAMCS realtime WebSocket proxied through /yamcs-proxy-ws/ -- webpack's
+        // own dev-server HMR socket also fires this event and would otherwise pollute the count.
+        websocketOpenCount = 0;
+        page.on('websocket', (ws) => {
+            if (ws.url().includes('yamcs-proxy-ws')) {
+                websocketOpenCount++;
+            }
+        });
+
+        await page.goto('./');
+        await expect(page.locator('.c-tree__item').filter({ hasText: 'myproject' })).toBeVisible();
+    });
+
+    test('Subscribing to Events does not drop concurrent parameter telemetry (regression for #220)', async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const telemetryObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: '~myproject~Battery1_Temp'
+            });
+            const paramValues = [];
+            const unsubscribeParam = openmct.telemetry.subscribe(telemetryObject, (datum) => {
+                paramValues.push(datum);
+            });
+
+            // Let parameter telemetry flow on its own first, to establish a baseline that
+            // proves the subscription is alive before Events is introduced.
+            await new Promise((resolve) => setTimeout(resolve, 4000));
+            const baselineCount = paramValues.length;
+
+            // Now concurrently subscribe to Events on the same shared WebSocket. This is the
+            // action that issue #220 reports as fatal to the other, already-active
+            // subscriptions on that socket.
+            const eventsObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: 'yamcs.events'
+            });
+            const unsubscribeEvents = openmct.telemetry.subscribe(eventsObject, () => {});
+
+            // Give the parameter subscription another window to keep receiving telemetry now
+            // that Events is also subscribed.
+            await new Promise((resolve) => setTimeout(resolve, 4000));
+            const afterEventsSubscribeCount = paramValues.length;
+
+            unsubscribeParam();
+            unsubscribeEvents();
+
+            return {
+                baselineCount,
+                afterEventsSubscribeCount
+            };
+        });
+
+        // Sanity check: the parameter subscription was actually delivering telemetry before
+        // Events was introduced.
+        expect(result.baselineCount).toBeGreaterThan(0);
+
+        // The actual regression assertion: parameter telemetry keeps flowing (more values
+        // arrive) after the Events subscription is established on the same socket -- it must
+        // not have been silently starved or the socket dropped.
+        expect(result.afterEventsSubscribeCount).toBeGreaterThan(result.baselineCount);
+
+        // The bug reproduced as "an endless loop of connecting and disconnecting" of the
+        // shared WebSocket. Only one WebSocket (the initial connection) should ever have been
+        // opened -- subscribing to Events must not force a reconnect.
+        expect(websocketOpenCount).toBe(1);
+
+        expect(pageErrors).toEqual([]);
+    });
+});
