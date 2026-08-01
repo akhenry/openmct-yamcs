@@ -260,16 +260,18 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
             // this map grew without bound across repeated reconnects (see
             // the fix in src/providers/realtime-provider.js's 'batch'
             // listener, DATA_TYPE_REPLY branch).
-            const getSubscriptionsByCallSize = () => page.evaluate(async () => {
-                const openmct = window.openmct;
-                const telemetryObject = await openmct.objects.get({
-                    namespace: 'taxonomy',
-                    key: '~myproject~Battery1_Temp'
-                });
-                const yamcsRealtimeProvider = await openmct.telemetry.findSubscriptionProvider(telemetryObject);
+            function getSubscriptionsByCallSize() {
+                return page.evaluate(async () => {
+                    const openmct = window.openmct;
+                    const telemetryObject = await openmct.objects.get({
+                        namespace: 'taxonomy',
+                        key: '~myproject~Battery1_Temp'
+                    });
+                    const yamcsRealtimeProvider = await openmct.telemetry.findSubscriptionProvider(telemetryObject);
 
-                return yamcsRealtimeProvider.subscriptionsByCall.size;
-            });
+                    return yamcsRealtimeProvider.subscriptionsByCall.size;
+                });
+            }
 
             // Let the initial round of subscriptions (one per parameter in
             // the layout) establish before taking a baseline measurement.
@@ -290,6 +292,94 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
             const finalSubscriptionCount = await getSubscriptionsByCallSize();
 
             expect(finalSubscriptionCount).toBe(initialSubscriptionCount);
+        });
+
+        test('Resubscribes exactly once per active subscription on each reconnect, verified at the websocket protocol level (regression for #209)', async ({ page }) => {
+            // The previous test catches the leak itself (subscriptionsByCall
+            // growing) by introspecting RealtimeProvider's internal state.
+            // This test is black-box: it inspects the actual websocket
+            // frames Open MCT-Yamcs sends/receives on each reconnect,
+            // independent of any internal JS state. It doesn't observe the
+            // leak directly -- the stale subscriptionsByCall entries are a
+            // pure client-side bookkeeping issue with no distinct wire
+            // signature, since each reconnect is a brand-new connection and
+            // the server can't reply on a dead one -- but it does guard
+            // against the fix regressing the resubscription protocol itself
+            // (e.g. a "fix" that skips resubscribing, or one that sends
+            // duplicate SUBSCRIBE messages): every active subscriptionId
+            // should be resubscribed exactly once per reconnect, and get
+            // exactly one reply, every time.
+            const connections = [];
+            page.on('websocket', (ws) => {
+                const connection = {
+                    subscribeFrames: [],
+                    replyFrames: []
+                };
+                connections.push(connection);
+
+                ws.on('framesent', ({ payload }) => {
+                    const message = parseFrame(payload);
+                    // All of RealtimeProvider's subscribe message shapes
+                    // (parameters, events, commands, alarms, MDB changes --
+                    // see src/providers/messages.js) share this envelope;
+                    // 'cancel' (UNSUBSCRIBE) does not.
+                    if (message?.id !== undefined && message?.options !== undefined) {
+                        connection.subscribeFrames.push(message);
+                    }
+                });
+
+                ws.on('framereceived', ({ payload }) => {
+                    const message = parseFrame(payload);
+                    if (message?.type === 'reply') {
+                        connection.replyFrames.push(message);
+                    }
+                });
+            });
+
+            // Let the initial round of subscriptions (one per parameter in
+            // the layout, established before this listener was attached)
+            // settle before reconnecting.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+
+            const RECONNECT_CYCLES = 3;
+            for (let cycle = 0; cycle < RECONNECT_CYCLES; cycle++) {
+                websocketWorker.evaluate(() => {
+                    self.currentWebSocket.close();
+                });
+                await page.waitForEvent('websocket');
+                // Give the reconnect + resubscribe round-trip time to complete.
+                await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+            }
+
+            // One new connection per reconnect (the pre-existing connection
+            // from test setup isn't counted -- the listener above was
+            // attached after it was already established).
+            expect(connections).toHaveLength(RECONNECT_CYCLES);
+
+            const subscriptionIdsPerConnection = connections.map(
+                (connection) => new Set(connection.subscribeFrames.map((frame) => String(frame.id)))
+            );
+            const [firstConnectionSubscriptionIds, ...restConnectionSubscriptionIds] = subscriptionIdsPerConnection;
+
+            expect(firstConnectionSubscriptionIds.size).toBeGreaterThan(0);
+
+            for (const connection of connections) {
+                // Exactly one SUBSCRIBE and exactly one matching REPLY per
+                // active subscription -- no duplicates, nothing dropped.
+                expect(connection.subscribeFrames).toHaveLength(firstConnectionSubscriptionIds.size);
+                expect(connection.replyFrames).toHaveLength(firstConnectionSubscriptionIds.size);
+
+                const subscribedIds = new Set(connection.subscribeFrames.map((frame) => String(frame.id)));
+                const repliedToIds = new Set(connection.replyFrames.map((frame) => String(frame.data?.replyTo)));
+                expect(subscribedIds.size).toBe(connection.subscribeFrames.length);
+                expect(repliedToIds).toEqual(subscribedIds);
+            }
+
+            // The same set of subscriptionIds is resubscribed on every
+            // single reconnect -- the set doesn't grow, shrink, or change.
+            for (const subscriptionIds of restConnectionSubscriptionIds) {
+                expect(subscriptionIds).toEqual(firstConnectionSubscriptionIds);
+            }
         });
 
         test('Open MCT does not drop telemetry while app is loading', async ({ page }) => {
@@ -563,6 +653,18 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
             expect(notification).toHaveCount(0);
         }
     });
+
+    /**
+     * @param {string} payload raw websocket frame payload
+     * @returns {object|undefined} the parsed message, or undefined if the frame isn't JSON
+     */
+    function parseFrame(payload) {
+        try {
+            return JSON.parse(payload);
+        } catch {
+            return undefined;
+        }
+    }
 
     function sortOpenMctTelemetryAscending(telemetry) {
         return telemetry.sort((a, b) => {
