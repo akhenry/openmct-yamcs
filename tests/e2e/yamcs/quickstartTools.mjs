@@ -116,6 +116,23 @@ async function issueCommand({ qualifiedName, args = {}, comment, yamcsURL, proce
     return response.json();
 }
 
+// Sets the value of a `dataSource="local"` parameter through the realtime processor,
+// the same mechanism openmct-yamcs itself uses (see src/providers/user/poll-question-telemetry.js
+// and src/providers/user/operator-status-telemetry.js). `value` is the Yamcs `Value` message,
+// e.g. `{ type: 'BINARY', binaryValue: '<base64>' }` or `{ type: 'STRING', stringValue: '...' }`.
+async function setParameterValue(parameterId, value, yamcsURL) {
+    const url = new URL(`api/processors/myproject/realtime/parameters/${parameterId}`, yamcsURL);
+    const response = await fetch(url.toString(), {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(value)
+    });
+
+    return response.ok;
+}
+
 export {
     disableLink,
     enableLink,
@@ -123,5 +140,6 @@ export {
     latestParameterValues,
     parameterArchive,
     getCommandQueues,
-    issueCommand
+    issueCommand,
+    setParameterValue
 };
