@@ -75,14 +75,30 @@ test.describe("Staleness tests @yamcs", () => {
         const tableWrapper = page.locator('.c-table-wrapper');
         await expect(tableWrapper).toBeVisible();
 
-        // Wait for at least one live row so we know a realtime subscription (and its
-        // Yamcs `call` number, assigned once Yamcs acknowledges the subscription) is established.
+        // Wait for at least one live row so we know telemetry is flowing.
         await expect(page.getByLabel('name table cell Battery1_Temp')).not.toHaveCount(0);
 
         // Live telemetry is flowing, so the object should not be reported as stale. This
         // exercises YamcsStalenessProvider#isStale returning a defined, non-stale response
         // from the LAD cache at mount.
         await expect(tableWrapper).not.toHaveClass(/is-stale/);
+
+        // A rendered row only proves the initial LAD/historical fetch completed -- it does NOT
+        // prove the realtime subscription's Yamcs `call` number (assigned once Yamcs acks the
+        // subscription, in RealtimeProvider's message handler) has been assigned yet. Dispatching
+        // against an undefined/stale call number silently matches no subscription at all, so poll
+        // until the real call number is actually populated in RealtimeProvider#subscriptionsByCall.
+        await expect.poll(async () => {
+            return page.evaluate(async () => {
+                const openmct = window.openmct;
+                const objectIdentifier = { namespace: 'taxonomy', key: '~myproject~Battery1_Temp' };
+                const telemetryObject = await openmct.objects.get(objectIdentifier);
+                const yamcsRealtimeProvider = await openmct.telemetry.findSubscriptionProvider(telemetryObject);
+                const call = yamcsRealtimeProvider.getSubscriptionByObjectIdentifier(objectIdentifier)?.call;
+
+                return call !== undefined && yamcsRealtimeProvider.subscriptionsByCall.has(call);
+            });
+        }).toBe(true);
 
         const callNumber = await page.evaluate(async () => {
             const openmct = window.openmct;
