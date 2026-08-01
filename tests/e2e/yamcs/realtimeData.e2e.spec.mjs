@@ -47,7 +47,7 @@ const THIRTY_MINUTES = 30 * 60 * 1000;
 // only, well below that measured peak.
 const TEST_MAX_BUFFER_SIZE = 50000;
 
-test.describe('Realtime telemetry displays', () => {
+test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
     let yamcsURL;
     let websocketWorker;
 
