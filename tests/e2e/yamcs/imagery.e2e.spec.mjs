@@ -78,7 +78,7 @@ const EXPECTED_THUMBNAIL_VALUE = RAW_IMAGE_VALUE
     .replace(/\/images\//, '/rescaled-images/')
     .replace(/.png$/, '_thumb.jpeg');
 
-test.describe('Imagery view for yamcs.image parameters @yamcs', () => {
+test.describe('Imagery view for yamcs.image parameters @yamcs @mutatesGlobalState', () => {
     let yamcsURL;
 
     test.beforeEach(async ({ page }) => {
