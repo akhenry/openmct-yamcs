@@ -39,6 +39,13 @@ const realTimeDisplayPath = fileURLToPath(
 // may take up to 1s for telemetry to propagate to the UI from when it is received.
 const TELEMETRY_PROPAGATION_TIME = 1000;
 const THIRTY_MINUTES = 30 * 60 * 1000;
+// The app's real default (see REASONABLE_DEFAULTS.maxBufferSize in src/openmct-yamcs.js and
+// example/index.js) is 1,000,000 characters, sized for production telemetry volumes -- far more
+// than QuickStart's ~46 demo parameters produce. Measured peak buffer utilization during a 10s
+// UI block against a live QuickStart instance is only ~300-400K characters, so the two tests
+// below that need to reliably trigger a buffer-overflow drop lower it for their own page/worker
+// only, well below that measured peak.
+const TEST_MAX_BUFFER_SIZE = 50000;
 
 test.describe('Realtime telemetry displays', () => {
     let yamcsURL;
@@ -251,7 +258,7 @@ test.describe('Realtime telemetry displays', () => {
 
             if (count > 0) {
                 const text = await notification.innerText();
-                expect(text).not.toBe('Telemetry dropped due to client rate limiting.');
+                expect(text).not.toBe('Telemetry dropped due to buffer overflow.');
             } else {
                 expect(notification).toHaveCount(0);
             }
@@ -262,6 +269,14 @@ test.describe('Realtime telemetry displays', () => {
          * This test confirms that after blocking the UI and inducing throttling, that all subscribed telemetry objects received telemetry.
          */
         test('When the UI is blocked during initialization, does not drop subscription housekeeping messages', async ({ page }) => {
+            // Lower the worker's receive-buffer threshold for this test only (a fresh
+            // worker/page is created per test, so this never affects other tests or the
+            // app's real default -- see the comment on TEST_MAX_BUFFER_SIZE above). QuickStart's
+            // realistic telemetry volume peaks at roughly 300-400K characters over a 10s block,
+            // well under the app's real 1,000,000-character default, so without lowering it here
+            // the buffer never actually overflows and this test can't exercise the drop path at all.
+            await setWorkerMaxBufferSize(websocketWorker, TEST_MAX_BUFFER_SIZE);
+
             // 1. Block the UI
             await page.evaluate(() => {
                 return new Promise((resolveBlockingLoop) => {
@@ -279,7 +294,7 @@ test.describe('Realtime telemetry displays', () => {
             //Confirm that throttling occurred
             const notification = page.getByRole('alert');
             const text = await notification.innerText();
-            expect(text).toBe('Telemetry dropped due to client rate limiting.');
+            expect(text).toBe('Telemetry dropped due to buffer overflow.');
 
             //Confirm that all subscribed telemetry points receive telemetry. This tests that subscriptions were established successfully and
             //tests for a failure mode where housekeeping telemetry was being dropped if the UI was blocked during initialization of telemetry subscriptions
@@ -312,6 +327,10 @@ test.describe('Realtime telemetry displays', () => {
 
         test('Open MCT shows the latest telemetry after UI is temporarily blocked', async ({ page }) => {
             const ladTable = await getLadTableByName(page, 'Test LAD Table');
+            // Lower the worker's receive-buffer threshold for this test only -- see the
+            // comment on the previous test for why this is necessary to reliably trigger
+            // the drop/overflow path with QuickStart's realistic telemetry volume.
+            await setWorkerMaxBufferSize(websocketWorker, TEST_MAX_BUFFER_SIZE);
             // 1. Subscribe to batched telemetry,
             // 3. Confirm that it is correct and only the _oldest_ values missing
             await page.evaluate(() => {
@@ -330,7 +349,7 @@ test.describe('Realtime telemetry displays', () => {
             //Confirm that throttling occurred
             const notification = page.getByRole('alert');
             const text = await notification.innerText();
-            expect(text).toBe('Telemetry dropped due to client rate limiting.');
+            expect(text).toBe('Telemetry dropped due to buffer overflow.');
 
             // Disable playback
             await disableLink(yamcsURL);
@@ -499,7 +518,7 @@ test.describe('Realtime telemetry displays', () => {
 
         if (count > 0) {
             const text = await notification.innerText();
-            expect(text).not.toBe('Telemetry dropped due to client rate limiting.');
+            expect(text).not.toBe('Telemetry dropped due to buffer overflow.');
         } else {
             expect(notification).toHaveCount(0);
         }
@@ -556,6 +575,23 @@ test.describe('Realtime telemetry displays', () => {
                 ?? parameterValue.engValue.booleanValue
             };
         });
+    }
+
+    /**
+     * Lowers the BatchingWebSocket worker's receive-buffer threshold, scoped to the given
+     * worker/page only (a fresh worker is created per test, so this never affects other tests
+     * or the app's real default). Dispatches the same 'setMaxBufferSize' worker message that
+     * RealtimeProvider/BatchingWebSocket send internally (see
+     * node_modules/openmct/src/api/telemetry/{BatchingWebSocket,WebSocketWorker}.js), the same
+     * technique this file already uses elsewhere to reach into the worker (closing
+     * self.currentWebSocket directly, above).
+     * @param {import('playwright').Worker} worker
+     * @param {number} maxBufferSize
+     */
+    async function setWorkerMaxBufferSize(worker, maxBufferSize) {
+        await worker.evaluate((size) => {
+            self.dispatchEvent(new MessageEvent('message', { data: { type: 'setMaxBufferSize', maxBufferSize: size } }));
+        }, maxBufferSize);
     }
 
     async function getLadTableByName(page, ladTableName) {
