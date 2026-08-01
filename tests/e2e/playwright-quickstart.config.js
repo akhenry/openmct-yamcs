@@ -56,6 +56,11 @@ const config = {
     projects: [
         {
             name: "chromium",
+            // Note: @mutatesGlobalState (see tests/e2e/yamcs/*.e2e.spec.mjs) is a distinct,
+            // purely informational tag -- it marks specs that write shared backend/MDB state
+            // (real command history, alarm overrides, telemetry link toggles, etc.) that a
+            // differently-ordered or truly concurrent run could collide with. Unlike the tags
+            // below, it is NOT excluded here; these specs are expected to run normally.
             grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
@@ -68,6 +73,7 @@ const config = {
         // -- Local Browsers --
         {
             name: "local-chrome",
+            // Same @mutatesGlobalState note as above.
             grepInvert: /@unstable|@snapshot|@localStorage|@addInit/,
             use: {
                 browserName: 'chromium',
