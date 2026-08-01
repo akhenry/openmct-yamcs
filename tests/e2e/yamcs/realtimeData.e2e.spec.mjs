@@ -252,6 +252,54 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
             assertParameterMapsAreEqual(secondGaugeValuesByName, parameterNamesToLatestValues, 2);
         });
 
+        test('Does not accumulate stale subscription entries across repeated websocket reconnects (regression for #209)', async ({ page }) => {
+            // #209 is closed upstream, but this is NOT actually fixed:
+            // resubscribeToAll() re-sends SUBSCRIBE for every tracked
+            // subscription on each reconnect, and the reply handler
+            // (RealtimeProvider's 'batch' listener, src/providers/realtime-provider.js)
+            // adds a new subscriptionsByCall entry keyed by the new call
+            // number without removing the stale entry for the old call
+            // number. Across repeated reconnects this map grows without
+            // bound -- confirmed empirically (66 -> 264 entries after 3
+            // reconnect cycles against a live QuickStart instance, i.e.
+            // exactly one full extra copy of the subscription set per
+            // reconnect). Filed as a live regression; per project policy
+            // this test intentionally documents the failure via
+            // test.fail() rather than silently patching src/ here.
+            test.fail(true, 'https://github.com/akhenry/openmct-yamcs/issues/209 - subscriptionsByCall leaks a stale entry per subscription on every websocket reconnect; needs a source fix in realtime-provider.js before this can pass.');
+
+            const getSubscriptionsByCallSize = () => page.evaluate(async () => {
+                const openmct = window.openmct;
+                const telemetryObject = await openmct.objects.get({
+                    namespace: 'taxonomy',
+                    key: '~myproject~Battery1_Temp'
+                });
+                const yamcsRealtimeProvider = await openmct.telemetry.findSubscriptionProvider(telemetryObject);
+
+                return yamcsRealtimeProvider.subscriptionsByCall.size;
+            });
+
+            // Let the initial round of subscriptions (one per parameter in
+            // the layout) establish before taking a baseline measurement.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+            const initialSubscriptionCount = await getSubscriptionsByCallSize();
+            expect(initialSubscriptionCount).toBeGreaterThan(0);
+
+            const RECONNECT_CYCLES = 3;
+            for (let cycle = 0; cycle < RECONNECT_CYCLES; cycle++) {
+                websocketWorker.evaluate(() => {
+                    self.currentWebSocket.close();
+                });
+                await page.waitForEvent('websocket');
+                // Give the reconnect + resubscribe round-trip time to complete.
+                await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+            }
+
+            const finalSubscriptionCount = await getSubscriptionsByCallSize();
+
+            expect(finalSubscriptionCount).toBe(initialSubscriptionCount);
+        });
+
         test('Open MCT does not drop telemetry while app is loading', async ({ page }) => {
             const notification = page.getByRole('alert');
             const count = await notification.count();

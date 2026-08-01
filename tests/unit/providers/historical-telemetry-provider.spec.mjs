@@ -103,3 +103,48 @@ describe('YamcsHistoricalTelemetryProvider options mutation (regression for #84)
         expect(sharedOptions).toEqual({ start: 1000, end: 2000, size: 500 });
     });
 });
+
+/*
+ * Regression test for #147: YAMCS's archive query bounds are exclusive, but
+ * Open MCT's time-conductor model treats start/stop as inclusive, so a data
+ * point sitting exactly on the query boundary was silently dropped. The fix
+ * (buildUrl, src/providers/historical-telemetry-provider.js) nudges the
+ * bound outward by 1ms depending on request order. This is exercised as a
+ * unit test on buildUrl directly rather than e2e: e2e can't reliably land a
+ * real telemetry point on an exact millisecond boundary against a live,
+ * asynchronously-ticking YAMCS instance, but the URL this method builds is a
+ * pure, deterministic function of its inputs.
+ */
+describe('YamcsHistoricalTelemetryProvider archive bounds inclusivity (regression for #147)', () => {
+    it('extends the stop bound by 1ms so an ascending request includes a point exactly at "end"', () => {
+        const openmct = createOpenmctMock();
+        const provider = new YamcsHistoricalTelemetryProvider(openmct, BASE_URL, INSTANCE, {});
+
+        const url = new URL(provider.buildUrl('~myproject~Battery1_Temp', {
+            start: 1000,
+            end: 2000,
+            order: 'asc',
+            sizeType: 'limit',
+            size: 1000
+        }));
+
+        expect(url.searchParams.get('start')).toBe(new Date(1000).toISOString());
+        expect(url.searchParams.get('stop')).toBe(new Date(2001).toISOString());
+    });
+
+    it('extends the start bound by 1ms so a descending request includes a point exactly at "start"', () => {
+        const openmct = createOpenmctMock();
+        const provider = new YamcsHistoricalTelemetryProvider(openmct, BASE_URL, INSTANCE, {});
+
+        const url = new URL(provider.buildUrl('~myproject~Battery1_Temp', {
+            start: 1000,
+            end: 2000,
+            order: 'desc',
+            sizeType: 'limit',
+            size: 1000
+        }));
+
+        expect(url.searchParams.get('start')).toBe(new Date(999).toISOString());
+        expect(url.searchParams.get('stop')).toBe(new Date(2000).toISOString());
+    });
+});
