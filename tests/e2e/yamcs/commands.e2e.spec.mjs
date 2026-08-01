@@ -56,12 +56,17 @@ test.describe("Commands @yamcs", () => {
 
     test('Verify that Commands and Command Queues appear in the object tree', async ({ page }) => {
         await page.getByLabel('Expand myproject folder').click();
-        await expect(page.getByRole('treeitem', { name: /^Commands/ })).toBeVisible();
+        // Tree item accessible names are prefixed with the expand/collapse action
+        // (e.g. "Expand Commands yamcs.commands Navigate to Commands ... Object"),
+        // not just the object's own name -- match anywhere in the label, not anchored.
+        await expect(page.getByRole('treeitem', { name: /Commands/ })).toBeVisible();
 
         await page.getByLabel(/Expand Commands/).click();
         const queues = await getCommandQueues(yamcsURL);
         for (const queueName of queues) {
-            await expect(page.getByRole('treeitem', { name: queueName, exact: true })).toBeVisible();
+            // Same wrapped-label shape as above (e.g. "Navigate to default
+            // yamcs.commands.queue Object"), so this can't be an exact match.
+            await expect(page.getByRole('treeitem', { name: queueName })).toBeVisible();
         }
     });
 
