@@ -30,7 +30,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 
-import { getValue } from '../../src/utils.js';
+import { getValue, flattenObjectArray } from '../../src/utils.js';
 
 describe('getValue unsupported-type fallbacks', () => {
     it('returns the unsupported-type marker for an unrecognized scalar type', () => {
@@ -58,5 +58,25 @@ describe('getValue unsupported-type fallbacks', () => {
         expect(warnSpy).toHaveBeenCalled();
 
         warnSpy.mockRestore();
+    });
+});
+
+/*
+ * flattenObjectArray's non-array guard is a defensive check against malformed
+ * input shapes that YAMCS's own API never actually sends (every call site in
+ * this repo passes a genuine array), so there's no organic e2e path that
+ * provokes it.
+ */
+describe('flattenObjectArray', () => {
+    it('throws when given a non-array value', () => {
+        expect(() => flattenObjectArray('not an array')).toThrow(/Expected array, got string/);
+    });
+
+    it('flattens a well-formed array as before (regression guard for the guard itself)', () => {
+        const result = flattenObjectArray([
+            { name: 'foo', value: { type: 'STRING', stringValue: 'bar' } }
+        ]);
+
+        expect(result.foo).toBe('bar');
     });
 });
