@@ -253,6 +253,63 @@ test.describe("Mdb runtime limits tests @yamcs @mutatesGlobalState", () => {
         await expect(page.locator('.is-limit--red').first()).toBeVisible();
     });
 
+    test('Plotting a parameter with no configured alarms does not throw (regression for #66)', async ({ page }) => {
+        // CCSDS_Packet_Length has no defaultAlarm in the base MDB and has
+        // never had a runtime override set, so object-provider.js leaves
+        // configuration.limits undefined for it (see #addParameter,
+        // src/providers/object-provider.js). #65 fixed a crash where
+        // limit-provider/utils code assumed an alarmRange was always
+        // present. Confirm the whole path -- dictionary load, plot render,
+        // limit evaluation -- tolerates that and doesn't throw or log an
+        // error.
+        const pageErrors = [];
+        page.on('pageerror', (error) => pageErrors.push(error));
+        const consoleErrors = [];
+        page.on('console', (msg) => {
+            if (msg.type() === 'error') {
+                consoleErrors.push(msg.text());
+            }
+        });
+
+        // Navigate directly to CCSDS_Packet_Length's own plot view with a
+        // fixed realtime window, the same navigation style the "no
+        // rangeCondition (like enums)" test above uses.
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~CCSDS_Packet_Length?tc.mode=local&tc.startDelta=1800000&tc.endDelta=0&tc.timeSystem=utc', {waitUntil: 'domcontentloaded'});
+
+        await waitForPlotsToRender(page);
+
+        // Also directly exercise the limit-evaluation code path (this is
+        // exactly what #65 fixed: code that unconditionally read
+        // alarmRange/staticAlarmRange threw when it was absent).
+        const evaluationThrew = await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const telemetryObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: '~myproject~CCSDS_Packet_Length'
+            });
+
+            try {
+                const limitsApi = openmct.telemetry.getLimits(telemetryObject);
+                await limitsApi.limits();
+
+                const evaluator = openmct.telemetry.getLimitEvaluator(telemetryObject);
+                evaluator.evaluate({ value: 42 }, { key: 'value' });
+
+                return false;
+            } catch (error) {
+                return true;
+            }
+        });
+
+        expect(evaluationThrew).toBe(false);
+
+        // No limit lines should be drawn (there's nothing to draw), and
+        // crucially, nothing should have thrown while trying.
+        expect(await page.locator('.c-plot-limit-line').count()).toBe(0);
+        expect(pageErrors).toEqual([]);
+        expect(consoleErrors).toEqual([]);
+    });
+
 });
 
 /**

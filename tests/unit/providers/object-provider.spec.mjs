@@ -78,6 +78,10 @@ function createFetchMock(parameters) {
             return jsonResponse({ overrides: [] });
         }
 
+        if (urlString.includes('/queues')) {
+            return jsonResponse({ queues: [] });
+        }
+
         return jsonResponse({});
     });
 }
@@ -163,5 +167,44 @@ describe('YamcsObjectProvider malformed status parameters', () => {
             namespace: ''
         }))
             .rejects.toThrow('Mission Status Parameter "/myproject/MissionStatusA" does not specify a mission action');
+    });
+});
+
+describe('YamcsObjectProvider non-static default alarms (regression for #430)', () => {
+    beforeEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('warns and continues, rather than throwing, when a parameter defaultAlarm has no staticAlarmRange', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const parameter = {
+            name: 'EnumParamWithNonStaticAlarm',
+            qualifiedName: '/myproject/EnumParamWithNonStaticAlarm',
+            type: {
+                engType: 'enumeration',
+                // YAMCS-valid but unsupported-by-us alarm shape: an
+                // EnumerationAlarm instead of a StaticAlarmRange. Dictionary
+                // load must not throw on this, or it takes down every e2e
+                // spec since the tree is built once at load time.
+                defaultAlarm: {
+                    enumerationAlarm: [
+                        { label: 'FAULT', level: 'CRITICAL' }
+                    ]
+                }
+            }
+        };
+        const provider = createProvider([parameter]);
+
+        const object = await provider.get({
+            key: '~myproject~EnumParamWithNonStaticAlarm',
+            namespace: ''
+        });
+
+        expect(object).toBeDefined();
+        expect(object.configuration.limits).toEqual({});
+        expect(warnSpy).toHaveBeenCalledWith(
+            'Open MCT supports default static alarms only at this time',
+            parameter.type.defaultAlarm
+        );
     });
 });
