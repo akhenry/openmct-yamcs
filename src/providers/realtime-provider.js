@@ -328,6 +328,14 @@ export default class RealtimeProvider {
                             return;
                         }
 
+                        // On a fresh subscribe this is undefined; on a resubscribe (e.g. after a
+                        // websocket reconnect) it's the previous call number YAMCS assigned this
+                        // subscription, which is about to be superseded by the new one below and
+                        // would otherwise leak as a stale, unreachable entry.
+                        if (subscriptionDetails.call !== undefined) {
+                            this.subscriptionsByCall.delete(subscriptionDetails.call);
+                        }
+
                         subscriptionDetails.call = call;
                         // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
                         this.subscriptionsByCall.set(call, subscriptionDetails);

@@ -252,6 +252,46 @@ test.describe('Realtime telemetry displays @mutatesGlobalState', () => {
             assertParameterMapsAreEqual(secondGaugeValuesByName, parameterNamesToLatestValues, 2);
         });
 
+        test('Does not accumulate stale subscription entries across repeated websocket reconnects (regression for #209)', async ({ page }) => {
+            // resubscribeToAll() re-sends SUBSCRIBE for every tracked
+            // subscription on each reconnect. The reply handler used to add
+            // a new subscriptionsByCall entry keyed by the new call number
+            // without removing the stale entry for the old call number, so
+            // this map grew without bound across repeated reconnects (see
+            // the fix in src/providers/realtime-provider.js's 'batch'
+            // listener, DATA_TYPE_REPLY branch).
+            const getSubscriptionsByCallSize = () => page.evaluate(async () => {
+                const openmct = window.openmct;
+                const telemetryObject = await openmct.objects.get({
+                    namespace: 'taxonomy',
+                    key: '~myproject~Battery1_Temp'
+                });
+                const yamcsRealtimeProvider = await openmct.telemetry.findSubscriptionProvider(telemetryObject);
+
+                return yamcsRealtimeProvider.subscriptionsByCall.size;
+            });
+
+            // Let the initial round of subscriptions (one per parameter in
+            // the layout) establish before taking a baseline measurement.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+            const initialSubscriptionCount = await getSubscriptionsByCallSize();
+            expect(initialSubscriptionCount).toBeGreaterThan(0);
+
+            const RECONNECT_CYCLES = 3;
+            for (let cycle = 0; cycle < RECONNECT_CYCLES; cycle++) {
+                websocketWorker.evaluate(() => {
+                    self.currentWebSocket.close();
+                });
+                await page.waitForEvent('websocket');
+                // Give the reconnect + resubscribe round-trip time to complete.
+                await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+            }
+
+            const finalSubscriptionCount = await getSubscriptionsByCallSize();
+
+            expect(finalSubscriptionCount).toBe(initialSubscriptionCount);
+        });
+
         test('Open MCT does not drop telemetry while app is loading', async ({ page }) => {
             const notification = page.getByRole('alert');
             const count = await notification.count();
