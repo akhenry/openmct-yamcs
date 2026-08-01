@@ -133,6 +133,40 @@ async function setParameterValue(parameterId, value, yamcsURL) {
     return response.ok;
 }
 
+/**
+ * Posts a batch of events directly to the YAMCS archive events endpoint,
+ * concurrently in fixed-size chunks. This is a fast, deterministic way to
+ * seed a large number of archived records (e.g. to force multi-page
+ * continuation-token responses) without waiting on the simulator's
+ * real-time telemetry cadence.
+ *
+ * @param {Array<Object>} events array of YAMCS CreateEventRequest bodies,
+ *   e.g. `{ type, message, severity, source, sequenceNumber, time }`
+ * @param {string} yamcsURL base URL of the YAMCS server
+ * @param {number} [batchSize] number of events to POST concurrently per chunk
+ * @returns {Promise<void>} rejects if any individual POST fails
+ */
+async function postEvents(events, yamcsURL, batchSize = 100) {
+    const url = new URL('api/archive/myproject/events', yamcsURL);
+
+    for (let i = 0; i < events.length; i += batchSize) {
+        const batch = events.slice(i, i + batchSize);
+        const responses = await Promise.all(batch.map((event) => fetch(url.toString(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(event)
+        })));
+
+        responses.forEach((response, index) => {
+            if (!response.ok) {
+                throw new Error(`Failed to seed event ${i + index} (sequenceNumber ${batch[index].sequenceNumber}): HTTP ${response.status} ${response.statusText}`);
+            }
+        });
+    }
+}
+
 export {
     disableLink,
     enableLink,
@@ -141,5 +175,6 @@ export {
     parameterArchive,
     getCommandQueues,
     issueCommand,
-    setParameterValue
+    setParameterValue,
+    postEvents
 };
