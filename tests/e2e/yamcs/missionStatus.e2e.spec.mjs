@@ -120,7 +120,7 @@ function setStatusForMissionAction(page, action, statusKey) {
     });
 }
 
-test.describe("Mission Status @yamcs", () => {
+test.describe("Mission Status @yamcs @mutatesGlobalState", () => {
     test.beforeEach(async ({ page }) => {
         await page.goto("./", { waitUntil: "domcontentloaded" });
         // 'Loading...' also transiently labels tree items whose composition
