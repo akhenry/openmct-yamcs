@@ -82,6 +82,20 @@ test.describe('Imagery view for yamcs.image parameters @yamcs', () => {
     let yamcsURL;
 
     test.beforeEach(async ({ page }) => {
+        // The `src` text can never be a real, browser-decodable `data:` URI (base64's alphabet
+        // excludes `:`/`,`, see the module doc comment above), so the browser will actually
+        // request it as an HTTP path -- and unlike the thumbnail strip, Open MCT's main/focused
+        // Imagery image specifically stays hidden via CSS until its `load` event fires, which a
+        // permanently-404ing request never does. Serve a real, tiny PNG for that request path
+        // only, so the main image genuinely loads, without touching the `src` attribute text
+        // itself (the raw-value-passthrough behavior this test is actually verifying). The
+        // thumbnail path is deliberately left un-intercepted -- the test below asserts it 404s.
+        await page.route('**/images/**', (route) => route.fulfill({
+            status: 200,
+            contentType: 'image/png',
+            body: Buffer.from(REAL_PNG_BASE64, 'base64')
+        }));
+
         await page.goto('./', { waitUntil: 'domcontentloaded' });
         await expect(page.getByText('Loading...')).toBeHidden();
 
@@ -113,7 +127,9 @@ test.describe('Imagery view for yamcs.image parameters @yamcs', () => {
         // (ImageryViewProvider#canView in Open MCT core), regardless of the object's type.
         await expect(page).toHaveURL(/view=example\.imagery/);
 
-        const mainImage = page.getByLabel('Focused Image');
+        // exact: true -- getByLabel substring-matches by default, and would otherwise also
+        // match the sibling "Focused Image Element" background div.
+        const mainImage = page.getByLabel('Focused Image', { exact: true });
         await expect(mainImage).toBeVisible();
         // The main image src is the raw telemetry value, completely unmodified --
         // demonstrating the `value`/`getValue()` passthrough for BINARY parameters.
