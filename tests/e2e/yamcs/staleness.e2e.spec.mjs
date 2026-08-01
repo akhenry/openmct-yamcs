@@ -42,7 +42,7 @@ import { pluginFixtures } from 'openmct-e2e';
 const { test, expect } = pluginFixtures;
 import { disableLink, enableLink } from './quickstartTools.mjs';
 
-test.describe("Staleness tests @yamcs", () => {
+test.describe("Staleness tests @yamcs @mutatesGlobalState", () => {
     let websocketWorker;
     let yamcsURL;
 
