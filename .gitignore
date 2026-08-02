@@ -16,3 +16,4 @@ coverage/
 .vscode/settings.json
 
 quickstart/
+quickstart-secure/
