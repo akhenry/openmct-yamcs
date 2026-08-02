@@ -34,7 +34,7 @@
     "test:e2e:smoke": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium quickstartSmoke",
     "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
-    "test:e2e:security": "WEBPACK_PORT=${WEBPACK_PORT:-9070} YAMCS_HTTP_PORT=${YAMCS_HTTP_PORT:-8160} npm test --workspace tests/e2e/opensource -- --config=../playwright-security.config.js --project=chromium tests/e2e/yamcs-security/",
+    "test:e2e:security": "WEBPACK_PORT=${WEBPACK_PORT:-9070} OBSERVER_WEBPACK_PORT=${OBSERVER_WEBPACK_PORT:-9071} YAMCS_HTTP_PORT=${YAMCS_HTTP_PORT:-8160} npm test --workspace tests/e2e/opensource -- --config=../playwright-security.config.js --project=chromium --project=chromium-observer tests/e2e/yamcs-security/",
     "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
     "cov:e2e:report": "nyc report --reporter=html --reporter=text-summary --reporter=lcovonly --report-dir=./coverage/e2e",
     "wait-for-yamcs": "node ./wait-for-yamcs.mjs http://localhost:${YAMCS_HTTP_PORT:-8090}/",

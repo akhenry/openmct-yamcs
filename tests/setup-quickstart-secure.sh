@@ -44,6 +44,16 @@ OVERLAY_DEST="$MDB_DIR/openmct-test.xml"
 SECURE_YAMCS_USER="${SECURE_YAMCS_USER:-flight}"
 SECURE_YAMCS_PASSWORD="${SECURE_YAMCS_PASSWORD:-flightpassword}"
 
+# A second real named user for the DENIAL (negative) path: an authenticated but
+# UNPRIVILEGED read-only user carrying role Observer, NOT Flight and with NO
+# WriteParameter privilege. The denial spec
+# (tests/e2e/yamcs-security/securityRolesDenied.e2e.spec.mjs) authenticates as
+# this user (via SECURE_YAMCS_USER=observer on a second proxy) and asserts the
+# adapter's role/write gates DENY it -- proving the gates are conditional, not
+# unconditionally true. Keep in sync with .webpack/webpack.secure.mjs defaults.
+SECURE_YAMCS_OBSERVER_USER="${SECURE_YAMCS_OBSERVER_USER:-observer}"
+SECURE_YAMCS_OBSERVER_PASSWORD="${SECURE_YAMCS_OBSERVER_PASSWORD:-observerpassword}"
+
 echo "Setting up isolated secured YAMCS in $SECURE_DIR ..."
 
 if [ ! -d "$SECURE_DIR" ]; then
@@ -104,14 +114,24 @@ authModules:
       required: true
 EOF
 
-# users.yaml: a single real, named user carrying role Flight. `Flight` is the
-# role the overlay MDB registers as an operator-status role (OpenMCT:role
-# alias), which is what the adapter's getStatusRoleForCurrentUser matches on.
+# users.yaml: two real, named users.
+#   - `flight` carries role Flight. `Flight` is the role the overlay MDB
+#     registers as an operator-status role (OpenMCT:role alias), which is what
+#     the adapter's getStatusRoleForCurrentUser matches on. This is the POSITIVE
+#     (privileged) path.
+#   - `observer` carries only role Observer (read-only, NOT Flight, NO
+#     WriteParameter). This is the DENIAL (negative) path: an authenticated but
+#     unauthorized user the adapter's gates must reject.
 cat > "$ETC_DIR/users.yaml" <<EOF
 $SECURE_YAMCS_USER:
   displayName: Flight Controller
   password: $SECURE_YAMCS_PASSWORD
   roles: [ Flight ]
+
+$SECURE_YAMCS_OBSERVER_USER:
+  displayName: Read-Only Observer
+  password: $SECURE_YAMCS_OBSERVER_PASSWORD
+  roles: [ Observer ]
 EOF
 
 # roles.yaml: broad READ object privileges (so the whole tree/telemetry loads)
@@ -148,9 +168,27 @@ Flight:
     - ControlAlarms
     - ReadEvents
     - ReadCommandHistory
+
+# Observer: the read-only role for the DENIAL path. It grants ONLY the object
+# READ privileges the app needs to fully load (object tree + telemetry) plus
+# GetMissionDatabase, and deliberately withholds:
+#   - the Flight role entirely (so hasRole('Flight') is false and
+#     getStatusRoleForCurrentUser finds no intersecting status role), and
+#   - WriteParameter entirely (so getWriteParameters() is empty, and both
+#     canSetMissionStatus and canSetPollQuestion evaluate false).
+# This is the minimum that lets the app load read-only; granting either of the
+# above would defeat the negative test.
+Observer:
+  ReadParameter: [".*"]
+  ReadPacket: [".*"]
+  ReadAlarms: [".*"]
+  System:
+    - GetMissionDatabase
+    - ReadEvents
 EOF
 
 echo "Secured YAMCS config written:"
 echo "  user:  $SECURE_YAMCS_USER (role Flight)"
+echo "  user:  $SECURE_YAMCS_OBSERVER_USER (role Observer, read-only)"
 echo "  ports: HTTP \${YAMCS_HTTP_PORT:-8160}, TM \${YAMCS_TM_PORT:-10085}"
 echo "Done."

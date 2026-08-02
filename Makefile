@@ -81,7 +81,7 @@ clean:
 # default targets above so `patch-quickstart` / the shared instance / the
 # default `test:e2e:quickstart` path are untouched. See
 # tests/setup-quickstart-secure.sh and README notes.
-SECURE_ENV := COMPOSE_PROJECT_NAME=yamcs-unit-security YAMCS_HTTP_PORT=8160 YAMCS_TM_PORT=10085 WEBPACK_PORT=9070
+SECURE_ENV := COMPOSE_PROJECT_NAME=yamcs-unit-security YAMCS_HTTP_PORT=8160 YAMCS_TM_PORT=10085 WEBPACK_PORT=9070 OBSERVER_WEBPACK_PORT=9071
 
 setup-quickstart-secure:
 	@echo "Running target: setup-quickstart-secure"
