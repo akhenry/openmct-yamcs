@@ -136,12 +136,8 @@ export default class RealtimeProvider {
         return () => {
             const id = subscriptionDetails.subscriptionId;
 
-            if (subscriptionDetails) {
-                this.sendUnsubscribeMessage(subscriptionDetails);
-
-                this.subscriptionsByCall.delete(subscriptionDetails.call);
-                delete this.subscriptionsById[id];
-            }
+            this.#releaseSubscriptionCall(subscriptionDetails);
+            delete this.subscriptionsById[id];
         };
     }
 
@@ -161,10 +157,8 @@ export default class RealtimeProvider {
         this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
-            this.sendUnsubscribeMessage(subscriptionDetails);
-
             if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
+                this.#releaseSubscriptionCall(this.subscriptionsById[id]);
                 delete this.subscriptionsById[id];
             }
         };
@@ -201,6 +195,24 @@ export default class RealtimeProvider {
         let message = UNSUBSCRIBE(subscriptionDetails);
 
         this.sendMessage(message);
+    }
+
+    // Cancel a subscription server-side and drop its call-number mapping, but
+    // ONLY while it still owns its recorded call number. Call numbers are
+    // connection-local and get reassigned on reconnect, so
+    // subscriptionDetails.call can be stale and now owned by a *different*
+    // subscription -- cancelling/deleting it then would tear that other
+    // subscription down (a spurious CANCEL for its live call plus removal of
+    // its local routing entry). Skipping also avoids emitting a bogus CANCEL
+    // when the subscription has no confirmed call at all (e.g. it was
+    // unsubscribed before its reply arrived).
+    #releaseSubscriptionCall(subscriptionDetails) {
+        const call = subscriptionDetails.call;
+
+        if (call !== undefined && this.subscriptionsByCall.get(call) === subscriptionDetails) {
+            this.sendUnsubscribeMessage(subscriptionDetails);
+            this.subscriptionsByCall.delete(call);
+        }
     }
 
     #setCallFromClock(clock) {

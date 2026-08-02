@@ -134,6 +134,7 @@ describe('RealtimeProvider reconnect call-number reassignment (regression for #2
     let provider;
     let aCallback;
     let bCallback;
+    let unsubscribeA;
 
     beforeEach(() => {
         socketWorker = createMockSocketWorker();
@@ -145,7 +146,7 @@ describe('RealtimeProvider reconnect call-number reassignment (regression for #2
 
         // Subscribe A then B: buildSubscriptionDetails assigns subscriptionId
         // 1 to A and 2 to B (connect() reset lastSubscriptionId to 1).
-        provider.subscribe(telemetryObject('A'), aCallback);
+        unsubscribeA = provider.subscribe(telemetryObject('A'), aCallback);
         provider.subscribe(telemetryObject('B'), bCallback);
 
         // Initial connection: YAMCS assigns A->call 1, B->call 2.
@@ -174,5 +175,36 @@ describe('RealtimeProvider reconnect call-number reassignment (regression for #2
 
         expect(bCallback).toHaveBeenCalledTimes(1); // B receives under call 1
         expect(aCallback).toHaveBeenCalledTimes(1); // A receives under call 2
+    });
+
+    it('does not cancel or unmap another subscription when unsubscribing one whose call was reassigned away', () => {
+        // Reconnect, but this time only B replies -- and it claims A's OLD
+        // call number 1. A's reconnect reply is delayed or never arrives, so
+        // A.call stays stale at 1 while call 1 now belongs to B.
+        socketWorker.emitReconnected();
+        socketWorker.emitBatch([reply(1, 2)]); // B (subscriptionId 2) -> call 1
+
+        expect(provider.subscriptionsByCall.size).toBe(1);
+        expect(provider.subscriptionsByCall.get(1).subscriptionId).toBe(2); // call 1 -> B
+
+        // Now unsubscribe A. Its stale .call is 1, which is B's live call.
+        // Unsubscribe must NOT act on a call it no longer owns.
+        socketWorker.sendMessage.mockClear();
+        unsubscribeA();
+
+        // No CANCEL may target call 1 -- that would cancel B on the server.
+        const cancelsTargetingCallOne = socketWorker.sendMessage.mock.calls
+            .map(([message]) => message)
+            .filter(message => typeof message === 'string'
+                && /"type":\s*"cancel"/.test(message)
+                && /"call":\s*"1"/.test(message));
+        expect(cancelsTargetingCallOne).toEqual([]);
+
+        // B must remain mapped and continue receiving telemetry under call 1.
+        expect(provider.subscriptionsByCall.get(1)?.subscriptionId).toBe(2);
+
+        bCallback.mockClear();
+        socketWorker.emitBatch([parameters(1, 9.9)]);
+        expect(bCallback).toHaveBeenCalledTimes(1);
     });
 });
