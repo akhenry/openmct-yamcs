@@ -331,8 +331,13 @@ export default class RealtimeProvider {
                         // On a fresh subscribe this is undefined; on a resubscribe (e.g. after a
                         // websocket reconnect) it's the previous call number YAMCS assigned this
                         // subscription, which is about to be superseded by the new one below and
-                        // would otherwise leak as a stale, unreachable entry.
-                        if (subscriptionDetails.call !== undefined) {
+                        // would otherwise leak as a stale, unreachable entry. Only remove it if
+                        // it still maps to THIS subscription: call numbers are connection-local
+                        // and get reassigned on reconnect, so another subscription may already
+                        // have claimed this (reused) call number on the new connection -- deleting
+                        // it unconditionally would silently unmap that other subscription.
+                        if (subscriptionDetails.call !== undefined
+                            && this.subscriptionsByCall.get(subscriptionDetails.call) === subscriptionDetails) {
                             this.subscriptionsByCall.delete(subscriptionDetails.call);
                         }
 
