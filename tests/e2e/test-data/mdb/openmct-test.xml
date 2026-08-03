@@ -19,8 +19,9 @@
 
   <LongDescription>
     Parameters that are used for Open MCT e2e testing only. Covers mission
-    status, operator status, poll question, imagery, OpenMCT:omit, and a
-    plain OpenMCT:type override.
+    status, operator status, poll question, imagery, OpenMCT:omit, a plain
+    OpenMCT:type override, and telemetry value-type fixtures (boolean, array,
+    XTCE units, and a nested aggregate) exercised by valueTypes.e2e.spec.mjs.
   </LongDescription>
 
   <Header validationStatus="Draft" classification="none" />
@@ -69,6 +70,66 @@
       <IntegerParameterType name="OverriddenType" signed="false">
         <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
       </IntegerParameterType>
+
+      <!-- Value-type coverage fixtures (see valueTypes.e2e.spec.mjs) -->
+
+      <!-- Boolean (#365): VALUE_EXTRACT_MAP.BOOLEAN -> value.booleanValue -->
+      <BooleanParameterType name="BooleanValueType" oneStringValue="True" zeroStringValue="False">
+        <IntegerDataEncoding sizeInBits="8" encoding="unsigned" />
+      </BooleanParameterType>
+
+      <!-- Units (#91/#93): object-provider #hasUnit/#getUnit read
+           parameter.type.unitSet[].unit and append it to value metadata. -->
+      <FloatParameterType name="UnitFloatType" sizeInBits="32">
+        <UnitSet>
+          <Unit description="degrees Celsius">degC</Unit>
+        </UnitSet>
+        <FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985" />
+      </FloatParameterType>
+
+      <!-- Scalar element type reused by the array and aggregate fixtures. -->
+      <FloatParameterType name="ScalarFloatType" sizeInBits="32">
+        <FloatDataEncoding sizeInBits="32" encoding="IEEE754_1985" />
+      </FloatParameterType>
+
+      <!-- Array (#49/#51/#76/#292): object-provider #isArray checks
+           engType.endsWith('[]'); getValue iterates value.arrayValue,
+           extracting each element via the scalar VALUE_EXTRACT_MAP. -->
+      <ArrayParameterType name="FloatArrayType" arrayTypeRef="ScalarFloatType">
+        <DimensionList>
+          <Dimension>
+            <StartingIndex><FixedValue>0</FixedValue></StartingIndex>
+            <EndingIndex><FixedValue>2</FixedValue></EndingIndex>
+          </Dimension>
+        </DimensionList>
+      </ArrayParameterType>
+
+      <!-- Scalar integer element reused by the aggregate fixture. -->
+      <IntegerParameterType name="ScalarIntegerType" signed="true">
+        <IntegerDataEncoding sizeInBits="32" encoding="twosComplement" />
+      </IntegerParameterType>
+
+      <!-- Inner aggregate, nested inside NestedAggregateType below. Exercises
+           the nested-aggregate-with-members path in object-provider
+           #formatAggregateMembers and the nested recursion in utils
+           getAggregateValues. (#75) -->
+      <AggregateParameterType name="InnerAggregateType">
+        <MemberList>
+          <Member name="innerScalar" typeRef="ScalarFloatType" />
+          <Member name="innerCount" typeRef="ScalarIntegerType" />
+        </MemberList>
+      </AggregateParameterType>
+
+      <!-- Nested aggregate whose members are (a) a scalar, (b) an array, and
+           (c) another aggregate. This is the fixture that drives the array-member
+           and nested-aggregate recursion branches. (#75) -->
+      <AggregateParameterType name="NestedAggregateType">
+        <MemberList>
+          <Member name="scalar" typeRef="ScalarFloatType" />
+          <Member name="valuesArray" typeRef="FloatArrayType" />
+          <Member name="inner" typeRef="InnerAggregateType" />
+        </MemberList>
+      </AggregateParameterType>
     </ParameterTypeSet>
 
     <ParameterSet>
@@ -132,6 +193,26 @@
         <AliasSet>
           <Alias nameSpace="OpenMCT:omit" alias="true" />
         </AliasSet>
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Boolean value type (#365) -->
+      <Parameter parameterTypeRef="BooleanValueType" name="BooleanValue">
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Numeric parameter carrying a unit (#91/#93) -->
+      <Parameter parameterTypeRef="UnitFloatType" name="UnitFloat">
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Array value type (#49/#51/#76/#292) -->
+      <Parameter parameterTypeRef="FloatArrayType" name="FloatArray">
+        <ParameterProperties dataSource="local" />
+      </Parameter>
+
+      <!-- Nested aggregate value type (#75) -->
+      <Parameter parameterTypeRef="NestedAggregateType" name="NestedAggregate">
         <ParameterProperties dataSource="local" />
       </Parameter>
 
