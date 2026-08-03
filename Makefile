@@ -1,4 +1,4 @@
-.PHONY: all clone-quickstart patch-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean
+.PHONY: all clone-quickstart patch-quickstart install-quickstart start-quickstart install-openmct-yamcs sanity-test build-example test-getopensource test-e2e clean setup-quickstart-secure start-quickstart-secure test-e2e-security clean-quickstart-secure
 
 test-all: clone-quickstart patch-quickstart install-quickstart install-openmct-yamcs sanity-test build-example test-e2e
 
@@ -72,4 +72,37 @@ clean:
 		echo "Removed 'quickstart' directory."; \
 	else \
 		echo "Directory 'quickstart/docker' does not exist. Skipping."; \
+	fi
+
+# --- Opt-in, ISOLATED security-enabled path (proxy-injected auth) -------------
+# Stands up a SEPARATE, security-ENABLED YAMCS instance (quickstart-secure/) on
+# non-default ports under a dedicated compose project, and runs only the
+# proxy-authenticated security-roles spec against it. Kept entirely off the
+# default targets above so `patch-quickstart` / the shared instance / the
+# default `test:e2e:quickstart` path are untouched. See
+# tests/setup-quickstart-secure.sh and README notes.
+SECURE_ENV := COMPOSE_PROJECT_NAME=yamcs-unit-security YAMCS_HTTP_PORT=8160 YAMCS_TM_PORT=10085 WEBPACK_PORT=9070 OBSERVER_WEBPACK_PORT=9071
+
+setup-quickstart-secure:
+	@echo "Running target: setup-quickstart-secure"
+	sh tests/setup-quickstart-secure.sh
+
+start-quickstart-secure: setup-quickstart-secure
+	@echo "Running target: start-quickstart-secure"
+	cd quickstart-secure/docker && $(SECURE_ENV) $(MAKE) wait-for-sent
+
+test-e2e-security: start-quickstart-secure
+	@echo "Running target: test-e2e-security"
+	npm run test:getopensource
+	$(SECURE_ENV) npm run test:e2e:security
+
+clean-quickstart-secure:
+	@echo "Running target: clean-quickstart-secure"
+	@if [ -d "quickstart-secure/docker" ]; then \
+		cd quickstart-secure/docker && $(SECURE_ENV) $(MAKE) clean; \
+		cd ../..; \
+		rm -rf quickstart-secure; \
+		echo "Removed 'quickstart-secure' directory."; \
+	else \
+		echo "Directory 'quickstart-secure/docker' does not exist. Skipping."; \
 	fi
