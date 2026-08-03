@@ -20,25 +20,20 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-/*
-Staleness Specific Tests
-*/
+import { defineConfig } from 'vitest/config';
 
-import { pluginFixtures } from 'openmct-e2e';
-const { test } = pluginFixtures;
-
-test.describe.fixme("Staleness tests @yamcs", () => {
-    // eslint-disable-next-line require-await
-    test('Staleness ', async ({ page }) => {
-        test.step('Indicator is displayed for historic data', () => {
-            // Create a plot
-            // Add a telemetry endpoint that has stale data to this plot
-            // Expect that there is indication of staleness for the plot
-        });
-
-        test.step('Indicator is removed when new data arrives in real time', () => {
-            // Wait for new data
-            // Expect that stale indication is removed
-        });
-    });
+export default defineConfig({
+    test: {
+        include: ['tests/unit/**/*.spec.mjs'],
+        environment: 'node',
+        coverage: {
+            provider: 'v8',
+            reportsDirectory: 'coverage/unit',
+            include: ['src/**'],
+            exclude: [
+                'src/**/*.spec.mjs',
+                'src/plugins/**/README.md'
+            ]
+        }
+    }
 });

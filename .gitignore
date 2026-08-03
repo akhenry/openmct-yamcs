@@ -8,6 +8,9 @@ tests/html-test-results/
 test-results
 .nyc_output/
 
+# unit test artifacts
+coverage/
+
 # Misc
 .DS_Store
 .vscode/settings.json

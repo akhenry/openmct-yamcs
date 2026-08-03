@@ -18,6 +18,8 @@
     "test": "npm run test:getopensource && npm run test:e2e:smoke",
     "lint": "eslint src example",
     "lint:fix": "eslint src example --fix",
+    "test:unit": "vitest run",
+    "test:unit:coverage": "vitest run --coverage",
     "build:dist": "webpack --config ./.webpack/webpack.prod.mjs",
     "build:example": "npm install openmct@unstable --no-save",
     "build:example:master": "rm -rf ./node_modules/openmct && git clone https://github.com/nasa/openmct.git --branch master --depth 1 ./node_modules/openmct && (cd ./node_modules/openmct && npm ci) && npm --prefix ./node_modules/openmct run build:prod",
@@ -32,7 +34,8 @@
     "test:e2e:quickstart": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=chromium tests/e2e/yamcs/",
     "test:e2e:quickstart:local": "npm test --workspace tests/e2e/opensource -- --config=../playwright-quickstart.config.js --project=local-chrome tests/e2e/yamcs/",
     "test:e2e:watch": "npm test --workspace tests/e2e/opensource -- --ui --config=../playwright-quickstart.config.js",
-    "wait-for-yamcs": "node ./wait-for-yamcs.mjs http://localhost:8090/",
+    "cov:e2e:report": "nyc report --reporter=html --reporter=text-summary --reporter=lcovonly --report-dir=./coverage/e2e",
+    "wait-for-yamcs": "node ./wait-for-yamcs.mjs http://localhost:${YAMCS_HTTP_PORT:-8090}/",
     "make-example-events": "node ./example/make-example-events.mjs"
   },
   "keywords": [
@@ -45,22 +48,25 @@
     "node": ">=24.14.1"
   },
   "optionalDependencies": {
-    "openmct": "github:nasa/openmct#master",
-    "fsevents": "2.3.2"
+    "fsevents": "2.3.2",
+    "openmct": "github:nasa/openmct#master"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
     "@babel/eslint-parser": "7.23.3",
+    "@vitest/coverage-v8": "^4.1.10",
     "babel-loader": "9.1.0",
     "babel-plugin-istanbul": "6.1.1",
     "eslint": "8.56.0",
     "eslint-plugin-import": "2.29.1",
     "eventemitter3": "4.0.7",
     "file-saver": "2.0.5",
+    "nyc": "17.1.0",
     "semver": "7.5.2",
     "sinon": "14.0.0",
     "source-map-loader": "4.0.1",
     "uuid": "9.0.1",
+    "vitest": "^4.1.10",
     "webpack": "5.105.4",
     "webpack-cli": "5.1.1",
     "webpack-dev-server": "5.2.3",
