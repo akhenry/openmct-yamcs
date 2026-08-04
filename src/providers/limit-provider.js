@@ -83,7 +83,7 @@ export default class LimitProvider {
             // Example: For enums the rangeCondition (upper or lower) does not make sense. So we skip it.
             if (datum.rangeCondition
                 && datum.rangeCondition in RANGE_CONDITION_CSS) {
-                cssClass = ' ' + RANGE_CONDITION_CSS[datum.rangeCondition];
+                cssClass += ' ' + RANGE_CONDITION_CSS[datum.rangeCondition];
             }
 
             return {

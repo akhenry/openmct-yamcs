@@ -19,7 +19,7 @@
  * this source code distribution or the Licensing information page available
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
-import { OBJECT_TYPES } from '../const.js';
+import { OBJECT_TYPES, isEventType } from '../const.js';
 import {
     idToQualifiedName,
     addLimitInformation,
@@ -28,7 +28,11 @@ import {
     convertYamcsToOpenMctDatum
 } from '../utils.js';
 import { commandToTelemetryDatum } from './commands.js';
-import { eventToTelemetryDatum } from './events.js';
+import {
+    eventToTelemetryDatum,
+    getEventSource,
+    getEventSeverity
+} from './events.js';
 
 export default class YamcsHistoricalTelemetryProvider {
     constructor(openmct, url, instance, latestTelemetryProvider) {
@@ -54,35 +58,33 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async request(domainObject, options) {
         options = { ...options };
-        const isEvent = ([OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE, OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE].includes(domainObject.type));
         this.standardizeOptions(options, domainObject);
-        if ((options.strategy === 'latest') && options.timeContext?.isRealTime() && !isEvent) {
-            // Latest requested in realtime, use latest telemetry provider instead
+        const supportsLatest = options.strategy === 'latest' && !isEventType(domainObject.type);
+        const isNotPast = options.end >= this.openmct.time.now();
+
+        if (supportsLatest && isNotPast) {
             const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
 
             return [mctDatum];
         }
-        // otherwise we're in fixed time mode or historical
 
-        const id = domainObject.identifier.key;
         options.useRawValue = this.hasEnumValue(domainObject);
 
-        // we use the eventSource, the minimumSeverity, and the commandQueue
-        // to narrow the search for events and commands
-        if ([OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE].includes(domainObject.type)) {
-            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
-            const eventSourceName = domainObject.identifier.key.replace(prefix, '');
-            options.eventSource = eventSourceName;
+        // limit events search by source and severity
+        if (isEventType(domainObject.type)) {
+            const source = getEventSource(domainObject);
+            const severity = getEventSeverity(domainObject);
+
+            if (source !== undefined) {
+                options.eventSource = source;
+            }
+
+            if (severity !== undefined) {
+                options.minimumSeverity = severity;
+            }
         }
 
-        if (domainObject.type === OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE) {
-            const prefix = `${OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE}.`;
-            const prefixRemoved = domainObject.identifier.key.replace(prefix, '');
-            const [eventSourceName, severity] = prefixRemoved.split('.');
-            options.eventSource = eventSourceName;
-            options.minimumSeverity = severity;
-        }
-
+        // limit commands search by command queue
         if (domainObject.type === OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE) {
             const prefix = `${OBJECT_TYPES.COMMANDS_QUEUE_OBJECT_TYPE}.`;
             const commandQueueName = domainObject.identifier.key.replace(prefix, '');
@@ -93,16 +95,51 @@ export default class YamcsHistoricalTelemetryProvider {
             && domainObject.type !== OBJECT_TYPES.AGGREGATE_TELEMETRY_TYPE
             && options.strategy === 'minmax';
 
+        const id = domainObject.identifier.key;
         const url = this.buildUrl(id, options);
         const requestArguments = [id, url, options];
 
         if (options.isSamples) {
-            const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
+            if (options.onPartialResponse) {
+                const minMaxHistoryYieldedResults = await this.yieldAndProcessMinMaxHistory(...requestArguments);
 
-            return minMaxHistory;
+                return minMaxHistoryYieldedResults.results;
+            } else {
+                const minMaxHistory = await this.getMinMaxHistory(...requestArguments);
+
+                return minMaxHistory;
+            }
         }
 
-        const history = await this.getHistory(...requestArguments);
+        let history;
+        if (options.onPartialResponse) {
+            const historyYieldedResults = await this.yieldAndProcessHistory(...requestArguments);
+            const { results, yielded } = historyYieldedResults;
+
+            // if request strategy is 'latest'
+            // and historical query is in the past
+            // and does not return any data
+            // fallback to latestTelemetryProvider
+            if (!yielded && supportsLatest) {
+                const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+                return [mctDatum];
+            }
+
+            history = results;
+        } else {
+            history = await this.getHistory(...requestArguments);
+
+            // if request strategy is 'latest'
+            // and historical query is in the past
+            // and does not return any data
+            // fallback to latestTelemetryProvider
+            if (!history.length && supportsLatest) {
+                const mctDatum = await this.latestTelemetryProvider.requestLatest(domainObject);
+
+                return [mctDatum];
+            }
+        }
 
         return history;
     }
@@ -115,30 +152,46 @@ export default class YamcsHistoricalTelemetryProvider {
 
     async getHistory(id, url, options) {
         options.responseKeyName = this.getResponseKeyById(id);
+        const results = await accumulateResults(
+            url,
+            { signal: options.signal },
+            options.responseKeyName,
+            [],
+            options.totalRequestSize
+        );
 
-        if (!options.onPartialResponse) {
-            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+        return this.convertDataHistory(id, results);
+    }
 
-            return this.convertDataHistory(id, results);
-        } else {
-            options.formatter = (res) => this.convertDataHistory(id, res);
+    async yieldAndProcessHistory(id, url, options) {
+        options.responseKeyName = this.getResponseKeyById(id);
+        options.formatter = (res) => this.convertDataHistory(id, res);
 
-            return yieldResults(url, options);
-        }
+        const yieldedResults = await yieldResults(url, options);
+
+        return yieldedResults;
     }
 
     async getMinMaxHistory(id, url, options) {
         options.responseKeyName = 'sample';
+        const results = await accumulateResults(
+            url,
+            { signal: options.signal },
+            options.responseKeyName,
+            [],
+            options.totalRequestSize
+        );
 
-        if (!options.onPartialResponse) {
-            const results = await accumulateResults(url, { signal: options.signal }, options.responseKeyName, [], options.totalRequestSize);
+        return this.convertSampleHistory(id, results);
+    }
 
-            return this.convertSampleHistory(id, results);
-        } else {
-            options.formatter = (res) => this.convertSampleHistory(id, res);
+    async yieldAndProcessMinMaxHistory(id, url, options) {
+        options.responseKeyName = 'sample';
+        options.formatter = (res) => this.convertSampleHistory(id, res);
 
-            return yieldResults(url, options);
-        }
+        const yieldedResults = await yieldResults(url, options);
+
+        return yieldedResults;
     }
 
     standardizeOptions(options, domainObject) {
@@ -232,8 +285,9 @@ export default class YamcsHistoricalTelemetryProvider {
 
     getLinkParamsSpecificToId(id) {
         if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
+            || id.startsWith(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE)) {
             return 'events';
         }
 
@@ -248,8 +302,9 @@ export default class YamcsHistoricalTelemetryProvider {
     getResponseKeyById(id) {
 
         if (id === (OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
+            || id.startsWith(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE)) {
             return 'event';
         }
 
@@ -270,8 +325,9 @@ export default class YamcsHistoricalTelemetryProvider {
         }
 
         if (id === OBJECT_TYPES.EVENTS_ROOT_OBJECT_TYPE
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_OBJECT_TYPE)
-            || id.startsWith(OBJECT_TYPES.EVENT_SPECIFIC_SEVERITY_OBJECT_TYPE)) {
+            || id.startsWith(OBJECT_TYPES.EVENTS_SEVERITY_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_OBJECT_TYPE)
+            || id.startsWith(OBJECT_TYPES.EVENTS_SOURCE_SEVERITY_OBJECT_TYPE)) {
             return results.map(event => eventToTelemetryDatum(event));
         }
 
