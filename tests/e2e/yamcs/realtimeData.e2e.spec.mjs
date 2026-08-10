@@ -505,6 +505,62 @@ test.describe('Realtime telemetry displays', () => {
         }
     });
 
+    test('Waits for the subscription call before unsubscribing', async ({ page }) => {
+        await websocketWorker.evaluate(() => {
+            const websocket = self.currentWebSocket;
+            const originalSend = websocket.send.bind(websocket);
+            self.outgoingMessages = [];
+            self.incomingMessages = [];
+            websocket.send = (message) => {
+                self.outgoingMessages.push(JSON.parse(message));
+                originalSend(message);
+            };
+
+            websocket.addEventListener('message', event => {
+                self.incomingMessages.push(JSON.parse(event.data));
+            });
+        });
+
+        await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const telemetryObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: '~myproject~Battery1_Temp'
+            });
+            const unsubscribe = openmct.telemetry.subscribe(telemetryObject, () => {});
+
+            unsubscribe();
+        });
+
+        await expect.poll(() => websocketWorker.evaluate(() => {
+            const subscription = self.outgoingMessages.find(message => message.type === 'parameters');
+            const reply = self.incomingMessages.find(message => {
+                return message.type === 'reply'
+                    && String(message.data.replyTo) === String(subscription?.id);
+            });
+
+            if (!subscription || !reply) {
+                return undefined;
+            }
+
+            return self.outgoingMessages.find(message => {
+                return message.type === 'cancel'
+                    && String(message.options.call) === String(reply.call);
+            });
+        })).not.toBeUndefined();
+
+        const unsubscribeMessages = await websocketWorker.evaluate(() => {
+            return self.outgoingMessages.filter(message => message.type === 'cancel');
+        });
+
+        expect(unsubscribeMessages).not.toContainEqual({
+            type: 'cancel',
+            options: {
+                call: 'undefined'
+            }
+        });
+    });
+
     function sortOpenMctTelemetryAscending(telemetry) {
         return telemetry.sort((a, b) => {
             if (a.timestamp < b.timestamp) {

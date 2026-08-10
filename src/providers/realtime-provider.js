@@ -134,14 +134,7 @@ export default class RealtimeProvider {
         this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
-            const id = subscriptionDetails.subscriptionId;
-
-            if (subscriptionDetails) {
-                this.sendUnsubscribeMessage(subscriptionDetails);
-
-                this.subscriptionsByCall.delete(subscriptionDetails.call);
-                delete this.subscriptionsById[id];
-            }
+            this.#unsubscribe(subscriptionDetails);
         };
     }
 
@@ -155,18 +148,12 @@ export default class RealtimeProvider {
 
     subscribe(domainObject, callback, options) {
         let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, options);
-        let id = subscriptionDetails.subscriptionId;
-        this.subscriptionsById[id] = subscriptionDetails;
+        this.subscriptionsById[subscriptionDetails.subscriptionId] = subscriptionDetails;
 
         this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
-            this.sendUnsubscribeMessage(subscriptionDetails);
-
-            if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
-                delete this.subscriptionsById[id];
-            }
+            this.#unsubscribe(subscriptionDetails);
         };
     }
 
@@ -201,6 +188,27 @@ export default class RealtimeProvider {
         let message = UNSUBSCRIBE(subscriptionDetails);
 
         this.sendMessage(message);
+    }
+
+    #unsubscribe(subscriptionDetails) {
+        if (subscriptionDetails.unsubscribeRequested) {
+            return;
+        }
+
+        subscriptionDetails.unsubscribeRequested = true;
+        this.#completeUnsubscribeIfReady(subscriptionDetails);
+    }
+
+    #completeUnsubscribeIfReady(subscriptionDetails) {
+        if (subscriptionDetails.call === undefined) {
+            return false;
+        }
+
+        this.sendUnsubscribeMessage(subscriptionDetails);
+        this.subscriptionsByCall.delete(subscriptionDetails.call);
+        delete this.subscriptionsById[subscriptionDetails.subscriptionId];
+
+        return true;
     }
 
     #setCallFromClock(clock) {
@@ -329,6 +337,13 @@ export default class RealtimeProvider {
                         }
 
                         subscriptionDetails.call = call;
+
+                        if (subscriptionDetails.unsubscribeRequested) {
+                            this.#completeUnsubscribeIfReady(subscriptionDetails);
+
+                            return;
+                        }
+
                         // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
                         this.subscriptionsByCall.set(call, subscriptionDetails);
 
