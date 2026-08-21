@@ -452,7 +452,7 @@ export default class YamcsObjectProvider {
                 });
             }
 
-            if (this.#isArray(parameter) || this.#isBinary(parameter)) {
+            if (this.#isArray(parameter) || this.#isBinary(parameter) || this.#isString(parameter)) {
                 telemetryValue.format = parameter.type.engType;
             }
 
@@ -511,6 +511,10 @@ export default class YamcsObjectProvider {
 
     #isArray(parameter) {
         return parameter?.type?.engType.endsWith('[]');
+    }
+
+    #isString(parameter) {
+        return parameter?.type?.engType === 'string';
     }
 
     #formatAggregateMembers(members, parentKey = '', rangeHint = 1) {
