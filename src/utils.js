@@ -113,11 +113,7 @@ function getValue(item, name) {
 
     if (value.type === AGGREGATE_TYPE) {
         let parentName = name || (item.id && item.id.name) || '';
-        const lastSlash = parentName.lastIndexOf('/');
-
-        if (lastSlash !== -1) {
-            parentName = parentName.slice(lastSlash + 1);
-        }
+        parentName = parentName.split('/').filter(Boolean).pop() || '';
 
         if (parentName.includes('_')) {
             parentName = parentName.replace('_', '.');

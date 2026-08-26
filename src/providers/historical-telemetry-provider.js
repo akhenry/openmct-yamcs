@@ -97,7 +97,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
         const id = domainObject.identifier.key;
         const url = this.buildUrl(id, options);
-        const requestArguments = [id, url, options];
+        const requestArguments = [id, url, options, domainObject.name];
 
         if (options.isSamples) {
             if (options.onPartialResponse) {
@@ -150,7 +150,7 @@ export default class YamcsHistoricalTelemetryProvider {
         return metadata.values().some(metadatum => metadatum.format === 'enum');
     }
 
-    async getHistory(id, url, options) {
+    async getHistory(id, url, options, parentName) {
         options.responseKeyName = this.getResponseKeyById(id);
         const results = await accumulateResults(
             url,
@@ -160,12 +160,12 @@ export default class YamcsHistoricalTelemetryProvider {
             options.totalRequestSize
         );
 
-        return this.convertDataHistory(id, results);
+        return this.convertDataHistory(id, results, parentName);
     }
 
-    async yieldAndProcessHistory(id, url, options) {
+    async yieldAndProcessHistory(id, url, options, parentName) {
         options.responseKeyName = this.getResponseKeyById(id);
-        options.formatter = (res) => this.convertDataHistory(id, res);
+        options.formatter = (res) => this.convertDataHistory(id, res, parentName);
 
         const yieldedResults = await yieldResults(url, options);
 
@@ -319,7 +319,7 @@ export default class YamcsHistoricalTelemetryProvider {
         return 'parameter';
     }
 
-    convertDataHistory(id, results) {
+    convertDataHistory(id, results, parentName) {
         if (!results) {
             return [];
         }
@@ -341,7 +341,7 @@ export default class YamcsHistoricalTelemetryProvider {
 
         let data = [];
         results.forEach(result => {
-            const datum = convertYamcsToOpenMctDatum(result);
+            const datum = convertYamcsToOpenMctDatum(result, parentName);
 
             addLimitInformation(result, datum);
             data.push(datum);
