@@ -561,6 +561,69 @@ test.describe('Realtime telemetry displays', () => {
         });
     });
 
+    test('Does not restore a cancelled subscription after reconnecting without a reply', async ({ page }) => {
+        const reconnected = page.waitForEvent('websocket');
+
+        await websocketWorker.evaluate(() => {
+            const originalSend = WebSocket.prototype.send;
+            const targetName = '/myproject/Battery1_Temp';
+            self.targetSubscriptionMessages = [];
+            self.originalWebSocketSend = originalSend;
+            self.dropTargetSubscription = true;
+            self.reconnectedSendCount = 0;
+            WebSocket.prototype.send = function (message) {
+                const parsedMessage = JSON.parse(message);
+                const isTargetSubscription = parsedMessage.type === 'parameters'
+                    && parsedMessage.options?.id?.some(identifier => identifier.name === targetName);
+
+                if (self.droppedTargetSocket && this !== self.droppedTargetSocket) {
+                    self.reconnectedSendCount++;
+                }
+
+                if (isTargetSubscription) {
+                    self.targetSubscriptionMessages.push(parsedMessage);
+                    if (self.dropTargetSubscription) {
+                        self.dropTargetSubscription = false;
+                        self.droppedTargetSocket = this;
+                        this.close();
+
+                        return;
+                    }
+                }
+
+                originalSend.call(this, message);
+            };
+        });
+
+        await page.evaluate(async () => {
+            const openmct = window.openmct;
+            const telemetryObject = await openmct.objects.get({
+                namespace: 'taxonomy',
+                key: '~myproject~Battery1_Temp'
+            });
+            const unsubscribe = openmct.telemetry.subscribe(telemetryObject, () => {});
+
+            unsubscribe();
+        });
+
+        await reconnected;
+        await expect.poll(() => websocketWorker.evaluate(() => {
+            return self.currentWebSocket !== self.droppedTargetSocket
+                && self.currentWebSocket.readyState === WebSocket.OPEN;
+        })).toBe(true);
+        await expect.poll(() => websocketWorker.evaluate(() => {
+            return self.reconnectedSendCount;
+        })).toBeGreaterThan(0);
+
+        const targetSubscriptionMessages = await websocketWorker.evaluate(() => {
+            WebSocket.prototype.send = self.originalWebSocketSend;
+
+            return self.targetSubscriptionMessages;
+        });
+
+        expect(targetSubscriptionMessages).toHaveLength(1);
+    });
+
     function sortOpenMctTelemetryAscending(telemetry) {
         return telemetry.sort((a, b) => {
             if (a.timestamp < b.timestamp) {

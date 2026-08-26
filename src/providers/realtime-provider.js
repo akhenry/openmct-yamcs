@@ -201,19 +201,22 @@ export default class RealtimeProvider {
 
     #completeUnsubscribeIfReady(subscriptionDetails) {
         if (subscriptionDetails.call === undefined) {
-            return false;
+            return;
         }
 
         this.sendUnsubscribeMessage(subscriptionDetails);
+        this.#removeSubscription(subscriptionDetails);
+    }
+
+    #removeSubscription(subscriptionDetails) {
         this.subscriptionsByCall.delete(subscriptionDetails.call);
         delete this.subscriptionsById[subscriptionDetails.subscriptionId];
-
-        return true;
     }
 
     #setCallFromClock(clock) {
         const correspondingSubscription = Object.values(this.subscriptionsById).find(subscription => {
-            return subscription.domainObject.identifier.key === clock.identifier.key;
+            return !subscription.unsubscribeRequested
+                && subscription.domainObject.identifier.key === clock.identifier.key;
         });
 
         if (correspondingSubscription !== undefined) {
@@ -331,7 +334,7 @@ export default class RealtimeProvider {
                         const id = message.data.replyTo;
                         subscriptionDetails = this.subscriptionsById[id];
 
-                        // Susbcriptions can be cancelled before we even get to this stage during tests due to rapid navigation.
+                        // A subscription can already be removed if it was cancelled during a reconnect.
                         if (!subscriptionDetails) {
                             return;
                         }
@@ -395,7 +398,11 @@ export default class RealtimeProvider {
 
     resubscribeToAll() {
         Object.values(this.subscriptionsById).forEach((subscriptionDetails) => {
-            this.sendSubscribeMessage(subscriptionDetails);
+            if (subscriptionDetails.unsubscribeRequested) {
+                this.#removeSubscription(subscriptionDetails);
+            } else {
+                this.sendSubscribeMessage(subscriptionDetails);
+            }
         });
     }
 
