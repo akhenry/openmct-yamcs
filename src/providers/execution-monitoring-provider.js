@@ -27,15 +27,14 @@ const PLAN_OBJECT_TYPE = 'plan';
 
 /**
  * Reports plan execution monitoring status (nominal/ahead/behind schedule,
- * with a duration) for every plan at once, sourced from a single Yamcs
- * parameter whose value is a JSON-encoded snapshot keyed by plan identifier:
- * { execution_monitoring: { '<planKeyString>': { status, duration }, ... } }
+ * with a duration) for a single plan, sourced from a single Yamcs aggregate
+ * parameter with members { planIdentifier, status, duration }.
  */
 export default class ExecutionMonitoringProvider {
     #openmct;
     #telemetryObject;
-    #latestExecutionMonitoring = {};
-    #subscribersByPlan = new Map();
+    #latestEntry;
+    #subscribers = new Set();
 
     constructor(openmct, { parameterName }) {
         this.#openmct = openmct;
@@ -62,50 +61,55 @@ export default class ExecutionMonitoringProvider {
         const planKeyString = this.#openmct.objects.makeKeyString(domainObject.identifier);
 
         return {
-            status: () => Promise.resolve(this.#latestExecutionMonitoring[planKeyString])
+            status: () => Promise.resolve(this.#statusForPlan(planKeyString))
         };
     }
 
     subscribeToExecutionMonitoring(domainObject, callback) {
         const planKeyString = this.#openmct.objects.makeKeyString(domainObject.identifier);
-        let callbacks = this.#subscribersByPlan.get(planKeyString);
-        if (callbacks === undefined) {
-            callbacks = new Set();
-            this.#subscribersByPlan.set(planKeyString, callbacks);
+        const subscriber = {
+            planKeyString,
+            callback
+        };
+        this.#subscribers.add(subscriber);
+
+        return () => this.#subscribers.delete(subscriber);
+    }
+
+    #statusForPlan(planKeyString) {
+        if (this.#latestEntry && this.#latestEntry.planIdentifier === planKeyString) {
+            return this.#latestEntry.status;
         }
 
-        callbacks.add(callback);
-
-        return () => callbacks.delete(callback);
+        return undefined;
     }
 
     #onDatum(datum) {
-        const executionMonitoring = parseExecutionMonitoring(datum);
-        if (!executionMonitoring) {
+        const entry = parseExecutionMonitoringEntry(datum);
+        if (!entry) {
             return;
         }
 
-        this.#latestExecutionMonitoring = executionMonitoring;
+        this.#latestEntry = entry;
 
-        Object.entries(executionMonitoring).forEach(([planKeyString, status]) => {
-            const callbacks = this.#subscribersByPlan.get(planKeyString);
-            if (callbacks) {
-                callbacks.forEach((callback) => callback(status));
+        this.#subscribers.forEach((subscriber) => {
+            if (subscriber.planKeyString === entry.planIdentifier) {
+                subscriber.callback(entry.status);
             }
         });
     }
 }
 
-function parseExecutionMonitoring(datum) {
-    if (!datum || typeof datum.value !== 'string') {
+function parseExecutionMonitoringEntry(datum) {
+    if (!datum || datum.planIdentifier === undefined || datum.status === undefined) {
         return undefined;
     }
 
-    try {
-        return JSON.parse(datum.value).execution_monitoring;
-    } catch (error) {
-        console.warn('Unable to parse execution monitoring parameter value', error);
-
-        return undefined;
-    }
+    return {
+        planIdentifier: String(datum.planIdentifier),
+        status: {
+            status: String(datum.status).toLowerCase(),
+            duration: Number(datum.duration) || 0
+        }
+    };
 }
