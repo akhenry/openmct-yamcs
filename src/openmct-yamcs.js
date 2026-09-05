@@ -112,7 +112,7 @@ export default function install(
             configuration.yamcsInstance));
 
         if (configuration.executionMonitoringParameter !== undefined) {
-            openmct.telemetry.addProvider(new ExecutionMonitoringProvider(openmct, {
+            openmct.plan.addProvider(new ExecutionMonitoringProvider(openmct, {
                 parameterName: configuration.executionMonitoringParameter
             }));
         } else {
