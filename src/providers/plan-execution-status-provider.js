@@ -26,11 +26,11 @@ import { qualifiedNameToId } from '../utils.js';
 const PLAN_OBJECT_TYPE = 'plan';
 
 /**
- * Reports plan execution monitoring status (nominal/ahead/behind schedule,
+ * Reports plan execution status (nominal/ahead/behind schedule,
  * with a duration) for a single plan, sourced from a single Yamcs aggregate
  * parameter with members { planIdentifier, status, duration }.
  */
-export default class ExecutionMonitoringProvider {
+export default class PlanExecutionStatusProvider {
     #openmct;
     #telemetryObject;
     #latestEntry;
@@ -43,7 +43,7 @@ export default class ExecutionMonitoringProvider {
                 key: qualifiedNameToId(parameterName),
                 namespace: NAMESPACE
             },
-            type: OBJECT_TYPES.EXECUTION_MONITOR_TYPE
+            type: OBJECT_TYPES.PLAN_EXECUTION_STATUS_TYPE
         };
 
         const unsubscribe = this.#openmct.telemetry.subscribe(
@@ -53,11 +53,11 @@ export default class ExecutionMonitoringProvider {
         openmct.once('destroy', unsubscribe);
     }
 
-    supportsExecutionMonitoring(domainObject) {
+    supportsExecutionStatus(domainObject) {
         return domainObject.type === PLAN_OBJECT_TYPE;
     }
 
-    getExecutionMonitoring(domainObject) {
+    getExecutionStatus(domainObject) {
         const planKeyString = this.#openmct.objects.makeKeyString(domainObject.identifier);
 
         return {
@@ -65,7 +65,7 @@ export default class ExecutionMonitoringProvider {
         };
     }
 
-    subscribeToExecutionMonitoring(domainObject, callback) {
+    subscribeForExecutionStatus(domainObject, callback) {
         const planKeyString = this.#openmct.objects.makeKeyString(domainObject.identifier);
         const subscriber = {
             planKeyString,
@@ -85,7 +85,7 @@ export default class ExecutionMonitoringProvider {
     }
 
     #onDatum(datum) {
-        const entry = parseExecutionMonitoringEntry(datum);
+        const entry = parseExecutionStatusEntry(datum);
         if (!entry) {
             return;
         }
@@ -100,7 +100,7 @@ export default class ExecutionMonitoringProvider {
     }
 }
 
-function parseExecutionMonitoringEntry(datum) {
+function parseExecutionStatusEntry(datum) {
     if (!datum || datum.planIdentifier === undefined || datum.status === undefined) {
         return undefined;
     }

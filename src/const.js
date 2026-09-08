@@ -36,7 +36,7 @@ export const OBJECT_TYPES = {
     POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
     ALARMS_TYPE: 'yamcs.alarms',
     GLOBAL_STATUS_TYPE: 'yamcs.globalStatus',
-    EXECUTION_MONITOR_TYPE: 'yamcs.executionMonitor'
+    PLAN_EXECUTION_STATUS_TYPE: 'yamcs.planExecutionStatus'
 };
 
 export const MDB_TYPE = 'yamcs.mdbchanges';
