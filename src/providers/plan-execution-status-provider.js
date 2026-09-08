@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, NAMESPACE } from '../const.js';
+import { OBJECT_TYPES, NAMESPACE, EXECUTION_STATUS_TYPE } from '../const.js';
 import { qualifiedNameToId } from '../utils.js';
 
 const PLAN_OBJECT_TYPE = 'plan';
@@ -61,7 +61,7 @@ export default class PlanExecutionStatusProvider {
         const planKeyString = this.#openmct.objects.makeKeyString(domainObject.identifier);
 
         return {
-            status: () => Promise.resolve(this.#statusForPlan(planKeyString))
+            status: () => this.#statusForPlan(planKeyString)
         };
     }
 
@@ -76,9 +76,40 @@ export default class PlanExecutionStatusProvider {
         return () => this.#subscribers.delete(subscriber);
     }
 
-    #statusForPlan(planKeyString) {
+    async #statusForPlan(planKeyString) {
+        // First check cached entry from realtime subscription
         if (this.#latestEntry && this.#latestEntry.planIdentifier === planKeyString) {
             return this.#latestEntry.status;
+        }
+
+        // Fallback: request latest telemetry via OpenMCT API
+        const telemetryArray = await this.#openmct.telemetry.request(
+            this.#telemetryObject,
+            { strategy: 'latest' }
+        );
+
+        if (!telemetryArray || telemetryArray.length === 0 || !telemetryArray[0]) {
+            return undefined;
+        }
+
+        const datum = telemetryArray[0];
+
+        // Normalize the structure - aggregate fields are nested in .value
+        const normalizedDatum = {
+            ...datum.value,  // Spread the aggregate fields to top level
+            timestamp: datum.timestamp
+        };
+
+        // Parse the entry using existing parser
+        const entry = parseExecutionStatusEntry(normalizedDatum);
+
+        if (entry) {
+            // Cache it for future use so subsequent calls don't re-fetch
+            this.#latestEntry = entry;
+
+            if (entry.planIdentifier === planKeyString) {
+                return entry.status;
+            }
         }
 
         return undefined;
@@ -100,16 +131,26 @@ export default class PlanExecutionStatusProvider {
     }
 }
 
+function getStatusFromDuration (duration) {
+    if (duration < 0) return 'behind';
+    if (duration > 0) return 'ahead';
+    return 'nominal';
+};
+
+// We're using signed integer for duration. So -ve means behind, +ve means ahead and zero means nominal.
 function parseExecutionStatusEntry(datum) {
-    if (!datum || datum.planIdentifier === undefined || datum.status === undefined) {
+    if (!datum || datum.planIdentifier === undefined || datum.duration === undefined) {
         return undefined;
     }
+
+    const duration = Number(datum.duration) || 0;
+    const status = getStatusFromDuration(duration);
 
     return {
         planIdentifier: String(datum.planIdentifier),
         status: {
-            status: String(datum.status).toLowerCase(),
-            duration: Number(datum.duration) || 0
+            status,
+            duration: Math.abs(duration)
         }
     };
 }

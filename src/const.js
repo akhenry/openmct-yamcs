@@ -96,3 +96,9 @@ export function isCommandType(type) {
 export function isMdbChangesType(type) {
     return type === MDB_TYPE;
 }
+
+export const EXECUTION_STATUS_TYPE = {
+    [-1]: 'behind',
+    [0]: 'nominal',
+    [1]: 'ahead'
+};
