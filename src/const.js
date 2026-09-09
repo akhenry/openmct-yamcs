@@ -99,6 +99,6 @@ export function isMdbChangesType(type) {
 
 export const EXECUTION_STATUS_TYPE = {
     [-1]: 'behind',
-    [0]: 'nominal',
-    [1]: 'ahead'
+    0: 'nominal',
+    1: 'ahead'
 };

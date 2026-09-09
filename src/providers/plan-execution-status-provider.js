@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import { OBJECT_TYPES, NAMESPACE, EXECUTION_STATUS_TYPE } from '../const.js';
+import { OBJECT_TYPES, NAMESPACE } from '../const.js';
 import { qualifiedNameToId } from '../utils.js';
 
 const PLAN_OBJECT_TYPE = 'plan';
@@ -60,9 +60,7 @@ export default class PlanExecutionStatusProvider {
     getExecutionStatus(domainObject) {
         const planKeyString = this.#openmct.objects.makeKeyString(domainObject.identifier);
 
-        return {
-            status: () => this.#statusForPlan(planKeyString)
-        };
+        return this.#statusForPlan(planKeyString);
     }
 
     subscribeForExecutionStatus(domainObject, callback) {
@@ -96,7 +94,7 @@ export default class PlanExecutionStatusProvider {
 
         // Normalize the structure - aggregate fields are nested in .value
         const normalizedDatum = {
-            ...datum.value,  // Spread the aggregate fields to top level
+            ...datum.value, // Spread the aggregate fields to top level
             timestamp: datum.timestamp
         };
 
@@ -131,11 +129,17 @@ export default class PlanExecutionStatusProvider {
     }
 }
 
-function getStatusFromDuration (duration) {
-    if (duration < 0) return 'behind';
-    if (duration > 0) return 'ahead';
+function getStatusFromDuration(duration) {
+    if (duration < 0) {
+        return 'behind';
+    }
+
+    if (duration > 0) {
+        return 'ahead';
+    }
+
     return 'nominal';
-};
+}
 
 // We're using signed integer for duration. So -ve means behind, +ve means ahead and zero means nominal.
 function parseExecutionStatusEntry(datum) {
