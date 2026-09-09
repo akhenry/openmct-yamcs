@@ -21,7 +21,7 @@
  *****************************************************************************/
 
 import { OBJECT_TYPES, NAMESPACE } from '../const.js';
-import { qualifiedNameToId } from '../utils.js';
+import { qualifiedNameToId, normalizeAggregateDatum } from '../utils.js';
 
 const PLAN_OBJECT_TYPE = 'plan';
 
@@ -92,11 +92,8 @@ export default class PlanExecutionStatusProvider {
 
         const datum = telemetryArray[0];
 
-        // Normalize the structure - aggregate fields are nested in .value
-        const normalizedDatum = {
-            ...datum.value, // Spread the aggregate fields to top level
-            timestamp: datum.timestamp
-        };
+        // Normalize aggregate datum to extract field names
+        const normalizedDatum = normalizeAggregateDatum(datum, this.#telemetryObject.identifier.key);
 
         // Parse the entry using existing parser
         const entry = parseExecutionStatusEntry(normalizedDatum);
