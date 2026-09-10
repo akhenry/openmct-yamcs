@@ -134,14 +134,7 @@ export default class RealtimeProvider {
         this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
-            const id = subscriptionDetails.subscriptionId;
-
-            if (subscriptionDetails) {
-                this.sendUnsubscribeMessage(subscriptionDetails);
-
-                this.subscriptionsByCall.delete(subscriptionDetails.call);
-                delete this.subscriptionsById[id];
-            }
+            this.#unsubscribe(subscriptionDetails);
         };
     }
 
@@ -155,18 +148,12 @@ export default class RealtimeProvider {
 
     subscribe(domainObject, callback, options) {
         let subscriptionDetails = this.buildSubscriptionDetails(domainObject, callback, options);
-        let id = subscriptionDetails.subscriptionId;
-        this.subscriptionsById[id] = subscriptionDetails;
+        this.subscriptionsById[subscriptionDetails.subscriptionId] = subscriptionDetails;
 
         this.sendSubscribeMessage(subscriptionDetails);
 
         return () => {
-            this.sendUnsubscribeMessage(subscriptionDetails);
-
-            if (this.subscriptionsById[id]) {
-                this.subscriptionsByCall.delete(this.subscriptionsById[id].call);
-                delete this.subscriptionsById[id];
-            }
+            this.#unsubscribe(subscriptionDetails);
         };
     }
 
@@ -203,9 +190,33 @@ export default class RealtimeProvider {
         this.sendMessage(message);
     }
 
+    #unsubscribe(subscriptionDetails) {
+        if (subscriptionDetails.unsubscribeRequested) {
+            return;
+        }
+
+        subscriptionDetails.unsubscribeRequested = true;
+        this.#completeUnsubscribeIfReady(subscriptionDetails);
+    }
+
+    #completeUnsubscribeIfReady(subscriptionDetails) {
+        if (subscriptionDetails.call === undefined) {
+            return;
+        }
+
+        this.sendUnsubscribeMessage(subscriptionDetails);
+        this.#removeSubscription(subscriptionDetails);
+    }
+
+    #removeSubscription(subscriptionDetails) {
+        this.subscriptionsByCall.delete(subscriptionDetails.call);
+        delete this.subscriptionsById[subscriptionDetails.subscriptionId];
+    }
+
     #setCallFromClock(clock) {
         const correspondingSubscription = Object.values(this.subscriptionsById).find(subscription => {
-            return subscription.domainObject.identifier.key === clock.identifier.key;
+            return !subscription.unsubscribeRequested
+                && subscription.domainObject.identifier.key === clock.identifier.key;
         });
 
         if (correspondingSubscription !== undefined) {
@@ -323,12 +334,19 @@ export default class RealtimeProvider {
                         const id = message.data.replyTo;
                         subscriptionDetails = this.subscriptionsById[id];
 
-                        // Susbcriptions can be cancelled before we even get to this stage during tests due to rapid navigation.
+                        // A subscription can already be removed if it was cancelled during a reconnect.
                         if (!subscriptionDetails) {
                             return;
                         }
 
                         subscriptionDetails.call = call;
+
+                        if (subscriptionDetails.unsubscribeRequested) {
+                            this.#completeUnsubscribeIfReady(subscriptionDetails);
+
+                            return;
+                        }
+
                         // Subsequent retrieval uses a string, so for performance reasons we use a string as a key.
                         this.subscriptionsByCall.set(call, subscriptionDetails);
 
@@ -380,7 +398,11 @@ export default class RealtimeProvider {
 
     resubscribeToAll() {
         Object.values(this.subscriptionsById).forEach((subscriptionDetails) => {
-            this.sendSubscribeMessage(subscriptionDetails);
+            if (subscriptionDetails.unsubscribeRequested) {
+                this.#removeSubscription(subscriptionDetails);
+            } else {
+                this.sendSubscribeMessage(subscriptionDetails);
+            }
         });
     }
 
