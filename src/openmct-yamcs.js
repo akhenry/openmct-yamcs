@@ -26,6 +26,7 @@ import YamcsObjectProvider from './providers/object-provider.js';
 import YamcsStalenessProvider from './providers/staleness-provider.js';
 import LimitProvider from './providers/limit-provider.js';
 import EventLimitProvider from './providers/event-limit-provider.js';
+import PlanExecutionStatusProvider from './providers/plan-execution-status-provider.js';
 import UserProvider from './providers/user/user-provider.js';
 
 import YamcsFaultProvider from './providers/fault-mgmt-providers/yamcs-fault-provider.js';
@@ -109,6 +110,14 @@ export default function install(
             openmct,
             configuration.yamcsHistoricalEndpoint,
             configuration.yamcsInstance));
+
+        if (configuration.planExecutionStatusParameter !== undefined) {
+            openmct.plan.addProvider(new PlanExecutionStatusProvider(openmct, {
+                parameterName: configuration.planExecutionStatusParameter
+            }));
+        } else {
+            console.warn('No execution status parameter configured, execution status unavailable in this deployment.');
+        }
 
         const missionStatusTelemetry = new MissionStatusTelemetry(openmct, {
             url: configuration.yamcsHistoricalEndpoint,

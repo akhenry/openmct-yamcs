@@ -417,6 +417,45 @@ function convertYamcsToOpenMctDatum(parameter, parentName) {
     return datum;
 }
 
+/**
+ * Normalizes an aggregate telemetry datum (from the latest telemetry provider).
+ * The datum.value object contains qualified field names like:
+ * "/ViperGround/Planning/Parameter.identifier"
+ * This function strips the parameter name prefix to get simple member names and their values:
+ * "identifier", "duration", etc.
+ *
+ * All top-level fields are preserved
+ * to ensure compatibility with other providers that depend on these fields.
+ *
+ * @param {Object} datum - The datum from latestTelemetryProvider with qualified field names
+ * @param {string} parameterIdentifierKey - The identifier key of the aggregate parameter (e.g., "~ViperGround~Planning~Parameter")
+ * @returns {Object} Normalized datum with all top-level fields preserved and aggregate members flattened
+ */
+function normalizeAggregateDatum(datum, parameterIdentifierKey) {
+    // Start with all top-level fields (id, acquisitionStatus, timestamp, etc.)
+    const normalizedDatum = {
+        ...datum
+    };
+
+    // Remove the qualified value object
+    delete normalizedDatum.value;
+
+    // Normalize and flatten aggregate members if present
+    if (datum.value && typeof datum.value === 'object') {
+        // Convert identifier key to qualified name for prefix matching
+        const parameterQualifiedName = idToQualifiedName(parameterIdentifierKey);
+
+        for (const [qualifiedName, value] of Object.entries(datum.value)) {
+            // Strip the parameter prefix to get just the member name
+            // e.g., "/ViperGround/Planning/Parameter.identifier" -> "identifier"
+            const memberName = qualifiedName.replace(`${parameterQualifiedName}.`, '');
+            normalizedDatum[memberName] = value;
+        }
+    }
+
+    return normalizedDatum;
+}
+
 export {
     buildStalenessResponseObject,
     getLimitFromAlarmRange,
@@ -429,5 +468,6 @@ export {
     addLimitInformation,
     yieldResults,
     getLimitOverrides,
-    convertYamcsToOpenMctDatum
+    convertYamcsToOpenMctDatum,
+    normalizeAggregateDatum
 };

@@ -35,7 +35,8 @@ export const OBJECT_TYPES = {
     MISSION_STATUS_TYPE: 'yamcs.missionStatus',
     POLL_QUESTION_TYPE: 'yamcs.pollQuestion',
     ALARMS_TYPE: 'yamcs.alarms',
-    GLOBAL_STATUS_TYPE: 'yamcs.globalStatus'
+    GLOBAL_STATUS_TYPE: 'yamcs.globalStatus',
+    PLAN_EXECUTION_STATUS_TYPE: 'yamcs.planExecutionStatus'
 };
 
 export const MDB_TYPE = 'yamcs.mdbchanges';
@@ -95,3 +96,9 @@ export function isCommandType(type) {
 export function isMdbChangesType(type) {
     return type === MDB_TYPE;
 }
+
+export const EXECUTION_STATUS_TYPE = {
+    [-1]: 'behind',
+    0: 'nominal',
+    1: 'ahead'
+};
