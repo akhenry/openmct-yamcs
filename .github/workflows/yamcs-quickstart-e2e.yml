@@ -24,6 +24,7 @@ jobs:
         with:
           repository: yamcs/quickstart
           path: 'quickstart'
+          ref: 'f331bfa4ac23db188a7358bda224a2a545c1c2ab'
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
