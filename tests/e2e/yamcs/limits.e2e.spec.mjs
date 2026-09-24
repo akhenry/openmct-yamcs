@@ -29,7 +29,7 @@ const { test, expect } = pluginFixtures;
 const { createDomainObjectWithDefaults, waitForPlotsToRender } = appActions;
 const YAMCS_URL = 'http://localhost:8090/';
 
-test.describe("Mdb runtime limits tests @yamcs", () => {
+test.describe("Mdb runtime limits tests @yamcs @mutatesGlobalState", () => {
 
     test.beforeEach(async ({ page }) => {
         await clearLimitsForParameter(page);
