@@ -95,6 +95,30 @@ test.describe("Timeline Events in @yamcs", () => {
         });
     });
 
+    test('Events render with severity-specific styling', async ({ page }) => {
+        // event-limit-provider.js maps YAMCS severities to CSS classes:
+        // WATCH/WARNING -> is-event--yellow, DISTRESS/CRITICAL/SEVERE ->
+        // is-event--red, and anything else (e.g. INFO, which YAMCS does not
+        // include in the severity->CSS map) falls back to the NOMINAL
+        // default, is-event--no-style. Verify the timeline renders each
+        // distinctly.
+        await eventsTreeItem.dragTo(objectPane);
+        await postAllEvents();
+
+        await setStartOffset(page, { startMins: '02' });
+        await setEndOffset(page, { endMins: '02' });
+        await setFixedTimeMode(page);
+
+        const eventLine = (message) => page
+            .getByLabel(eventTimelineView.name)
+            .getByLabel(message)
+            .first();
+
+        await expect(eventLine('Pressure threshold exceeded')).toHaveClass(/is-event--red/);
+        await expect(eventLine('Pressure nearing critical level')).toHaveClass(/is-event--yellow/);
+        await expect(eventLine('Pressure system check completed')).toHaveClass(/is-event--no-style/);
+    });
+
     test('YAMCS event lines can extend over other telemetry in the timeline', async ({ page }) => {
         const plot = await createDomainObjectWithDefaults(page, { type: 'Overlay Plot' });
         const plotTreeItem = page.getByRole('treeitem', { name: plot.name });

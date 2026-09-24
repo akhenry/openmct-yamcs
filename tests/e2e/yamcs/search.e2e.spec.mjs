@@ -47,4 +47,31 @@ test.describe("Quickstart search tests @yamcs", () => {
         await expect(page.getByLabel('Object Search Result').nth(1)).toContainText("CCSDS_Packet_Sequence.GroupFlags");
         await expect(page.getByLabel('Object Search Result').nth(2)).toContainText("CCSDS_Packet_Sequence.Count");
     });
+
+    test('Duplicate raw search hits from YAMCS are deduped in search results', async ({ page }) => {
+        // CCSDS_Packet_ID is an aggregate with four members (Version, Type,
+        // SecHdrFlag, APID). YAMCS's MDB search API (with searchMembers=true)
+        // returns the *parent* parameter once per matching member in the raw
+        // response, so a query of "CCSDS_Packet_ID" yields five raw hits that
+        // all share the same qualifiedName (/myproject/CCSDS_Packet_ID).
+        // #convertSearchHitToTelemetries must dedupe those raw hits before
+        // recursing into members, otherwise the parent (and by extension its
+        // members) would be duplicated in the search results.
+        await page.goto("./");
+        const myProjectTreeItem = page.locator('.c-tree__item').filter({ hasText: 'myproject' });
+        await expect(myProjectTreeItem).toBeVisible();
+
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').click();
+        await page.locator('[aria-label="OpenMCT Search"] [aria-label="Search Input"]').fill('CCSDS_Packet_ID');
+
+        // Exactly one entry per parameter/member: the parent plus its four
+        // members, with no duplicates despite YAMCS sending the parent five
+        // times in its raw response.
+        await expect(page.getByLabel('Object Search Result')).toHaveCount(5);
+        await expect(page.getByLabel('Object Search Result').nth(0)).toContainText("CCSDS_Packet_ID");
+        await expect(page.getByLabel('Object Search Result').nth(1)).toContainText("CCSDS_Packet_ID.Version");
+        await expect(page.getByLabel('Object Search Result').nth(2)).toContainText("CCSDS_Packet_ID.Type");
+        await expect(page.getByLabel('Object Search Result').nth(3)).toContainText("CCSDS_Packet_ID.SecHdrFlag");
+        await expect(page.getByLabel('Object Search Result').nth(4)).toContainText("CCSDS_Packet_ID.APID");
+    });
 });

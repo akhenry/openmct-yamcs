@@ -1,10 +1,16 @@
 import installYamcsPlugins from '../src/openmct-yamcs.js';
 
+// Derived from the page origin (rather than a hardcoded port) so the example
+// app keeps working when WEBPACK_PORT is overridden, e.g. to run multiple
+// worktree checkouts in parallel against non-conflicting ports.
+const { protocol, host } = window.location;
+const wsProtocol = protocol === 'https:' ? 'wss:' : 'ws:';
+
 const config = {
-    yamcsDictionaryEndpoint: "http://localhost:9000/yamcs-proxy/",
-    yamcsHistoricalEndpoint: "http://localhost:9000/yamcs-proxy/",
-    yamcsWebsocketEndpoint: "ws://localhost:9000/yamcs-proxy-ws/",
-    yamcsUserEndpoint: "http://localhost:9000/yamcs-proxy/api/user/",
+    yamcsDictionaryEndpoint: `${protocol}//${host}/yamcs-proxy/`,
+    yamcsHistoricalEndpoint: `${protocol}//${host}/yamcs-proxy/`,
+    yamcsWebsocketEndpoint: `${wsProtocol}//${host}/yamcs-proxy-ws/`,
+    yamcsUserEndpoint: `${protocol}//${host}/yamcs-proxy/api/user/`,
     yamcsInstance: "myproject",
     yamcsProcessor: "realtime",
     yamcsFolder: "myproject",

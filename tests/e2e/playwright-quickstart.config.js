@@ -1,6 +1,11 @@
 // playwright.config.js
 // @ts-check
 
+// Overridable so multiple worktree checkouts can run the suite against
+// non-conflicting ports in parallel (see tests/patch-quickstart-ports.sh).
+const webpackPort = Number(process.env.WEBPACK_PORT) || 9000;
+const baseOrigin = `http://localhost:${webpackPort}`;
+
 /** @type {import('@playwright/test').PlaywrightTestConfig<{ failOnConsoleError: boolean, myItemsFolderName: string }>} */
 const config = {
     retries: 1,
@@ -12,7 +17,7 @@ const config = {
         video: 'off',
         screenshot: 'on',
         trace: 'on',
-        baseURL: 'http://localhost:9000/#',
+        baseURL: `${baseOrigin}/#`,
         ignoreHTTPSErrors: true,
         myItemsFolderName: "My Items",
         failOnConsoleError: false,
@@ -20,7 +25,7 @@ const config = {
             cookies: [],
             origins: [
                 {
-                    "origin": "http://localhost:9000",
+                    "origin": baseOrigin,
                     "localStorage": [
                         {
                             "name": "exampleLayout",
@@ -34,7 +39,7 @@ const config = {
     webServer: {
         cwd: '../',
         command: 'npm run start:coverage',
-        url: 'http://localhost:9000/#',
+        url: `${baseOrigin}/#`,
         timeout: 120 * 1000,
         reuseExistingServer: false
     },
