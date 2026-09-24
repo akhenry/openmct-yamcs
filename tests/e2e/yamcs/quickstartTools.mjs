@@ -72,10 +72,56 @@ async function parameterArchive({start, end, parameterId, yamcsURL}) {
     return response.parameter;
 }
 
+async function getCommandQueues(yamcsURL, processor = 'realtime') {
+    const url = new URL(`api/processors/myproject/${processor}/queues`, yamcsURL);
+    const response = await (await fetch(url.toString())).json();
+    const { queues = [] } = response;
+
+    return queues.map(queue => queue.name);
+}
+
+/**
+ * Issue a command directly against the running YAMCS instance via the REST API.
+ * @param {Object} options
+ * @param {string} options.qualifiedName fully qualified command name, e.g. "/myproject/SwitchVoltageOn"
+ * @param {Object} [options.args] name/value argument assignments for the command
+ * @param {string} [options.comment] optional comment attached to the command
+ * @param {string} options.yamcsURL base URL of the YAMCS server
+ * @param {string} [options.processor] processor name, defaults to "realtime"
+ * @returns {Object} the YAMCS command response body
+ */
+async function issueCommand({ qualifiedName, args = {}, comment, yamcsURL, processor = 'realtime' }) {
+    // qualifiedName is of the form "/myproject/SwitchVoltageOn"; the REST API expects
+    // it appended (without a leading slash) after the "commands/" path segment.
+    const commandPath = qualifiedName.replace(/^\//, '');
+    const url = new URL(`api/processors/myproject/${processor}/commands/${commandPath}`, yamcsURL);
+    const body = { args };
+
+    if (comment !== undefined) {
+        body.comment = comment;
+    }
+
+    const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error issuing command ${qualifiedName}: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+}
+
 export {
     disableLink,
     enableLink,
     isLinkEnabled,
     latestParameterValues,
-    parameterArchive
+    parameterArchive,
+    getCommandQueues,
+    issueCommand
 };
