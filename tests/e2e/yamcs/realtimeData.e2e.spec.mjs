@@ -23,7 +23,8 @@
 /**
  * IMPORTANT: CANNOT BE RUN IN PARALLEL, ENABLES & DISABLES LINKS
  */
-import { expect, test } from '@playwright/test';
+import { baseFixtures } from 'openmct-e2e';
+const { test, expect } = baseFixtures;
 import { fileURLToPath } from 'url';
 import { latestParameterValues, disableLink, enableLink, parameterArchive } from './quickstartTools.mjs';
 
@@ -41,6 +42,8 @@ const TELEMETRY_PROPAGATION_TIME = 1000;
 const THIRTY_MINUTES = 30 * 60 * 1000;
 
 test.describe('Realtime telemetry displays', () => {
+    test.use({failOnConsoleError: true});
+
     let yamcsURL;
     let websocketWorker;
 
@@ -342,6 +345,88 @@ test.describe('Realtime telemetry displays', () => {
             const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
             const tableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
             assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName);
+        });
+
+        test('VIPERGC-816 - A condition set that uses an "any" rule does not prevent other telemetry in the display from updating ', async ({ page }) => {
+            /**
+             * Confirm that the test display has a condition set that uses an "any" rule.
+             */
+            const hasConditionSetThatUsesAnyRule = await page.evaluate(async () => {
+                const openmct = window.openmct;
+                const displayLayout = openmct.router.path[0]
+                const children = await openmct.composition.get(displayLayout).load();
+                const conditionSet = children.find(child => child.type === 'conditionSet');
+
+                if (!conditionSet) {
+                    return false;
+                }
+
+                const containsAnyOrAllRule = conditionSet.configuration.conditionCollection.some(condition => {
+                    return condition.configuration.criteria.some(criterion => criterion.telemetry === 'any' || criterion.telemetry === 'all');
+                });
+
+                return containsAnyOrAllRule;
+            });
+
+            expect(hasConditionSetThatUsesAnyRule).toBe(true);
+
+            /**
+             * Confirm that telemetry in the display is updating correctly (ie. it is consistent with the latest data in Yamcs).
+             */
+            // Wait a reasonable amount of time for new telemetry to come in.
+            // There is nothing significant about the number chosen.
+            const WAIT_FOR_MORE_TELEMETRY = 3000;
+
+            const ladTable = await getLadTableByName(page, 'Test LAD Table');
+
+            // Let it run for a few seconds
+            await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
+
+            // Disable playback
+            await disableLink(yamcsURL);
+
+            // Wait 1 second for values to propagate to client and render on screen.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+
+            const latestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
+            const parameterNamesToLatestValues = toParameterNameToValueMap(latestValueObjects);
+            const tableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
+            const allAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
+            const allGaugeValuesByName = await getParameterValuesFromAllGauges(page);
+            const tableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
+            assertParameterMapsAreEqual(parameterNamesToLatestValues, tableValuesByParameterName);
+            assertParameterMapsAreEqual(parameterNamesToLatestValues, allAlphaNumericValuesByName);
+            assertParameterMapsAreEqual(allGaugeValuesByName, parameterNamesToLatestValues, 2);
+
+            // Enable playback
+            await enableLink(yamcsURL);
+
+            // Let it run for a few seconds to cycle through a few telemetry values
+            await page.waitForTimeout(WAIT_FOR_MORE_TELEMETRY);
+
+            // Disable playback
+            await disableLink(yamcsURL);
+
+            // Wait 1 second for values to propagate to client and render on screen.
+            await page.waitForTimeout(TELEMETRY_PROPAGATION_TIME);
+
+            const secondLatestValueObjects = await latestParameterValues(Object.values(namesToParametersMap), yamcsURL);
+            const secondParameterNamesToLatestValues = toParameterNameToValueMap(secondLatestValueObjects);
+            const secondTableValuesByParameterName = await getParameterValuesFromLadTable(ladTable);
+            const secondTableTimestampsByParameterName = await getParameterTimestampsFromLadTable(ladTable);
+            const secondAlphaNumericValuesByName = await getParameterValuesFromAllAlphaNumerics(page);
+            const secondGaugeValuesByName = await getParameterValuesFromAllGauges(page);
+
+            //First compare timestamps to make sure telemetry on screen is actually changing.
+            Object.keys(namesToParametersMap).forEach(key => {
+                expect(tableTimestampsByParameterName[key]).not.toBe(secondTableTimestampsByParameterName[key]);
+            });
+
+            // Next confirm that the values on screen are, again, the same as the latest values in Yamcs
+            assertParameterMapsAreEqual(secondParameterNamesToLatestValues, secondTableValuesByParameterName);
+            assertParameterMapsAreEqual(secondParameterNamesToLatestValues, secondAlphaNumericValuesByName);
+            assertParameterMapsAreEqual(secondGaugeValuesByName, parameterNamesToLatestValues, 2);
+
         });
     });
 
