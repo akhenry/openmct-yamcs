@@ -28,6 +28,11 @@ import commonConfig from "./webpack.common.mjs";
 // Replicate __dirname functionality for ES modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Overridable so multiple worktree checkouts can run the dev server + YAMCS proxy
+// against non-conflicting ports in parallel (see tests/patch-quickstart-ports.sh).
+const webpackPort = Number(process.env.WEBPACK_PORT) || 9000;
+const yamcsHttpPort = Number(process.env.YAMCS_HTTP_PORT) || 8090;
+
 /** @type {import('webpack').Configuration} */
 const devConfig = {
   mode: "development",
@@ -38,7 +43,7 @@ const devConfig = {
   },
   devServer: {
     compress: true,
-    port: 9000,
+    port: webpackPort,
     static: [
       {
         directory: path.join(__dirname, "../example"),
@@ -51,14 +56,14 @@ const devConfig = {
     proxy: [
       {
         context: ["/yamcs-proxy/"],
-        target: "http://0.0.0.0:8090/",
+        target: `http://0.0.0.0:${yamcsHttpPort}/`,
         secure: false,
         changeOrigin: true,
         pathRewrite: { "^/yamcs-proxy/": "" },
       },
       {
         context: ["/yamcs-proxy-ws/"],
-        target: "ws://0.0.0.0:8090/api/websocket",
+        target: `ws://0.0.0.0:${yamcsHttpPort}/api/websocket`,
         secure: false,
         changeOrigin: true,
         ws: true,
