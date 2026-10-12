@@ -70,7 +70,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await detectorTreeItem.dragTo(objectPane);
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
@@ -86,7 +86,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Change the limits for the Detector_Temp parameter using the yamcs API
@@ -141,7 +141,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await detectorTreeItem.dragTo(page.locator('.c-object-view'));
 
         // Save (exit edit mode)
-        await page.getByLabel('Save').click();
+        await page.getByLabel({ name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         // Assert that no limit lines are shown by default
@@ -157,7 +157,7 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         await page.getByLabel('Limit lines').check();
 
         // Save (exit edit mode)
-        await page.getByRole('button', { name: 'Save' }).click();
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
         await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
 
         //navigate away from the overlay plot
@@ -250,9 +250,65 @@ test.describe("Mdb runtime limits tests @yamcs", () => {
         });
         await expect(runTimeLimitChangeResponse).toBeOK();
 
+        await page.waitForSelector('.is-limit--red', { state: 'attached' });
+
         await expect(page.locator('.is-limit--red').first()).toBeVisible();
     });
 
+    test('Can show limits for alpha numeric values in a display layout', async ({ page }) => {
+        //navigate to EpochUSNO with a specified realtime window
+        await page.goto('./#/browse/taxonomy:spacecraft/taxonomy:~myproject/taxonomy:~myproject~EpochUSNO?tc.mode=local&tc.startDelta=1800000&tc.endDelta=0&tc.timeSystem=utc&view=table', {waitUntil: 'domcontentloaded'});
+        await expect(page.getByText('Loading...')).toBeHidden();
+        // Create a display layout with the EpochUSNO parameter
+        const displayLayout = await createDomainObjectWithDefaults(page, {
+            type: 'Display Layout'
+        });
+
+        // Navigate to display Layout
+        await page.goto(displayLayout.url);
+
+        // Expand the myproject folder (/myproject)
+        await page.getByLabel('Expand myproject').click();
+        // Expand the myproject under the previous folder (/myproject/myproject)
+        await page.getByLabel('Expand myproject').click();
+
+        // Find the EpochUSNO parameter (/myproject/myproject/EpochUSNO)
+        const enumTreeItem = page.getByRole('treeitem', { name: /EpochUSNO/ });
+        await page.getByLabel('Edit Object').click();
+
+        // Drag and drop the EpochUSNO telemetry endpoint into this display layout
+        await enumTreeItem.dragTo(page.locator('.c-object-view'));
+
+        // Save (exit edit mode)
+        await page.getByLabel({ name: 'Save', exact: true }).click();
+        await page.getByRole('listitem', { name: 'Save and Finish Editing' }).click();
+
+        // Change the limits for the EpochUSNO parameter using the yamcs API
+        const runTimeLimitChangeResponse = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/EpochUSNO`, {
+            data: {
+                action: 'SET_DEFAULT_ALARMS',
+                defaultAlarm: {
+                    minViolations: 1,
+                    staticAlarmRange: [
+                        {
+                            level: 'WATCH',
+                            minInclusive: 57388.03,
+                            maxInclusive: 57388.05
+                        }
+                    ]
+                }
+            }
+        });
+
+        await expect(runTimeLimitChangeResponse).toBeOK();
+
+        await page.waitForSelector('.is-limit--yellow', { state: 'attached' });
+
+        const alphaNumericEl = page.getByLabel("Alpha-numeric telemetry");
+        const yellowCellLocator = alphaNumericEl.locator('.is-limit--yellow');
+
+        await expect(yellowCellLocator).toBeVisible();
+    });
 });
 
 /**
@@ -288,4 +344,14 @@ async function clearLimitsForParameter(page) {
         data: {}
     });
     await expect(runTimeLimitChangeResponse).toBeOK();
+
+    const runTimeLimitChangeResponse2 = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/Enum_Para_1`, {
+        data: {}
+    });
+    await expect(runTimeLimitChangeResponse2).toBeOK();
+
+    const runTimeLimitChangeResponse3 = await page.request.patch(`${YAMCS_URL}api/mdb-overrides/myproject/realtime/parameters/myproject/EpochUSNO`, {
+        data: {}
+    });
+    await expect(runTimeLimitChangeResponse3).toBeOK();
 }
