@@ -405,7 +405,7 @@ function convertYamcsToOpenMctDatum(parameter, parentName) {
     };
     const value = getValue(parameter, parentName);
 
-    if (parameter.engValue.type !== AGGREGATE_TYPE) {
+    if ((parameter.engValue || parameter).type !== AGGREGATE_TYPE) {
         datum.value = value;
     } else {
         datum = {
