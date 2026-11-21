@@ -209,6 +209,10 @@ export default class RealtimeProvider {
     }
 
     #removeSubscription(subscriptionDetails) {
+        if (this.remoteClockCallNumber === subscriptionDetails.call) {
+            delete this.remoteClockCallNumber;
+        }
+
         this.subscriptionsByCall.delete(subscriptionDetails.call);
         delete this.subscriptionsById[subscriptionDetails.subscriptionId];
     }
