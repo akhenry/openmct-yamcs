@@ -111,4 +111,33 @@ test.describe(`Latest Available Data, or LAD (strategy='latest', greedyLAD=true)
             await expect(ladRowTimestampCell).toHaveText('---');
         });
     });
+
+    test('aggregate LAD uses the same member keys as telemetry metadata', async ({ page }) => {
+        const aggregateTelemetry = await page.evaluate(async () => {
+            const domainObject = await window.openmct.objects.get({
+                namespace: 'taxonomy',
+                key: '~myproject~CCSDS_Packet_ID'
+            });
+            const metadataKeys = window.openmct.telemetry
+                .getMetadata(domainObject)
+                .values()
+                .map((metadatum) => metadatum.key)
+                .filter((key) => key !== 'utc');
+            const bounds = window.openmct.time.bounds();
+            const [datum] = await window.openmct.telemetry.request(domainObject, {
+                ...bounds,
+                strategy: 'latest'
+            });
+
+            return {
+                datumKeys: Object.keys(datum),
+                metadataKeys
+            };
+        });
+
+        expect(aggregateTelemetry.metadataKeys.length).toBeGreaterThan(0);
+        expect(aggregateTelemetry.datumKeys).toEqual(
+            expect.arrayContaining(aggregateTelemetry.metadataKeys)
+        );
+    });
 });

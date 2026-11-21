@@ -20,7 +20,7 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 import {
-    getValue,
+    convertYamcsToOpenMctDatum,
     idToQualifiedName,
     qualifiedNameFromParameterId,
     qualifiedNameToId
@@ -60,8 +60,7 @@ export default class LatestTelemetryProvider {
                     openMctStyleDatum = {
                         id: qualifiedNameToId(id),
                         acquisitionStatus: result.acquisitionStatus,
-                        timestamp: result.generationTime,
-                        value: getValue(result)
+                        ...convertYamcsToOpenMctDatum(result, domainObject.name)
                     };
                 }
             }
