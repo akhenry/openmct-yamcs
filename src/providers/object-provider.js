@@ -63,7 +63,7 @@ export default class YamcsObjectProvider {
 
     #initialize() {
         this.#createRootObject();
-        this.openmct.on('destroy', this.#unsubscribeFromAll);
+        this.openmct.on('destroy', this.#unsubscribeFromAll.bind(this));
     }
 
     #createRootObject() {
