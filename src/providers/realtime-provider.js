@@ -222,15 +222,7 @@ export default class RealtimeProvider {
             const subscriptionDetails = this.subscriptionsByCall.get(this.remoteClockCallNumber);
 
             if (remoteClockValues !== undefined && remoteClockValues.length > 0) {
-                const allClockValues = [];
-
-                remoteClockValues.forEach((parameterValue) => {
-                    this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allClockValues);
-                });
-
-                if (allClockValues.length > 0) {
-                    subscriptionDetails.callback(allClockValues);
-                }
+                this.#processParameterBatch(remoteClockValues, subscriptionDetails);
 
                 // Delete so we don't process it twice.
                 parameterValuesByCall.delete(this.remoteClockCallNumber);
@@ -239,7 +231,6 @@ export default class RealtimeProvider {
 
         // Now process all non-clock parameter updates
         for (const [call, parameterValues] of parameterValuesByCall.entries()) {
-            const allTelemetryData = [];
             const subscriptionDetails = this.subscriptionsByCall.get(call);
 
             // possibly cancelled
@@ -247,38 +238,36 @@ export default class RealtimeProvider {
                 continue;
             }
 
-            parameterValues.forEach((parameterValue) => {
-                this.#convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allTelemetryData);
-            });
-
-            if (allTelemetryData.length > 0) {
-                subscriptionDetails.callback(allTelemetryData);
-            }
+            this.#processParameterBatch(parameterValues, subscriptionDetails);
         }
     }
 
-    #convertMessageToDatumAndReportStaleness(parameterValue, subscriptionDetails, allTelemetryData) {
-        const values = parameterValue.data.values || [];
+    #processParameterBatch(messages, subscriptionDetails) {
         const parentName = subscriptionDetails.domainObject.name;
-        values.forEach(parameter => {
-            const datum = convertYamcsToOpenMctDatum(parameter, parentName);
+        const allTelemetryData = [];
+        let lastParameter;
 
-            if (this.observingStaleness[subscriptionDetails.name] !== undefined) {
-                const status = STALENESS_STATUS_MAP[parameter.acquisitionStatus];
-
-                if (this.observingStaleness[subscriptionDetails.name].response.isStale !== status) {
-                    const stalenesResponseObject = buildStalenessResponseObject(
-                        status,
-                        parameter[METADATA_TIME_KEY]
-                    );
-                    this.observingStaleness[subscriptionDetails.name].response = stalenesResponseObject;
-                    this.observingStaleness[subscriptionDetails.name].callback(stalenesResponseObject);
-                }
+        for (const message of messages) {
+            for (const parameter of message.data.values || []) {
+                const datum = convertYamcsToOpenMctDatum(parameter, parentName);
+                addLimitInformation(parameter, datum);
+                allTelemetryData.push(datum);
+                lastParameter = parameter;
             }
+        }
 
-            addLimitInformation(parameter, datum);
-            allTelemetryData.push(datum);
-        });
+        if (lastParameter === undefined) {
+            return;
+        }
+
+        const observation = this.observingStaleness[subscriptionDetails.name];
+        const status = STALENESS_STATUS_MAP[lastParameter.acquisitionStatus];
+        if (observation && observation.response.isStale !== status) {
+            observation.response = buildStalenessResponseObject(status, lastParameter[METADATA_TIME_KEY]);
+            observation.callback(observation.response);
+        }
+
+        subscriptionDetails.callback(allTelemetryData);
     }
 
     connect() {
